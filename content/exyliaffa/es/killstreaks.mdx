@@ -1,0 +1,96 @@
+---
+title: "Rachas de bajas"
+description: "La escalera de killstreaks, sus anuncios, sus comandos y el mensaje de corte."
+---
+
+Las rachas viven en dos archivos: los ajustes generales en `config.yml` y la escalera en
+`killstreaks.yml`.
+
+## Ajustes generales
+
+```yaml title="config.yml"
+kill-streaks:
+  enabled: true
+  reset-on-death: true
+  break-min-streak: 3
+  break-message: "<#b9a5cc>%killer% ended %player%'s <gradient:#ff4d4d:#ffd700><bold>%streak% kill streak</bold></gradient><#b9a5cc>!</#b9a5cc>"
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | Si las rachas se cuentan y se anuncian. |
+| `reset-on-death` | `true` | Si morir devuelve la racha a cero. |
+| `break-min-streak` | `3` | La racha más corta cuyo final merece anuncio. |
+| `break-message` | ver arriba | El anuncio de racha cortada. Acepta `%killer%`, `%player%` y `%streak%`. |
+
+## La escalera
+
+`killstreaks.yml` es una lista de peldaños. Cada uno se dispara cuando el jugador alcanza
+exactamente ese número de bajas.
+
+```yaml title="killstreaks.yml"
+streaks:
+  - streak: 3
+    enabled: true
+    broadcast: true
+    message: "<#ff7a7a>%player%</#ff7a7a> <#b9a5cc>is heating up with</#b9a5cc> <gradient:#ff4d4d:#ff9a9a><bold>3 kills</bold></gradient><#b9a5cc>.</#b9a5cc>"
+    commands: []
+  - streak: 5
+    enabled: true
+    broadcast: true
+    message: "..."
+    commands:
+      - "give %player% diamond 1"
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `streak` | — | El número de bajas que activa el peldaño. Obligatorio y mayor que cero. |
+| `enabled` | `true` | Desactiva el peldaño sin borrarlo. |
+| `broadcast` | `true` | `true` anuncia a todo el servidor, `false` solo al jugador. |
+| `message` | vacío | El anuncio. `%player%` es el jugador de la racha. |
+| `commands` | vacío | Comandos que ejecuta la consola al alcanzarla. `%player%` se sustituye. |
+
+La escalera se ordena sola de menor a mayor, así que el orden en el archivo no importa. Un peldaño
+mal escrito se salta y se avisa en consola: pierdes ese peldaño, no la escalera entera.
+
+Por defecto se envían nueve peldaños: 3, 5, 7, 10, 15, 20, 25, 35 y 50.
+
+<Callout type="note" title="Por qué es un archivo aparte">
+El resto de `config.yml` es un conjunto fijo de claves con tipo conocido. Una escalera es una lista
+de bloques con longitud libre, así que vive en su propio archivo. Si vienes de una versión anterior
+donde estaba en `kill-streaks.streaks`, la migración la mueve sola en el primer arranque.
+</Callout>
+
+## Consultar la racha
+
+`/ffa streak` muestra la racha actual del jugador. Con el permiso
+`exyliaffa.commands.streak.others`, `/ffa streak <jugador>` muestra la de otro.
+
+El valor también está disponible como placeholder:
+
+```text
+%exyliaffa_current_streak%
+```
+
+## Recompensas por racha
+
+Los `commands` de cada peldaño los ejecuta la consola, así que sirve cualquier comando de cualquier
+plugin:
+
+```yaml
+commands:
+  - "eco give %player% 500"
+  - "broadcast &e%player% &7va por 10 bajas seguidas"
+  - "lp user %player% permission settemp exyliaffa.kit.premium true 10m"
+```
+
+<Callout type="tip">
+Para recompensas por baja individual, no por racha, usa `kill-commands` en `config.yml`. Ver
+[Configuración](/docs/exyliaffa/configuracion#kill-commands).
+</Callout>
+
+## Ajustes por jugador
+
+Un jugador puede silenciar sus propias notificaciones de racha o los anuncios globales de las rachas
+ajenas desde `/ffa settings`, sin afectar a nadie más.

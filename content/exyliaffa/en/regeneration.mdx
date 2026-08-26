@@ -1,0 +1,67 @@
+---
+title: "Regeneration"
+description: "Restoring the arena from a schematic, on a timer or by hand."
+---
+
+Regeneration returns the arena to the exact state you saved it in. It leans on FastAsyncWorldEdit:
+the plugin saves a schematic of the region and restores it when due.
+
+## How it works
+
+<Steps>
+  <Step title="Save the schematic">
+    With the region already marked, use the save-schematic action from the arena panel. The file is
+    stored as `ffa_arena_<arenaId>` in the server's schematic folder.
+  </Step>
+  <Step title="Set the interval">
+    In the arena settings, `regenerationTime` is **seconds** between automatic regenerations. `0`
+    disables the timer.
+  </Step>
+  <Step title="Let it run">
+    The clock starts when the arena's session starts. Each cycle warns the players inside, restores
+    the blocks, and starts counting again.
+  </Step>
+  <Step title="Or force it">
+    The admin panel has a manual regeneration action, which also resets the countdown.
+  </Step>
+</Steps>
+
+## Things that matter
+
+<Callout type="warning" title="No schematic, no regeneration">
+If the arena has no saved schematic, the cycle does nothing. The settings panel flags the schematic
+as pending when it is missing: check that list before enabling the arena.
+</Callout>
+
+- The clock is anchored to the arena's location, not to the server. That matters on Folia:
+  regeneration runs on the region it belongs to and does not block the rest of the world.
+- Saving the schematic again overwrites the previous one. Always save with the map in the state you
+  want as "clean".
+- Players inside get the message that the arena is regenerating, and the one saying it finished. Both
+  are edited in `messages.yml`.
+
+## Countdown on the scoreboard
+
+The remaining time is available on the sidebar through `%regen%`, included in the default lines:
+
+```yaml
+lines:
+  - " {muted}❙ {letters}Regen: {info}%regen%"
+```
+
+With regeneration disabled the value is `-1` internally, and the line shows whatever fallback text
+you define for that case in `messages.yml`.
+
+## Choosing an interval
+
+| Arena type | Suggested interval |
+|---|---|
+| Nodebuff with no building | No regeneration needed |
+| Arena with temporary blocks | 300–600 s |
+| Free-building arena | 120–300 s |
+| Delicate decorative map | 60–120 s |
+
+<Callout type="tip">
+Too short an interval interrupts fights. If the arena degrades quickly, enabling `playerBuildOnly`
+and temporary blocks usually beats lowering the timer.
+</Callout>

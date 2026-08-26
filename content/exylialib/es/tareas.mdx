@@ -1,0 +1,93 @@
+---
+title: "Tareas e hilos"
+description: "Un scheduler que corre en Spigot, Paper y Folia sin una sola rama en tu código."
+---
+
+Folia no tiene hilo principal. Tiene hilos por región, y una tarea que toca una entidad tiene que
+correr en el hilo dueño de esa entidad. Escribir para ambos significa escribir cada llamada dos veces —
+o llamar a este módulo, que decide por ti.
+
+```java
+TaskScheduler tasks = Tasks.of(this);
+
+tasks.run(() -> broadcast());
+tasks.runLater(20L, () -> start());
+tasks.runTimer(0L, 20L, () -> tick());
+```
+
+## Dónde corre una tarea
+
+| Llamada | Corre en |
+|---|---|
+| `run`, `runLater`, `runTimer` | El hilo global — el principal de Bukkit, o la región global de Folia. |
+| `runAsync`, `runAsyncLater`, `runAsyncTimer` | Un hilo del pool. Nunca toques la API de Bukkit desde uno. |
+| `runAtEntity`, `runAtEntityLater`, `runAtEntityTimer` | El hilo dueño de esa entidad. En Folia, su región. |
+| `runAtLocation`, `runAtLocationLater`, `runAtLocationTimer` | El hilo dueño de esa ubicación. |
+| `execute` | Ahora si ya estás en el hilo correcto, programado si no. |
+
+<Callout type="warning" title="Todo lo que va sobre un jugador es `runAtEntity`">
+Teletransportar, cambiar inventario, mandar un título, leer su ubicación: todo eso pertenece al hilo del
+propio jugador. `run` es para trabajo sobre el servidor entero — un broadcast, un contador global.
+Equivocarse es invisible en Paper y un crash en Folia.
+</Callout>
+
+## Cancelar
+
+Cada llamada devuelve un `TaskHandle`:
+
+```java
+TaskHandle timer = tasks.runTimer(0L, 20L, () -> tick());
+timer.cancel();
+```
+
+Una tarea repetitiva que necesita cancelarse a sí misma recibe el handle como argumento:
+
+```java
+tasks.runTimer(0L, 20L, handle -> {
+    if (--countdown <= 0) {
+        handle.cancel();
+        return;
+    }
+    show(countdown);
+});
+```
+
+`runAtEntity` acepta además un callback **retired**, que se ejecuta si la entidad desapareció antes que
+la tarea:
+
+```java
+tasks.runAtEntity(player, () -> give(player, kit), () -> queueForLater(player));
+```
+
+## Preguntar dónde estás
+
+```java
+if (!tasks.isOwnedBy(player)) {
+    tasks.runAtEntity(player, () -> act(player));
+    return;
+}
+act(player);
+```
+
+| Llamada | Responde |
+|---|---|
+| `isGlobalThread()` | Si este es el hilo global. |
+| `isOwnedBy(entity)` | Si este hilo puede tocar esa entidad. |
+
+Volver de una consulta a la base de datos es el motivo habitual de preguntar: el future se completa en
+un hilo del pool, y todo lo que quieras hacer con la respuesta pertenece al jugador.
+
+```java
+kits.find(id).thenAccept(found ->
+        tasks.runAtEntity(player, () -> found.ifPresent(kit -> give(player, kit))));
+```
+
+## Ticks
+
+Retrasos y periodos van en ticks: 20 ticks es un segundo. La librería mantiene ticks donde una API de
+Bukkit los mantendría, así que un número copiado de una config antigua sigue significando lo mismo.
+
+## Limpieza
+
+Las tareas de un plugin se cancelan cuando se desactiva. Los menús se cierran primero, para que un
+botón no pueda responder un último clic hacia un classloader moribundo.

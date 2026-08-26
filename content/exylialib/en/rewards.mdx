@@ -1,0 +1,109 @@
+---
+title: "Rewards, loot and economy"
+description: "What a player earned, what comes out of a chest, and what a balance is worth."
+---
+
+## Rewards
+
+A reward list is items, commands and money with odds and conditions, edited in-game and stored exactly
+as ExyliaCommons stored it.
+
+```java
+PluginRewards rewards = Rewards.of(this);
+
+rewards.give(player, config.winnerRewards(), context);
+```
+
+| Call | What it does |
+|---|---|
+| `give(player, rewards, context)` | Hand over a whole list. |
+| `give(player, reward)` | One entry. |
+| `roll(player, rewards, context)` | Give what the odds picked. |
+| `pick(rewards)` | Pick without giving — for a preview. |
+| `giveLater(uuid, owed)` | Queue for somebody who is offline. |
+| `claim(player, callback)` | Deliver whatever they were owed. |
+| `editor(rewards)` | The in-game list editor. |
+| `overflow(policy)` | What happens when the inventory is full. |
+| `pending(store)` | Where owed rewards are kept. |
+
+### Offline is not a lost prize
+
+`giveLater` writes into whatever `PendingRewards` store you handed in — usually a table of your own —
+and `claim` empties it on the player's next join. The queue is cleared **before** delivery rather than
+after, so a failure mid-delivery cannot duplicate a reward next time.
+
+### Overflow
+
+`OverflowPolicy` decides what a full inventory means: drop at the player's feet, keep it pending, or
+refuse. Choosing per plugin is the point — a crate should drop, an event prize should wait.
+
+## Loot
+
+What comes out of a chest, a spawner or a broken block:
+
+```java
+List<LootEntry> table = Loot.parseAll(section.getStringList("loot"));
+
+List<ItemStack> filled = Loot.roll(table);      // a chest's worth
+ItemStack single = Loot.pick(table);            // one draw
+```
+
+| Field | What it does |
+|---|---|
+| Item | The stack, with its own name, enchantments and lore. |
+| `weight` | How likely this entry is relative to the others. |
+| `minAmount` / `maxAmount` | The stack size range rolled per pick. |
+| `tier` | A label, so an entry can belong to a rarity band. |
+
+Weights are relative, not percentages: an entry weighted `10` beside one weighted `5` is drawn twice as
+often, and the numbers do not have to add up to anything.
+
+`Loot.editor(plugin, entries)` is the in-game editor for one.
+
+## Economy
+
+One economy choice for the whole server, over Vault, PlayerPoints or a currency you write:
+
+```java
+Economy.balance(uuid);
+Economy.has(uuid, amount);
+
+Economy.charge(uuid, amount);                  // true when it went through
+Economy.pay(uuid, amount);
+
+EconomyResponse taken = Economy.withdraw(uuid, amount);
+TransferResult moved  = Economy.transfer(from, to, amount);
+```
+
+`charge` and `pay` answer with a boolean for the common case; `withdraw` and `deposit` hand back an
+`EconomyResponse` when you need to know *why* it failed. Nothing throws — a charge that could not be
+made is a result you branch on, not an exception to catch around a menu click.
+
+Several currencies are supported: `Economy.of("points")` scopes every call to one, and
+`Economy.currencies()` lists what is registered.
+
+A server with no economy plugin gets a provider that says so, so the failure is *"no economy
+installed"* rather than a `NoClassDefFoundError` in the middle of a purchase.
+
+## Formats
+
+The other half of money: what a player reads, and what a player types.
+
+```java
+Formats.money(1234567);          // "1.23M", or whatever the owner configured
+Formats.compact(1234567);        // the same shortening, without a currency
+Formats.percent(0.42);
+Formats.percentOf(3, 12);
+Formats.date(epochMillis);
+Formats.relative(epochMillis);   // "3 minutes ago"
+
+Amounts.parse("10M");            // what a player typed, back to a number
+```
+
+Reading `10M` from chat is the same parser the [`amount` input](/docs/exylialib/input-and-editors)
+uses, so a menu, a command and a chat prompt all accept the same shorthand.
+
+<Callout type="note" title="Locale is pinned deliberately">
+Decimal formats use a fixed locale rather than the host's. A server in Spain would otherwise write
+`1,50`, and that value breaks every scoreboard, comparison and config that reads it back.
+</Callout>

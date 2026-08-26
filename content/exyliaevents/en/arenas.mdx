@@ -1,0 +1,116 @@
+---
+title: "Arenas"
+description: "What a configuration holds, how an arena is validated and restored, and the blocks each type expects."
+---
+
+An event configuration is a row in the database. It carries the arena, the settings, the kits and the
+rewards for one event, and it is edited entirely from `/eventsadmin`.
+
+## What a configuration holds
+
+| Field | What it is |
+|---|---|
+| `id` | The key. What commands, menus and placeholders name. |
+| `displayName` | What players read. Defaults to the id. |
+| `eventType` | Which of the 34 games it is. Chosen at creation. |
+| `enabled` | Whether it may be started at all. |
+| `iconMaterial` | The menu icon. Defaults to `NETHER_STAR`. |
+| `lobbySpawn` | Where players wait before the game starts. |
+| `spectatorSpawn` | Where spectators and eliminated players go. |
+| `spawnPoints` | Where players are dropped at the start. |
+| `bounds` | The cuboid the game happens inside. |
+| `copyBounds` | An optional second region, cloned instead of `bounds` by Brackets and Build Battle. |
+| `settings` | Everything the type itself reads. |
+| Kits, loot, rewards | Stored alongside, covered in their own pages. |
+
+## Validation
+
+A configuration is playable when it has a lobby spawn, a spectator spawn, at least one spawn point
+and complete bounds. The setup screen lists whatever is missing by name.
+
+Two extra rules:
+
+- Types marked as needing one spawn per player — **Pillars of Fortune** — require at least
+  `max-players` spawn points, and the validator says how many are missing.
+- An arena schematic is checked separately, because it is not needed to *play* but is needed to
+  *restore*.
+
+## Bounds and the schematic
+
+`bounds` does two jobs: it is what counts as "inside the arena", and it is what gets saved as a
+schematic named `event_bounds_<id>`.
+
+`copyBounds` is a second, optional region used **only by the two cloning types**: Brackets and Build
+Battle copy `copyBounds` when it is set and fall back to `bounds` when it is not. It exists for an
+arena whose playable area is smaller than what should travel with a clone — a duel ring inside a
+decorated hall, for instance. Restoring after a normal game always uses `bounds`.
+
+<Callout type="tip" title="Re-save after editing the map">
+The schematic is a snapshot. Change the arena and it keeps restoring the old version until you save
+it again from the setup screen.
+</Callout>
+
+## Spawn points
+
+Most types put each player at a random spawn point. Some ask for a spawn far from other players, so
+several spread-out points are better than one — a single point means everyone lands on top of each
+other.
+
+## The auto world
+
+Two types need more than one copy of the arena at a time, so the plugin generates a flat, empty world
+called `exyliaevents_autoworld` and pastes copies into it side by side:
+
+| Type | What is cloned |
+|---|---|
+| Brackets | One arena copy per simultaneous match |
+| Build Battle | One plot per builder |
+
+```yaml title="config.yml"
+auto-world:
+  clone-spacing: 500
+  clone-paste-y: 64
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `clone-spacing` | `500` | Blocks of horizontal space allocated between cloned arenas. |
+| `clone-paste-y` | `64` | The Y level copies are pasted at. |
+
+The world is created at startup: through Bukkit normally, and through the **Worlds** plugin on Folia,
+where Bukkit's own world creation is not available. If it already exists it is adopted rather than
+regenerated.
+
+<Callout type="warning" title="Cloning needs the schematic">
+A Brackets or Build Battle arena with no saved schematic has nothing to clone. Save it before running
+either type.
+</Callout>
+
+## Materials each type expects
+
+Several games look for specific blocks. Build the arena with these or the game will not work:
+
+| Type | What it needs |
+|---|---|
+| **TNT Run** | A floor whose block has `TNT` directly beneath it — that is what makes a block fall away. Touching `WATER` eliminates. |
+| **Spleef** | `SNOW_BLOCK` as the breakable floor. Touching `WATER` eliminates. |
+| **Splegg** | The breakable floor material is a setting, `breakable-material`, defaulting to `SNOW_BLOCK`. Touching `WATER` eliminates. |
+| **Block Party** | The floor scanner picks up `WHITE_CONCRETE`; those tiles are then recoloured each round. Falling into `WATER` eliminates. |
+| **Splatoon** | Paintable ground made of concrete or concrete powder — the full colour family is recoloured as players paint. |
+| **Slap** | `RED_CONCRETE` is the capture block: standing on it is what scores. |
+| **Parkour** | `HEAVY_WEIGHTED_PRESSURE_PLATE` for checkpoints, `LIGHT_WEIGHTED_PRESSURE_PLATE` for the finish. |
+| **Thimble** | `WATER` blocks are the targets players dive into. |
+| **Anvil Running** | Touching `WATER` eliminates. |
+| **Survival Games** | Chests inside the bounds, filled from the loot table. |
+
+<Callout type="note" title="Water is the standard death plane">
+Several elimination games use water below the arena rather than a void: it is cheap to build, works at
+any Y, and lets a player's fall be seen. Where a type is listed above as eliminating on water, that
+is the mechanism.
+</Callout>
+
+## Restoring after a game
+
+When a game ends, the arena is restored from its schematic, which is what makes an arena reusable
+without an admin rebuilding blocks by hand. That is also why a type that changes the map — Spleef,
+TNT Run, Block Party, Splatoon — is unplayable twice in a row without one.

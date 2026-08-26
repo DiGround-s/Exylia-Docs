@@ -1,0 +1,77 @@
+---
+title: "API"
+description: "The public entry point for other plugins."
+badge: "dev"
+---
+
+`net.exylia.exyliaCapture.api.CaptureAPI` is static, and is the supported way to reach the plugin
+from another one.
+
+## Starting and stopping
+
+```java
+import net.exylia.exyliaCapture.api.CaptureAPI;
+
+// Start a configured event by its configuration id.
+Optional<BaseCaptureEvent> started = CaptureAPI.startEvent("koth1");
+
+// Same, but reporting to a command sender the way the admin command does.
+CaptureAPI.startEvent(sender, "koth1");
+
+// Stop a running event by its event id.
+boolean stopped = CaptureAPI.stopEvent(eventId);
+CaptureAPI.stopEvent(sender, eventId);
+```
+
+`startEvent` returns empty when the event does not exist, is disabled, is incompletely configured or
+is already running — the same checks the scheduler goes through.
+
+## Reading state
+
+```java
+Collection<BaseCaptureEvent> running = CaptureAPI.getActiveEvents();
+Optional<BaseCaptureEvent> event     = CaptureAPI.getEvent(eventId);
+boolean active                       = CaptureAPI.isEventActive("koth1");
+
+// Prints the running events to a sender, as /captureadmin list does.
+CaptureAPI.listEvents(sender);
+```
+
+<Callout type="note" title="Configuration id and event id are not the same">
+`isEventActive` and `startEvent` take the **configuration** id — what you named the event in the
+panel. `getEvent` and `stopEvent` take the id of the running instance.
+</Callout>
+
+## Players and statistics
+
+```java
+CapturePlayerStats stats = CaptureAPI.getPlayerStats(uuid);
+
+Optional<BaseCaptureEvent> theirEvent = CaptureAPI.getEventByParticipant(uuid);
+```
+
+`getPlayerStats` returns the player's global totals: wins, captures, points earned, leaderboard
+points and captured time. A player with no history returns a zeroed record rather than null.
+
+`getEventByParticipant` answers which running event a player is taking part in, if any — the
+straightforward way to keep your own plugin out of the way while somebody is in an event.
+
+## Declaring the dependency
+
+```yaml title="plugin.yml"
+softdepend:
+  - ExyliaCapture
+```
+
+With `softdepend` your plugin still loads when ExyliaCapture is absent, so check before calling:
+
+```java
+if (Bukkit.getPluginManager().isPluginEnabled("ExyliaCapture")) {
+    CaptureAPI.startEvent("koth1");
+}
+```
+
+<Callout type="warning" title="Main thread">
+These methods start and stop events, which spawn entities, holograms and tasks. Call them from the
+server thread — on Folia, from the thread owning the region the event is in.
+</Callout>

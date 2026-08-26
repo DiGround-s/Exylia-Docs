@@ -1,0 +1,64 @@
+---
+title: "Spawns"
+description: "Varios puntos de aparición por arena, con nombre, icono, permiso y prioridad."
+---
+
+Una arena puede tener tantos spawns como quieras. Con uno solo, el jugador aparece siempre ahí. Con
+varios, se abre un selector al entrar y al reaparecer.
+
+## Campos
+
+| Campo | Por defecto | Qué hace |
+|---|---|---|
+| `id` | generado | Identificador interno. |
+| `arenaId` | — | La arena a la que pertenece. |
+| `displayName` | — | Nombre en el selector. Acepta colores. |
+| `permission` | vacío | Permiso necesario para elegirlo. |
+| `iconMaterial` | `COMPASS` | Icono en el menú. |
+| `location` | — | La ubicación exacta, tomada de donde estabas al crearlo. |
+| `priority` | `0` | Orden en el menú. |
+
+## Cuándo se muestra el selector
+
+El selector de spawn aparece **antes** que el de kit, y solo si la arena tiene más de un spawn. La
+secuencia completa al entrar es:
+
+```text
+/ffa join <arena>
+   ├── ¿más de un spawn?  → selector de spawn
+   ├── ¿kitMode SELECTABLE y más de un kit?  → selector de kit
+   └── entrar
+```
+
+## Usos habituales
+
+<Cards>
+  <Card title="Zonas del mapa">
+    Un spawn por región del mapa deja al jugador elegir dónde caer. Funciona muy bien en arenas
+    grandes donde el centro se satura.
+  </Card>
+  <Card title="Spawns premium">
+    Un spawn con permiso, en una posición ventajosa o simplemente más cómoda, como recompensa de
+    rango.
+  </Card>
+  <Card title="Reaparición táctica">
+    Con varios spawns repartidos, morir no significa volver siempre al mismo sitio y ser esperado
+    ahí.
+  </Card>
+</Cards>
+
+<Callout type="warning" title="Los spawns deben estar dentro de la región">
+Un spawn fuera de los límites de la arena hace que el jugador aparezca "fuera" y sea devuelto de
+inmediato. Coloca siempre los spawns dentro de la región marcada.
+</Callout>
+
+## Protección
+
+La protección de spawn no se configura por spawn, sino en la arena: un radio, una forma y un modo
+que se aplican a **todos** los spawns de esa arena. Ver
+[Arenas · Protección de spawn](/docs/exyliaffa/arenas#protección-de-spawn).
+
+## Waypoints
+
+Si el jugador tiene activo el ajuste de waypoints, verá una marca en dirección a los spawns de la
+arena. Se desactiva por jugador desde `/ffa settings`, sin afectar a los demás.

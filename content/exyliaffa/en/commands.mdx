@@ -1,0 +1,63 @@
+---
+title: "Commands"
+description: "Every player and admin command, with its permission."
+---
+
+Commands autocomplete on every argument: arena identifiers, kit identifiers and player names are all
+suggested.
+
+## Player
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/ffa` | `exyliaffa.commands.ffa` | Opens the arena selector. |
+| `/ffa join <arenaId>` | `exyliaffa.commands.join` | Joins an arena. |
+| `/ffa leave` | `exyliaffa.commands.leave` | Leaves the current arena. |
+| `/ffa spectate <arenaId>` | `exyliaffa.commands.spectate` | Joins as a spectator. |
+| `/ffa stats` | `exyliaffa.commands.stats` | Opens your statistics. |
+| `/ffa stats <player>` | `exyliaffa.commands.stats` | Opens another player's statistics. |
+| `/ffa streak` | `exyliaffa.commands.streak` | Shows your current streak. |
+| `/ffa streak <player>` | `exyliaffa.commands.streak.others` | Shows another player's streak. |
+| `/ffa settings` | `exyliaffa.commands.settings` | Opens your personal settings. |
+| `/ffa kiteditor` | `exyliaffa.commands.kiteditor` | Opens the kit layout editor. |
+| `/ffa savekit` | `exyliaffa.commands.savekit` | Saves the layout you are editing. |
+| `/ffa cancelkit` | `exyliaffa.commands.cancelkit` | Leaves edit mode without saving. |
+| `/ffa resetkit <kitId>` | `exyliaffa.commands.resetkit` | Deletes your saved layout for a kit. |
+| `/ffa kick <player>` | `exyliaffa.commands.kick` or `exyliaffa.commands.kick.<arenaId>` | Removes from the arena a player you invited. |
+| `/ffa invite <player>` | `exyliaffa.commands.invite` or `exyliaffa.commands.invite.<arenaId>` | Invites a player to your arena. |
+| `/ffa accept <player>` | — | Accepts an invitation. |
+| `/ffa decline <player>` | — | Declines an invitation. |
+
+`kick` additionally requires that **you invited** that player. The `exyliaffa.kick-bypass` permission
+lifts that condition and allows removing anyone from the arena.
+
+<Callout type="note" title="On top of the command permission">
+Joining an arena, choosing a spawn or using a kit may require an extra permission — the one you wrote
+on that arena, spawn or kit. See [Permissions](/docs/exyliaffa/permissions).
+</Callout>
+
+## Administration
+
+Everything under `/ffaadmin` requires `exyliaffa.admin`.
+
+| Command | What it does |
+|---|---|
+| `/ffaadmin` | Opens the admin panel. |
+| `/ffaadmin reload` | Reloads configs, messages, scoreboards and menus. |
+| `/ffaadmin resetstats <player> <arenaId>` | Deletes a player's statistics in one arena. |
+| `/ffaadmin resetlayout <player> <kitId>` | Deletes a player's saved kit layout. |
+
+## What `reload` does and does not do
+
+It reloads what lives in files: `config.yml`, `messages.yml`, `scoreboards.yml`, `killstreaks.yml`
+and the menus. It also sets the prefix again, so an edited prefix applies without a restart. Each
+step reports for itself: one that fails is named in the console and the sender is told how many
+succeeded.
+
+It does not reload what lives in the database, because it does not need to: arenas, kits, spawns and
+statistics are already read fresh.
+
+<Callout type="warning" title="One change that does need a restart">
+Changing the engine in `database.yml` requires restarting the server: the client is opened at boot
+and is not swapped out live.
+</Callout>

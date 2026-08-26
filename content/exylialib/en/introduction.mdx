@@ -1,0 +1,81 @@
+---
+title: "Introduction"
+description: "What ExyliaLib is, the thirty-seven modules it ships, and the rules it is built on."
+---
+
+ExyliaLib is the shared library every Exylia plugin depends on. It is installed **once** on the
+server and never shaded into a plugin: one copy, one class, one cache.
+
+It is not a grab-bag of helpers. It is thirty-seven modules with one guiding rule — **the server
+should do as little work as possible**. Where something can be a packet instead of real server state,
+the library sends the packet: sidebars, holograms, nametags and boss bars never create a scoreboard
+team or an armour stand.
+
+| | |
+|---|---|
+| Java | 21 |
+| API | Paper 1.21.4 |
+| Runs on | Spigot, Paper, Purpur and Folia, from one build |
+| Version documented here | 1.61.0 |
+
+## What it gives a plugin
+
+<Cards>
+  <Card title="Typed configuration" href="/docs/exylialib/configuration">
+    A YAML file declared as a Java record, generated from it, and migrated when it changes shape.
+  </Card>
+  <Card title="Menus in YAML" href="/docs/exylialib/menus">
+    Paginated lists, templates, conditions, animations and clicks bound to actions — no menu code.
+  </Card>
+  <Card title="One scheduler" href="/docs/exylialib/tasks">
+    The same call runs on Spigot and on Folia's region threads.
+  </Card>
+  <Card title="Records in a database" href="/docs/exylialib/database">
+    H2, MySQL, MariaDB, PostgreSQL or MongoDB behind one repository, never blocking.
+  </Card>
+  <Card title="Everything on screen" href="/docs/exylialib/display">
+    Sidebars, holograms, nametags and client waypoints, all as packets.
+  </Card>
+  <Card title="Players, once" href="/docs/exylialib/players">
+    One claim registry so two minigames cannot hold the same player.
+  </Card>
+</Cards>
+
+The full list, with what each module is for, is in [Module index](/docs/exylialib/modules).
+
+## Three rules worth knowing before reading further
+
+### Read once, render per viewer
+
+An item, a menu and a sidebar are **definitions** compiled when a file loads, and drawn per player
+afterwards. Parsing is the expensive half and happens once; drawing is cheap and happens constantly.
+That split is why `Item` is not an `ItemStack` and `UiDefinition` is not an open window.
+
+### A value is text unless you say otherwise
+
+Anything substituted into a message, an item or a menu row is inserted as **literal text** by
+default. A player named `{error}X` shows those characters rather than repainting the line.
+`withFormatted` is the other door, for values a server owner wrote — a rank display written
+`{highlight}&lMVP`.
+
+The question is never what type the value is. It is **whose value it is**.
+
+### A broken part is reported, not fatal
+
+A mistyped enchantment becomes a dead button and a line in the console; the other fifty buttons keep
+working. A file that does not describe a menu at all throws, because guessing would hide the mistake.
+
+<Callout type="note" title="Why not shade it">
+Shading would put one copy of the scoreboard library, the skull cache and the placeholder registry
+inside every plugin. With one installed copy there is one cache to warm, one registry to look in, and
+a placeholder registered by one plugin is visible to the next.
+</Callout>
+
+## What depends on it
+
+Every Exylia plugin: ExyliaFFA, ExyliaCapture, ExyliaEvents, ExyliaPracticeCore and the rest declare
+it under `depend`, so the server refuses to load them without it.
+
+Some modules lean on optional plugins and say so when they are missing rather than failing quietly —
+PacketEvents for retitling an open menu, FastAsyncWorldEdit for schematics, PlaceholderAPI for
+exposing placeholders outside the server, Vault or PlayerPoints for economy.

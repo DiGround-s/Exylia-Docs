@@ -1,0 +1,96 @@
+---
+title: "Instalación"
+description: "Dependencias, primer arranque y los archivos que el plugin genera."
+---
+
+## Antes de empezar
+
+ExyliaFFA depende de tres plugins que deben estar en `plugins/` **antes** del primer arranque. Si
+falta alguno, el servidor desactiva ExyliaFFA y lo dice en consola.
+
+| Plugin | Para qué |
+|---|---|
+| `ExyliaLib` | Configuración, menús, base de datos, placeholders, efectos y acciones. |
+| `FastAsyncWorldEdit` | Guardar y restaurar la esquemática de cada arena en la regeneración. |
+| `packetevents` | El brillo (`glow`) del rival enlazado, enviado por paquetes sin tocar equipos. |
+
+Opcionales, pero recomendados:
+
+- **PlaceholderAPI** — para usar los placeholders del plugin fuera de él.
+- **ViaVersion** — clientes de versiones antiguas.
+- **ExyliaPracticeCore**, **ExyliaEvents**, **ExyliaSandBox** — si están presentes, ExyliaFFA
+  respeta sus estados: un jugador en cola de práctica, en un evento o en la sandbox no puede entrar
+  a un FFA.
+
+## Instalar
+
+<Steps>
+  <Step title="Coloca los jars">
+    Copia `ExyliaFFA.jar` y sus dependencias en la carpeta `plugins/` del servidor.
+  </Step>
+  <Step title="Arranca el servidor">
+    En el primer arranque se generan los archivos de configuración y las tablas de la base de datos.
+  </Step>
+  <Step title="Revisa la consola">
+    Deberías ver los mensajes de carga: configuraciones, acciones, menús, placeholders y listeners.
+    Cualquier clave desconocida se reporta una vez como `UNKNOWN_KEY`.
+  </Step>
+  <Step title="Abre el panel">
+    Con el permiso `exyliaffa.admin`, ejecuta `/ffaadmin` para abrir el panel de administración.
+  </Step>
+</Steps>
+
+## Archivos generados
+
+Todos viven en `plugins/ExyliaFFA/`.
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | Ajustes globales: combate, anti-farmkill, rachas, respawn, comandos. |
+| `messages.yml` | Todos los mensajes que el plugin envía, agrupados por sistema. |
+| `scoreboards.yml` | El sidebar que se muestra dentro de una arena. |
+| `killstreaks.yml` | La escalera de rachas: qué se anuncia y a partir de cuántas bajas. |
+| `database.yml` | Motor de base de datos. Por defecto H2, embebido, sin instalar nada. |
+| `menus/` | Los menús en YAML, tanto de jugador como de administración. |
+
+<Callout type="note" title="Las arenas no están en un archivo">
+Arenas, kits, spawns, estadísticas, ajustes de jugador e inventarios guardados viven en la base de
+datos, no en YAML. Se crean y editan desde `/ffaadmin`. Eso permite compartir configuración entre
+varios servidores apuntando al mismo MySQL.
+</Callout>
+
+## Base de datos
+
+Por defecto el plugin usa **H2**: un archivo dentro de la carpeta del plugin, sin servidor, sin
+instalación y sin mantenimiento. Sirve perfectamente para un servidor único.
+
+Para compartir datos entre varios servidores, edita `database.yml`:
+
+```yaml title="plugins/ExyliaFFA/database.yml"
+database:
+  type: mysql
+  settings:
+    max-pool-size: 0
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Motores soportados: `h2`, `mysql`, `mariadb`, `postgresql` y `mongodb`. Solo se lee el bloque que
+coincide con `type`. Un valor no reconocido vuelve a `h2` y lo avisa en consola.
+
+<Callout type="warning" title="max-pool-size">
+Déjalo en `0` salvo que la consola reporte timeouts de conexión bajo carga. `0` deja que el motor
+decida, que casi siempre es la respuesta correcta: un pool más grande contra una base de datos que
+ya es el cuello de botella la hace más lenta, no más rápida.
+</Callout>
+
+## Actualizar
+
+Reemplaza el jar y reinicia. Las migraciones de configuración se aplican solas en el primer arranque
+después de actualizar y **conservan tus ediciones**: solo se mueve o reescribe lo que cambió de
+nombre o de forma. Consulta [Configuración](/docs/exyliaffa/configuracion) para el detalle de cada
+versión de archivo.

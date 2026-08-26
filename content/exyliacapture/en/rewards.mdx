@@ -1,0 +1,69 @@
+---
+title: "Rewards and commands"
+description: "The four reward slots, what happens when the winner is offline, and event commands."
+---
+
+Rewards are edited with the in-game reward editor, one list per slot. Nothing is written in YAML.
+
+## The four slots
+
+| Slot | Given to |
+|---|---|
+| Winner | Whoever the event declares the winner |
+| Top 1 | First place on the event's own podium |
+| Top 2 | Second place |
+| Top 3 | Third place |
+
+Which slots make sense depends on the type: a plain KOTH ends with a single winner, while the
+point-scored types, Conquest, Payload and DTC all build a podium and pay the three positions.
+
+## Offline winners
+
+If the player is online, the reward is given immediately. If not, it is queued in
+`capture_pending_rewards` with the event name and the position, and delivered the next time they join.
+A reward is never lost because somebody disconnected before the event ended.
+
+<Callout type="note" title="Cleared before delivery">
+The queue is emptied before the items are handed over, not after, so a failure mid-delivery cannot
+duplicate a reward on the next join.
+</Callout>
+
+## Clan events and who is paid
+
+In a clan-scored event the podium is a list of clans, and each one is paid through **one
+representative**, chosen in this order:
+
+1. Any member of that clan currently online.
+2. Otherwise a leader of the clan.
+3. Otherwise any registered member.
+
+Statistics work differently from rewards here: a clan win is recorded for **every participating
+member** of the winning clan, not only for the representative. So the whole clan's win counter goes
+up while the reward goes to one player.
+
+## Event commands
+
+Separately from rewards, an event carries two command lists, edited in their own screen:
+
+| List | Runs |
+|---|---|
+| Start commands | When the event starts |
+| End commands | When it ends |
+
+They are run by the console. `%event_name%` is replaced with the event's display name. Each entry can
+be given a descriptive name in the editor so a list of commands stays readable.
+
+```text
+broadcast &e%event_name% &7has started
+```
+
+<Callout type="warning" title="No player token here">
+These commands are about the event, not about a player, so there is no `%player%` to substitute.
+Rewards are the mechanism for giving something to a person.
+</Callout>
+
+## Legacy formats
+
+Events written by an older version stored rewards and commands as a single blob. The first load
+migrates each event to the current format and marks it migrated, so the conversion happens once and
+is not repeated.

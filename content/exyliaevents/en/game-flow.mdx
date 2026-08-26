@@ -1,0 +1,178 @@
+---
+title: "Game flow"
+description: "The five states, the timers around them, and the rules that decide who may join."
+---
+
+## The five states
+
+| State | What it means |
+|---|---|
+| `WAITING` | Open, collecting players. |
+| `STARTING` | Enough players; the countdown is running. |
+| `PLAYING` | The game itself. |
+| `ENDING` | Winners announced, rewards handed out, arena restored. |
+| `DISABLED` | Not running. |
+
+Players may join in `WAITING` and `STARTING`. `PLAYING` is spectate-only, and an event can only be
+*started* from `WAITING`.
+
+## The timers
+
+```yaml title="config.yml"
+settings:
+  broadcast-interval: 30
+  waiting-timeout: 300
+  broadcast-countdown-times: [30, 15, 10, 5]
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `broadcast-interval` | `30` | Seconds between "an event is waiting for players" announcements. |
+| `waiting-timeout` | `300` | Seconds an event waits without filling before it gives up. |
+| `broadcast-countdown-times` | `30, 15, 10, 5` | Which countdown seconds are announced server-wide. |
+
+Per configuration, `countdown` — 30 seconds by default — is how long `STARTING` lasts once
+`min-players` is reached. Dropping back below the minimum cancels it.
+
+Inside the countdown, players are told at every second from 10 down and at each multiple of ten. The
+server-wide announcement only fires at the times listed above.
+
+## Grace period
+
+Most types start with a `grace-period` — 5 seconds as a rule, 15 in Survival Games — during which
+nobody can be damaged. It exists so a game does not end while players are still landing.
+
+## Limits
+
+```yaml title="config.yml"
+settings:
+  max-events-per-player: 1
+  max-events-total: -1
+  max-events-waiting: 3
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `max-events-per-player` | `1` | Active events one player may have started at once. `-1` is unlimited. |
+| `max-events-total` | `-1` | Active events across the server. |
+| `max-events-waiting` | `3` | Events sitting in `WAITING` at once. |
+
+`max-events-waiting` is the one that keeps a server from filling with half-empty lobbies nobody joins.
+
+## Start cooldowns
+
+```yaml title="config.yml"
+settings:
+  start-cooldown: 0
+  start-cooldown-permissions: []
+```
+
+`start-cooldown` is the seconds a player must wait before starting another event; `0` disables it.
+Per-rank overrides go in `start-cooldown-permissions` as `permission:seconds`:
+
+```yaml
+start-cooldown-permissions:
+  - "exyliaevents.cooldown.vip:300"
+  - "exyliaevents.cooldown.vip+:120"
+  - "exyliaevents.cooldown.staff:0"
+```
+
+A player matching several entries gets the **lowest** of them. `exyliaevents.cooldown.bypass` skips
+the cooldown entirely.
+
+## Where players may join from
+
+```yaml title="config.yml"
+world-restrictions:
+  mode: NONE
+  worlds: []
+```
+
+| Mode | Meaning |
+|---|---|
+| `NONE` | No restriction. The default. |
+| `BLACKLIST` | Players standing in a listed world cannot join any event. |
+| `WHITELIST` | Players can only join while standing in a listed world. |
+
+World names are case-insensitive, and `exyliaevents.world.bypass` ignores the rule.
+
+## Commands inside an event
+
+```yaml title="config.yml"
+command-whitelist:
+  enabled: true
+  commands: [msg, message, tell, w, whisper, reply, r, respond, events, e, eventsadmin, event]
+```
+
+With `enabled` on, anything not on the list is refused while a player is inside an event. Matching is
+by prefix, and `exyliaevents.bypass.blocked-commands` skips it.
+
+## One activity at a time
+
+Joining an event takes a claim on the player, and the claim is shared with the rest of the Exylia
+plugins. A player already in a practice queue, an FFA arena or the sandbox cannot be pulled into an
+event, and a player in an event cannot be pulled elsewhere.
+
+The claim is re-entrant: moving from the event's lobby into the game, or from playing to spectating,
+keeps one continuous claim rather than dropping and racing to retake it.
+
+## Automatic events
+
+Two independent mechanisms can start an event with no admin.
+
+### Random events
+
+```yaml title="config.yml"
+random-events:
+  enabled: false
+  interval-minutes: 30
+  min-players-online: 2
+  allow-concurrent: false
+  excluded-types: []
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `enabled` | `false` | Whether the timer runs at all. |
+| `interval-minutes` | `30` | How often it tries. |
+| `min-players-online` | `2` | Players needed for a try to go ahead. |
+| `allow-concurrent` | `false` | Whether it may start one while another is already running. |
+| `excluded-types` | empty | Type ids it will never pick. |
+
+Each tick it picks a random **startable** configuration — enabled, valid and not already running —
+and starts it.
+
+### Scheduled events
+
+`scheduled-events.yml` starts a specific event at a specific time:
+
+```yaml title="scheduled-events.yml"
+enabled: false
+timezone: ""
+entries:
+  - name: "friday-night-lms"
+    target: "my-lms-config-id"
+    days: ["FRIDAY"]
+    time: "20:00"
+    min-players-online: 5
+  - name: "weekend-random"
+    target: "RANDOM-EVENT"
+    days: ["SATURDAY", "SUNDAY"]
+    time: "18:00"
+```
+
+| Field | What it does |
+|---|---|
+| `name` | A label, used in the console log. |
+| `target` | The configuration id to start, or `RANDOM-EVENT` for a random one. |
+| `days` | Weekday names, or `["*"]` for every day. |
+| `time` | `HH:mm`, 24-hour. |
+| `min-players-online` | Players needed, default `0`. |
+
+The scheduler checks once a second and fires an entry at most once per minute. `timezone` takes an
+IANA zone id such as `Europe/Madrid`, or is left empty for the machine's own clock.
+
+<Callout type="note" title="Both count as automatic">
+Events started by either mechanism are marked as scheduler-started, which is what
+`reward-commands.only-on-random-events` keys off.
+</Callout>

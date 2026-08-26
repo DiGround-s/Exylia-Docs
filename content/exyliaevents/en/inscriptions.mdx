@@ -1,0 +1,59 @@
+---
+title: "Sign-ups"
+description: "Opening a list, adding players, and running an event only they may join."
+---
+
+Sign-ups — *inscriptions* in the commands — restrict one configuration to a named list of players.
+It is how a scheduled tournament stays limited to the people who signed up.
+
+## The commands
+
+All of them need `exyliaevents.admin.inscriptions`, which is separate from plain
+`exyliaevents.admin`.
+
+| Command | What it does |
+|---|---|
+| `/eventsadmin inscriptions open <configId>` | Opens the list for that configuration. |
+| `/eventsadmin inscriptions close <configId>` | Closes it. |
+| `/eventsadmin inscriptions add <configId> <player>` | Adds a player, online or not. |
+| `/eventsadmin inscriptions remove <configId> <player>` | Removes one. |
+| `/eventsadmin inscriptions clear <configId>` | Empties the list. |
+| `/eventsadmin inscriptions startevent <configId>` | Starts the event with the list in force. |
+
+## What "open" changes
+
+While a configuration's list is **open**, only players on it may join that event. Anyone else is
+refused with the `not-inscribed` message from `messages.yml`, whether they used `/events join` or the
+menu.
+
+Closing the list lifts the restriction: the configuration goes back to being open to everyone. The
+list itself is not deleted by closing, so it can be reopened for a second round.
+
+## A typical flow
+
+<Steps>
+  <Step title="Open the list">
+    `/eventsadmin inscriptions open tournament1`
+  </Step>
+  <Step title="Collect names">
+    Staff run `add` for each player. Offline players work — the list stores UUIDs, so somebody can be
+    signed up days before.
+  </Step>
+  <Step title="Start it">
+    `/eventsadmin inscriptions startevent tournament1` starts the event with the list applied.
+  </Step>
+  <Step title="Afterwards">
+    `clear` before the next round, or `close` to open the configuration to everyone again.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="It pairs with scheduled events">
+Open the list during the week, schedule the event for Friday in
+[`scheduled-events.yml`](/docs/exyliaevents/game-flow#scheduled-events), and the event starts on its
+own with only the signed-up players able to enter.
+</Callout>
+
+## Where it is stored
+
+One row per configuration in `event_inscriptions`: whether the list is open, and the players on it.
+Sign-ups survive restarts, and on a shared database they are visible to every server reading it.

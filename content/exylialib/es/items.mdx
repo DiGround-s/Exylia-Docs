@@ -1,0 +1,171 @@
+---
+title: "Items"
+description: "Un item descrito en YAML — icono de menú, entrada de kit, item especial o escudo — leído una vez y dibujado por jugador."
+---
+
+Un icono de menú, un item especial, una entrada de kit, un slot de hotbar de lobby y un escudo son el
+mismo bloque de YAML. Este es el único parser para todos ellos.
+
+```java
+PluginItems items = Items.of(this);
+
+Item icon = items.parse(section);              // una vez, al cargar el archivo
+ItemStack stack = items.render(icon, player);  // cada vez que alguien lo mira
+```
+
+`Item` es una **definición**, no un `ItemStack`. Guarda sus placeholders sin resolver, la comparten
+todos los jugadores que la ven, y se puede comparar, cachear y testear sin un servidor en marcha.
+Convertirla en item es trabajo por jugador.
+
+## El objeto
+
+`material` decide qué es el item, y lleva más que un nombre de material:
+
+| Escrito como | Significa |
+|---|---|
+| `DIAMOND_SWORD` | Un material |
+| `%kit_icon%` | Un material que decide el lector |
+| `basehead-<base64>` | Una cabeza, por textura |
+| `urlhead-<url>` | Una cabeza, por URL de skin |
+| `playerhead-Notch` | Una cabeza, por nombre de jugador |
+| `playerhead-%player_name%` | Una cabeza cuyo dueño depende de la fila |
+| `bytes:<base64>` | Un item serializado |
+
+Tanto `-` como `:` separan el prefijo de su carga, sin distinguir mayúsculas. Las cabezas nunca
+bloquean: una textura o una URL no tocan la red, y una cabeza de jugador que aún no se ha descargado
+vuelve en plano.
+
+<Callout type="note" title="Un placeholder se lee dos veces">
+`material: "%arena_icon%"` es un material cuando se lee el archivo, porque es todo lo que puede ser
+antes de que alguien lo rellene. El texto ya resuelto vuelve a pasar por la tabla de arriba — así que
+`%arena_icon%` con `headbase-eyJ0…` dibuja la cabeza. Solo se leen dos veces los valores que llevaban
+placeholder.
+</Callout>
+
+## Texto
+
+| Clave | Significado |
+|---|---|
+| `name` | El nombre pintado en el item. |
+| `display-name` | El nombre en forma plana, para mensajes y logs. |
+| `lore` | Líneas del tooltip. `<nl>`, saltos reales y `\n` literales parten una entrada en varias. |
+| `amount` | Tamaño de pila, como número o placeholder. |
+
+`name` y `display-name` son **separados**, no una pareja con alternativa: uno se pinta en el item —
+negrita, con degradado, con un contador dentro — y el otro es lo que un plugin le cita a un jugador.
+
+## Aspecto
+
+| Clave | Significado |
+|---|---|
+| `glow`, `glowing` | El brillo de encantamiento, sin línea en el tooltip. |
+| `hide-tooltip` | Oculta el tooltip entero. |
+| `hide-attributes` | Oculta todo lo que escribe vanilla por su cuenta. |
+| `unbreakable` | Lo marca irrompible. |
+| `custom-model-data` | El número de modelo. |
+| `max_stack_size` | El límite de pila. |
+| `flags`, `item-flags` | Nombres de `ItemFlag` a ocultar. |
+| `item_model` | Una clave de modelo, `namespace:key`. |
+| `tooltip_style` | Una clave de estilo de tooltip. |
+| `enchantments` | Una sección de `NOMBRE: nivel`, o una lista de `NOMBRE:nivel`. |
+
+Las grafías con guion bajo y con guion funcionan las dos.
+
+## Traits
+
+Solo algunos materiales los tienen, así que viven en un record aparte — los otros miles de items llevan
+una referencia compartida en vez de seis campos nulos cada uno.
+
+```yaml
+potion:
+  base_type: HEALING
+  upgraded: true            # STRONG_HEALING
+  color: "#ff4d4d"
+  custom_effects:
+    - type: SPEED
+      amplifier: "%level%"  # resuelto por jugador
+      duration: 600
+
+armor_trim:
+  pattern: "%helmet_trim_pattern%"
+  material: "%helmet_trim_material%"
+
+banner_patterns:
+  base_color: WHITE
+  patterns:
+    - pattern: STRIPE_BOTTOM
+      color: LIGHT_GRAY
+
+banner_design: "%shield_preview%"   # un diseño calculado por jugador
+
+force-consumable: true
+consumable-time: 1.0
+consumable-nutrition: 6
+consumable-saturation: 14.4
+consumable-sound: ITEM_HONEY_BOTTLE_DRINK
+
+attributes:
+  - "attack_damage|8"
+  - "movement_speed|0.05"
+
+nbt:
+  kind: special
+  uses: 3
+```
+
+Un trait que no encaja con su material no hace nada. Una poción puesta en una espada es una clave
+sobrante en un archivo de config, no un motivo para fallar mientras se dibuja un menú.
+
+<Callout type="note" title="Por qué `nbt` necesita un plugin">
+Los valores escritos con `nbt` se guardan bajo el namespace del **plugin dueño**, así que dos plugins
+pueden escribir `id` en un item sin chocar. `Items.parse` sin plugin está bien para definiciones que no
+guardan valores, que son casi todas.
+</Callout>
+
+## Guardar lo que alguien lleva en la mano
+
+La otra dirección, para un selector de iconos:
+
+```java
+String icon = Source.of(player.getInventory().getItemInMainHand()).raw();
+```
+
+Un item normal se guarda como su nombre de material — `STONE`, no cuatrocientos caracteres de base64.
+Cualquier cosa con meta se guarda entera como `bytes:`. Una mano vacía es `AIR`.
+
+**El nombre y el lore se descartan.** Se conserva todo lo que el item aparenta — modelo, color,
+patrones, brillo — pero quien dibuja el icono escribe su propio nombre y lore. Son además casi todo el
+tamaño de un item: el nombre con degradado de una espada de kit se serializa como JSON de componentes y
+se pasa de los 512 caracteres que admite una columna de icono.
+
+### Nombrarlo para una persona
+
+```java
+Source.of(config.icon()).label();      // "Nether Star"
+```
+
+| Guardado como | Se lee como |
+|---|---|
+| `NETHER_STAR` | `Nether Star` |
+| `playerhead-Notch` | `Notch's Head` |
+| `basehead-…`, `urlhead-…` | `Custom Head` |
+| `playerhead-%player_name%` | `Player Head` |
+| `bytes:…` | El material que hay dentro, o `Custom Item` |
+
+`label()` es para una persona; `raw()` es lo que vuelve a una config o a una columna.
+
+### Dibujarlo de vuelta
+
+```java
+ItemStack icon = Items.icon(home.icon());
+```
+
+Una llamada, toda la gramática, sin plugin y sin jugador — para quien tiene una cadena suelta salida de
+una columna. Un icono de menú no lo necesita: escribe `material: "%home_icon%"` y la fila lo resuelve
+con el jugador.
+
+<Callout type="tip" title="Lo ilegible vuelve como papel">
+Una cadena que no nombra nada, o un `bytes:` que no se puede decodificar, se dibuja como papel y no como
+nada. Una fila ilegible sigue siendo una fila que alguien tiene que ver y borrar, y el papel se lee como
+"esto no se pudo leer" donde un bloque de piedra se lee como la configuración de alguien.
+</Callout>

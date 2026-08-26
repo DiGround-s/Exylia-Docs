@@ -1,0 +1,61 @@
+---
+title: "Rewards"
+description: "Per-event rewards, global reward commands, and what happens when a winner is offline."
+---
+
+There are two independent reward layers: the ones a configuration carries, and the commands
+`config.yml` runs for every event.
+
+## Per-event rewards
+
+Each configuration has two lists, edited with the reward editor in the admin panel:
+
+| List | Given to |
+|---|---|
+| Winner rewards | Whoever the event declares the winner |
+| Participant rewards | Everyone else who played |
+
+They are handed over a moment after the event ends, so the items land after the player has been
+returned to the lobby rather than into an inventory that is about to be cleared.
+
+## Global reward commands
+
+`config.yml` carries console commands run for every event, whichever configuration it was:
+
+```yaml title="config.yml"
+reward-commands:
+  only-on-random-events: false
+  participant:
+    - "console: give %player% coal 1"
+  winner:
+    - "console: give %player% diamond 1"
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `only-on-random-events` | `false` | When `true`, these commands only run for events the scheduler started. |
+| `participant` | one example | Commands run for each participant. `%player%` is substituted. |
+| `winner` | one example | Commands run for each winner. |
+
+<Callout type="tip" title="only-on-random-events">
+It exists so a staff member testing an event by hand does not hand out prizes. Turn it on and only
+automatically started events pay out — see [Game flow](/docs/exyliaevents/game-flow#automatic-events).
+</Callout>
+
+## Offline winners
+
+If a player is offline when rewards are handed out, their per-event rewards are queued in
+`event_pending_rewards` along with the event name and whether they won, and delivered the next time
+they join. Nothing is lost because somebody disconnected in the last seconds.
+
+## Which layer to use
+
+| You want | Use |
+|---|---|
+| Different prizes per event | The configuration's own reward lists |
+| The same prize for every event on the server | The global reward commands |
+| Economy money, permissions, crate keys | Global commands, or commands inside the reward editor |
+| Physical items, exactly as configured | The reward lists |
+
+Both layers run for the same event, so a configuration with its own rewards **and** global commands
+gives both.

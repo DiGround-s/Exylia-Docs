@@ -1,0 +1,184 @@
+---
+title: "Flujo de juego"
+description: "Los cinco estados, los temporizadores que los rodean, y las reglas que deciden quién puede entrar."
+---
+
+## Los cinco estados
+
+| Estado | Qué significa |
+|---|---|
+| `WAITING` | Abierto, reuniendo jugadores. |
+| `STARTING` | Ya hay suficientes; corre la cuenta atrás. |
+| `PLAYING` | La partida. |
+| `ENDING` | Ganadores anunciados, recompensas repartidas, arena restaurada. |
+| `DISABLED` | No está corriendo. |
+
+Se puede entrar en `WAITING` y en `STARTING`. En `PLAYING` solo se puede espectar, y un evento solo
+puede *iniciarse* desde `WAITING`.
+
+## Los temporizadores
+
+```yaml title="config.yml"
+settings:
+  broadcast-interval: 30
+  waiting-timeout: 300
+  broadcast-countdown-times: [30, 15, 10, 5]
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `broadcast-interval` | `30` | Segundos entre anuncios de "hay un evento esperando jugadores". |
+| `waiting-timeout` | `300` | Segundos que espera un evento sin llenarse antes de rendirse. |
+| `broadcast-countdown-times` | `30, 15, 10, 5` | Qué segundos de la cuenta atrás se anuncian a todo el servidor. |
+
+Por configuración, `countdown` — 30 segundos por defecto — es lo que dura `STARTING` una vez alcanzado
+`min-players`. Bajar del mínimo la cancela.
+
+Dentro de la cuenta atrás se avisa a los jugadores en cada segundo desde el 10 y en cada múltiplo de
+diez. El anuncio a todo el servidor solo salta en los tiempos de la lista de arriba.
+
+## Periodo de gracia
+
+Casi todos los tipos empiezan con un `grace-period` — 5 segundos por norma, 15 en Survival Games —
+durante el que nadie puede recibir daño. Existe para que una partida no termine mientras la gente
+todavía está cayendo.
+
+## Límites
+
+```yaml title="config.yml"
+settings:
+  max-events-per-player: 1
+  max-events-total: -1
+  max-events-waiting: 3
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `max-events-per-player` | `1` | Eventos activos que un jugador puede tener iniciados a la vez. `-1` es ilimitado. |
+| `max-events-total` | `-1` | Eventos activos en todo el servidor. |
+| `max-events-waiting` | `3` | Eventos en `WAITING` a la vez. |
+
+`max-events-waiting` es el que evita que el servidor se llene de lobbies a medias a los que nadie
+entra.
+
+## Cooldown de inicio
+
+```yaml title="config.yml"
+settings:
+  start-cooldown: 0
+  start-cooldown-permissions: []
+```
+
+`start-cooldown` son los segundos que un jugador debe esperar antes de iniciar otro evento; `0` lo
+desactiva. Los ajustes por rango van en `start-cooldown-permissions` con el formato
+`permiso:segundos`:
+
+```yaml
+start-cooldown-permissions:
+  - "exyliaevents.cooldown.vip:300"
+  - "exyliaevents.cooldown.vip+:120"
+  - "exyliaevents.cooldown.staff:0"
+```
+
+Un jugador que encaje en varias entradas recibe **la más baja**. `exyliaevents.cooldown.bypass` se
+salta el cooldown entero.
+
+## Desde qué mundos se puede entrar
+
+```yaml title="config.yml"
+world-restrictions:
+  mode: NONE
+  worlds: []
+```
+
+| Modo | Significado |
+|---|---|
+| `NONE` | Sin restricción. Es el valor por defecto. |
+| `BLACKLIST` | Quien esté en un mundo de la lista no puede entrar a ningún evento. |
+| `WHITELIST` | Solo se puede entrar estando en un mundo de la lista. |
+
+Los nombres de mundo no distinguen mayúsculas, y `exyliaevents.world.bypass` ignora la regla.
+
+## Comandos dentro de un evento
+
+```yaml title="config.yml"
+command-whitelist:
+  enabled: true
+  commands: [msg, message, tell, w, whisper, reply, r, respond, events, e, eventsadmin, event]
+```
+
+Con `enabled` activo, cualquier cosa que no esté en la lista se rechaza mientras el jugador esté
+dentro de un evento. La comparación es por prefijo, y `exyliaevents.bypass.blocked-commands` se la
+salta.
+
+## Una actividad a la vez
+
+Entrar a un evento toma una reserva sobre el jugador, y esa reserva es compartida con el resto de
+plugins de Exylia. Un jugador que ya está en una cola de práctica, en una arena de FFA o en la
+sandbox no puede ser metido en un evento, y uno que está en un evento no puede ser llevado a otro
+sitio.
+
+La reserva es reentrante: pasar del lobby del evento a la partida, o de jugar a espectar, mantiene una
+única reserva continua en vez de soltarla y competir por recuperarla.
+
+## Eventos automáticos
+
+Dos mecanismos independientes pueden lanzar un evento sin un admin.
+
+### Eventos aleatorios
+
+```yaml title="config.yml"
+random-events:
+  enabled: false
+  interval-minutes: 30
+  min-players-online: 2
+  allow-concurrent: false
+  excluded-types: []
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `false` | Si el temporizador corre. |
+| `interval-minutes` | `30` | Cada cuánto lo intenta. |
+| `min-players-online` | `2` | Jugadores necesarios para que el intento siga adelante. |
+| `allow-concurrent` | `false` | Si puede lanzar uno mientras ya corre otro. |
+| `excluded-types` | vacío | Identificadores de tipo que nunca elegirá. |
+
+En cada intento elige una configuración **lanzable** al azar — activada, válida y no corriendo ya — y
+la inicia.
+
+### Eventos programados
+
+`scheduled-events.yml` lanza un evento concreto a una hora concreta:
+
+```yaml title="scheduled-events.yml"
+enabled: false
+timezone: ""
+entries:
+  - name: "friday-night-lms"
+    target: "my-lms-config-id"
+    days: ["FRIDAY"]
+    time: "20:00"
+    min-players-online: 5
+  - name: "weekend-random"
+    target: "RANDOM-EVENT"
+    days: ["SATURDAY", "SUNDAY"]
+    time: "18:00"
+```
+
+| Campo | Qué hace |
+|---|---|
+| `name` | Una etiqueta, usada en el log de consola. |
+| `target` | El id de la configuración a lanzar, o `RANDOM-EVENT` para una al azar. |
+| `days` | Nombres de días, o `["*"]` para todos. |
+| `time` | `HH:mm`, formato de 24 horas. |
+| `min-players-online` | Jugadores necesarios, `0` por defecto. |
+
+El programador comprueba una vez por segundo y dispara una entrada como mucho una vez por minuto.
+`timezone` acepta un identificador IANA como `Europe/Madrid`, o se deja vacío para el reloj de la
+máquina.
+
+<Callout type="note" title="Los dos cuentan como automáticos">
+Los eventos lanzados por cualquiera de los dos mecanismos quedan marcados como iniciados por el
+programador, que es de lo que depende `reward-commands.only-on-random-events`.
+</Callout>

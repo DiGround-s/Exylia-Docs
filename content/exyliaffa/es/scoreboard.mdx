@@ -1,0 +1,86 @@
+---
+title: "Scoreboard"
+description: "El sidebar dentro de una arena: título, líneas, refresco y placeholders."
+---
+
+El sidebar se define en `scoreboards.yml`. Solo se muestra a jugadores que están dentro de una
+arena, y cada jugador puede apagarlo desde `/ffa settings`.
+
+## El archivo
+
+```yaml title="scoreboards.yml"
+scoreboards:
+  ffa:
+    enabled: true
+    scoreboard:
+      enabled: true
+      title:
+        - "{primary}&lFFA"
+      lines:
+        - ""
+        - " {muted}❙ {letters}Arena: {highlight}%arena%"
+        - " {muted}❙ {letters}Players: {success}%players%"
+        - ""
+        - " {muted}❙ {letters}Kills: {success}%kills%"
+        - " {muted}❙ {letters}Deaths: {error}%deaths%"
+        - " {muted}❙ {letters}KDR: {highlight}%kdr%"
+        - " {muted}❙ {letters}Streak: {highlight}%streak%"
+        - ""
+        - " {muted}❙ {letters}Regen: {info}%regen%"
+        - ""
+        - " {highlight}exylia.net"
+      update:
+        interval: 15
+        smart: true
+        cache: true
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `ffa.enabled` | `true` | Interruptor general. En `false`, el plugin no muestra sidebar. |
+| `scoreboard.enabled` | `true` | Permite dejar la sección escrita pero apagada. |
+| `title` | una línea | Lista de títulos. Con varios, se animan: cada refresco muestra el siguiente. |
+| `lines` | ver arriba | Las líneas, de arriba abajo. Máximo 15; las de más se descartan. |
+| `update.interval` | `15` | **Ticks** entre refrescos. 20 ticks es un segundo. |
+| `update.smart` | `true` | Envía solo las líneas que cambiaron en lugar del tablero entero. |
+| `update.cache` | `true` | Se lee y se ignora: el cacheo de texto es global y siempre está activo. |
+
+## Placeholders del sidebar
+
+Dentro de las líneas del sidebar están disponibles estos valores de sesión:
+
+| Token | Qué muestra |
+|---|---|
+| `%arena%` | Nombre de la arena en la que está el jugador |
+| `%players%` | Jugadores dentro de esa arena |
+| `%kills%` | Bajas del jugador en esa arena |
+| `%deaths%` | Muertes del jugador en esa arena |
+| `%kdr%` | Su KDR |
+| `%streak%` | Su racha actual |
+| `%regen%` | Tiempo hasta la siguiente regeneración |
+
+Si PlaceholderAPI está instalado, también funciona cualquier placeholder de otros plugins, además de
+los de ExyliaFFA descritos en [Placeholders](/docs/exyliaffa/placeholders).
+
+## Colores
+
+Los tokens entre llaves son la paleta de ExyliaLib, definida en su propio `colors.yml`:
+`{primary}`, `{highlight}`, `{muted}`, `{letters}`, `{success}`, `{error}`, `{info}`, `{warning}`.
+Cambiar la paleta ahí recolorea todos los plugins del ecosistema a la vez.
+
+También se aceptan códigos legacy (`&a`), hexadecimales (`<#ff5c8a>`) y MiniMessage completo,
+incluidos gradientes.
+
+<Callout type="warning" title="Un placeholder renombrado">
+Hasta la versión 1.0.6 la ocupación de una arena se registraba con un nombre global tan genérico
+que rompía cualquier línea de sidebar escrita con `%players%`, incluidas las de este plugin. Ahora
+se llama `%exyliaffa_arena_players_<arenaId>%`, y `scoreboards.yml` se reescribe solo en el primer
+arranque tras actualizar.
+</Callout>
+
+## Rendimiento
+
+`interval: 15` significa un refresco cada 0,75 s, que es fluido para una cuenta atrás. Si tu sidebar
+no tiene valores que cambien cada segundo, subirlo a `20` o `40` reduce trabajo sin que se note.
+
+Con `smart: true`, un refresco que no cambia nada no envía paquetes.

@@ -1,0 +1,79 @@
+---
+title: "Scoreboard"
+description: "The in-arena sidebar: title, lines, refresh rate and placeholders."
+---
+
+The sidebar is defined in `scoreboards.yml`. It is only shown to players inside an arena, and every
+player can turn it off from `/ffa settings`.
+
+## The file
+
+```yaml title="scoreboards.yml"
+scoreboards:
+  ffa:
+    enabled: true
+    scoreboard:
+      enabled: true
+      title:
+        - "{primary}&lFFA"
+      lines:
+        - ""
+        - " {muted}❙ {letters}Arena: {highlight}%arena%"
+        - " {muted}❙ {letters}Players: {success}%players%"
+        - ""
+        - " {muted}❙ {letters}Kills: {success}%kills%"
+        - " {muted}❙ {letters}Deaths: {error}%deaths%"
+        - " {muted}❙ {letters}KDR: {highlight}%kdr%"
+        - " {muted}❙ {letters}Streak: {highlight}%streak%"
+        - ""
+        - " {muted}❙ {letters}Regen: {info}%regen%"
+        - ""
+        - " {highlight}exylia.net"
+      update:
+        interval: 15
+        smart: true
+        cache: true
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `ffa.enabled` | `true` | Master switch. On `false`, the plugin shows no sidebar. |
+| `scoreboard.enabled` | `true` | Lets you keep the section written but switched off. |
+| `title` | one line | List of titles. With several, they animate: each refresh shows the next. |
+| `lines` | see above | The lines, top first. At most 15; extras are dropped. |
+| `update.interval` | `15` | **Ticks** between refreshes. 20 ticks is one second. |
+| `update.smart` | `true` | Sends only the lines that changed instead of the whole board. |
+| `update.cache` | `true` | Read and ignored: text caching is global and always on. |
+
+## Sidebar placeholders
+
+These session values are available inside the sidebar lines:
+
+| Token | What it shows |
+|---|---|
+| `%arena%` | Name of the arena the player is in |
+| `%players%` | Players inside that arena |
+| `%kills%` | The player's kills in that arena |
+| `%deaths%` | Their deaths in that arena |
+| `%kdr%` | Their KDR |
+| `%streak%` | Their current streak |
+| `%regen%` | Time until the next regeneration |
+
+With PlaceholderAPI installed, placeholders from other plugins work too, alongside ExyliaFFA's own,
+described in [Placeholders](/docs/exyliaffa/placeholders).
+
+## Colours
+
+The tokens in braces are ExyliaLib's palette, defined in its own `colors.yml`: `{primary}`,
+`{highlight}`, `{muted}`, `{letters}`, `{success}`, `{error}`, `{info}`, `{warning}`. Changing the
+palette there recolours every plugin of the ecosystem at once.
+
+Legacy codes (`&a`), hexadecimals (`<#ff5c8a>`) and full MiniMessage, gradients included, are also
+accepted.
+
+## Rendering
+
+`interval: 15` means a refresh every 0.75 s, which is smooth for a countdown. If your sidebar has no
+value changing every second, raising it to `20` or `40` cuts work with no visible difference.
+
+With `smart: true`, a refresh that changes nothing sends no packets.

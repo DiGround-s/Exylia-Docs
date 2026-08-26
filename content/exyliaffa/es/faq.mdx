@@ -1,0 +1,80 @@
+---
+title: "Preguntas frecuentes"
+description: "Los problemas que aparecen más veces y su respuesta corta."
+---
+
+## El plugin no arranca
+
+Revisa la consola. Si falta `ExyliaLib`, `FastAsyncWorldEdit` o `packetevents`, el servidor
+desactiva ExyliaFFA y lo indica por nombre. Los tres son dependencias obligatorias.
+
+## La arena no aparece en `/ffa`
+
+Una arena se muestra cuando está **habilitada**. Y para ser jugable necesita además región, al menos
+un spawn y al menos un kit. El panel de configuración marca lo que falta.
+
+## Los jugadores aparecen y salen disparados de la arena
+
+El spawn está fuera de la región. Colócate dentro del área marcada y vuelve a crear el spawn.
+
+## La arena no se regenera
+
+Comprueba dos cosas: que `regenerationTime` sea mayor que `0` y que la arena tenga esquemática
+guardada. Sin esquemática, el ciclo se ejecuta y no hace nada.
+
+## `%players%` dejó de funcionar en mis scoreboards
+
+Ese era el problema que se corrigió en la versión 1.0.6: el placeholder de ocupación registraba un
+nombre global tan genérico que se comía cualquier `%players%` del servidor. Ahora se llama
+`%exyliaffa_arena_players_<arenaId>%` y `scoreboards.yml` se reescribe solo al actualizar. Si tienes
+otros plugins con líneas `%players%`, vuelven a funcionar.
+
+## Un placeholder aparece tal cual en pantalla
+
+Tres causas, por frecuencia:
+
+1. PlaceholderAPI no está instalado.
+2. El identificador de arena está mal escrito.
+3. La posición pedida supera `leaderboard.max-entries`.
+
+## Mis mensajes salen con `%prefix%` visible
+
+Ocurre si el mensaje se envía desde un archivo que no pasa por el prefijo del plugin. Todos los
+textos de `messages.yml` sí lo hacen. Tras editar el prefijo, ejecuta `/ffaadmin reload`.
+
+## Las bajas no suman
+
+Lo más probable es el anti-farmkill: por defecto rechaza más de tres bajas sobre la misma víctima en
+dos minutos, y cualquier baja entre dos jugadores con la misma IP. Ajusta o desactiva el sistema en
+`config.yml`.
+
+## El kit no se rellena tras matar
+
+`resetKitAfterKill` es un ajuste **de la arena**, no del kit. Actívalo en la configuración de la
+arena.
+
+## Un jugador dice que no le aparece el scoreboard
+
+Puede tenerlo apagado en `/ffa settings`. Si a nadie le aparece, mira `scoreboards.yml`: la clave
+`ffa.enabled` en `false` lo desactiva para todo el servidor y ningún ajuste personal puede
+encenderlo.
+
+## ¿Funciona en Folia?
+
+Sí. El plugin se declara compatible con Folia y las tareas por arena se anclan a la ubicación de la
+arena, no a un hilo global.
+
+## ¿Puedo compartir arenas entre varios servidores?
+
+Sí: apunta el `database.yml` de todos ellos al mismo MySQL, MariaDB o PostgreSQL. Arenas, kits,
+spawns, estadísticas y ajustes viven en la base de datos, así que se comparten. Ten en cuenta que
+los archivos de esquemática viven en el disco de cada servidor.
+
+## Cambié `database.yml` y no pasa nada
+
+El cliente de base de datos se abre al arrancar. Reinicia el servidor; `/ffaadmin reload` no lo
+reemplaza.
+
+## ¿Dónde pido soporte?
+
+En el [Discord de Exylia](https://discord.exylia.net). Las licencias también se gestionan ahí.

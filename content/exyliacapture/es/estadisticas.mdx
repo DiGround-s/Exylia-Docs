@@ -1,0 +1,93 @@
+---
+title: "Estadísticas"
+description: "Qué se cuenta, dónde se guarda y cómo se construyen los leaderboards."
+---
+
+Las estadísticas se registran en cuatro sitios a la vez: por jugador global, por jugador y evento, por
+clan global, y por clan y evento.
+
+## Los contadores
+
+| Contador | Jugador | Clan | Cuándo se mueve |
+|---|---|---|---|
+| Victorias | Sí | Sí | Al ganar un evento |
+| Puntos de leaderboard | Sí | Sí | Al ganar, según el `leaderboard-points` del evento |
+| Capturas | Sí | Sí | En cada captura, rotura de núcleo o entrega del payload |
+| Puntos ganados | Sí | Sí (puntos totales) | Según se puntúa durante el evento |
+| Tiempo capturado | Sí | — | Mientras se mantiene una zona |
+
+Qué registra cada tipo:
+
+| Tipo | Registra |
+|---|---|
+| `koth` | Captura y tiempo de captura en cada captura; victoria y puntos de leaderboard al ganar |
+| `koth_points_exclusive` / `koth_points_multi` | Puntos ganados y un segundo de tiempo capturado por segundo puntuado |
+| `koth_capture_points` | Captura, un punto y el tiempo de captura por cada captura completada |
+| `conquest` | Captura y los puntos de la zona en cada captura de zona |
+| `payload` | Victoria y captura al entregarlo |
+| `dtc` | Captura y los puntos de la rotura en cada rotura |
+
+## El criterio de ranking
+
+Los leaderboards ordenan por **puntos de leaderboard**, no por victorias ni por puntos ganados. Ese
+valor es por evento: `leaderboard-points` vale `1` por defecto, así que una victoria vale un punto de
+ranking, y un evento que deba valer más puede valer más sin tocar los demás.
+
+## Dónde se ven
+
+| Comando | Pantalla |
+|---|---|
+| `/capture top` | Leaderboard de jugadores |
+| `/capture clantop` | Leaderboard de clanes |
+
+Ambas pantallas se pueden filtrar por evento, así que un ranking puede ser global o limitado a los
+totales de un evento.
+
+El top diez de cada uno se cachea en memoria y se refresca **cada 60 segundos**, más una vez al
+arrancar. Una victoria aparece en el leaderboard dentro del minuto siguiente, no al instante.
+
+<Callout type="note" title="Por qué está cacheado">
+El leaderboard lo leen los menús, los hologramas y cada placeholder `%exyliacapture_top_...%` en cada
+refresco de scoreboard. Servirlo desde una instantánea evita que un sidebar lance una consulta a la
+base de datos por línea y por segundo.
+</Callout>
+
+## Aspecto del leaderboard
+
+Los menús se configuran en `config.yml`:
+
+```yaml title="config.yml"
+leaderboard:
+  max-entries: 50
+  player-heads: true
+  rank-materials:
+    first: GOLD_BLOCK
+    second: IRON_BLOCK
+    third: COPPER_BLOCK
+    player: PLAYER_HEAD
+    clan: SHIELD
+  filter-materials:
+    selected: LIME_CONCRETE
+    unselected: RED_CONCRETE
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `max-entries` | `50` | Cuántas filas tiene un leaderboard. |
+| `player-heads` | `true` | Dibuja cada fila con la cabeza de ese jugador. Se piden una vez y se cachean. |
+| `rank-materials` | ver arriba | Los items del podio y del resto de filas. |
+| `filter-materials` | ver arriba | El filtro de evento elegido y los no elegidos. |
+
+## Leerlas fuera
+
+Estadísticas del jugador que lee el placeholder:
+
+```text
+%exyliacapture_stats_wins%
+%exyliacapture_stats_captures%
+%exyliacapture_stats_points%
+%exyliacapture_stats_leaderboard_points%
+%exyliacapture_stats_time_captured%
+```
+
+Las filas cacheadas del top están en [Placeholders](/docs/exyliacapture/placeholders).

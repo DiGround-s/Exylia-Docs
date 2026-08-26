@@ -1,0 +1,77 @@
+---
+title: "Comandos y permisos"
+description: "Todos los comandos con su permiso, y los nodos de excepción."
+---
+
+## Jugador
+
+| Comando | Alias | Permiso |
+|---|---|---|
+| `/events` | `/event`, `/ev` | `exyliaevents.commands.events` |
+| `/events join <eventId>` | | `exyliaevents.commands.join` |
+| `/events leave` | | `exyliaevents.commands.leave` |
+| `/events start <configId>` | | `exyliaevents.start` |
+| `/events stats` | | `exyliaevents.commands.stats` |
+| `/events stats <jugador>` | | `exyliaevents.commands.stats.others` |
+| `/events music` | | `exyliaevents.commands.music` |
+
+`/events start` es el inicio de cara al jugador: es lo que convierte un evento en algo que un rango
+puede abrir, sujeto a los límites y cooldowns de
+[Flujo de juego](/docs/exyliaevents/flujo-de-juego#límites).
+
+## Administración
+
+Todo `/eventsadmin` necesita `exyliaevents.admin`.
+
+| Comando | Qué hace |
+|---|---|
+| `/eventsadmin` | Abre el panel de administración. |
+| `/eventsadmin reload` | Recarga los archivos de configuración. |
+| `/eventsadmin forcestart <eventId>` | Inicia un evento saltándose el filtro habitual. |
+| `/eventsadmin forcejoin <jugador> <eventId>` | Mete a un jugador en un evento. |
+| `/eventsadmin forcestop <eventId>` | Detiene y elimina un evento activo. |
+| `/eventsadmin revive <eventId> <jugador>` | Devuelve a la partida a un jugador eliminado. |
+| `/eventsadmin export` | Vuelca todas las tablas en `dumps/`. |
+| `/eventsadmin import <archivo>` | Lee un volcado de vuelta. |
+
+Los comandos de inscripción viven bajo `/eventsadmin inscriptions` y necesitan su propio nodo — ver
+[Inscripciones](/docs/exyliaevents/inscripciones).
+
+## Permisos
+
+| Nodo | Concede |
+|---|---|
+| `exyliaevents.admin` | Todo `/eventsadmin` y los menús de configuración. |
+| `exyliaevents.admin.inscriptions` | Los subcomandos de inscripción. |
+| `exyliaevents.start` | `/events start` y las acciones de inicio de los menús. |
+| `exyliaevents.commands.events` | `/events` |
+| `exyliaevents.commands.join` | `/events join` |
+| `exyliaevents.commands.leave` | `/events leave` |
+| `exyliaevents.commands.stats` | `/events stats` |
+| `exyliaevents.commands.stats.others` | `/events stats <jugador>` |
+| `exyliaevents.commands.music` | `/events music` |
+| `exyliaevents.cooldown.bypass` | Ignorar el cooldown de inicio. |
+| `exyliaevents.cooldown.<nombre>` | Los nodos que tú definas en `start-cooldown-permissions`. |
+| `exyliaevents.world.bypass` | Entrar a eventos desde un mundo que las reglas rechazarían. |
+| `exyliaevents.bypass.blocked-commands` | Ejecutar comandos que la lista blanca bloquearía dentro de un evento. |
+
+<Callout type="warning" title="exyliaevents.start no es exyliaevents.admin">
+`start` permite a un jugador abrir un evento desde el menú, que suele ser una ventaja de rango.
+`admin` permite crear, editar y borrar configuraciones. No los mezcles.
+</Callout>
+
+<Callout type="tip" title="Un grupo por defecto sensato">
+Concede `exyliaevents.commands.events`, `join`, `leave`, `stats` y `music` a todos. Son inofensivos y
+su ausencia solo genera tickets.
+</Callout>
+
+## Qué abarca reload
+
+`/eventsadmin reload` ejecuta cuatro pasos e informa de cada uno: los archivos de configuración y los
+menús, las configuraciones de evento, los dos programadores, y los sidebars de todos los eventos
+activos. Un paso que falle se nombra en vez de tragarse el error.
+
+Un prefijo editado se aplica sin reiniciar, y un evento en curso recoge un sidebar editado en el
+sitio.
+
+No reabre la conexión de base de datos: cambiar `database.yml` exige reiniciar.

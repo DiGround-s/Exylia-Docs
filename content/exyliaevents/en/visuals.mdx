@@ -1,0 +1,88 @@
+---
+title: "On-screen and audio"
+description: "Sidebars per type, the boss bars each game draws, nametags, and event music."
+---
+
+## Sidebars
+
+`scoreboards.yml` holds one sidebar per event type, plus a `lobby` board shown while players wait.
+Each is an ExyliaLib sidebar: a title, a list of lines and a refresh interval in ticks.
+
+```yaml title="scoreboards.yml"
+scoreboards:
+  lobby: ...
+  tnttag: ...
+  spleef: ...
+  csgo: ...
+  topkiller_teams: ...
+```
+
+Every registered type has its own key, team variants included, so a Quake board and a Quake Teams
+board are edited separately.
+
+The values available inside the lines are the ones that type provides — its round, its timer, its
+score, the player's own kills — because each event builds its own scoreboard context.
+
+<Callout type="note" title="TAB is not required for sidebars">
+The sidebar is drawn by ExyliaLib either way. What TAB changes is the **handover**: when TAB is
+installed, leaving an event restores the player to their normal TAB scoreboard and nametag rather
+than to nothing.
+</Callout>
+
+## Boss bars
+
+`config.yml` carries a boss bar per type that has one, in that type's own block:
+
+```yaml title="config.yml"
+tnttag:
+  boss-bar:
+    text: "{primary}Eliminating in {error}%time% ⌚"
+    color: PURPLE
+    style: NOTCHED_20
+  tagged-action-bar:
+    text: "..."
+```
+
+Types with their own visual blocks include TNT Tag, Tag Game, Block Party, Build Battle, Quake,
+CS:GO, Parkour, Chairs, Slap, Gem Crawler, Pillars of Fortune, LMS, Simon Says, Survival Games and
+Tournament, alongside `winner-fireworks` for the celebration at the end.
+
+Tournament's block is three separate effects rather than a bar: a freeze title before a match, the
+same countdown on the action bar, and an "you're next" title for whoever fights after.
+
+## Nametags
+
+With TAB installed, nametags are handed to TAB when the event ends. Without it, nothing is changed
+and nothing needs restoring.
+
+## Visibility
+
+Two managers decide who sees whom: spectators are hidden from players inside the game, and players in
+one event are hidden from players in another running at the same time. That is what stops two
+simultaneous events in nearby arenas from showing each other's players.
+
+## Music
+
+Events can play music discs to their participants:
+
+```yaml title="config.yml"
+settings:
+  event-music-enabled: true
+  event-music-volume: 0.5
+  event-music-interval: 150
+  event-music-discs: [MUSIC_DISC_PIGSTEP, MUSIC_DISC_CAT, ...]
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `event-music-enabled` | `true` | Whether events play music at all. |
+| `event-music-volume` | `0.5` | How loud. |
+| `event-music-interval` | `150` | Seconds between discs. |
+| `event-music-discs` | 19 discs | The pool it picks from. |
+
+A player who does not want it uses `/events music`, which is stored per player and remembered.
+
+<Callout type="tip" title="Turning it off server-wide">
+`event-music-enabled: false` silences it for everyone and makes the per-player toggle moot — the
+usual choice on a server that already has its own ambience.
+</Callout>

@@ -1,0 +1,165 @@
+---
+title: "Event types"
+description: "The seven types, how each one is actually played, and every setting with its default."
+---
+
+The type is chosen when the event is created and does not change afterwards. Each type reads its own
+settings; a setting another type owns is simply not read.
+
+## Shared settings
+
+Every type has these.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `maxDuration` | 10 min, `-1` for KOTH | How long the event may run. `-1` or less means no limit. |
+| `leaderboard-points` | `1` | What winning this event adds to the leaderboard ranking. |
+| `bossbar-enabled` | `true` | The bar at the top of the screen while it runs. |
+| `scoreboard-enabled` | `true` | The sidebar while it runs. |
+
+## KOTH
+
+Type id `koth`. One zone, one timer.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `capture-time` | `30000` ms | How long the zone must be held. |
+| `infinite` | `false` | A capture starts another round instead of ending the event. |
+| `glow-enabled` | `false` | Makes the holder glow near the end of the capture. |
+| `glow-last-millis` | `10000` ms | How long before the capture completes the glow starts. |
+
+The first player to enter an empty zone becomes the holder and the timer starts. It keeps running
+while they stay inside; it resets only when **they** leave, and then any player still inside takes
+over with a fresh timer.
+
+<Callout type="note" title="Others entering does not stop the timer">
+Holding is not exclusive: a second player walking in neither takes the zone nor resets the progress.
+Fighting them off matters only because the holder losing the zone means **leaving** it. The type
+description in the menu says the same thing — "the first player inside holds it until they leave or
+the timer ends".
+</Callout>
+
+With `infinite` on, a capture announces the winner, pays the winner reward, records the win and
+resets the zone — the event keeps running. It is the setting for a permanently available KOTH.
+
+## KOTH Points
+
+Two type ids sharing one implementation: `koth_points_exclusive` and `koth_points_multi`.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `target-points` | `100` | Points needed to win. |
+| `points-per-second` | `1` | Points awarded each second. |
+| `clan-mode` | `false` | Score by clan instead of by player. |
+
+Points are awarded once a second to whoever is inside. The difference between the two ids is who
+gets them:
+
+- **Multi** — everyone inside the zone scores at the same time.
+- **Exclusive** — only the **holding** group scores. The holder is the first group in the zone and
+  keeps it while any of it remains inside; when it is gone, the next group takes over. In clan mode
+  a group is a clan, so every member of the holding clan scores together.
+
+<Callout type="note" title="Exclusive is not a lottery">
+It is not a random player per second: it is the incumbent. A contested zone is logged as contested,
+and the holder keeps scoring until it is emptied of them.
+</Callout>
+
+In clan mode a player with no clan is skipped, and with no clan plugin installed the mode falls back
+to individual scoring.
+
+## KOTH Capture Points
+
+Type id `koth_capture_points`. A capture is worth one point, then the zone frees up again.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `target-points` | `5` | Captures needed to win. |
+| `capture-time` | `30000` ms | How long one capture takes. |
+| `clan-mode` | `false` | Score by clan instead of by player. |
+| `glow-enabled` | `false` | Makes the holder glow near the end of a capture. |
+| `glow-last-millis` | `10000` ms | How long before completion the glow starts. |
+
+Holding works like KOTH: first in holds, and the timer only resets when the holder leaves. In clan
+mode the holder is the clan, so the capture survives one member leaving as long as another member of
+the same clan is still inside.
+
+Each completed capture scores one point, records a capture and the capture time, and restarts the
+timer at zero.
+
+## Conquest
+
+Type id `conquest`. The only type with several zones in one event, and the only one that is clan-only.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `target-points` | `10` | Points a clan needs to win. |
+
+Each zone in `conquest-zones` carries its own:
+
+| Zone field | Default | What it does |
+|---|---|---|
+| `name` | `Zone` | Shown on the zone's own hologram and in messages. |
+| `color` | `#FFFFFF` | The colour it is drawn with. |
+| `points-per-capture` | `1` | What capturing it adds to the clan's total. |
+| `capture-time` | `30000` ms | How long that zone takes to capture. |
+
+A zone is held by a clan tag: the first clan member inside claims it, and it survives members leaving
+while another member of that clan remains. Points accumulate per clan across all zones, and the first
+clan to the target wins.
+
+<Callout type="warning" title="No clan plugin, no capture">
+Conquest zones read the capturer's clan tag. With no clan provider detected, a zone never registers a
+capturer and the event cannot progress. Players without a clan are ignored the same way.
+</Callout>
+
+## Payload
+
+Type id `payload`. A minecart travels a rail path from a start point to an end point.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `radius` | `5.0` | How close a player must be to push. |
+| `capture-speed` | `0.5` | Blocks per second forward. |
+| `recapture-speed` | `1.5` | Blocks per second backwards while the other side pushes it back. |
+| `return-speed` | `0.3` | Blocks per second backwards when nobody is pushing. |
+| `minecart-type` | `TNT_MINECART` | Which cart is spawned. |
+| `clan-mode` | `false` | Group pushers by clan instead of individually. |
+
+Cart types: `MINECART`, `CHEST_MINECART`, `FURNACE_MINECART`, `TNT_MINECART`, `HOPPER_MINECART`.
+
+The path is scanned automatically between the two points: both must be rails, and the scan walks the
+rail neighbours between them. The cart's position along that path is the progress.
+
+### The five states
+
+| State | When | What the cart does |
+|---|---|---|
+| `IDLE` | Nobody in range, and no progress made | Stands still |
+| `CAPTURING` | One group in range | Moves forward at `capture-speed` |
+| `DISPUTED` | Two or more groups in range | Stops |
+| `RECAPTURING` | Only the other side is in range | Moves back at `recapture-speed` |
+| `RETURNING` | Nobody in range after progress was made | Rolls back at `return-speed` |
+
+Reaching the end wins. Rolling all the way back to the start clears the capturing side and the cart
+becomes idle again.
+
+## Destroy The Core
+
+Type id `dtc`. One block, broken over and over.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `target-points` | `50` | Points needed to win. |
+| `points-per-break` | `1` | What one break is worth. |
+| `regen-time` | `5000` ms | How long the block takes to come back. |
+| `broadcast-every` | `1` | Announce only every Nth break. |
+| `clan-mode` | `false` | Score by clan instead of by player. |
+
+Every break records a capture and its points for the breaker. In clan mode the points go to the
+breaker's clan — a player with no clan has their break logged as unattributed, and it scores nothing.
+
+<Callout type="tip" title="broadcast-every">
+At the default of `1`, every break is announced. On a busy core that is a lot of chat: `5` or `10`
+keeps the announcements meaningful without changing the scoring.
+</Callout>

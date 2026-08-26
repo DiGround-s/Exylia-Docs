@@ -1,0 +1,89 @@
+---
+title: "Placeholders"
+description: "Every PlaceholderAPI placeholder the plugin registers."
+---
+
+Expansion identifier: **`exyliaffa`**. Nothing needs downloading from eCloud: registering the
+placeholders registers the expansion.
+
+## Occupancy
+
+| Placeholder | Returns |
+|---|---|
+| `%exyliaffa_total_players%` | Players inside any arena, alive and spectating. |
+| `%exyliaffa_arena_players_<arenaId>%` | Players inside that specific arena. |
+
+```text
+%exyliaffa_arena_players_nodebuff%
+%exyliaffa_arena_players_the_pit%
+```
+
+An arena identifier with underscores works: it is rebuilt whole, not cut at the first underscore.
+
+<Callout type="note" title="A missing arena returns empty, not zero">
+If the arena does not exist, the placeholder answers nothing, so you can tell "nobody is there" from
+"that arena does not exist". An empty arena does return `0`.
+</Callout>
+
+## Streak
+
+| Placeholder | Returns |
+|---|---|
+| `%exyliaffa_current_streak%` | The current streak of whoever reads it. |
+
+## Leaderboards
+
+The general form is:
+
+```text
+%exyliaffa_stats_top_<stat>_<position>%
+%exyliaffa_stats_top_<stat>_<position>_<arenaId>%
+%exyliaffa_stats_top_value_<stat>_<position>%
+%exyliaffa_stats_top_value_<stat>_<position>_<arenaId>%
+```
+
+- Without `value`, it returns the **name** of the player in that position.
+- With `value`, it returns **their figure** for that statistic.
+- Without an arena the ranking is global; with one it is limited to that arena.
+
+Supported statistics:
+
+```text
+kills          deaths        kdr
+best_streak    assists       damage_dealt
+play_time      alive_time    kills_per_minute
+```
+
+### Examples
+
+```text
+%exyliaffa_stats_top_kills_1%                     first by kills, server-wide
+%exyliaffa_stats_top_kills_1_nodebuff%            first by kills in "nodebuff"
+%exyliaffa_stats_top_value_kills_1_nodebuff%      their kills, instead of their name
+%exyliaffa_stats_top_best_streak_3%               third by best streak
+%exyliaffa_stats_top_value_kills_per_minute_1%    the best kills-per-minute rate
+```
+
+<Callout type="warning" title="The ceiling is max-entries">
+`leaderboard.max-entries` in `config.yml` sets the highest position that can be queried. With the
+default of `50`, asking for position 51 returns nothing.
+</Callout>
+
+## When there is no answer
+
+A placeholder with no answer returns **empty**, never a dash or a filler zero. That leaves the choice
+of fallback text to whoever writes it:
+
+```yaml
+lines:
+  - "Top 1: %exyliaffa_stats_top_kills_1%"
+```
+
+If nobody holds that position, the line is left without a name instead of showing a symbol that looks
+like a plugin error.
+
+## Inside the plugin's own sidebar
+
+The lines of `scoreboards.yml` also carry session tokens of their own (`%arena%`, `%players%`,
+`%kills%`, `%deaths%`, `%kdr%`, `%streak%`, `%regen%`) that need no prefix because the session itself
+resolves them. See [Scoreboard](/docs/exyliaffa/scoreboard).

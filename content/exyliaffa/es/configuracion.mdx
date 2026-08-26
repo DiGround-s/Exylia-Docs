@@ -1,0 +1,180 @@
+---
+title: "Configuración"
+description: "Referencia completa de config.yml y de los demás archivos del plugin."
+---
+
+Los archivos viven en `plugins/ExyliaFFA/`. Todos se generan en el primer arranque con sus valores
+por defecto y con comentarios que explican cada clave.
+
+## config.yml
+
+### leaderboard
+
+```yaml
+leaderboard:
+  max-entries: 50
+```
+
+<Field name="max-entries" type="entero" defaultValue="50">
+Cuántos jugadores caben en un leaderboard, y la posición más alta que un placeholder de leaderboard
+puede responder.
+</Field>
+
+### combat
+
+```yaml
+combat:
+  tag-duration: 20.0
+  blocked-commands: [spawn, hub, lobby, warp, home, tpa, tpaccept, tpyes, rtp, back]
+  combat-actionbar:
+    action-bar:
+      text: "{primary}⚔ {error}Combat {muted}%time%s"
+      duration: 0
+      countdown: 0
+      time-style: tenths
+```
+
+Detallado en [Combate](/docs/exyliaffa/combate#combat-tag).
+
+### anti-farmkill
+
+```yaml
+anti-farmkill:
+  enabled: true
+  same-player-enabled: true
+  same-player-max-kills: 3
+  same-player-window-seconds: 120
+  same-ip-enabled: true
+```
+
+### command-whitelist
+
+```yaml
+command-whitelist:
+  enabled: true
+  commands: [msg, message, tell, w, whisper, reply, r, respond, ffa, ffaadmin]
+```
+
+### anti-freehit
+
+```yaml
+anti-freehit:
+  hit-reset-window-seconds: 8
+  linked-actionbar:
+    action-bar:
+      text: "{primary}⚔ {highlight}%linked_name% {error}%linked_hearts%❤ {primary}%linked_ping%ms {muted}| {warning}%time%s"
+      duration: 0
+      countdown: 0
+      time-style: tenths
+```
+
+### kill-streaks
+
+```yaml
+kill-streaks:
+  enabled: true
+  reset-on-death: true
+  break-min-streak: 3
+  break-message: "<#b9a5cc>%killer% ended %player%'s ..."
+```
+
+La escalera está en `killstreaks.yml`. Ver [Rachas](/docs/exyliaffa/killstreaks).
+
+### respawn
+
+```yaml
+respawn:
+  leave-on-death: false
+```
+
+<Field name="leave-on-death" type="booleano" defaultValue="false">
+`true` envía al lobby a quien muere. `false` lo deja en modo espectador con un menú para reaparecer
+o salir, que es lo que la mayoría de servidores quiere.
+</Field>
+
+### kill-commands
+
+```yaml
+kill-commands:
+  on-kill: []
+  on-death: []
+```
+
+Comandos que ejecuta la consola en cada baja contada y en cada muerte. Aceptan `%killer%` y
+`%victim%`.
+
+```yaml
+kill-commands:
+  on-kill:
+    - "eco give %killer% 25"
+  on-death:
+    - "title %victim% actionbar &7Te mató &c%killer%"
+```
+
+<Callout type="warning" title="El anti-farmkill no filtra estos comandos">
+`on-kill` se ejecuta en **toda** baja, incluida la que el anti-farmkill descartó para las
+estadísticas. Si das dinero por baja, dos cuentas con la misma IP pueden financiarse matándose entre
+ellas. Para evitarlo, condiciona la recompensa desde el propio comando o desde tu plugin de economía.
+</Callout>
+
+## messages.yml
+
+Todos los textos del plugin, agrupados por sistema:
+
+| Sección | Contiene |
+|---|---|
+| `prefix` | El prefijo que rellena `%prefix%` en el resto de mensajes. |
+| `common` | Errores y respuestas compartidas. |
+| `ffa` | Entrar, salir, morir, arena no encontrada, arena llena, avisos de regeneración. |
+| `stats` | Nombres, iconos y formato de los nueve contadores. |
+| `combat` | Entrar y salir de combate, comando bloqueado. |
+| `spectator-toggle` | Mensajes del modo espectador. |
+| `kit-editor` | Guardar, cancelar y resetear layout. |
+| `invite` | Invitaciones entre jugadores. |
+| `kill-streaks` | Notificaciones y anuncios de racha. |
+| `anti-freehit` | El aviso de enlace 1v1. |
+| `admin` | Respuestas del panel de administración. |
+| `player-settings` | Textos del menú de ajustes. |
+
+Todos empiezan con `%prefix%`; bórralo de una línea concreta si la quieres sin prefijo.
+
+## scoreboards.yml
+
+Ver [Scoreboard](/docs/exyliaffa/scoreboard).
+
+## killstreaks.yml
+
+Ver [Rachas](/docs/exyliaffa/killstreaks#la-escalera).
+
+## database.yml
+
+Ver [Instalación · Base de datos](/docs/exyliaffa/instalacion#base-de-datos).
+
+## menus/
+
+Los menús son YAML editables, en dos carpetas:
+
+```text
+menus/
+├── user/          selector de FFA, kits, spawns, stats, espectador, ajustes
+│   └── es/        las mismas pantallas en español
+└── admin/         panel, arenas, reglas, kits, spawns, datos, confirmaciones
+```
+
+Puedes cambiar títulos, tamaños, iconos, posiciones, lore y sonidos. Las claves de acción de cada
+botón son las que lo enlazan con lo que hace: consérvalas.
+
+## Migraciones
+
+El plugin versiona sus archivos y los migra solo, conservando tus ediciones.
+
+| Archivo | Versión | Qué migra |
+|---|---|---|
+| `config.yml` | 3 | Reestructura las dos barras de acción y corrige el token de cuenta atrás a `%time%`. |
+| `scoreboards.yml` | 2 | Apunta las líneas al placeholder de ocupación renombrado. |
+
+<Callout type="warning" title="Claves desconocidas se eliminan">
+Una clave que ningún archivo declara se borra en la carga y se reporta una vez como `UNKNOWN_KEY`.
+Es lo que mantiene los archivos limpios tras una actualización, y también por qué no conviene añadir
+claves propias a estos archivos.
+</Callout>

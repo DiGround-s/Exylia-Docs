@@ -1,0 +1,95 @@
+---
+title: "Installation"
+description: "Dependencies, first boot, generated files and database setup."
+---
+
+## Before you start
+
+Two plugins must be in `plugins/` **before** the first boot. Without either, the server disables
+ExyliaCapture and says so in the console.
+
+| Plugin | What for |
+|---|---|
+| `ExyliaLib` | Configuration, database, menus, zone wand, holograms, boss bars, placeholders, rewards. |
+| `packetevents` | The packet layer the client integrations sit on. |
+
+Optional:
+
+- **PlaceholderAPI** — to read the plugin's values from other plugins.
+- **A clan plugin** — required for Conquest, and for clan mode in the other types. See
+  [Clans](/docs/exyliacapture/clans) for which ones are detected.
+- **Apollo or Feather** — draws an on-screen waypoint over the running event's zone.
+- **ViaVersion** — older clients.
+
+## Installing
+
+<Steps>
+  <Step title="Drop in the jars">
+    Copy `ExyliaCapture.jar`, `ExyliaLib.jar` and `packetevents` into `plugins/`.
+  </Step>
+  <Step title="Start the server">
+    The first boot writes the configuration files and creates six database tables.
+  </Step>
+  <Step title="Open the panel">
+    With `exyliacapture.admin`, run `/captureadmin`. Everything else happens there.
+  </Step>
+</Steps>
+
+## Generated files
+
+All of them live in `plugins/ExyliaCapture/`.
+
+| File | Contents |
+|---|---|
+| `config.yml` | Scheduler timezone, zone particles, boss bar and hologram per event type, leaderboard menus. |
+| `messages.yml` | Every message, grouped by system. |
+| `scoreboards.yml` | One sidebar per event type, plus the shared sidebar for several at once. |
+| `database.yml` | Database engine. H2 by default, embedded. |
+| `menus/` | The menu layouts, admin and player. |
+
+<Callout type="note" title="Events are not in a file">
+An event configuration — its type, zone, settings, rewards, commands and schedules — is a row in
+`capture_event_configs`. It is created and edited from `/captureadmin`, which is what lets several
+servers share one set of events by pointing at the same MySQL.
+</Callout>
+
+## Database tables
+
+| Table | Holds |
+|---|---|
+| `capture_event_configs` | The configured events. |
+| `capture_player_stats` | Global player statistics. |
+| `capture_player_event_stats` | Player statistics per event. |
+| `capture_clan_stats` | Global clan statistics. |
+| `capture_clan_event_stats` | Clan statistics per event. |
+| `capture_pending_rewards` | Rewards owed to players who were offline when they won. |
+
+## Choosing an engine
+
+By default the plugin uses **H2**: a file in the plugin folder, nothing to install.
+
+```yaml title="plugins/ExyliaCapture/database.yml"
+database:
+  type: mysql
+  settings:
+    max-pool-size: 0
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Supported engines: `h2`, `mysql`, `mariadb`, `postgresql` and `mongodb`. Only the block matching
+`type` is read; an unrecognised value falls back to `h2` and says so in the console.
+
+<Callout type="warning" title="Changing the engine needs a restart">
+The database client is opened at boot. `/captureadmin reload` re-reads the files and the events; it
+does not swap the database client.
+</Callout>
+
+## Updating
+
+Replace the jar and restart. `config.yml` is versioned and migrates itself, keeping your edits — see
+[Configuration · Migrations](/docs/exyliacapture/configuration#migrations).

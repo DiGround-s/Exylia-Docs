@@ -1,0 +1,143 @@
+---
+title: "Entrada, editores y asistentes"
+description: "Pedirle algo a un jugador, editar una lista de cosas, y guiar a alguien por una configuración."
+---
+
+Tres módulos que resuelven la misma forma de problema: sacarle información a un jugador sin escribir un
+listener de yunque, uno de chat y un mapa de estado para cada caso.
+
+## Pedir una cosa
+
+```java
+PluginInputs inputs = Inputs.of(this);
+
+inputs.integer(player, "¿Cuántos slots?")
+      .range(1L, 64L)
+      .open()
+      .thenAccept(result -> result
+          .ifCompleted(this::resize)
+          .otherwise(outcome -> {
+              if (outcome.byPlayer()) reopenMenu(player);
+          }));
+```
+
+Trece tipos de petición, cada uno un builder:
+
+| Llamada | Produce | Para |
+|---|---|---|
+| `text` | `String` | Texto libre |
+| `id` | `String` | Un identificador estricto en minúsculas |
+| `slug` | `String` | Un identificador derivado de un texto visible |
+| `integer` | `Long` | Números enteros |
+| `decimal` | `BigDecimal` | Decimales exactos |
+| `amount` | `BigDecimal` | Dinero, como lo escribe un jugador — `10M` |
+| `duration` | `Duration` | `30s`, `1h30m` |
+| `flag` | `Boolean` | Un ajuste o interruptor |
+| `confirm` | `Boolean` | Una confirmación explícita |
+| `choice` | `T` | Una de unas pocas opciones |
+| `search` | `T` | Una de muchísimas opciones |
+| `icon` | `String` | Con qué se dibuja algo |
+| `form` | `FormValues` | Varias cosas en una ventana |
+
+Todas comparten los mismos modificadores, así que se leen igual sea lo que sea que se pida:
+`timeout(Duration)`, `defaultValue(T)`, `validate(predicado, mensaje)`, `transform(operador)`,
+`transports(tipos…)`, y `open()` u `open(consumer)`.
+
+<Callout type="note" title="validate y transform viven en la petición">
+No en el transporte. Eso es lo que evita que el plegado de mayúsculas funcione en el chat pero no en un
+diálogo.
+</Callout>
+
+### Cómo se pregunta
+
+Cinco transportes, probados en orden. Gana el primero que pueda representar la petición:
+
+| Orden | Transporte | Se elige cuando |
+|---|---|---|
+| 1 | `DIALOG` | Los diálogos están activos, PacketEvents está cargado y el cliente es 1.21.6 o superior. |
+| 2 | `BEDROCK` | El jugador está en Bedrock y Floodgate está instalado. |
+| 3 | `ANVIL_SEARCH` | La petición es una búsqueda. |
+| 4 | `MENU` | Un inventario de botones puede expresarla — elección, confirmación, interruptor. |
+| 5 | `CHAT` | Siempre. |
+
+El chat es el respaldo universal: cualquier jugador de Java puede responder por chat aunque no haya
+ninguna integración de paquetes ni de puente. Ni PacketEvents ni Floodgate son obligatorios, y los
+transportes se descubren por reflexión, así que uno que falte simplemente no se ofrece.
+
+### Un desenlace, exactamente una vez
+
+`COMPLETED`, `CANCELLED`, `TIMED_OUT` y los demás llegan **exactamente una vez por petición**, pase lo
+que pase — incluido que el jugador se desconecte a medias. `outcome().byPlayer()` es sobre lo que
+ramificar al decidir si reabrir el menú del que vino.
+
+## Editar una lista de cosas
+
+Una lista de recompensas, una tabla de loot, un conjunto de puntos de spawn: la misma pantalla, un
+motor.
+
+| Llamada | Edita |
+|---|---|
+| `Rewards.of(plugin).editor(rewards)` | Recompensas |
+| `Loot.editor(plugin, entries)` | Tablas de loot |
+| `NamedCommands.editor(plugin, commands)` | Comandos de consola con nombre |
+| `Effects.editor(plugin, effects)` | Efectos de poción |
+| `Sequences.of(plugin).editor(effects)` | Efectos con probabilidades, condiciones y audiencia |
+| `Editors.of(plugin).items(items)` | Items reales — kits, stock de tienda |
+| `Editors.of(plugin).locations(places)` | Puntos de spawn, esquinas de arena |
+| `Editors.of(plugin).list(descriptor, tipo, entries)` | La que solo tiene tu plugin |
+
+Cada lista tiene paginación, añadir, editar, borrar, copiar, pegar, guardar y cancelar:
+
+| Gesto | Qué pasa |
+|---|---|
+| Clic izquierdo en una fila | Editarla |
+| Clic derecho en una fila | Borrarla |
+| Shift + izquierdo | Copiarla |
+| `ADD` | Crear una fila y configurarla |
+| `PASTE` | Añadir lo que haya en el portapapeles |
+| `COPY ALL` | Poner la lista entera en el portapapeles |
+| `SAVE` / `CANCEL` | Quedarse con todo, o con nada |
+
+<Callout type="tip" title="No se escribe nada hasta guardar">
+La lista que entregas se copia, y cada cambio va a la copia — así que cancelar sale gratis y una fila a
+medias no puede escaparse al estado del plugin.
+</Callout>
+
+Una fila sin terminar — una entrada de comando sin comando — se dibuja **con una marca** en vez de
+ocultarse. Un editor es donde se termina una fila a medio configurar, y una que desapareciera se
+llevaría su sitio en la lista con ella.
+
+## Guiar a alguien por una configuración
+
+Un asistente son varias preguntas con ramas, una revisión desde la que se puede volver atrás, y nada
+aplicado hasta que confirman.
+
+```java
+static final WizardKey<String> ID    = WizardKey.text("id");
+static final WizardKey<Long>   SLOTS = WizardKey.integer("slots");
+
+Wizards.of(this)
+       .define("create-arena", builder -> builder
+               .ask(ID, "Id de la arena")
+               .ask(SLOTS, "¿Cuántos jugadores?")
+               .review()
+               .apply(values -> create(values.get(ID), values.get(SLOTS))))
+       .start(player);
+```
+
+Los atajos de un solo paso son lo que usan de verdad casi todas las pantallas de setup:
+
+```java
+wizards.askRegion(player, "Zona de captura", "Selecciona el área con el selector", accepted, abandoned);
+wizards.askLocation(player, "Punto de spawn", "Ponte donde aparecen los jugadores", accepted, null);
+wizards.askItem(player, "Icono", "Sostén el item", accepted, null);
+```
+
+`askRegion` es el selector de bloques compartido: el mismo objeto, la misma vista previa y las mismas
+dos esquinas con las que selecciona cada plugin de Exylia — que es por lo que ninguno depende de
+WorldEdit para eso.
+
+<Callout type="note" title="Abandonar es un desenlace de primera clase">
+Cada flujo acepta un callback `abandoned`. Un jugador que se sale deja la configuración anterior
+intacta, y se le reabre la pantalla de la que venía en vez de dejarlo con todo cerrado.
+</Callout>

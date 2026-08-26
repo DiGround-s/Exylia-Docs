@@ -1,0 +1,70 @@
+---
+title: "Primeros pasos"
+description: "Crear tu primera arena jugable de principio a fin, sin tocar un archivo."
+badge: "guía"
+---
+
+Esta guía deja una arena funcionando y jugable. Todo se hace desde `/ffaadmin`; no hace falta editar
+ningún YAML.
+
+## Lo mínimo que necesita una arena
+
+Una arena es jugable cuando tiene **región**, **al menos un spawn** y **al menos un kit**, y está
+marcada como habilitada. El resto son mejoras.
+
+<Steps>
+  <Step title="Define el lobby global">
+    Abre `/ffaadmin` y establece la ubicación del lobby. Es adonde vuelve un jugador al salir de
+    cualquier arena, y adonde se le envía si muere con `leave-on-death` activo.
+  </Step>
+  <Step title="Crea la arena">
+    Desde el panel, crea una arena nueva y dale un identificador corto y sin espacios, por ejemplo
+    `nodebuff`. Ese identificador es el que usarás en comandos y placeholders.
+  </Step>
+  <Step title="Marca la región">
+    Selecciona las dos esquinas del área de combate y guárdalas como región de la arena. La región
+    define qué se considera "dentro": salir de ella devuelve al jugador al spawn.
+  </Step>
+  <Step title="Añade un spawn">
+    Colócate donde quieras que aparezcan los jugadores y crea el spawn desde el menú de spawns. Si
+    creas más de uno, el jugador podrá elegir al entrar.
+  </Step>
+  <Step title="Crea un kit">
+    Equípate exactamente con lo que quieres dar y guarda el kit desde el menú de kits. Se almacenan
+    inventario, armadura y mano secundaria.
+  </Step>
+  <Step title="Habilita la arena">
+    En el menú de configuración de la arena, actívala. A partir de ese momento aparece en `/ffa`.
+  </Step>
+  <Step title="Pruébala">
+    Ejecuta `/ffa join nodebuff`, o simplemente `/ffa` y elige desde el menú.
+  </Step>
+</Steps>
+
+## Qué ocurre al entrar
+
+Al ejecutar `/ffa join <arenaId>` el plugin decide cuántos menús mostrar:
+
+- Si la arena tiene **más de un spawn**, se abre el selector de spawn.
+- Si además el modo de kit es `SELECTABLE` y hay **más de un kit**, se abre el selector de kit.
+- Si solo hay uno de cada, entra directo.
+
+<Callout type="tip">
+Esa lógica también está expuesta en la API: `FFAAPI.joinFFA`, `joinFFAWithSpawn` y `joinFFAWithKit`
+son exactamente los tres escalones. Ver [API](/docs/exyliaffa/api).
+</Callout>
+
+## Recomendaciones para la primera arena
+
+| Ajuste | Sugerencia | Por qué |
+|---|---|---|
+| `max-players` | 30–50 | Suficiente para que se sienta viva sin convertirse en un caos. |
+| Radio de protección | 3–5 bloques | Evita el spawnkill sin volver el spawn intocable. |
+| Regeneración | 0 al principio | Actívala cuando la arena tenga bloques que se rompan. |
+| `reset-kit-after-kill` | Activado en nodebuff | Recompensa la kill y evita la ventaja acumulada. |
+| Guardar inventario al salir | Activado | Devuelve al jugador lo que tenía antes de entrar. |
+
+## Siguiente paso
+
+Con la arena viva, lo siguiente es afinarla: las [reglas](/docs/exyliaffa/reglas) deciden cómo se
+juega dentro, y los [kits](/docs/exyliaffa/kits) deciden con qué.

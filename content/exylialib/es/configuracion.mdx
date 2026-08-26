@@ -1,0 +1,116 @@
+---
+title: "Configuración"
+description: "Archivos YAML declarados como records de Java, generados a partir de ellos, y migrados cuando cambian de forma."
+---
+
+El record es la fuente de verdad. El archivo YAML es **salida**, no entrada: se genera a partir del
+constructor sin argumentos del record, comentarios incluidos, y se lee de vuelta a la misma forma.
+
+```java
+ConfigFile<Settings> settings = Configs.define(this, "config", Settings.class).load();
+int pool = settings.get().database().poolSize();
+```
+
+## Declarar un archivo
+
+```java
+public record Storage(
+        @Comment("Conexiones abiertas. Regla rápida: núcleos × 2.")
+        @Key("pool-size")
+        int poolSize,
+
+        @Comment("Dónde viven los datos de jugador.")
+        String host) {
+
+    /** Los valores con los que se genera el archivo. */
+    public Storage() {
+        this(10, "localhost");
+    }
+}
+```
+
+| Anotación | Qué hace |
+|---|---|
+| `@Key("otro-nombre")` | La clave YAML difiere del nombre del componente. |
+| `@Comment("…")` | Se escribe encima del valor en el archivo. Repetible — varias líneas, en orden. |
+
+Los records anidados se convierten en secciones anidadas, así que la estructura del archivo es el árbol
+de records.
+
+<Callout type="tip" title="Los comentarios son el manual">
+Son lo que lee el dueño del servidor en vez de tu documentación. Di qué cambia el valor, en qué unidad
+y en qué rango — `Segundos que un jugador sigue marcado tras recibir un golpe`, no `duración del tag`.
+</Callout>
+
+## Leer y escribir
+
+| Llamada | Qué hace |
+|---|---|
+| `get()` | La instantánea actual. Un acceso a campo, nunca un reparseo. |
+| `reload()` | Relee el archivo. Devuelve los problemas; lista vacía significa limpio. |
+| `onReload(consumer)` | Se ejecuta tras cada recarga correcta. |
+| `save()` | Escribe la instantánea actual en disco. |
+| `update(operador)` | Cambiar y persistir en un paso. |
+| `issues()` | Problemas de la última carga. |
+| `schema()` | Una descripción de solo lectura del tipo del record. |
+
+```java
+settings.update(actual -> actual.withHost("10.0.0.5"));
+```
+
+## Versiones y migraciones
+
+Un archivo recibe un marcador `config-version` en cuanto declaras una versión, y las migraciones llevan
+un archivo antiguo hacia adelante en el primer arranque tras actualizar:
+
+```java
+config = Configs.define(this, "config", Settings.class)
+        .version(3)
+        .migration(1, MIGRATION_FROM_1)
+        .migration(2, MIGRATION_FROM_2)
+        .load();
+```
+
+Los pasos se ejecutan en orden, por muy atrasado que esté el archivo. Una migración se construye con
+cuatro operaciones:
+
+| Operación | Qué hace |
+|---|---|
+| `Migration.rename(de, a)` | Mueve un valor a una ruta nueva. Un origen ausente se deja en paz. |
+| `Migration.remove(ruta)` | Borra una clave. |
+| `Migration.transform(ruta, reescritura)` | Reescribe el valor en el sitio. Se salta si la clave no está. |
+| `Migration.all(pasos…)` | Varias de las anteriores como una sola migración. |
+
+```java
+public static final Migration MIGRATION_FROM_1 = Migration.all(
+        Migration.rename("combat.combat-actionbar.text",
+                         "combat.combat-actionbar.action-bar.text"),
+        Migration.remove("combat.combat-actionbar.update-interval"));
+```
+
+<Callout type="warning" title="Un renombrado sin migración borra las ediciones del dueño">
+Una clave que ningún record declara se elimina al cargar. Eso es lo que mantiene los archivos limpios
+entre actualizaciones — y es exactamente por lo que reestructurar una sección sin migración tira en
+silencio lo que el dueño del servidor hubiera escrito ahí. Renombra en el record y migra en el mismo
+commit.
+</Callout>
+
+`transform` es la herramienta correcta cuando lo que cambió es el *significado* de un valor y no su
+sitio — un token renombrado, un número que estaba en ticks y ahora va en segundos. Reescribe lo que hay
+en vez de reemplazarlo con el valor por defecto, así que las palabras y los colores del dueño
+sobreviven.
+
+## Claves desconocidas
+
+Cualquier clave que ningún record declare se elimina al cargar y se reporta una vez como
+`UNKNOWN_KEY`. Es una operación de un solo sentido, así que una sección que se está retirando a
+propósito merece una nota en el código diciéndolo.
+
+## Recargar todo lo de un plugin
+
+```java
+List<ConfigIssue> issues = Configs.reloadAll(this);
+```
+
+Cada `ConfigIssue` dice qué archivo, qué ruta y qué estaba mal. Un valor malo cuesta ese valor, no el
+archivo: el resto carga y el valor por defecto rellena el hueco.

@@ -1,0 +1,166 @@
+---
+title: "Tipos de evento"
+description: "Los siete tipos, cómo se juega cada uno de verdad, y todos sus ajustes con su valor por defecto."
+---
+
+El tipo se elige al crear el evento y no cambia después. Cada tipo lee sus propios ajustes; un ajuste
+que pertenece a otro tipo simplemente no se lee.
+
+## Ajustes comunes
+
+Los tiene cualquier tipo.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `maxDuration` | 10 min, `-1` en KOTH | Cuánto puede durar el evento. `-1` o menos significa sin límite. |
+| `leaderboard-points` | `1` | Lo que ganar este evento suma al ranking. |
+| `bossbar-enabled` | `true` | La barra superior mientras corre. |
+| `scoreboard-enabled` | `true` | El sidebar mientras corre. |
+
+## KOTH
+
+Identificador `koth`. Una zona, un temporizador.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `capture-time` | `30000` ms | Cuánto hay que mantener la zona. |
+| `infinite` | `false` | Una captura inicia otra ronda en vez de terminar el evento. |
+| `glow-enabled` | `false` | Hace brillar al capturador cerca del final. |
+| `glow-last-millis` | `10000` ms | Cuánto antes de completar la captura empieza el brillo. |
+
+El primer jugador que entra a una zona vacía se convierte en capturador y arranca el temporizador.
+Sigue corriendo mientras siga dentro; se reinicia solo cuando **él** sale, y entonces cualquier
+jugador que quede dentro toma el relevo con el temporizador a cero.
+
+<Callout type="note" title="Que entre otro no detiene el temporizador">
+La posesión no es exclusiva: que entre un segundo jugador ni le quita la zona al capturador ni
+reinicia el progreso. Echarlo importa solo porque la única forma de que el capturador pierda la zona
+es **saliendo** de ella. La descripción del tipo en el menú dice lo mismo: "el primer jugador dentro
+la mantiene hasta que sale o se agota el temporizador".
+</Callout>
+
+Con `infinite` activo, una captura anuncia ganador, paga la recompensa de ganador, registra la
+victoria y reinicia la zona — el evento sigue corriendo. Es el ajuste para un KOTH permanentemente
+disponible.
+
+## KOTH Points
+
+Dos identificadores sobre una misma implementación: `koth_points_exclusive` y `koth_points_multi`.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `target-points` | `100` | Puntos necesarios para ganar. |
+| `points-per-second` | `1` | Puntos que se otorgan cada segundo. |
+| `clan-mode` | `false` | Puntúa por clan en vez de por jugador. |
+
+Los puntos se reparten una vez por segundo entre quienes estén dentro. La diferencia entre los dos
+identificadores es a quién:
+
+- **Multi** — todos los que están dentro puntúan a la vez.
+- **Exclusive** — solo puntúa el grupo **poseedor**. El poseedor es el primer grupo que entró y
+  conserva la zona mientras quede alguien de él dentro; cuando ya no queda nadie, toma el relevo el
+  siguiente. En modo clan un grupo es un clan, así que puntúan todos sus miembros a la vez.
+
+<Callout type="note" title="Exclusive no es una lotería">
+No es un jugador al azar por segundo: es quien la tiene. Una zona disputada se registra como
+disputada, y el poseedor sigue puntuando hasta que no quede ninguno de los suyos dentro.
+</Callout>
+
+En modo clan, un jugador sin clan se salta, y sin plugin de clanes instalado el modo cae a puntuación
+individual.
+
+## KOTH Capture Points
+
+Identificador `koth_capture_points`. Una captura vale un punto y luego la zona vuelve a quedar libre.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `target-points` | `5` | Capturas necesarias para ganar. |
+| `capture-time` | `30000` ms | Cuánto dura una captura. |
+| `clan-mode` | `false` | Puntúa por clan en vez de por jugador. |
+| `glow-enabled` | `false` | Hace brillar al poseedor cerca del final de una captura. |
+| `glow-last-millis` | `10000` ms | Cuánto antes de completarla empieza el brillo. |
+
+La posesión funciona como en KOTH: manda quien llegó primero, y el temporizador solo se reinicia
+cuando el poseedor sale. En modo clan el poseedor es el clan, así que la captura sobrevive a que un
+miembro se vaya mientras otro del mismo clan siga dentro.
+
+Cada captura completada suma un punto, registra una captura y su tiempo, y reinicia el temporizador.
+
+## Conquest
+
+Identificador `conquest`. El único tipo con varias zonas en un mismo evento, y el único exclusivo de
+clanes.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `target-points` | `10` | Puntos que necesita un clan para ganar. |
+
+Cada zona de `conquest-zones` lleva los suyos:
+
+| Campo de zona | Por defecto | Qué hace |
+|---|---|---|
+| `name` | `Zone` | Se muestra en su holograma y en los mensajes. |
+| `color` | `#FFFFFF` | El color con el que se dibuja. |
+| `points-per-capture` | `1` | Lo que capturarla suma al total del clan. |
+| `capture-time` | `30000` ms | Cuánto tarda en capturarse esa zona. |
+
+Una zona la posee un tag de clan: el primer miembro que entra la reclama, y sobrevive a que salgan
+miembros mientras quede alguno de ese clan. Los puntos se acumulan por clan sumando todas las zonas, y
+gana el primer clan en llegar al objetivo.
+
+<Callout type="warning" title="Sin plugin de clanes no hay captura">
+Las zonas de Conquest leen el tag de clan del capturador. Sin proveedor detectado, una zona nunca
+registra capturador y el evento no puede avanzar. A los jugadores sin clan se les ignora igual.
+</Callout>
+
+## Payload
+
+Identificador `payload`. Un minecart recorre un camino de raíles desde un punto de inicio a uno de
+fin.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `radius` | `5.0` | A qué distancia hay que estar para empujar. |
+| `capture-speed` | `0.5` | Bloques por segundo hacia adelante. |
+| `recapture-speed` | `1.5` | Bloques por segundo hacia atrás mientras el otro bando lo empuja. |
+| `return-speed` | `0.3` | Bloques por segundo hacia atrás cuando no hay nadie empujando. |
+| `minecart-type` | `TNT_MINECART` | Qué carro se genera. |
+| `clan-mode` | `false` | Agrupa a los que empujan por clan en vez de individualmente. |
+
+Tipos de carro: `MINECART`, `CHEST_MINECART`, `FURNACE_MINECART`, `TNT_MINECART`, `HOPPER_MINECART`.
+
+El camino se calcula solo entre los dos puntos: ambos deben ser raíles, y el recorrido va saltando de
+raíl a raíl vecino entre ellos. La posición del carro en ese camino es el progreso.
+
+### Los cinco estados
+
+| Estado | Cuándo | Qué hace el carro |
+|---|---|---|
+| `IDLE` | Nadie en rango y sin progreso | Se queda quieto |
+| `CAPTURING` | Un solo bando en rango | Avanza a `capture-speed` |
+| `DISPUTED` | Dos o más bandos en rango | Se detiene |
+| `RECAPTURING` | Solo el otro bando en rango | Retrocede a `recapture-speed` |
+| `RETURNING` | Nadie en rango después de haber avanzado | Retrocede a `return-speed` |
+
+Llegar al final gana. Volver del todo al inicio libera al bando que lo tenía y el carro queda inactivo.
+
+## Destroy The Core
+
+Identificador `dtc`. Un bloque, roto una y otra vez.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `target-points` | `50` | Puntos necesarios para ganar. |
+| `points-per-break` | `1` | Lo que vale una rotura. |
+| `regen-time` | `5000` ms | Cuánto tarda el bloque en volver. |
+| `broadcast-every` | `1` | Anuncia solo cada N roturas. |
+| `clan-mode` | `false` | Puntúa por clan en vez de por jugador. |
+
+Cada rotura registra una captura y sus puntos para quien la hizo. En modo clan los puntos van al clan
+de quien rompe — si no tiene clan, la rotura queda sin atribuir y no puntúa.
+
+<Callout type="tip" title="broadcast-every">
+Con el valor por defecto de `1` se anuncia cada rotura. En un núcleo concurrido eso es mucho chat:
+`5` o `10` mantiene los anuncios con sentido sin tocar la puntuación.
+</Callout>

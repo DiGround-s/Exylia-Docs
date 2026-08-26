@@ -1,0 +1,311 @@
+---
+title: "Tipos de evento"
+description: "Los treinta y cuatro tipos registrados, qué es cada uno, y los ajustes que importan con su valor por defecto."
+---
+
+Hay treinta y cuatro tipos registrados: veintisiete juegos individuales y siete variantes por equipos.
+El tipo se elige al crear la configuración y no se puede cambiar después.
+
+## El catálogo
+
+| Identificador | Nombre | Categoría | Equipos |
+|---|---|---|---|
+| `tnttag` | TNT Tag | Eliminación por rondas | — |
+| `taggame` | Tag Game | Eliminación por rondas | — |
+| `simonsays` | Simon Says | Eliminación por rondas | — |
+| `blockparty` | Block Party | Supervivencia por rondas | — |
+| `chairs` | Chairs | Supervivencia por rondas | — |
+| `tntrun` | TNT Run | Supervivencia | — |
+| `spleef` | Spleef | Supervivencia | — |
+| `splegg` | Splegg | Supervivencia | — |
+| `volcano` | Volcano | Supervivencia | — |
+| `anvilrunning` | Anvil Running | Supervivencia / Reflejos | — |
+| `lms` | Last Man Standing | Eliminación PvP | — |
+| `topkiller` | Top Killer | PvP por bajas | — |
+| `oitc` | OITC | PvP de precisión | — |
+| `quake` | Quake | PvP de precisión | — |
+| `csgo` | CS:GO | PvP a muerte | — |
+| `slap` | Slap | PvP de control de zona | — |
+| `gemcrawler` | Gem Crawler | PvP de recolección | — |
+| `pillarsoffortune` | Pillars of Fortune | PvP de supervivencia | — |
+| `survivalgames` | Survival Games | PvP de supervivencia | — |
+| `infection` | Infection | Infección | — |
+| `kingkong` | King Kong | Persecución | — |
+| `brackets` | Brackets | Torneo 1v1 | — |
+| `tournament` | Tournament | 1v1 secuencial | — |
+| `buildbattle` | Build Battle | Construcción creativa | — |
+| `parkour` | Parkour | Parkour | — |
+| `thimble` | Thimble | Parkour / Habilidad | Sí |
+| `splatoon` | Splatoon | Territorial por equipos | Sí |
+| `topkiller_teams` | Top Killer Teams | PvP por equipos | Sí |
+| `oitc_teams` | OITC Teams | PvP por equipos | Sí |
+| `quake_teams` | Quake Teams | PvP por equipos | Sí |
+| `csgo_teams` | CS:GO Teams | PvP por equipos | Sí |
+| `lms_teams` | LMS Teams | Eliminación por equipos | Sí |
+| `gemcrawler_teams` | Gem Crawler Teams | Recolección por equipos | Sí |
+| `thimble_teams` | Thimble Teams | Precisión por equipos | Sí |
+
+## Ajustes comunes a todos
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `countdown` | `30` | Segundos desde tener jugadores suficientes hasta empezar. |
+| `duration` | `0` en casi todos | Segundos que puede durar. `0` significa que termina por sus propias reglas. |
+| `min-players` | `2` | Jugadores necesarios para que arranque la cuenta atrás. |
+| `max-players` | `32` | Cuántos caben. |
+| `grace-period` | `5` donde el tipo lo tiene | Segundos iniciales sin daño. |
+
+Los tipos por equipos añaden `team-selector-enabled`, activo por defecto.
+
+## Eliminación por rondas
+
+### TNT Tag
+
+| Ajuste | Por defecto |
+|---|---|
+| `min-players` | `4` |
+| `round-duration` | `30` |
+| `tagged-percentage` | `25` |
+| `transfer-cooldown` | `0.5` |
+| `glow-effect` | `true` |
+| `normal-player-speed` | `2` |
+| `tnt-player-speed` | `3` |
+| `tnt-item` | `TNT` |
+| `respawn-at-spawn-after-round` | `5` |
+| `round-pause` | `2` |
+
+Una parte de los jugadores empieza con el TNT; al acabar cada ronda, quien lo tenga queda eliminado.
+Los marcados van más rápido y brillan, y pasarlo tiene un pequeño cooldown para que dos jugadores no
+se lo intercambien al instante.
+
+### Tag Game
+
+El mismo núcleo que TNT Tag, más construcción: `temporary-blocks` activo con
+`temporary-blocks-seconds` de `15`, `re-give-blocks` activo, `enderpearl-regive-seconds` `8` y
+`enderpearl-throw-cooldown` `3`.
+
+### Simon Says
+
+| Ajuste | Por defecto |
+|---|---|
+| `action-time` | `8` |
+| `min-action-time` | `2` |
+| `time-decrease-interval` | `5` |
+| `round-pause` | `3` |
+
+Se canta una instrucción y quien no la cumple a tiempo queda eliminado. La ventana se acorta con las
+rondas hasta `min-action-time`.
+
+## Supervivencia por rondas
+
+### Block Party
+
+| Ajuste | Por defecto |
+|---|---|
+| `min-players` | `4` |
+| `max-players` | `24` |
+| `round-duration` | `10` |
+| `round-pause` | `3` |
+| `pvp-round` | `5` |
+| `time-reduction-per-round` | `1` |
+| `min-round-duration` | `3` |
+| `initial-colors` | `3` |
+| `max-colors` | `10` |
+
+El suelo se recolorea, se canta un color y desaparece todo lo demás. Las rondas se acortan y añaden
+colores, y a partir de la ronda `pvp-round` los jugadores pueden pelear.
+
+### Chairs
+
+| Ajuste | Por defecto |
+|---|---|
+| `chair-percentage` | `80` |
+| `chair-color` | `RED` |
+| `music-duration-min` | `10` |
+| `music-duration-max` | `20` |
+| `rush-duration` | `8` |
+| `round-pause` | `3` |
+
+Las sillas musicales: menos asientos que jugadores, música de duración aleatoria y una carrera cuando
+para.
+
+## Supervivencia
+
+### TNT Run
+
+| Ajuste | Por defecto |
+|---|---|
+| `block-break-delay` | `8` |
+| `double-jump-cooldown` | `1.5` |
+| `double-jump-limit` | `3` |
+| `double-jump-power` | `1.0` |
+
+El suelo desaparece a tu paso. Los dobles saltos están limitados, que es lo que evita resolverlo
+flotando.
+
+### Spleef y Splegg
+
+Spleef: `snowballs-per-break` `1`, `snowball-knockback` activo, `fall-damage` desactivado.
+
+Splegg: `breakable-material` `SNOW_BLOCK`, `projectile-type` `EGG`, `explosion-radius` `1`,
+`starting-ammo` `16`, `ammo-per-break` `1`, `max-ammo` `64`, `shot-cooldown` `0.0`,
+`knockback-enabled` activo, `fall-damage` desactivado.
+
+### Volcano
+
+| Ajuste | Por defecto |
+|---|---|
+| `stage-delay` | `20` |
+| `initial-blocks-per-second` | `3` |
+| `acceleration-interval` | `10` |
+
+El suelo sube inundándose, cada vez más rápido.
+
+### Anvil Running
+
+| Ajuste | Por defecto |
+|---|---|
+| `initial-anvil-rate` | `20` |
+| `min-anvil-rate` | `3` |
+| `rate-decrease-interval` | `10` |
+| `rate-decrease-amount` | `2` |
+| `anvils-per-wave` | `1` |
+| `anvils-increase-interval` | `15` |
+| `target-anvils` | `true` |
+| `target-anvil-interval` | `2` |
+| `break-ground-blocks` | `true` |
+| `anvil-damage` | `true` |
+
+Caen yunques, más rápido y en mayor número con el tiempo. Con `target-anvils` activo, algunos apuntan
+a los jugadores en vez de caer al azar.
+
+## PvP
+
+### Last Man Standing
+
+`drop-items-on-death` desactivado, `block-break` desactivado, `block-place` desactivado,
+`player-build-only` desactivado, `temporary-blocks` desactivado con `temporary-blocks-seconds` `15`,
+`golden-apple-on-kill` activo con `golden-apple-amount` `1`.
+
+### Top Killer y OITC
+
+Ambos: `kills-to-win` `20`, `respawn-delay` `3`, `golden-apple-on-kill` activo, `reset-kit-on-kill`
+desactivado. OITC añade `arrow-limit` `1` — una flecha, una baja, y la recoges.
+
+### Quake
+
+| Ajuste | Por defecto |
+|---|---|
+| `kills-to-win` | `25` |
+| `max-players` | `16` |
+| `weapon-cooldown` | `20` |
+| `dash-cooldown` | `60` |
+| `dash-power` | `1.2` |
+| `dash-vertical` | `0.4` |
+| `no-regen-duration` | `3` |
+
+### CS:GO
+
+La pantalla de ajustes más profunda del plugin: `kills-to-win` `25`, `headshot-multiplier` `1.5`,
+`recoil-enabled` activo, `weapon-switch-delay` `20`, y después un bloque por arma — pistola, AK-47,
+sniper, escopeta, SMG y lanzacohetes — cada uno con su interruptor, daño, cooldown, alcance, disparo
+letal y dispersión.
+
+El sniper solo ya tiene seis valores de dispersión, uno por postura: perfecta, en el aire, agachado
+quieto, agachado en movimiento, de pie quieto y de pie en movimiento.
+
+<Callout type="tip" title="Cada arma tiene su menú">
+`menus/admin/csgo_*_settings.yml` es una pantalla por arma, así que afinar el AK no obliga a pasar por
+la escopeta.
+</Callout>
+
+### Slap
+
+`points-to-win` `100`, `respawn-delay` `3`. Los puntos salen de estar sobre el bloque de captura — ver
+[Arenas](/docs/exyliaevents/arenas#materiales-que-espera-cada-tipo).
+
+### Gem Crawler
+
+`gem-spawn-interval` `5`, `win-gems` `10`, `win-countdown` `10`, `respawn-delay` `3`. Aparecen gemas,
+los jugadores las recogen, y mantener la ventaja durante la cuenta atrás gana.
+
+### Pillars of Fortune
+
+`max-players` `20`, `item-interval` `10`, `mode` `DEFAULT`. Cada jugador tiene su propio pilar, y por
+eso este tipo necesita **un punto de spawn por jugador**.
+
+### Survival Games
+
+`max-players` `20`, `grace-period` `15`, `chest-refill-interval` `180`, `min-items-per-chest` `3`,
+`max-items-per-chest` `12`. Los cofres se llenan desde la tabla de loot de la configuración — ver
+[Equipos y kits](/docs/exyliaevents/equipos-y-kits#tablas-de-loot).
+
+## Persecución e infección
+
+### Infection
+
+`min-players` `4`, `max-players` `24`, `duration` `300`, `infected-percentage` `25`,
+`infection-cooldown` `0.5`, `glow-effect` activo, `infected-speed` `2`, `survivor-speed` `3`,
+`eliminate-on-infect` desactivado. Los supervivientes que aguantan la duración ganan.
+
+### King Kong
+
+`min-players` `3`, `runner-respawn` activo, `respawn-delay` `3`, `kong-speed-level` `2`, `kong-glow`
+activo.
+
+## Torneos y construcción
+
+### Brackets
+
+`match-duration` `120`, `match-end-delay` `3`, `round-delay` `3`, `max-arenas` `8`,
+`heal-between-rounds` activo. Las partidas corren **en paralelo** en arenas clonadas, hasta
+`max-arenas` a la vez.
+
+### Tournament
+
+`match-duration` `120`, `match-intro-delay` `5`, `match-end-delay` `3`, `round-delay` `3`,
+`heal-between-matches` activo. La misma idea de cuadro pero **una partida cada vez**, con el público
+mirando y una congelación e introducción antes de cada combate.
+
+### Build Battle
+
+`max-players` `16`, `theme-vote-duration` `20`, `theme-options` `5`, `build-duration` `300`,
+`vote-duration-per-plot` `20`, `results-duration` `15`. Cada constructor recibe una parcela clonada;
+los temas salen de `buildbattle-themes.yml` y se votan antes de construir.
+
+## Precisión y parkour
+
+### Parkour
+
+Solo los ajustes comunes. Los checkpoints y la meta son placas de presión en la arena.
+
+### Thimble
+
+`respawn-delay` `2`. Los jugadores se lanzan a losetas de agua; una loseta llenada es un punto. Existe
+también como `thimble_teams`.
+
+### Splatoon
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `180` |
+| `team-count` | `2` |
+| `weapon-delay` | `0.1` |
+| `weapon-damage` | `2.0` |
+| `paint-radius` | `2` |
+| `ink-trail` | `true` |
+| `respawn-delay` | `3` |
+| `fall-damage` | `false` |
+| `double-jump-enabled` | `true` |
+| `double-jump-cooldown` | `2.0` |
+| `double-jump-limit` | `-1` |
+| `double-jump-power` | `0.8` |
+
+Pinta más suelo que el otro equipo antes de que se agote la duración. `double-jump-limit` en `-1`
+significa ilimitado.
+
+## Variantes por equipos
+
+Siete tipos existen en versión por equipos: Top Killer, OITC, Quake, CS:GO, LMS, Gem Crawler y
+Thimble. Conservan sus ajustes individuales y añaden la capa de equipos descrita en
+[Equipos y kits](/docs/exyliaevents/equipos-y-kits).

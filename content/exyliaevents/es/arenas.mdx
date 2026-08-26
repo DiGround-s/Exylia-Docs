@@ -1,0 +1,114 @@
+---
+title: "Arenas"
+description: "Qué contiene una configuración, cómo se valida y restaura una arena, y qué bloques espera cada tipo."
+---
+
+Una configuración de evento es una fila en la base de datos. Lleva la arena, los ajustes, los kits y
+las recompensas de un evento, y se edita entera desde `/eventsadmin`.
+
+## Qué contiene una configuración
+
+| Campo | Qué es |
+|---|---|
+| `id` | La clave. Lo que nombran comandos, menús y placeholders. |
+| `displayName` | Lo que leen los jugadores. Por defecto, el id. |
+| `eventType` | Cuál de los 34 juegos es. Se elige al crearla. |
+| `enabled` | Si se puede lanzar. |
+| `iconMaterial` | El icono en los menús. Por defecto `NETHER_STAR`. |
+| `lobbySpawn` | Donde esperan los jugadores antes de empezar. |
+| `spectatorSpawn` | Donde van espectadores y eliminados. |
+| `spawnPoints` | Donde aparecen los jugadores al empezar. |
+| `bounds` | El cuboide dentro del que ocurre la partida. |
+| `copyBounds` | Una segunda región opcional, clonada en vez de `bounds` por Brackets y Build Battle. |
+| `settings` | Todo lo que lee el propio tipo. |
+| Kits, loot, recompensas | Guardados aparte, con su propia página. |
+
+## Validación
+
+Una configuración es jugable cuando tiene spawn de lobby, spawn de espectadores, al menos un punto de
+spawn y límites completos. La pantalla de setup nombra lo que falte.
+
+Dos reglas extra:
+
+- Los tipos marcados como que necesitan un spawn por jugador — **Pillars of Fortune** — exigen al
+  menos `max-players` puntos de spawn, y el validador dice cuántos faltan.
+- La esquemática se comprueba aparte, porque no hace falta para *jugar* pero sí para *restaurar*.
+
+## Límites y esquemática
+
+`bounds` hace dos trabajos: es lo que cuenta como "dentro de la arena", y es lo que se guarda como
+esquemática con el nombre `event_bounds_<id>`.
+
+`copyBounds` es una segunda región opcional que usan **solo los dos tipos que clonan**: Brackets y
+Build Battle copian `copyBounds` cuando está definida y recurren a `bounds` cuando no. Existe para una
+arena cuya zona jugable es menor que lo que debe viajar con una copia — un ring dentro de una sala
+decorada, por ejemplo. Restaurar tras una partida normal siempre usa `bounds`.
+
+<Callout type="tip" title="Vuelve a guardarla si editas el mapa">
+La esquemática es una foto. Cambia la arena y seguirá restaurando la versión antigua hasta que la
+guardes otra vez desde la pantalla de setup.
+</Callout>
+
+## Puntos de spawn
+
+Casi todos los tipos reparten a cada jugador en un punto de spawn al azar. Algunos piden un spawn
+alejado de otros jugadores, así que varios puntos separados funcionan mejor que uno solo — con un
+único punto todos caen unos encima de otros.
+
+## El mundo automático
+
+Dos tipos necesitan más de una copia de la arena a la vez, así que el plugin genera un mundo plano y
+vacío llamado `exyliaevents_autoworld` y pega copias dentro, una al lado de otra:
+
+| Tipo | Qué se clona |
+|---|---|
+| Brackets | Una copia de la arena por partida simultánea |
+| Build Battle | Una parcela por constructor |
+
+```yaml title="config.yml"
+auto-world:
+  clone-spacing: 500
+  clone-paste-y: 64
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `clone-spacing` | `500` | Bloques de separación horizontal reservados entre arenas clonadas. |
+| `clone-paste-y` | `64` | La altura a la que se pegan las copias. |
+
+El mundo se crea al arrancar: con Bukkit normalmente, y con el plugin **Worlds** en Folia, donde la
+creación de mundos de Bukkit no está disponible. Si ya existe, se adopta en vez de regenerarse.
+
+<Callout type="warning" title="Clonar necesita la esquemática">
+Una arena de Brackets o Build Battle sin esquemática guardada no tiene nada que clonar. Guárdala antes
+de usar cualquiera de los dos tipos.
+</Callout>
+
+## Materiales que espera cada tipo
+
+Varios juegos buscan bloques concretos. Construye la arena con ellos o el juego no funcionará:
+
+| Tipo | Qué necesita |
+|---|---|
+| **TNT Run** | Un suelo cuyo bloque tenga `TNT` justo debajo — eso es lo que hace que un bloque caiga. Tocar `WATER` elimina. |
+| **Spleef** | `SNOW_BLOCK` como suelo rompible. Tocar `WATER` elimina. |
+| **Splegg** | El material rompible es un ajuste, `breakable-material`, con `SNOW_BLOCK` por defecto. Tocar `WATER` elimina. |
+| **Block Party** | El escáner de suelo detecta `WHITE_CONCRETE`; esas losetas se recolorean cada ronda. Caer al `WATER` elimina. |
+| **Splatoon** | Suelo pintable de concreto o polvo de concreto — se recolorea toda la familia de colores según se pinta. |
+| **Slap** | `RED_CONCRETE` es el bloque de captura: estar encima es lo que puntúa. |
+| **Parkour** | `HEAVY_WEIGHTED_PRESSURE_PLATE` para los checkpoints, `LIGHT_WEIGHTED_PRESSURE_PLATE` para la meta. |
+| **Thimble** | Los bloques de `WATER` son los objetivos donde saltan los jugadores. |
+| **Anvil Running** | Tocar `WATER` elimina. |
+| **Survival Games** | Cofres dentro de los límites, llenados desde la tabla de loot. |
+
+<Callout type="note" title="El agua es el plano de muerte estándar">
+Varios juegos de eliminación usan agua bajo la arena en vez de vacío: es barato de construir, funciona
+a cualquier altura y deja ver la caída. Donde arriba pone que un tipo elimina al tocar agua, ese es el
+mecanismo.
+</Callout>
+
+## Restaurar tras la partida
+
+Cuando una partida termina, la arena se restaura desde su esquemática, y eso es lo que hace que sea
+reutilizable sin que un admin recoloque bloques a mano. Es también por qué un tipo que modifica el
+mapa — Spleef, TNT Run, Block Party, Splatoon — no se puede jugar dos veces seguidas sin ella.

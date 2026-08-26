@@ -1,0 +1,81 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaEvents, los treinta y cuatro minijuegos que registra y cómo está organizada la documentación."
+---
+
+ExyliaEvents es un sistema de eventos de minijuegos. Registra **34 tipos de evento** — veintisiete
+juegos individuales y siete variantes por equipos — y cada uno es un juego real y distinto, con sus
+reglas, su pantalla de ajustes, su scoreboard y sus mensajes.
+
+Una *configuración de evento* es una arena de un tipo: su lobby, sus spawns, sus límites, sus
+ajustes, sus kits y sus recompensas. Puedes tener tantas como quieras, y varias pueden correr a la
+vez. Todo se crea desde `/eventsadmin`, y las configuraciones viven en la base de datos, no en un
+archivo.
+
+## Qué abarca
+
+<Cards>
+  <Card title="34 tipos de evento" href="/docs/exyliaevents/tipos-de-evento">
+    Desde TNT Run y Spleef hasta CS:GO, Build Battle, Survival Games y Simon Says.
+  </Card>
+  <Card title="Variantes por equipos" href="/docs/exyliaevents/equipos-y-kits">
+    Siete juegos existen también por equipos, con cuatro colores y selector.
+  </Card>
+  <Card title="Clonado de arenas" href="/docs/exyliaevents/arenas#el-mundo-automático">
+    Brackets y Build Battle pegan copias de tu arena en un mundo vacío generado, para que las partidas
+    y las parcelas corran en paralelo.
+  </Card>
+  <Card title="Inscripciones" href="/docs/exyliaevents/inscripciones">
+    Abre una lista, deja que el staff añada jugadores, y lanza un evento al que solo ellos entran.
+  </Card>
+  <Card title="Eventos automáticos" href="/docs/exyliaevents/flujo-de-juego#eventos-automáticos">
+    Un temporizador que lanza un evento al azar, y horarios por día y hora.
+  </Card>
+  <Card title="Estadísticas y recompensas" href="/docs/exyliaevents/estadisticas">
+    Bajas, muertes, victorias y partidas, globales y por evento, con recompensas que no se pierden.
+  </Card>
+</Cards>
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. Folia soportado. |
+| Java | 21 |
+| Dependencias obligatorias | `ExyliaLib`, `FastAsyncWorldEdit`, `packetevents` |
+| Dependencias opcionales | `PlaceholderAPI`, `ViaVersion`, `Worlds`, `WorldGuard`, Apollo o Feather, `TAB`, `floodgate` |
+
+<Callout type="note" title="FastAsyncWorldEdit es obligatorio, no opcional">
+Las esquemáticas de arena son la forma de restaurar una arena tras una partida y de que Brackets y
+Build Battle se clonen. Sin FAWE el plugin no arranca.
+</Callout>
+
+## Dónde vive cada cosa
+
+| Cosa | Dónde |
+|---|---|
+| Configuraciones de evento, arenas, ajustes, recompensas | Base de datos (`event_configurations`) |
+| Kits, tablas de loot, inscripciones, recompensas pendientes | Base de datos |
+| Estadísticas de jugador, globales y por evento | Base de datos |
+| Temporizadores, límites, cooldowns, boss bars, música | `config.yml` |
+| Sidebars, uno por tipo de evento | `scoreboards.yml` |
+| Todos los mensajes | `messages.yml` |
+| Temas de Build Battle | `buildbattle-themes.yml` |
+| Diseño de los menús | `menus/` |
+
+## Cómo leer esta documentación
+
+<Steps>
+  <Step title="Empezar">
+    Instalación y una arena funcionando desde el panel.
+  </Step>
+  <Step title="Configurar">
+    Arenas, el catálogo de tipos, equipos y kits, recompensas.
+  </Step>
+  <Step title="Sistemas">
+    Cómo transcurre una partida, inscripciones, estadísticas y todo lo que se dibuja en pantalla.
+  </Step>
+  <Step title="Referencia">
+    Comandos, placeholders, cada clave de configuración, la API y el FAQ.
+  </Step>
+</Steps>

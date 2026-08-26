@@ -1,0 +1,391 @@
+---
+title: "Menús"
+description: "Todo lo que puede decir un archivo de menú: ventanas, listas, plantillas, rellenos, condiciones, animaciones, clics y redibujado."
+---
+
+Un menú es un archivo YAML, compilado una vez y abierto barato. Nada de él se escribe en Java salvo los
+datos que llenan sus listas.
+
+```java
+PluginMenus menus = Menus.of(this);
+
+menus.load("kits", YamlConfiguration.loadConfiguration(file));   // una vez
+menus.open(player, "kits");                                      // cuando haga falta
+```
+
+## Tres cosas separadas
+
+| | Qué es | Vida |
+|---|---|---|
+| `UiDefinition` | Lo que dice el archivo, compilado | Una por menú, compartida por todos |
+| `UiSession` | La ventana abierta de un jugador | Hasta que la cierra |
+| `UiEntry` | Una fila de una lista | Hasta que la lista se reemplaza |
+
+Leer el archivo es la mitad cara y ocurre una vez. Abrir dibuja los slots que se muestran y nada más.
+
+## Cargar y abrir
+
+| Llamada | Qué hace |
+|---|---|
+| `load(id, section)` | Compila un menú, reportando las partes malas a consola. |
+| `load(id, section, problems)` | Lo mismo, reportándolas donde tú quieras. |
+| `register(definition)` | Registra un menú ya compilado. |
+| `definition(id)` | Recupera uno. |
+| `unload()` | Olvidarlos todos, para una recarga. |
+| `sounds(UiSounds)` | A qué suenan los menús de este plugin. |
+| `refreshBundledDirectory(clase, ruta)` | Reemplaza un directorio de menús empaquetados con la copia del jar al arrancar. |
+| `open(player, id)` | Abrirlo. Seguro desde cualquier hilo. |
+| `open(player, id, context)` | Abrirlo con valores de contexto. |
+| `openNow(player, definition, context)` | Abrir y devolver la sesión. Solo desde el hilo del jugador. |
+| `back(player)` / `close(player)` | De donde vino, o cerrar. |
+| `session(player)` | La sesión abierta, si es una de las nuestras. |
+
+`open` se mueve solo al hilo dueño del jugador, así que quien vuelva de una consulta a la base de datos
+no tiene que hacerlo. `openNow` no puede, porque devuelve la sesión que abrió.
+
+### Contexto
+
+Los valores de contexto rellenan placeholders en todo lo que dibuja el menú — el título, cada slot fijo,
+cada fila:
+
+```java
+menus.open(player, "leaderboard", Map.of("kit_name", kit.name()));
+```
+
+Los valores de contexto se **parsean**, a diferencia de los de fila: quien escribió el menú escribió
+también esos valores, normalmente en el mismo archivo, así que `"{success}&lNUEVO ESCUDO"` llega como un
+botón verde. Una fila que use la misma clave tapa al contexto y mantiene su propia regla.
+
+## La ventana
+
+```yaml
+type: SIMPLE     # un cofre; el valor por defecto
+size: 54         # solo un cofre es redimensionable
+```
+
+`SIMPLE`, `PAGINATION`, `MULTI_PAGINATION`, `ITEM_INPUT` y `STATIC` son todos cofres — que un menú
+pagine lo decide que tenga una lista, que es lo único que lo decidió nunca de verdad.
+
+Cualquier otro contenedor funciona y trae su propio tamaño fijo: `BARREL`, `HOPPER`, `DROPPER`,
+`DISPENSER`, `ANVIL`, `ENCHANTING`, `FURNACE`, `BREWING`, `BEACON`, `CRAFTING`, `MERCHANT`, `SMITHING`,
+`GRINDSTONE`, `CARTOGRAPHY`, `LOOM`, `STONECUTTER`.
+
+<Callout type="warning" title="Un tamaño equivocado no es cosmético">
+Crear un inventario cuyo tamaño no concuerda con su tipo lanza, así que el menú no llega a abrirse. Un
+barril parece un cofre y no lo es: siempre son veintisiete slots.
+</Callout>
+
+### La página en el título
+
+```yaml
+title: '{primary}&lMIS ESCUDOS {muted}%current_page%/%total_pages%'
+```
+
+`%current_page%`, `%total_pages%` y los más cortos `%page%` y `%pages%` los aporta la propia lista — la
+sección sabe cuántas filas tiene, así que un valor de contexto con ese nombre nunca los tapa.
+
+El título **sigue al lector por la lista**, cosa que Bukkit no puede hacer: el título nuevo sale como
+paquete y el cliente lo acepta como un retitulado de la ventana que ya tiene abierta. Solo se manda
+cuando el título nombra una página y el texto ha cambiado de verdad.
+
+Esto necesita **PacketEvents**. Sin él el título se queda en la página en la que se abrió, y todo lo
+demás funciona igual.
+
+## Listas
+
+Un menú puede tener varias listas paginadas en una pantalla, cada una paginando por su cuenta.
+
+```yaml
+pagination:
+  slots: '10-16,19-25,28-34'
+  item_template:
+    material: "%kit_icon%"
+    name: "{warning}&l%kit_name%"
+    actions:
+      - "practice:select %kit_id%"
+  navigation:
+    previous: { slot: 45, material: ARROW }
+    next:     { slot: 53, material: ARROW }
+```
+
+Varias listas se escriben como secciones con nombre:
+
+```yaml
+sections:
+  players:
+    slots: "1-7,10-16,19-25,28-34"
+    player_template: { ... }
+    navigation: { previous: { slot: 37 }, next: { slot: 43 } }
+  stat_types:
+    slots: "46-52"
+    not_selected_template: { ... }
+    selected_template:     { ... }
+    navigation: { previous: { slot: 45 }, next: { slot: 53 } }
+```
+
+Un bloque `pagination` es una sección llamada `main`, así que un menú con una sola lista nunca tiene que
+saber que existen los nombres de sección. Una flecha dentro de un bloque `navigation` pagina **su
+propia** sección — las acciones van implícitas.
+
+### Llenar una
+
+```java
+session.entries(kits.stream()
+        .map(kit -> UiEntry.of(kit)
+                .with("kit_name", kit.name())
+                .with("kit_icon", kit.icon())
+                .template(kit.equals(selected) ? "selected" : "not_selected")
+                .build())
+        .toList());
+```
+
+Una fila puede traer su propio item, para listas que ninguna plantilla podría describir:
+
+```java
+session.entries("items", stored.stream()
+        .map(stack -> UiEntry.of(stack).item(stack).build())
+        .toList());
+```
+
+`UiEntry.of(kit)` guarda el objeto en la fila, así que un handler lee **cuál** kit se pulsó en vez de
+deducirlo del item que se dibujó:
+
+```java
+actions.registerSync("select", (context, args) -> {
+    Kit kit = (Kit) context.require(UiKeys.ENTRY);
+    ...
+});
+```
+
+Reemplazar las filas deja al lector donde estaba, ajustado a lo que siga existiendo — un leaderboard que
+se refresca bajo alguien que está en la página tres lo deja en la página tres.
+
+### Valores literales, y los que no lo son
+
+`with()` inserta el valor como texto; `withFormatted()` lo parsea. La misma regla que en toda la
+librería: la pregunta es de quién es el valor.
+
+```java
+UiEntry.of(player)
+        .with("player_name", player.getName())          // lo tecleó un jugador
+        .withFormatted("rank", config.rankDisplay())    // lo escribió un dueño
+        .build();
+```
+
+### Varias líneas de lore desde un valor
+
+Un valor que contenga `<nl>` se convierte en varias líneas de lore, cada una conservando lo que la
+plantilla pone alrededor del placeholder:
+
+```yaml
+lore:
+  - "{muted} ┃ {letters}%description%"     # una línea escrita, dos dibujadas
+```
+
+<Callout type="danger" title="Un color por sí solo no puede ser un valor">
+`name: "%name_color%&l%kit_name%"` no funciona y no puede. La sustitución ocurre sobre el árbol de
+componentes ya parseado — que es lo que permite parsear una plantilla una vez y compartirla entre todas
+las filas — y un color a secas parsea a un componente vacío que lleva un color, y ese color no alcanza
+al texto de al lado.
+
+Pasa la frase coloreada entera, o di en qué estado está la fila y deja que decida una plantilla con
+nombre.
+</Callout>
+
+### Plantillas por nombre
+
+Cualquier clave que termine en `template` es una, nombrada por lo que va antes:
+
+| Escrito | Se llama |
+|---|---|
+| `item_template` | la de por defecto |
+| `selected_template` | `selected` |
+| `no_permissions_template` | `no_permissions` |
+
+Se leen por forma y no de una lista cerrada, así que un plugin inventa los nombres que necesite. Un
+nombre que el archivo no declara dibuja la fila normal en vez de dejar un slot vacío.
+
+## Rellenos
+
+Tres trabajos distintos, no una lista:
+
+```yaml
+filler:
+  global:                      # todo lo que sobra
+    material: BLACK_STAINED_GLASS_PANE
+    hide_tooltip: true
+  pagination:                  # los slots vacíos de una lista corta
+    material: LIGHT_GRAY_STAINED_GLASS_PANE
+    name: "{muted}No hay kits disponibles"
+  custom:                      # paneles con nombre, cada uno con sus slots
+    header:
+      material: GRAY_STAINED_GLASS_PANE
+      slots: "0-8"
+```
+
+El relleno `pagination` normalmente **dice algo** — es lo que ve alguien con una lista vacía, y tratarlo
+como otro fondo no le cuenta nada.
+
+Los paneles se dibujan antes del fondo, en orden de archivo, así que el primero que reclama un slot se
+lo queda.
+
+Un botón de página que no tiene a dónde ir no se dibuja, y su slot vuelve a lo que lo cubriría si no.
+Una flecha que está y no hace nada es la misma mentira en todos los menús de una sola página.
+
+## Condiciones
+
+```yaml
+join:
+  slot: 10
+  material: LIME_DYE
+  condition: "%lfc_state% == none"
+```
+
+Operadores: `==` `!=` `>` `<` `>=` `<=` `contains` `startsWith` `endsWith`, y un valor a secas leído
+como booleano.
+
+Un slot cuya condición falla no está en blanco — **no está ahí**, así que pulsarlo no hace nada. Una
+condición que no se puede leer oculta el slot, porque fallar al revés daría un botón a quien no debería
+tenerlo.
+
+## Clics
+
+```yaml
+actions:
+  - "left: practice:adjust_priority 1"
+  - "right: practice:adjust_priority -1"
+  - "left,right: practice:open_details"
+```
+
+Tipos: `left`, `right`, `middle`, `shift_left`, `shift_right`, `drop`, `control_drop`, `swap`, `double`,
+`number_key`, y `any` para una línea sin prefijo.
+
+Cada decisión se toma contra la sesión, nunca contra el item que el cliente dice haber pulsado: el
+paquete lleva un número de slot, y el servidor ya sabe qué dibujó ahí. Un botón nunca se coge, y un
+arrastre que toque cualquier botón se rechaza.
+
+### Acciones integradas
+
+Registradas para cada plugin que pide menús, porque pasar de página no es la funcionalidad de nadie:
+
+| Acción | Qué hace |
+|---|---|
+| `next_page`, `previous_page` | Mueve la única lista, o una con nombre: `next_page players`. |
+| `back` | El menú del que vino, en la página que dejó. |
+| `close` | Cerrar la ventana. |
+| `refresh` | Redibujar todo. |
+
+Un plugin que registre su propia acción con uno de estos nombres gana.
+
+### Slots editables
+
+```yaml
+size: 54
+editable_slots: '0-4,9-44'
+```
+
+Los slots listados aquí siguen siendo del jugador. Los botones alrededor son lo que lo convierte en un
+editor y no en un buzón:
+
+```java
+session.input(slot, null);                          // vaciar uno
+session.inputs(fromInventory(player));              // llenar con lo que lleva
+Map<Integer, ItemStack> layout = session.inputs();  // leerlo para guardar
+```
+
+Los dos escritores rechazan un slot que no sea editable, y `inputs(map)` comprueba todos los slots antes
+de escribir ninguno — un layout aplicado a medias es uno que el jugador no distingue del que pidió.
+
+Así se edita el layout de un kit, el stock de una tienda o el equipamiento de una arena: los propios
+slots son el registro, así que la armadura se queda en los slots de armadura y la hotbar sigue siendo la
+hotbar.
+
+## Redibujado
+
+Un slot declara de qué depende:
+
+```yaml
+elo:
+  slot: 22
+  material: DIAMOND
+  name: "{letters}Rating: {highlight}%elo%"
+  depends-on:
+    - stats
+```
+
+```java
+session.invalidate("stats");   // solo los slots que dijeron depender de stats
+session.invalidateSlot(13);    // uno
+session.refresh();             // todo — rara vez la respuesta correcta
+```
+
+Un menú también puede redibujarse solo:
+
+```yaml
+refresh:
+  mode: SMART      # DISABLED | FULL | SMART | ON_CLICK
+  interval: 20     # ticks, para los modos con temporizador
+  click_delay: 4   # ticks tras un clic, para ON_CLICK y SMART
+```
+
+| Modo | Cuándo |
+|---|---|
+| `DISABLED` | Solo cuando un plugin lo pide. El de por defecto. |
+| `FULL` | Todo, en el intervalo. |
+| `SMART` | En el intervalo, pero solo los slots que pueden cambiar — y tras un clic. |
+| `ON_CLICK` | Tras un clic, pasado `click_delay`. |
+
+<Callout type="tip" title="SMART es el que hay que usar">
+Un temporizador que redibuja decoraciones estáticas son paquetes para un item idéntico. `SMART` solo
+arranca el temporizador si el menú tiene algo que pueda cambiar, y muere con el jugador.
+</Callout>
+
+Un clic redibuja todo lo que puede cambiar, no solo el slot donde cayó: añadir una capa mueve un
+contador, una vista previa y una lista, y ninguna de esas es el slot que se pulsó.
+
+## Animaciones
+
+```yaml
+animation: center_out
+```
+
+```yaml
+animation:
+  type: rows_alternate
+  speed: 3          # ticks entre fotogramas
+```
+
+Diecisiete formas: `center_out`, `explosion`, `corners`, `cascade`, `slide_left`, `slide_top`,
+`wave_horizontal`, `wave_vertical`, `rows_alternate`, `columns_alternate`, `checkerboard`, `snake`,
+`spiral`, `spiral_out`, `typewriter`, `random`, `none`.
+
+Todo se dibuja y se registra **antes** de que empiece la animación, así que un clic en un slot que
+todavía no ha aparecido visualmente funciona igual. Pulsar se salta el resto, porque quien está
+interactuando ha dejado de mirar.
+
+`random` va sembrado por el tamaño del menú y no por el reloj, así que se ve igual para todos. Un nombre
+que no sea uno de estos se reporta al leer el archivo y el menú aparece de golpe — el silencio haría que
+una errata se pareciera exactamente a un menú que nunca tuvo animación.
+
+## Sonidos
+
+```yaml
+sounds:
+  open: "BLOCK_BARREL_OPEN|0.6|1.4"
+  click: "UI_BUTTON_CLICK|1.0|1.5"
+  denied: ""        # silencio, que no es lo mismo que ausente
+```
+
+Nombres: `open`, `close`, `click`, `denied`, `failed`, `back`, `page`. Las listas antiguas
+`open_sounds` y `click_sounds` también funcionan, y el bloque gana donde un archivo tenga ambos.
+
+`denied` y `failed` suenan cuando un botón se niega, así que un clic que no hizo nada suena distinto de
+uno que funcionó — el reporte de "el menú está roto" más común que existe.
+
+## Ciclo de vida
+
+Nada sobrevive a su pantalla. Una secuencia de acciones con un paso retrasado, lanzada por un botón, se
+cancela al cerrar el menú. Desactivar un plugin cierra sus ventanas antes de liberar sus tareas.
+
+Los menús se encuentran por el holder de la ventana y no por un mapa indexado por jugador, así que un
+jugador que abre un cofre encima de un menú no se confunde con uno de los nuestros.

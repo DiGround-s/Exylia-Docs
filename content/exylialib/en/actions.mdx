@@ -1,0 +1,127 @@
+---
+title: "Actions"
+description: "Compiled, namespaced actions shared by menus, items and any other event boundary."
+---
+
+An action is a string in a config file and a handler in Java. Menus, items and anything else that
+reacts to a player call the same registry.
+
+```java
+PluginActions actions = Actions.of(this, "practice");
+
+actions.registerSync("join_queue", (context, args) -> {
+    queues.join(context.player(), args.string(0));
+    return ActionResult.success();
+});
+```
+
+```yaml
+actions:
+  - "practice:join_queue boxing"
+```
+
+## Namespaces
+
+Public YAML always writes the full id. A plugin may compile its own local id, but `Actions.compile`
+without one rejects it — that prevents the old failure where a bare id worked until a second plugin
+registered the same one and both became ambiguous.
+
+Duplicate full ids are rejected. Registrations are removed when the owner disables, and a compiled call
+held by an old menu is deactivated with them: it cannot invoke code from a dead classloader.
+
+`""`, `none` and `noop` compile into a real no-op, so a menu placeholder resolving to nothing is not an
+unknown-action error.
+
+## Compile once, execute cheaply
+
+```java
+ActionCall call = actions.compile("practice:adjust_priority -10");
+```
+
+Compilation parses and validates the id, resolves the registration, tokenises quoted arguments and
+retains the handler. Execution does none of that. Menus and items hold the compiled call on the loaded
+definition rather than compiling on every click.
+
+Arguments keep negative numbers and quoted strings:
+
+```java
+ActionArguments args = actions.compile(
+        "practice:set_name 'Ranked Boxing' -0.5 true").arguments();
+
+args.string(0);      // Ranked Boxing
+args.decimal(1);     // -0.5
+args.bool(2, false); // true
+```
+
+## Context
+
+The context carries a player, an origin, typed data contributed by whoever raised it, and a scope
+shared across a sequence:
+
+```java
+public static final ActionKey<Integer> SLOT = ActionKey.of("ui.slot", Integer.class);
+
+ActionContext context = ActionContext.forPlayer(player)
+        .origin("menu")
+        .put(SLOT, slot)
+        .build();
+```
+
+```java
+int slot = context.require(SLOT);
+```
+
+Menus contribute their own keys — `UiKeys.ENTRY` is the row that was clicked, which is how a handler
+knows *which* kit rather than working it back out of the item that was drawn.
+
+<Callout type="note" title="What Actions deliberately does not know">
+Clicks, hands, slots, inventories, projectiles, permissions and cooldowns. Menus parse `left:` and
+contribute UI keys; items parse triggers and contribute item keys. The core stays reusable instead of
+becoming a second event framework.
+</Callout>
+
+## Sync and async
+
+| Registration | Runs on |
+|---|---|
+| `registerSync(id, handler)` | The player's thread. |
+| `registerAsync(id, handler)` | A pool thread. |
+| `register(id, handler)` | The handler decides. |
+
+When an async step finishes, the sequence resumes on the player-owning thread — so a step that reads
+the database and a step that opens a menu can sit next to each other in one list.
+
+## Sequences
+
+```java
+ActionSequence sequence = actions.compile(List.of(
+        "practice:heal",
+        "practice:teleport spawn",
+        "practice:message 'Welcome back'"));
+```
+
+Or built, when a config carries delays:
+
+```java
+ActionSequence sequence = actions.sequence()
+        .step("practice:freeze", 0)
+        .step("practice:start", 60)      // ticks to wait before this step
+        .build();
+```
+
+Only `SUCCESS` advances a sequence. `STOP`, `DENIED` and `FAILED` end it — which is what makes a
+permission check a first step rather than a wrapper around everything after it.
+
+Steps share an `ActionScope`, so one step can leave a value for the next. It is thread-safe because an
+async step may fill it before a later sync step reads it.
+
+## Cancelling what has not run yet
+
+```java
+ActionExecution running = sequence.execute(context);
+session.cancelOnClose(running);
+```
+
+Without this, a sequence with a delayed step outlives the screen that started it. Cancelling stops it
+before its next step and cancels any pending delay outright. A step already running is not
+interrupted, but nothing after it starts; cancelling twice is harmless.

@@ -1,0 +1,88 @@
+---
+title: "Instalación"
+description: "Instalar la librería en un servidor y depender de ella desde un plugin."
+---
+
+## En el servidor
+
+Coloca `ExyliaLib.jar` en `plugins/`. Esa es toda la instalación — los plugins que dependen de ella se
+niegan a cargar sin ella, y la librería lleva dentro lo que necesita.
+
+La librería de sidebars por paquetes viaja dentro del jar, relocalizada, así que hay exactamente una
+copia en el servidor en vez de una por plugin.
+
+## Plugins opcionales
+
+Nada de esto es obligatorio. Cada uno desbloquea o mejora un módulo:
+
+| Plugin | Qué habilita |
+|---|---|
+| **PacketEvents** | Retitular un menú según el lector pasa páginas. Sin él el título se queda en la página en la que se abrió. |
+| **PlaceholderAPI** | Exponer los placeholders de este plugin a otros, y leer los suyos. |
+| **FastAsyncWorldEdit** | El módulo de esquemáticas: guardar y pegar cajas del mundo. |
+| **Vault** o **PlayerPoints** | El módulo de economía. |
+| **Un plugin de clanes** | El módulo de clanes. Se detectan ocho — ver [Jugadores](/docs/exylialib/jugadores#clanes). |
+| **Lunar (Apollo)** o **Feather** | Waypoints, cooldowns y marcadores de compañero en el cliente. |
+| **DeluxeCombat** o **PvPManager** | La respuesta del módulo de combate a "¿está peleando este jugador?". |
+| **Worlds** | Crear y borrar mundos, que en Folia es la única forma de hacerlo. |
+
+Un módulo cuyo plugin de apoyo no está hace nada **en voz alta**: `Schematics.isSupported()` y
+`Holograms.isSupported()` responden con honestidad, y el motivo es una cadena que puedes imprimir.
+
+## Desde un plugin
+
+Declara la dependencia para que el servidor cargue la librería primero:
+
+```yaml title="plugin.yml"
+name: MyPlugin
+main: net.example.MyPlugin
+api-version: '1.21'
+depend:
+  - ExyliaLib
+```
+
+Después toma las vistas de módulo que necesites en `onEnable`. Casi todos los módulos se alcanzan
+igual — un `of(plugin)` estático que devuelve una vista que pertenece a tu plugin:
+
+```java title="MyPlugin.java"
+public final class MyPlugin extends JavaPlugin {
+
+    private ConfigFile<Settings> settings;
+
+    @Override
+    public void onEnable() {
+        TaskScheduler tasks = Tasks.of(this);
+        PluginMenus menus   = Menus.of(this);
+        PluginActions acts  = Actions.of(this);
+
+        settings = Configs.define(this, "config", Settings.class).load();
+    }
+}
+```
+
+<Callout type="note" title="Por qué es por plugin">
+La vista es lo que hace funcionar la propiedad: tus acciones viven en tu namespace, tus menús se
+cierran cuando tu plugin se desactiva, tus placeholders se dan de baja con él, y los valores escritos
+en un item se archivan bajo tu nombre y no bajo el de la librería.
+</Callout>
+
+## Limpieza
+
+No tienes que hacerla. La librería libera las tareas, menús, acciones, placeholders y entradas de un
+plugin cuando se desactiva — los menús se cierran **antes** de liberar las tareas, para que un botón
+cuyo handler viene de un classloader moribundo no pueda responder un último clic.
+
+## Los comandos de la propia librería
+
+`/exylialib` exige `exylialib.admin` en cada subcomando:
+
+| Comando | Qué hace |
+|---|---|
+| `/exylialib reload` | Refresca colores, formatos y el resto de la configuración compartida, y avisa a cada plugin que esté escuchando. |
+| `/exylialib info` | Versión, plataforma y quién depende de esta librería. |
+| `/exylialib stats` | Contadores en vivo de cada módulo. |
+| `/exylialib export <plugin>` | Escribe las tablas de ese plugin en un volcado. |
+| `/exylialib import <plugin> <archivo> [force]` | Lee uno de vuelta. |
+
+Un plugin escucha esa recarga con `Reloads.onLibraryReload(plugin, runnable)` — el motivo habitual es
+que cambie la paleta, porque cada menú compilado se queda con los colores viejos.

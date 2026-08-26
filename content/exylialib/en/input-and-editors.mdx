@@ -1,0 +1,140 @@
+---
+title: "Input, editors and wizards"
+description: "Asking a player for something, editing a list of things, and walking somebody through a setup."
+---
+
+Three modules that solve the same shape of problem: getting information out of a player without
+writing an anvil listener, a chat listener and a state map for each one.
+
+## Asking for one thing
+
+```java
+PluginInputs inputs = Inputs.of(this);
+
+inputs.integer(player, "How many slots?")
+      .range(1L, 64L)
+      .open()
+      .thenAccept(result -> result
+          .ifCompleted(this::resize)
+          .otherwise(outcome -> {
+              if (outcome.byPlayer()) reopenMenu(player);
+          }));
+```
+
+Thirteen request types, each a builder:
+
+| Call | Produces | For |
+|---|---|---|
+| `text` | `String` | Free-form text |
+| `id` | `String` | A strict lowercase identifier |
+| `slug` | `String` | An identifier derived from display text |
+| `integer` | `Long` | Whole numbers |
+| `decimal` | `BigDecimal` | Exact decimals |
+| `amount` | `BigDecimal` | Money, as a player writes it — `10M` |
+| `duration` | `Duration` | `30s`, `1h30m` |
+| `flag` | `Boolean` | A setting or switch |
+| `confirm` | `Boolean` | An explicit confirmation |
+| `choice` | `T` | One of a few options |
+| `search` | `T` | One of very many options |
+| `icon` | `String` | What something is drawn as |
+| `form` | `FormValues` | Several things in one window |
+
+Every request shares the same modifiers, so they read the same whatever is being asked:
+`timeout(Duration)`, `defaultValue(T)`, `validate(predicate, message)`, `transform(operator)`,
+`transports(kinds…)`, and `open()` or `open(consumer)`.
+
+<Callout type="note" title="validate and transform live on the request">
+Not on the transport. That is what stops case folding from working in chat but not in a dialog.
+</Callout>
+
+### How it is asked
+
+Five transports, tried in order. The first that can represent the request wins:
+
+| Order | Transport | Chosen when |
+|---|---|---|
+| 1 | `DIALOG` | Dialogs are enabled, PacketEvents is loaded and the client is 1.21.6 or newer. |
+| 2 | `BEDROCK` | The player is on Bedrock and Floodgate is installed. |
+| 3 | `ANVIL_SEARCH` | The request is a search. |
+| 4 | `MENU` | An inventory of buttons can express it — choice, confirm, flag. |
+| 5 | `CHAT` | Always. |
+
+Chat is the universal fallback: every Java player can answer in chat even with no packet or bridge
+integration present. Neither PacketEvents nor Floodgate is required, and transports are discovered
+reflectively so a missing one simply is not offered.
+
+### One outcome, exactly once
+
+`COMPLETED`, `CANCELLED`, `TIMED_OUT` and the rest arrive **exactly once per request**, whatever
+happened — including the player logging out mid-answer. `outcome().byPlayer()` is the one to branch on
+when deciding whether to reopen the menu they came from.
+
+## Editing a list of things
+
+A rewards list, a loot table, a set of spawn points: the same screen, one engine.
+
+| Call | Edits |
+|---|---|
+| `Rewards.of(plugin).editor(rewards)` | Rewards |
+| `Loot.editor(plugin, entries)` | Loot tables |
+| `NamedCommands.editor(plugin, commands)` | Named console commands |
+| `Effects.editor(plugin, effects)` | Potion effects |
+| `Sequences.of(plugin).editor(effects)` | Effects with odds, conditions and an audience |
+| `Editors.of(plugin).items(items)` | Real items — kits, shop stock |
+| `Editors.of(plugin).locations(places)` | Spawn points, arena corners |
+| `Editors.of(plugin).list(descriptor, type, entries)` | The one only your plugin has |
+
+Every list gets pagination, add, edit, delete, copy, paste, save and cancel:
+
+| Gesture | What happens |
+|---|---|
+| Left click a row | Edit it |
+| Right click a row | Delete it |
+| Shift + left | Copy it |
+| `ADD` | Create a row and configure it |
+| `PASTE` | Add whatever is on the clipboard |
+| `COPY ALL` | Put the whole list on the clipboard |
+| `SAVE` / `CANCEL` | Keep everything, or nothing |
+
+<Callout type="tip" title="Nothing is written until save">
+The list handed in is copied, and every change goes into the copy — so cancel is free and an
+half-finished row cannot escape into the plugin's state.
+</Callout>
+
+A row that is not finished — a command entry with no command — is drawn **with a mark** rather than
+hidden. An editor is where a half-configured row gets finished, and one that vanished would take its
+place in the list with it.
+
+## Walking somebody through a setup
+
+A wizard is several questions with branches, a review they can go back from, and nothing applied until
+they confirm.
+
+```java
+static final WizardKey<String> ID    = WizardKey.text("id");
+static final WizardKey<Long>   SLOTS = WizardKey.integer("slots");
+
+Wizards.of(this)
+       .define("create-arena", builder -> builder
+               .ask(ID, "Arena id")
+               .ask(SLOTS, "How many players?")
+               .review()
+               .apply(values -> create(values.get(ID), values.get(SLOTS))))
+       .start(player);
+```
+
+The one-step shortcuts are what most setup screens actually use:
+
+```java
+wizards.askRegion(player, "Capture zone", "Select the area with the wand", accepted, abandoned);
+wizards.askLocation(player, "Spawn point", "Stand where players appear", accepted, null);
+wizards.askItem(player, "Icon", "Hold the item", accepted, null);
+```
+
+`askRegion` is the shared block selector: the same wand, the same preview and the same two corners
+every Exylia plugin selects with — which is why none of them depends on WorldEdit for it.
+
+<Callout type="note" title="Abandoning is a first-class outcome">
+Every flow takes an `abandoned` callback. A player who backed out leaves the previous configuration
+untouched, and the screen they came from is reopened rather than left closed.
+</Callout>

@@ -1,0 +1,107 @@
+---
+title: "Elementos en pantalla"
+description: "Boss bars, hologramas, sidebars y waypoints de cliente: qué muestra cada uno y dónde se configura."
+---
+
+Cuatro capas independientes, cada una con su configuración y sus propios tokens.
+
+## Boss bar
+
+Una por tipo de evento, en `config.yml`, dentro del bloque de ese tipo:
+
+```yaml title="config.yml"
+koth:
+  boss-bar:
+    text: "{highlight}&l%capture_event_name%&r {muted}| {success}⚑ %capture_koth_capturer% {muted}| {info}%capture_koth_player_time% ⌚"
+    color: RED
+```
+
+El relleno de la barra es el progreso del propio evento, escrito cada segundo — no hay cuenta atrás en
+la barra, porque pelearía con ese progreso.
+
+Colores por defecto: KOTH rojo, KOTH Capture Points morado, Conquest verde, Payload amarillo, KOTH
+Points azul, DTC rojo.
+
+Un evento concreto puede apagar su barra con el ajuste `bossbar-enabled`.
+
+## Hologramas
+
+También uno por tipo en `config.yml`, y a diferencia de la boss bar se muestra **aunque el evento no
+esté corriendo**: la última línea, `%event_status%`, dice inactivo, programado o corriendo.
+
+```yaml title="config.yml"
+koth:
+  hologram:
+    enabled: true
+    lines:
+      - "{warning}⚔ {highlight}&l%event_name%"
+      - " "
+      - "{letters}Time: {info}%event_time%"
+      - "{letters}Capturing: {highlight}%koth_capturer%"
+      - "{letters}Cap. time: {info}%koth_player_time%"
+      - " "
+      - "%event_status%"
+```
+
+Conquest dibuja un holograma por zona, cada uno con el nombre y el progreso de la suya. El de Payload
+sigue al carro.
+
+### Tokens de holograma
+
+| Familia | Tokens |
+|---|---|
+| Cualquier evento | `%event_name%`, `%event_time%`, `%event_status%` |
+| KOTH y Capture Points | `%koth_capturer%`, `%koth_player_time%`, `%koth_leader%`, `%koth_top1_name%`, `%koth_top1_pts%` |
+| KOTH Points | `%koth_leader%`, `%koth_top1_name%` … `%koth_top3_pts%` |
+| Conquest | `%conquest_zone_name%`, `%conquest_zone_capturer%`, `%conquest_zone_progress%` |
+| Payload | `%payload_progress%`, `%payload_distance_remaining%`, `%payload_capturing_clan%`, `%payload_state%` |
+| DTC | `%dtc_leader%`, `%dtc_top1_name%` … `%dtc_top3_pts%` |
+
+## Sidebars
+
+`scoreboards.yml` contiene tres cosas:
+
+| Sección | Se usa cuando |
+|---|---|
+| `scoreboards` | Corre exactamente un evento. Un sidebar por tipo. |
+| `compact-lines` | Dos líneas que describen un evento, para el sidebar compartido. |
+| `multi-event` | Corren dos o más eventos. |
+
+Con varios eventos activos, cada uno aporta sus dos líneas compactas a un sidebar compartido, hasta
+**cuatro eventos**. La sección multi-event decide el título, el separador, las dos plantillas de línea
+— donde `{n}` es el índice del evento, de 0 a 3 — y el pie.
+
+```yaml title="scoreboards.yml"
+multi-event:
+  title: "{warning}&l⚡ EVENTS"
+  separator: ""
+  line1: " %e{n}_l1%"
+  line2: " %e{n}_l2%"
+  footer:
+    - ""
+    - " {highlight}ᴇxʏʟɪᴀ.ɴᴇᴛ"
+  update-interval: 2
+```
+
+Los sidebars de un solo evento se refrescan cada 2 ticks por defecto, que es lo que pide un
+temporizador de captura en vivo.
+
+Los tokens del sidebar son la familia `%capture_...%`: `%capture_event_name%`, `%capture_event_time%`,
+`%capture_zone_x%`, `%capture_zone_z%`, `%capture_koth_capturer%`, `%capture_koth_capturer_clan%`,
+`%capture_koth_player_time%`, `%capture_koth_top1_name%`, `%capture_dtc_top1_pts%`,
+`%capture_conquest_top1_clan%`, `%capture_payload_progress%` y sus hermanos.
+
+Un evento concreto puede apagar su sidebar con el ajuste `scoreboard-enabled`.
+
+## Waypoints de cliente
+
+Si el cliente del jugador es Lunar con Apollo, o Feather, la zona del evento activo se marca en su
+pantalla con el color del evento. El marcador se añade al empezar y se retira al terminar. El de
+Payload sigue al carro; el de DTC marca el bloque del núcleo.
+
+No hay nada que configurar: sin un cliente compatible no se envía waypoint y no cambia nada más.
+
+## Contorno de la zona
+
+El contorno de partículas de una zona activa está en
+[Zonas](/docs/exyliacapture/zonas#el-contorno).

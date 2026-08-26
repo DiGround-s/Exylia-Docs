@@ -1,0 +1,73 @@
+---
+title: "Programación"
+description: "Eventos recurrentes por hora y día de la semana, con mínimo de jugadores."
+---
+
+Cada evento lleva su propia lista de horarios, editable desde las pantallas de horarios de
+`/captureadmin`. Un horario es una hora del día, un conjunto de días de la semana y un mínimo de
+jugadores conectados.
+
+## Qué contiene un horario
+
+| Campo | Significado |
+|---|---|
+| `name` | Una etiqueta para la entrada. Por defecto, el id del evento. |
+| `time` | `HH:mm`, el minuto exacto en que dispara. Obligatorio. |
+| `days` | Nombres de días, o `*` para todos. Una lista vacía también significa todos. |
+| `min-players` | Jugadores que deben estar conectados para que dispare. Por defecto `0`. |
+
+Un evento puede tener tantos horarios como quieras: tres horas distintas entre semana y una el sábado
+son cuatro entradas en el mismo evento.
+
+## Cómo dispara
+
+El scheduler comprueba una vez por segundo. Cuando el día de la semana y el `HH:mm` actuales coinciden
+con una entrada, esa entrada dispara — como mucho una vez por minuto, así que dos comprobaciones
+dentro del mismo minuto no pueden iniciarlo dos veces.
+
+Después se salta el inicio si se cumple alguna de estas:
+
+- Hay menos jugadores conectados que `min-players`.
+- Ese evento ya está corriendo.
+
+Ambos casos se escriben en el log de depuración de la consola en vez de quedar en silencio.
+
+<Callout type="note" title="No es cron">
+Aunque internamente las entradas se llamen cron, no hay expresiones cron. Un horario es un conjunto
+de días más un minuto exacto; no existe "cada 15 minutos" ni sintaxis de intervalos. Repetir con más
+frecuencia que a diario significa añadir más entradas.
+</Callout>
+
+## Zona horaria
+
+Todos los horarios se leen contra un mismo reloj, definido globalmente:
+
+```yaml title="config.yml"
+scheduler:
+  timezone: ""
+```
+
+Vacío usa la zona horaria de la máquina. Si no, acepta un identificador de zona como
+`America/New_York` o `Europe/Madrid`.
+
+<Callout type="warning" title="Un identificador inválido detiene el scheduler">
+El valor se interpreta al cargar. Usa un identificador IANA real — de los que hay en
+`/usr/share/zoneinfo` — y no una abreviatura como `CET`.
+</Callout>
+
+## Cuánto falta para el siguiente
+
+El próximo disparo se calcula avanzando hasta siete días desde ahora y tomando la entrada coincidente
+más cercana. Ese valor es el que alimenta:
+
+- `%exyliacapture_<id>_time_until_start%` para un evento concreto.
+- `%exyliacapture_next_event_time_until_start%` para el evento más próximo de todo el servidor.
+- El estado `SCHEDULED` que muestra un holograma cuando el evento no corre pero tiene horario.
+
+Un evento sin horarios no responde nada en vez de cero, y así un holograma distingue "no está
+corriendo, pero viene" de "no está corriendo y ya está".
+
+## Lanzar a mano
+
+El horario no es obligatorio. `/captureadmin start <id>` lanza el evento al momento, y respeta la
+misma regla de no iniciar uno que ya está corriendo.

@@ -1,0 +1,82 @@
+---
+title: "Arena rules"
+description: "The twenty-one switches that define how an arena is played."
+---
+
+Every arena stores its own rules block. They are edited from the **Rules** menu inside the arena's
+settings in `/ffaadmin`, and apply live: no restart, and players do not need to rejoin.
+
+## Combat
+
+| Rule | Default | What it does |
+|---|---|---|
+| `pvp` | `true` | Allows damage between players. Off, the arena becomes a lobby. |
+| `fallDamage` | `true` | Fall damage inside the arena. |
+| `healthRegeneration` | `true` | Natural health regeneration. Turn it off in nodebuff-style arenas. |
+| `foodDecrease` | `true` | Hunger drain. Off, food stops mattering. |
+| `healOnKill` | `true` | Fully heals the killer after a kill. |
+| `clearEffectsOnKill` | `false` | Clears the killer's potion effects after a kill. |
+
+## Building
+
+| Rule | Default | What it does |
+|---|---|---|
+| `blockBreak` | `true` | Allows breaking blocks. |
+| `blockPlace` | `true` | Allows placing blocks. |
+| `playerBuildOnly` | `false` | Only player-placed blocks can be broken. Protects the original map. |
+| `temporaryBlocks` | `false` | Placed blocks disappear on their own. |
+| `temporaryBlocksSeconds` | `0` | How many seconds those blocks last before disappearing. |
+| `reGiveBlocks` | `false` | Returns the block to the inventory when it disappears or breaks. |
+| `interact` | `true` | Allows interacting with chests, buttons, doors and the like. |
+
+<Callout type="tip" title="The clean-arena combination">
+`playerBuildOnly: true` + `temporaryBlocks: true` + `temporaryBlocksSeconds: 8` +
+`reGiveBlocks: true` is the classic recipe: players can use blocks to fight, the map does not
+degrade, and nobody runs out of blocks.
+</Callout>
+
+## Items
+
+| Rule | Default | What it does |
+|---|---|---|
+| `itemDrop` | `true` | Allows dropping items. |
+| `itemPickup` | `true` | Allows picking items up. |
+| `dropItemsOnDeath` | `false` | A dying player drops their inventory. |
+| `enderPearlCooldown` | `0` | Seconds between pearls. `0` disables the cooldown. |
+| `goldenAppleCooldown` | `0` | Seconds between golden apples. `0` disables it. |
+
+<Callout type="warning" title="dropItemsOnDeath and kits">
+Turning on `dropItemsOnDeath` with kits that refill on death fills the floor with duplicates. Use it
+only in arenas where loot is part of the game.
+</Callout>
+
+## Per-arena anti free-hit
+
+| Arena rule | Default | What it does |
+|---|---|---|
+| `antiFreeHit` | `false` | Enables the 1v1 link in this arena. |
+| `antiFreeHitHitsToLink` | `3` | Hits traded between two players before they count as linked. |
+| `antiFreeHitIsolateLinkedPlayers` | `false` | Two linked players stop taking damage from third parties until the link ends. |
+
+The link expires on its own once the seconds set in `anti-freehit.hit-reset-window-seconds` of
+`config.yml` pass with neither player hitting the other. The full system is covered in
+[Combat](/docs/exyliaffa/combat).
+
+## Common profiles
+
+<Cards>
+  <Card title="NoDebuff">
+    `healthRegeneration: false`, `blockBreak: false`, `blockPlace: false`, `healOnKill: true`, plus
+    `resetKitAfterKill` on the arena.
+  </Card>
+  <Card title="Sumo">
+    `pvp: true`, `fallDamage: false`, `blockBreak: false`, `blockPlace: false`, `itemDrop: false`.
+  </Card>
+  <Card title="Build UHC">
+    `playerBuildOnly: true`, `temporaryBlocks: true` at 10 seconds, `reGiveBlocks: true`,
+    `goldenAppleCooldown: 8`.
+  </Card>
+  <Card title="Chaos">
+    Everything on, `dropItemsOnDeath: true`, no cooldowns. Works well with a short regeneration.
+  </Card>
+</Cards>

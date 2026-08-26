@@ -1,0 +1,98 @@
+---
+title: "Estadísticas"
+description: "Los nueve contadores, cómo se muestran, cómo se ordenan y cómo se reinician."
+---
+
+Las estadísticas son por jugador **y por arena**. Un mismo jugador tiene una fila distinta en cada
+arena en la que ha jugado, y los leaderboards pueden consultarse por arena o de forma global.
+
+## Los contadores
+
+| Contador | Identificador | Formato |
+|---|---|---|
+| Bajas | `kills` | Número entero |
+| Muertes | `deaths` | Número entero |
+| KDR | `kdr` | Dos decimales |
+| Mejor racha | `best_streak` | Número entero |
+| Asistencias | `assists` | Número entero |
+| Daño infligido | `damage_dealt` | Un decimal |
+| Tiempo jugado | `play_time` | `1h 5m 3s` |
+| Tiempo con vida | `alive_time` | `1h 5m 3s` |
+| Bajas por minuto | `kills_per_minute` | Dos decimales |
+
+Los identificadores son los que se usan en los placeholders de leaderboard, y también los nombres de
+columna que la base de datos indexa para ordenar.
+
+<Callout type="note" title="Los decimales siempre usan punto">
+El formato está fijado al estilo anglosajón a propósito. Un servidor alojado en España escribiría
+`1,50` con el formato del sistema, y ese valor rompería cualquier scoreboard o comparación que lo
+leyera después.
+</Callout>
+
+## Ver estadísticas
+
+| Acción | Comando |
+|---|---|
+| Las tuyas | `/ffa stats` |
+| Las de otro jugador | `/ffa stats <jugador>` |
+
+El menú de estadísticas permite cambiar de arena y saltar al leaderboard filtrado por cualquiera de
+los nueve contadores.
+
+## Leaderboards
+
+Se consultan desde el menú o desde placeholders. El tamaño máximo lo decide `config.yml`:
+
+```yaml title="config.yml"
+leaderboard:
+  max-entries: 50
+```
+
+Ese número es también la posición más alta que un placeholder de leaderboard puede responder: con
+`50`, pedir la posición 51 no devuelve nada.
+
+```text
+%exyliaffa_stats_top_kills_1%              nombre del primero por bajas, en todas las arenas
+%exyliaffa_stats_top_kills_1_nodebuff%     lo mismo, solo en la arena "nodebuff"
+%exyliaffa_stats_top_value_kills_1%        su número de bajas en lugar de su nombre
+```
+
+El detalle completo de la sintaxis está en [Placeholders](/docs/exyliaffa/placeholders).
+
+## Reiniciar
+
+| Acción | Comando |
+|---|---|
+| Estadísticas de un jugador en una arena | `/ffaadmin resetstats <jugador> <arenaId>` |
+| Todas las estadísticas de una arena | Desde el menú de datos en `/ffaadmin` |
+
+<Callout type="warning" title="No hay deshacer">
+Reiniciar una arena borra las filas de todos sus jugadores. Si vas a hacerlo en producción, haz
+copia de la base de datos antes.
+</Callout>
+
+## Asistencias y daño
+
+Una asistencia se cuenta a quien haya hecho daño a la víctima en los **10 segundos** previos a su
+muerte, excluyendo a quien dio el golpe final. Varios jugadores pueden recibir asistencia por la
+misma muerte.
+
+El daño infligido se acumula en toda la sesión, incluido el que no terminó en baja: es el contador
+que mejor distingue a quien pelea de quien recoge bajas ajenas.
+
+### Cómo se derivan KDR y bajas por minuto
+
+```text
+kdr              = deaths == 0 ? kills : kills / deaths
+kills_per_minute = alive_minutes <= 0 ? 0 : kills / alive_minutes
+```
+
+Dos consecuencias prácticas:
+
+- Un jugador que nunca ha muerto reporta su número de bajas como KDR, no infinito. Es lo que permite
+  ordenar un leaderboard y escribirlo en un scoreboard.
+- El ritmo se mide sobre el **tiempo con vida**, no sobre el tiempo total en la arena. Estar muerto o
+  espectando no rebaja tus bajas por minuto.
+
+Ambos se guardan en la base de datos, no se calculan al leer, porque es la base de datos la que
+ordena los leaderboards.

@@ -1,0 +1,145 @@
+---
+title: "Texto y placeholders"
+description: "Un solo parser para cada cadena visible, la paleta compartida, y un registro para %placeholders%."
+---
+
+## Cuatro notaciones, una cadena
+
+Todo lo que lee un jugador pasa por `Text` y sale como componente de Adventure. Las cuatro formas se
+mezclan libremente:
+
+| Forma | Ejemplo |
+|---|---|
+| Token de paleta | `{primary}`, `{error}` |
+| Código legacy | `&a`, `&l` |
+| Hex legacy | `&#8a51c4`, `&x&8&a&5&1&c&4` |
+| MiniMessage | `<bold>`, `<gradient:#8a51c4:#ff6b9d>…</gradient>` |
+
+```java
+Text.of("{primary}&lBIENVENIDO &8[{success}online&8]").send(player);
+```
+
+Las cursivas están apagadas salvo que se pidan, que es lo contrario del comportamiento de vanilla en
+items renombrados.
+
+## La API
+
+| Llamada | Qué hace |
+|---|---|
+| `Text.of(cadena)` | La forma encadenable. |
+| `Text.from(plugin, cadena)` | Lo mismo, para un mensaje de un plugin, para que `%prefix%` resuelva. |
+| `Text.component(cadena)` | Directo a un `Component`. |
+| `.with(nombre, valor)` | Sustituye un valor **como texto literal**. |
+| `.withFormatted(nombre, valor)` | Sustituye un valor que trae su propio formato. |
+| `.forPlayer(player)` | Resuelve `%placeholders%` para ese lector. |
+| `.forPlayerFormatted(player)` | Lo mismo, honrando valores de resolver que traen formato. |
+| `.build()` / `.send(receptor)` | Terminar, o terminar y entregar. |
+| `.plain()` / `.legacy()` / `.raw()` | Serializadores. `legacy()` es para APIs antiguas que lo exigen. |
+
+<Callout type="warning" title="with o withFormatted es una decisión, no un detalle">
+Equivocarse es un bug en las dos direcciones: un nombre visible imprimiendo `{highlight}` en pantalla, o
+un jugador llamado `<rainbow>` recoloreando tu mensaje. Pregunta **de quién es el valor** — lo escribió
+el dueño del servidor, o lo tecleó un jugador.
+</Callout>
+
+## La paleta
+
+Los mensajes nombran un rol, no un valor hexadecimal. Vienen dieciséis roles, definidos en el
+`colors.yml` de la propia librería, y cambiar uno recolorea todo el ecosistema a la vez:
+
+| Token | Por defecto | Token | Por defecto |
+|---|---|---|---|
+| `{primary}` | `#8a51c4` | `{info}` | `#59a4ff` |
+| `{secondary}` | `#aa76de` | `{info_light}` | `#7db7ff` |
+| `{secondary_light}` | `#b48fd9` | `{accent}` | `#ff6b9d` |
+| `{letters}` | `#e7cfff` | `{neutral}` | `#6c757d` |
+| `{letters_black}` | `#a89ab5` | `{highlight}` | `#ffd700` |
+| `{error}` | `#a33b53` | `{muted}` | `#868e96` |
+| `{success}` | `#8fffc1` | `{warning}` | `#ff9500` |
+| `{success_light}` | `#a1ffc3` | `{warning_light}` | `#ffd2a8` |
+
+`Colors.get(token)` devuelve uno como `TextColor`, y `Colors.names()` los lista.
+
+## El prefijo
+
+Casi todos los mensajes empiezan con la misma etiqueta. Escrita en cada línea no se puede cambiar de
+forma centralizada; registrada como placeholder global, dos plugins pelean por `%prefix%`. Así que
+pertenece a un plugin:
+
+```java
+Prefixes.set(this, messages.prefix());                 // al activar, y otra vez al recargar
+Text.from(this, messages.ready()).send(player);        // %prefix% resuelve al tuyo
+```
+
+<Callout type="note" title="Vuelve a fijarlo tras una recarga">
+Un prefijo editado que no se vuelve a registrar se queda obsoleto hasta el siguiente reinicio. Cada
+plugin de Exylia llama a `Prefixes.set` como último paso de cargar sus configs precisamente por esto.
+</Callout>
+
+## Placeholders
+
+Un registro, esté o no PlaceholderAPI instalado.
+
+```java
+Placeholders.group(this, "clan")
+        .describe("El clan del lector")
+        .add("name", request -> clans.of(request.requireViewer()).name())
+        .add("members", request -> clans.of(request.requireViewer()).size())
+        .register();
+```
+
+Eso declara `%clan_name%` y `%clan_members%`. El nombre final es **el prefijo del grupo, un guion bajo
+y el nombre de la entrada** — `add("")` registra el prefijo a secas.
+
+### Argumentos
+
+Gana el nombre registrado más largo y lo que sobra pasa a ser argumentos:
+
+```java
+.add("players", request -> occupants(request.arg(0, "")))
+```
+
+`%arena_players_the_pit%` encuentra el registrado `arena_players` y entrega `the_pit` — el argumento se
+corta del texto **tal y como está escrito**, así que las mayúsculas de un valor sobreviven aunque el
+nombre se compare en minúsculas.
+
+### Sin respuesta no es cadena vacía
+
+Un resolver que devuelve `null` significa "no hay valor", y el texto conserva la alternativa que se
+escribiera:
+
+```text
+%clan_name|Sin clan%
+```
+
+Devolver `"-"` en su lugar haría indistinguible "no hay nadie en el tercer puesto" de "esa arena no
+existe".
+
+### Leerlos
+
+| Llamada | Qué hace |
+|---|---|
+| `Placeholders.apply(texto, lector)` | Resolver todo para un lector. |
+| `Placeholders.applyRelational(texto, lector, objetivo)` | Resolver un placeholder de dos jugadores. |
+| `Placeholders.compile(texto)` | Compilar una vez, resolver muchas. |
+| `Placeholders.isDynamic(texto)` | Si contiene algo que resolver. |
+| `Placeholders.unresolved(texto)` | Nombra lo que no respondió — la forma de cazar una errata. |
+
+### Con PlaceholderAPI
+
+Registrar un grupo registra la expansión; no hay nada que instalar desde eCloud. Fuera, el nombre del
+plugin es el identificador: `total_players` registrado por ExyliaFFA se lee como
+`%exyliaffa_total_players%`.
+
+Un grupo cuyo prefijo ya **es** el nombre del plugin también está contemplado — PlaceholderAPI se come
+esa palabra como identificador, y la librería la vuelve a poner en vez de obligar a nadie a escribirla
+dos veces.
+
+## Líneas escritas para varias líneas
+
+Un valor que contenga `<nl>` se convierte en varias líneas de lore. `Lines.value(section, key)` lee una
+clave de config que puede ser cadena o lista a esa misma forma canónica, normalizando saltos de línea
+reales y `\n` literales por el camino.
+
+Solo se estiran las líneas que mencionan el valor multilínea, y el resto de la plantilla se repite
+alrededor de cada una — así que una viñeta sigue siendo una viñeta en la segunda línea.

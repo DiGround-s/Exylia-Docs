@@ -1,0 +1,79 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaFFA, qué resuelve y cómo está organizada esta documentación."
+---
+
+ExyliaFFA es un sistema de FFA (free-for-all) pensado para servidores serios: arenas ilimitadas,
+kits múltiples, spawns con permisos, reglas configurables por arena, regeneración con esquemáticos,
+estadísticas persistentes y un panel de administración completo desde menús en el juego.
+
+No es un plugin de arena única con un comando de unirse. Cada arena es una configuración
+independiente: sus reglas, sus kits, sus spawns, su protección de spawn y su temporizador de
+regeneración.
+
+## Qué incluye
+
+<Cards>
+  <Card title="Arenas ilimitadas" href="/docs/exyliaffa/arenas">
+    Región propia, límite de jugadores, permiso de acceso, prioridad en menús y protección de spawn.
+  </Card>
+  <Card title="Reglas por arena" href="/docs/exyliaffa/reglas">
+    Veintiún interruptores: PvP, construcción, bloques temporales, caída, regeneración, cooldowns.
+  </Card>
+  <Card title="Kits múltiples" href="/docs/exyliaffa/kits">
+    Modo seleccionable o aleatorio, permisos por kit y editor de layout guardado por jugador.
+  </Card>
+  <Card title="Spawns con permiso" href="/docs/exyliaffa/spawns">
+    Varios puntos de aparición por arena, cada uno con su icono, su nombre y su permiso.
+  </Card>
+  <Card title="Estadísticas" href="/docs/exyliaffa/estadisticas">
+    Nueve contadores persistentes con leaderboards por arena y globales.
+  </Card>
+  <Card title="Anti-abuso" href="/docs/exyliaffa/combate">
+    Combat tag, anti-farmkill por jugador y por IP, y enlace 1v1 contra el free-hit.
+  </Card>
+</Cards>
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. Folia soportado. |
+| Java | 21 |
+| Dependencias obligatorias | `ExyliaLib`, `FastAsyncWorldEdit`, `packetevents` |
+| Dependencias opcionales | `PlaceholderAPI`, `ViaVersion`, `ExyliaPracticeCore`, `ExyliaEvents`, `ExyliaSandBox` |
+
+<Callout type="note" title="Sobre ExyliaLib">
+ExyliaLib no es una dependencia decorativa. De ella salen la configuración tipada con migraciones,
+los menús declarativos en YAML, la base de datos, los placeholders, los efectos y las acciones. Si
+no está presente, el plugin no arranca.
+</Callout>
+
+## Cómo leer esta documentación
+
+La documentación está dividida en cuatro bloques, y están pensados para leerse en ese orden la
+primera vez:
+
+<Steps>
+  <Step title="Empezar">
+    Instalación y una primera arena funcionando en pocos minutos.
+  </Step>
+  <Step title="Configurar">
+    Arenas, reglas, kits, spawns y regeneración. Es donde se pasa la mayor parte del tiempo.
+  </Step>
+  <Step title="Sistemas">
+    Combate, rachas, estadísticas, scoreboard y ajustes de jugador.
+  </Step>
+  <Step title="Referencia">
+    Comandos, permisos, placeholders, todas las claves de configuración y la API para desarrolladores.
+  </Step>
+</Steps>
+
+## Convenciones
+
+- Los valores marcados como **por defecto** son los que el plugin escribe la primera vez que
+  arranca. Si el archivo ya existe, tu valor se respeta.
+- Los identificadores entre `<` y `>` son variables. `/ffa join <arenaId>` significa
+  `/ffa join nodebuff`, no `/ffa join <nodebuff>`.
+- Los colores usan tokens de paleta de ExyliaLib (`{primary}`, `{highlight}`, `{muted}`) y también
+  aceptan MiniMessage y códigos hexadecimales.

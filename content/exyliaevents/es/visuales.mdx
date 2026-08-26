@@ -1,0 +1,91 @@
+---
+title: "Pantalla y audio"
+description: "Sidebars por tipo, las boss bars de cada juego, nametags y música de evento."
+---
+
+## Sidebars
+
+`scoreboards.yml` contiene un sidebar por tipo de evento, más un tablero `lobby` que se muestra
+mientras los jugadores esperan. Cada uno es un sidebar de ExyliaLib: un título, una lista de líneas y
+un intervalo de refresco en ticks.
+
+```yaml title="scoreboards.yml"
+scoreboards:
+  lobby: ...
+  tnttag: ...
+  spleef: ...
+  csgo: ...
+  topkiller_teams: ...
+```
+
+Cada tipo registrado tiene su clave, variantes por equipos incluidas, así que el tablero de Quake y el
+de Quake Teams se editan por separado.
+
+Los valores disponibles dentro de las líneas son los que ese tipo aporta — su ronda, su temporizador,
+su marcador, las bajas del propio jugador — porque cada evento construye su propio contexto de
+scoreboard.
+
+<Callout type="note" title="TAB no hace falta para los sidebars">
+El sidebar lo dibuja ExyliaLib en cualquier caso. Lo que cambia TAB es la **devolución**: con TAB
+instalado, salir de un evento restaura el scoreboard y el nametag normales del jugador en vez de
+dejarlo sin nada.
+</Callout>
+
+## Boss bars
+
+`config.yml` lleva una boss bar por cada tipo que la tenga, dentro del bloque de ese tipo:
+
+```yaml title="config.yml"
+tnttag:
+  boss-bar:
+    text: "{primary}Eliminating in {error}%time% ⌚"
+    color: PURPLE
+    style: NOTCHED_20
+  tagged-action-bar:
+    text: "..."
+```
+
+Los tipos con bloque visual propio incluyen TNT Tag, Tag Game, Block Party, Build Battle, Quake,
+CS:GO, Parkour, Chairs, Slap, Gem Crawler, Pillars of Fortune, LMS, Simon Says, Survival Games y
+Tournament, además de `winner-fireworks` para la celebración final.
+
+El bloque de Tournament son tres efectos en vez de una barra: un título de congelación antes de la
+partida, la misma cuenta atrás en la barra de acción, y un título de "eres el siguiente" para quien
+pelea después.
+
+## Nametags
+
+Con TAB instalado, los nametags se devuelven a TAB al terminar el evento. Sin él no se cambia nada y no
+hay nada que restaurar.
+
+## Visibilidad
+
+Dos gestores deciden quién ve a quién: los espectadores se ocultan a los jugadores en partida, y los
+jugadores de un evento se ocultan a los de otro que corra a la vez. Eso evita que dos eventos
+simultáneos en arenas cercanas se muestren los jugadores del otro.
+
+## Música
+
+Los eventos pueden reproducir discos a sus participantes:
+
+```yaml title="config.yml"
+settings:
+  event-music-enabled: true
+  event-music-volume: 0.5
+  event-music-interval: 150
+  event-music-discs: [MUSIC_DISC_PIGSTEP, MUSIC_DISC_CAT, ...]
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `event-music-enabled` | `true` | Si los eventos ponen música. |
+| `event-music-volume` | `0.5` | Cómo de alto. |
+| `event-music-interval` | `150` | Segundos entre discos. |
+| `event-music-discs` | 19 discos | El repertorio del que elige. |
+
+Quien no la quiera usa `/events music`, que se guarda por jugador y se recuerda.
+
+<Callout type="tip" title="Apagarla para todo el servidor">
+`event-music-enabled: false` la silencia para todos y deja el interruptor personal sin efecto — lo
+habitual en un servidor que ya tiene su propia ambientación.
+</Callout>

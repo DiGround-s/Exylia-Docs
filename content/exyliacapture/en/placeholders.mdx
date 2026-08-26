@@ -1,0 +1,109 @@
+---
+title: "Placeholders"
+description: "Every PlaceholderAPI placeholder, and the exact spelling each one needs."
+---
+
+Expansion identifier: **`exyliacapture`**. Registering the placeholders registers the expansion, so
+nothing is downloaded from eCloud.
+
+<Callout type="warning" title="The global counter carries `capture_` twice">
+It is the one spelling here that is easy to guess wrong, and it is explained right below.
+</Callout>
+
+## How many events are running
+
+```text
+%exyliacapture_capture_active_events%
+```
+
+The `capture_` in the middle is not a typo: the family is registered under the prefix `capture`, and
+PlaceholderAPI adds the plugin identifier in front of it. `%exyliacapture_active_events%` does not
+resolve.
+
+## Per event
+
+Where `<id>` is the event configuration's id:
+
+```text
+%exyliacapture_<id>_<stat>%
+```
+
+Each configured event registers its id as a placeholder family of its own, so an event called
+`koth1` answers `%exyliacapture_koth1_status%`. The families are re-registered on
+`/captureadmin reload`, which is how a newly created event becomes readable without a restart.
+
+| Stat | Returns |
+|---|---|
+| `display_name` | The name players read |
+| `id` | The configuration id |
+| `type` | The type id, such as `koth` or `payload` |
+| `color` | The configured hex colour |
+| `max_duration` | The duration, or `∞` when unlimited |
+| `status` | `RUNNING`, `SCHEDULED` or `INACTIVE` |
+| `time_remaining` | Time left in the running event |
+| `time_until_start` | Time until the next scheduled start |
+| `target_points` | Points needed to win |
+| `points_per_second` | Points per second, KOTH Points only |
+| `clan_mode` | `true` or `false` |
+| `leader` | The leading player or clan |
+| `leader_pts` | The leader's points |
+| `top1_name`, `top2_name`, `top3_name` | The live podium's names |
+| `top1_pts`, `top2_pts`, `top3_pts` | The live podium's points |
+| `capturer` | Who is capturing right now |
+| `capturer_clan` | That capturer's clan |
+| `cap_time_remaining` | Time left to complete the current capture |
+| `zone_x`, `zone_y`, `zone_z` | The zone centre's coordinates |
+
+Anything with no value returns an em dash rather than an empty string.
+
+## The next scheduled event
+
+```text
+%exyliacapture_next_event_time_until_start%
+%exyliacapture_next_event_display_name%
+%exyliacapture_next_event_type%
+```
+
+It resolves against whichever configured event starts soonest across the whole server, and accepts
+the same stats as the per-event family above.
+
+## The reader's own statistics
+
+```text
+%exyliacapture_stats_wins%
+%exyliacapture_stats_captures%
+%exyliacapture_stats_points%
+%exyliacapture_stats_leaderboard_points%
+%exyliacapture_stats_time_captured%
+```
+
+These are the player's global totals, not per event.
+
+## Leaderboard rows
+
+```text
+%exyliacapture_top_player_<position>_<stat>%
+%exyliacapture_top_clan_<position>_<stat>%
+```
+
+Positions start at `1`. Stats for a player: `name`, `wins`, `points`, `leaderboard_points`,
+`captures`, `time_captured`. For a clan the same, without `time_captured`.
+
+```text
+%exyliacapture_top_player_1_name%
+%exyliacapture_top_player_1_leaderboard_points%
+%exyliacapture_top_clan_3_wins%
+```
+
+A position past the end of the list returns an em dash for `name` and `0` for the numbers.
+
+<Callout type="note" title="These come from the cache">
+Leaderboard rows are served from the snapshot refreshed every 60 seconds, which is what keeps a
+sidebar full of them from querying the database on every refresh.
+</Callout>
+
+## Not the same as the sidebar and hologram tokens
+
+The `%capture_...%` tokens in `scoreboards.yml` and the `%event_...%` tokens in the hologram lines are
+not PlaceholderAPI placeholders. They are values the plugin fills in while rendering its own screens,
+and they only work there. See [On-screen visuals](/docs/exyliacapture/visuals).

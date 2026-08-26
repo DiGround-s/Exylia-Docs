@@ -1,0 +1,111 @@
+---
+title: "Recompensas, loot y economía"
+description: "Lo que un jugador ganó, lo que sale de un cofre, y cuánto vale un saldo."
+---
+
+## Recompensas
+
+Una lista de recompensas son items, comandos y dinero con probabilidades y condiciones, editable en el
+juego y guardada exactamente como la guardaba ExyliaCommons.
+
+```java
+PluginRewards rewards = Rewards.of(this);
+
+rewards.give(player, config.winnerRewards(), context);
+```
+
+| Llamada | Qué hace |
+|---|---|
+| `give(player, rewards, context)` | Entregar una lista entera. |
+| `give(player, reward)` | Una entrada. |
+| `roll(player, rewards, context)` | Dar lo que salió por probabilidad. |
+| `pick(rewards)` | Elegir sin dar — para una vista previa. |
+| `giveLater(uuid, owed)` | Encolar para alguien desconectado. |
+| `claim(player, callback)` | Entregar lo que se le debía. |
+| `editor(rewards)` | El editor de lista en el juego. |
+| `overflow(policy)` | Qué pasa cuando el inventario está lleno. |
+| `pending(store)` | Dónde se guardan las recompensas pendientes. |
+
+### Desconectado no es premio perdido
+
+`giveLater` escribe en el `PendingRewards` que le hayas pasado — normalmente una tabla tuya — y `claim`
+lo vacía en la siguiente conexión del jugador. La cola se limpia **antes** de entregar y no después,
+así que un fallo a mitad de entrega no puede duplicar una recompensa la próxima vez.
+
+### Desbordamiento
+
+`OverflowPolicy` decide qué significa un inventario lleno: soltar a los pies, dejarlo pendiente, o
+rechazar. Elegirlo por plugin es la gracia — una caja debería soltar, un premio de evento debería
+esperar.
+
+## Loot
+
+Lo que sale de un cofre, un generador o un bloque roto:
+
+```java
+List<LootEntry> table = Loot.parseAll(section.getStringList("loot"));
+
+List<ItemStack> filled = Loot.roll(table);      // lo que llena un cofre
+ItemStack single = Loot.pick(table);            // una tirada
+```
+
+| Campo | Qué hace |
+|---|---|
+| Objeto | El ítem, con su nombre, encantamientos y lore. |
+| `weight` | Cuán probable es esta entrada respecto a las demás. |
+| `minAmount` / `maxAmount` | El rango de cantidad que se sortea. |
+| `tier` | Una etiqueta, para que una entrada pertenezca a una banda de rareza. |
+
+Los pesos son relativos, no porcentajes: una entrada con peso `10` junto a otra con `5` sale el doble de
+veces, y los números no tienen que sumar nada.
+
+`Loot.editor(plugin, entries)` es el editor en el juego para una.
+
+## Economía
+
+Una sola elección de economía para todo el servidor, sobre Vault, PlayerPoints o una moneda que
+escribas:
+
+```java
+Economy.balance(uuid);
+Economy.has(uuid, amount);
+
+Economy.charge(uuid, amount);                  // true si salió adelante
+Economy.pay(uuid, amount);
+
+EconomyResponse taken = Economy.withdraw(uuid, amount);
+TransferResult moved  = Economy.transfer(from, to, amount);
+```
+
+`charge` y `pay` responden con un booleano para el caso habitual; `withdraw` y `deposit` devuelven un
+`EconomyResponse` cuando necesitas saber *por qué* falló. Nada lanza — un cobro que no se pudo hacer es
+un resultado sobre el que ramificar, no una excepción que cazar alrededor de un clic de menú.
+
+Se soportan varias monedas: `Economy.of("points")` acota cada llamada a una, y `Economy.currencies()`
+lista las registradas.
+
+Un servidor sin plugin de economía recibe un proveedor que lo dice, así que el fallo es *"no hay
+economía instalada"* y no un `NoClassDefFoundError` a mitad de una compra.
+
+## Formatos
+
+La otra mitad del dinero: lo que lee un jugador, y lo que teclea un jugador.
+
+```java
+Formats.money(1234567);          // "1.23M", o lo que haya configurado el dueño
+Formats.compact(1234567);        // el mismo acortado, sin moneda
+Formats.percent(0.42);
+Formats.percentOf(3, 12);
+Formats.date(epochMillis);
+Formats.relative(epochMillis);   // "hace 3 minutos"
+
+Amounts.parse("10M");            // lo que tecleó un jugador, de vuelta a número
+```
+
+Leer `10M` del chat usa el mismo parser que la [entrada `amount`](/docs/exylialib/entrada-y-editores),
+así que un menú, un comando y una petición por chat aceptan la misma abreviatura.
+
+<Callout type="note" title="El locale está fijado a propósito">
+Los formatos decimales usan un locale fijo y no el de la máquina. Un servidor en España escribiría
+`1,50`, y ese valor rompe cada scoreboard, comparación y config que lo lea de vuelta.
+</Callout>

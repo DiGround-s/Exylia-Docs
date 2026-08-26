@@ -1,0 +1,93 @@
+---
+title: "Statistics"
+description: "What is counted, where it is stored, and how the leaderboards are built."
+---
+
+Statistics are tracked in four places at once: per player globally, per player per event, per clan
+globally and per clan per event.
+
+## The counters
+
+| Counter | Player | Clan | When it moves |
+|---|---|---|---|
+| Wins | Yes | Yes | On winning an event |
+| Leaderboard points | Yes | Yes | On winning, by the event's `leaderboard-points` |
+| Captures | Yes | Yes | On each capture, core break or payload win |
+| Points earned | Yes | Yes (total points) | As points are scored during an event |
+| Time captured | Yes | — | While holding a zone |
+
+What records what, by type:
+
+| Type | Records |
+|---|---|
+| `koth` | Capture and capture time on each capture; win and leaderboard points on the win |
+| `koth_points_exclusive` / `koth_points_multi` | Points earned and one second of capture time per scoring second |
+| `koth_capture_points` | Capture, one point and the capture time per completed capture |
+| `conquest` | Capture and the zone's points on each zone capture |
+| `payload` | Win and capture on delivery |
+| `dtc` | Capture and the break's points on each break |
+
+## The ranking
+
+Leaderboards rank by **leaderboard points**, not by wins or by points earned. That value is per
+event: `leaderboard-points` defaults to `1`, so by default one win is worth one ranking point, and an
+event worth more can be made worth more without touching the others.
+
+## Where they are shown
+
+| Command | Screen |
+|---|---|
+| `/capture top` | Player leaderboard |
+| `/capture clantop` | Clan leaderboard |
+
+Both screens can be filtered by event, so a ranking can be global or limited to one event's own
+totals.
+
+The top ten of each is cached in memory and refreshed **every 60 seconds**, plus once at startup. A
+win therefore appears on the leaderboard within a minute, not instantly.
+
+<Callout type="note" title="Why cached">
+The leaderboard is read by menus, by holograms and by every `%exyliacapture_top_...%` placeholder on
+every scoreboard refresh. Serving that from a snapshot keeps a sidebar from issuing a database query
+per line per second.
+</Callout>
+
+## Leaderboard appearance
+
+The menus are configured in `config.yml`:
+
+```yaml title="config.yml"
+leaderboard:
+  max-entries: 50
+  player-heads: true
+  rank-materials:
+    first: GOLD_BLOCK
+    second: IRON_BLOCK
+    third: COPPER_BLOCK
+    player: PLAYER_HEAD
+    clan: SHIELD
+  filter-materials:
+    selected: LIME_CONCRETE
+    unselected: RED_CONCRETE
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `max-entries` | `50` | How many rows a leaderboard holds. |
+| `player-heads` | `true` | Draw each row as that player's head. Heads are fetched once and cached. |
+| `rank-materials` | see above | The items the podium rows and the rest are drawn with. |
+| `filter-materials` | see above | The chosen and unchosen event filters. |
+
+## Reading them elsewhere
+
+Player statistics for whoever reads the placeholder:
+
+```text
+%exyliacapture_stats_wins%
+%exyliacapture_stats_captures%
+%exyliacapture_stats_points%
+%exyliacapture_stats_leaderboard_points%
+%exyliacapture_stats_time_captured%
+```
+
+Cached top rows are described in [Placeholders](/docs/exyliacapture/placeholders).

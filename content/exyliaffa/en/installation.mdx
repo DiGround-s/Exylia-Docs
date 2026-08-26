@@ -1,0 +1,94 @@
+---
+title: "Installation"
+description: "Dependencies, first boot, and the files the plugin generates."
+---
+
+## Before you start
+
+ExyliaFFA depends on three plugins that must be in `plugins/` **before** the first boot. If any is
+missing, the server disables ExyliaFFA and says so in the console.
+
+| Plugin | What for |
+|---|---|
+| `ExyliaLib` | Configuration, menus, database, placeholders, effects and actions. |
+| `FastAsyncWorldEdit` | Saving and restoring each arena's schematic during regeneration. |
+| `packetevents` | The glow on your linked opponent, sent by packets without touching teams. |
+
+Optional, but recommended:
+
+- **PlaceholderAPI** — to use the plugin's placeholders outside it.
+- **ViaVersion** — older client versions.
+- **ExyliaPracticeCore**, **ExyliaEvents**, **ExyliaSandBox** — when present, ExyliaFFA respects
+  their state: a player queued for practice, inside an event or in the sandbox cannot join an FFA.
+
+## Installing
+
+<Steps>
+  <Step title="Drop in the jars">
+    Copy `ExyliaFFA.jar` and its dependencies into the server's `plugins/` folder.
+  </Step>
+  <Step title="Start the server">
+    The first boot generates the configuration files and the database tables.
+  </Step>
+  <Step title="Check the console">
+    You should see the load messages: configs, actions, menus, placeholders and listeners. Any
+    unknown key is reported once as `UNKNOWN_KEY`.
+  </Step>
+  <Step title="Open the panel">
+    With the `exyliaffa.admin` permission, run `/ffaadmin` to open the admin panel.
+  </Step>
+</Steps>
+
+## Generated files
+
+All of them live in `plugins/ExyliaFFA/`.
+
+| File | Contents |
+|---|---|
+| `config.yml` | Global settings: combat, anti-farmkill, streaks, respawn, commands. |
+| `messages.yml` | Every message the plugin sends, grouped by system. |
+| `scoreboards.yml` | The sidebar shown inside an arena. |
+| `killstreaks.yml` | The streak ladder: what is announced, and from how many kills. |
+| `database.yml` | Database engine. H2 by default, embedded, nothing to install. |
+| `menus/` | The YAML menus, both player-facing and admin. |
+
+<Callout type="note" title="Arenas are not in a file">
+Arenas, kits, spawns, statistics, player settings and saved inventories live in the database, not in
+YAML. They are created and edited from `/ffaadmin`. That is what lets several servers share one
+configuration by pointing at the same MySQL.
+</Callout>
+
+## Database
+
+By default the plugin uses **H2**: a file inside the plugin folder, with no server, no installation
+and no maintenance. It is perfectly fine for a single server.
+
+To share data across servers, edit `database.yml`:
+
+```yaml title="plugins/ExyliaFFA/database.yml"
+database:
+  type: mysql
+  settings:
+    max-pool-size: 0
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Supported engines: `h2`, `mysql`, `mariadb`, `postgresql` and `mongodb`. Only the block matching
+`type` is read. An unrecognised value falls back to `h2` and says so in the console.
+
+<Callout type="warning" title="max-pool-size">
+Leave it at `0` unless the console reports connection timeouts under load. `0` lets the engine
+decide, which is almost always the right answer: a bigger pool against a database that is already
+the bottleneck makes things slower, not faster.
+</Callout>
+
+## Updating
+
+Replace the jar and restart. Configuration migrations run on their own during the first boot after
+updating, and **your edits survive**: only what was renamed or reshaped is moved or rewritten. See
+[Configuration](/docs/exyliaffa/configuration) for the detail of each file version.

@@ -1,0 +1,94 @@
+---
+title: "Kill streaks"
+description: "The streak ladder, its announcements, its commands, and the break message."
+---
+
+Streaks live in two files: the general settings in `config.yml` and the ladder in `killstreaks.yml`.
+
+## General settings
+
+```yaml title="config.yml"
+kill-streaks:
+  enabled: true
+  reset-on-death: true
+  break-min-streak: 3
+  break-message: "<#b9a5cc>%killer% ended %player%'s <gradient:#ff4d4d:#ffd700><bold>%streak% kill streak</bold></gradient><#b9a5cc>!</#b9a5cc>"
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `enabled` | `true` | Whether streaks are tracked and announced at all. |
+| `reset-on-death` | `true` | Whether dying returns the streak to zero. |
+| `break-min-streak` | `3` | The shortest streak whose ending is worth announcing. |
+| `break-message` | see above | The break announcement. Accepts `%killer%`, `%player%` and `%streak%`. |
+
+## The ladder
+
+`killstreaks.yml` is a list of rungs. Each fires when the player reaches exactly that number of
+kills.
+
+```yaml title="killstreaks.yml"
+streaks:
+  - streak: 3
+    enabled: true
+    broadcast: true
+    message: "<#ff7a7a>%player%</#ff7a7a> <#b9a5cc>is heating up with</#b9a5cc> <gradient:#ff4d4d:#ff9a9a><bold>3 kills</bold></gradient><#b9a5cc>.</#b9a5cc>"
+    commands: []
+  - streak: 5
+    enabled: true
+    broadcast: true
+    message: "..."
+    commands:
+      - "give %player% diamond 1"
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `streak` | — | The kill count that fires the rung. Required, and greater than zero. |
+| `enabled` | `true` | Disables the rung without deleting it. |
+| `broadcast` | `true` | `true` announces server-wide, `false` only to the player. |
+| `message` | empty | The announcement. `%player%` is the player on the streak. |
+| `commands` | empty | Commands the console runs when it is reached. `%player%` is substituted. |
+
+The ladder sorts itself from lowest to highest, so the order in the file does not matter. A
+malformed rung is skipped and reported in the console: you lose that rung, not the whole ladder.
+
+Nine rungs ship by default: 3, 5, 7, 10, 15, 20, 25, 35 and 50.
+
+<Callout type="note" title="Why this is a separate file">
+The rest of `config.yml` is a fixed set of keys with known types. A ladder is a list of blocks of
+free length, so it lives in its own file. If you come from an older version where it sat in
+`kill-streaks.streaks`, the migration moves it on the first boot.
+</Callout>
+
+## Checking a streak
+
+`/ffa streak` shows the player's current streak. With the `exyliaffa.commands.streak.others`
+permission, `/ffa streak <player>` shows someone else's.
+
+The value is also available as a placeholder:
+
+```text
+%exyliaffa_current_streak%
+```
+
+## Streak rewards
+
+The `commands` of each rung are run by the console, so any command of any plugin works:
+
+```yaml
+commands:
+  - "eco give %player% 500"
+  - "broadcast &e%player% &7is on 10 kills"
+  - "lp user %player% permission settemp exyliaffa.kit.premium true 10m"
+```
+
+<Callout type="tip">
+For rewards on individual kills rather than streaks, use `kill-commands` in `config.yml`. See
+[Configuration](/docs/exyliaffa/configuration#kill-commands).
+</Callout>
+
+## Per-player settings
+
+A player can silence their own streak notifications, or the global announcements of other people's
+streaks, from `/ffa settings`, with no effect on anyone else.

@@ -1,0 +1,117 @@
+---
+title: "Configuración"
+description: "Todos los archivos que escribe el plugin y qué vive en cada uno."
+---
+
+Los archivos viven en `plugins/ExyliaCapture/`. Todos se escriben en el primer arranque con sus
+valores por defecto y con comentarios en cada clave.
+
+## config.yml
+
+Todo lo global. Los ajustes por evento no están aquí — viven en la base de datos y se editan desde el
+panel.
+
+### scheduler
+
+```yaml
+scheduler:
+  timezone: ""
+```
+
+<Field name="timezone" type="zona horaria" defaultValue="vacío">
+Contra qué reloj se leen los horarios. Vacío usa la zona de la máquina. Acepta un identificador IANA
+como `America/New_York`.
+</Field>
+
+### particles
+
+```yaml
+particles:
+  enabled: true
+  interval-ticks: 40
+  particle: WAX_ON
+  view-distance: 48.0
+```
+
+El contorno alrededor de las zonas de un evento activo. Explicado en
+[Zonas](/docs/exyliacapture/zonas#el-contorno).
+
+### Un bloque por tipo de evento
+
+`koth`, `koth_capture_points`, `conquest`, `payload`, `koth_points` y `dtc` llevan cada uno un
+`boss-bar` y un `hologram`. Explicados en [Elementos en pantalla](/docs/exyliacapture/visuales).
+
+### leaderboard
+
+```yaml
+leaderboard:
+  max-entries: 50
+  player-heads: true
+  rank-materials:
+    first: GOLD_BLOCK
+    second: IRON_BLOCK
+    third: COPPER_BLOCK
+    player: PLAYER_HEAD
+    clan: SHIELD
+  filter-materials:
+    selected: LIME_CONCRETE
+    unselected: RED_CONCRETE
+```
+
+Explicado en [Estadísticas](/docs/exyliacapture/estadisticas#aspecto-del-leaderboard).
+
+## scoreboards.yml
+
+Tres secciones: un sidebar por tipo para cuando corre un solo evento, las dos líneas compactas que
+aporta cada evento cuando corren varios, y el sidebar compartido multi-evento. Ver
+[Elementos en pantalla](/docs/exyliacapture/visuales#sidebars).
+
+## messages.yml
+
+Todos los mensajes, agrupados por sistema:
+
+| Sección | Contiene |
+|---|---|
+| `prefix` | Lo que rellena `%prefix%` en el resto. |
+| `events` | Inicio, fin, ganador y tiempo agotado, comunes a todos los tipos. |
+| `koth-capture-points` | Mensajes propios de ese tipo. |
+| `conquest` | Mensajes de Conquest, incluidos los formatos de línea de zona. |
+| `payload` | Mensajes de Payload. |
+| `dtc` | Mensajes de Destroy The Core. |
+| `admin` | Respuestas del panel y de los comandos. |
+| `leaderboard` | Las pantallas de leaderboard. |
+| `tabs` | La tira de pestañas dentro de los menús. |
+| `event-list` | La lista de `/capture`. |
+| `reward-preview` | Cómo se describen las recompensas a los jugadores. |
+| `placeholders` | Las palabras de reserva: ninguno, desconocido, no aplica, raya. |
+
+## database.yml
+
+Motor y credenciales. Ver
+[Instalación · Elegir motor](/docs/exyliacapture/instalacion#elegir-motor).
+
+## menus/
+
+El diseño de los menús en YAML, editable sin tocar código.
+
+```text
+menus/
+├── admin/    panel, lista y setup de eventos, selector de tipo, ajustes por tipo,
+│             lista y editor de zonas de Conquest, horarios, comandos y recompensas
+└── user/     lista de eventos, leaderboards de jugador y clan, filtro por evento
+```
+
+Se pueden cambiar iconos, posiciones, títulos, lore y sonidos. Las claves de acción de cada botón son
+las que lo enlazan con lo que hace: consérvalas.
+
+## Migraciones
+
+`config.yml` está en la versión 2. Un archivo escrito por la versión anterior se migra en el primer
+arranque tras actualizar: se elimina la sección interna y las boss bars se renombran a su forma actual
+en vez de reescribirse, así que un color o un estilo que hubieras puesto sobrevive.
+
+<Callout type="warning" title="Las claves desconocidas se eliminan">
+Una clave que ningún archivo declara se borra al cargar y se reporta una vez como `UNKNOWN_KEY`. Es lo
+que mantiene los archivos limpios entre actualizaciones, y por eso añadirles claves propias no
+funciona.
+</Callout>

@@ -1,0 +1,81 @@
+---
+title: "Introduction"
+description: "What ExyliaEvents is, the thirty-four minigames it registers, and how the docs are laid out."
+---
+
+ExyliaEvents is a minigame event system. It registers **34 event types** — twenty-seven solo games and
+seven team variants — and each one is a real, separate game with its own rules, its own settings
+screen, its own scoreboard and its own messages.
+
+An *event configuration* is one arena of one type: its lobby, its spawns, its bounds, its settings,
+its kits and its rewards. You can have as many as you like, and several can run at the same time.
+Everything is created from `/eventsadmin`, and configurations live in the database rather than in a
+file.
+
+## What it covers
+
+<Cards>
+  <Card title="34 event types" href="/docs/exyliaevents/event-types">
+    From TNT Run and Spleef to CS:GO, Build Battle, Survival Games and Simon Says.
+  </Card>
+  <Card title="Team variants" href="/docs/exyliaevents/teams-and-kits">
+    Seven games also exist as team games, with four colours and a team selector.
+  </Card>
+  <Card title="Arena cloning" href="/docs/exyliaevents/arenas#the-auto-world">
+    Brackets and Build Battle paste copies of your arena into a generated void world so matches and
+    plots run side by side.
+  </Card>
+  <Card title="Sign-ups" href="/docs/exyliaevents/inscriptions">
+    Open a list, let staff add players, and start an event only those players may join.
+  </Card>
+  <Card title="Random events" href="/docs/exyliaevents/game-flow#random-events">
+    A timer that starts a random configured event when enough players are online.
+  </Card>
+  <Card title="Stats and rewards" href="/docs/exyliaevents/stats">
+    Kills, deaths, wins and games played, globally and per event, with offline-safe rewards.
+  </Card>
+</Cards>
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21 or newer. Folia supported. |
+| Java | 21 |
+| Required dependencies | `ExyliaLib`, `FastAsyncWorldEdit`, `packetevents` |
+| Optional dependencies | `PlaceholderAPI`, `ViaVersion`, `Worlds`, `WorldGuard`, Apollo or Feather, `TAB`, `floodgate` |
+
+<Callout type="note" title="FastAsyncWorldEdit is required, not optional">
+Arena schematics are how an arena is restored after a game and how Brackets and Build Battle clone
+themselves. Without FAWE the plugin does not start.
+</Callout>
+
+## Where things live
+
+| Thing | Where |
+|---|---|
+| Event configurations, arenas, settings, rewards | Database (`event_configurations`) |
+| Kits, loot tables, sign-ups, pending rewards | Database |
+| Player statistics, global and per event | Database |
+| Timers, limits, cooldowns, boss bars, music | `config.yml` |
+| Sidebars, one per event type | `scoreboards.yml` |
+| Every message | `messages.yml` |
+| Build Battle themes | `buildbattle-themes.yml` |
+| Menu layouts | `menus/` |
+
+## How to read this documentation
+
+<Steps>
+  <Step title="Getting started">
+    Installing, and one arena running from the panel.
+  </Step>
+  <Step title="Configuring">
+    Arenas, the type catalogue, teams and kits, rewards.
+  </Step>
+  <Step title="Systems">
+    How a game flows, sign-ups, statistics and what is drawn on screen.
+  </Step>
+  <Step title="Reference">
+    Commands, placeholders, every configuration key, the API and the FAQ.
+  </Step>
+</Steps>

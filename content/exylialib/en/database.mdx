@@ -1,0 +1,145 @@
+---
+title: "Database"
+description: "Records stored in H2, MySQL, MariaDB, PostgreSQL or MongoDB — one pool, no reflection per row, nothing blocking."
+---
+
+A table is a record. There is no DAO, no SQL in your plugin and no ORM configuration.
+
+```java
+@Table("player_stats")
+public record PlayerStats(
+        @Id(length = 36) String uuid,
+        @Column int kills,
+        @Column int deaths,
+        @Column("created_at") long createdAt) {
+}
+```
+
+```java
+Repository<PlayerStats> stats = Databases.of(this).repository(PlayerStats.class);
+```
+
+The table is created on first use, and a new component becomes a new column.
+
+## Annotations
+
+| Annotation | What it does |
+|---|---|
+| `@Table("name")` | The table this record lives in. |
+| `@Id(length = …)` | The primary key. |
+| `@Column` | A stored component. `@Column("other_name")` when the column name differs. |
+| `@Column(length = Column.UNBOUNDED)` | Text with no length limit — `TEXT` on H2, `LONGTEXT` on MySQL. |
+| `@Indexed` / `@Index(…)` | Indexes, including composite and descending ones. |
+
+## Reading and writing
+
+Everything returns a `CompletableFuture` and nothing blocks the server:
+
+```java
+stats.find(uuid);                    // Optional<PlayerStats>
+stats.findAll();
+stats.exists(uuid);
+stats.count();
+
+stats.save(record);                  // insert or update
+stats.saveAll(records);
+stats.update(record);
+stats.insert(record);                // generated keys
+stats.insertReturning(record);
+stats.delete(uuid);
+```
+
+### Queries
+
+```java
+stats.where("arenaId", "nodebuff")
+     .orderByDescending("kills")
+     .limit(10)
+     .find();
+```
+
+| Call | What it does |
+|---|---|
+| `where(column, value)` | Filter. Chainable. |
+| `orderBy` / `orderByDescending` | Sort. |
+| `limit(rows)` / `skip(rows)` | Page. |
+| `find()` / `findFirst()` | Run it. |
+| `count()` / `delete()` | Count or delete what matches. |
+
+Sorting happens in the database, which is why a leaderboard stores its derived values rather than
+computing them on read: a database cannot sort by something only Java knows how to work out.
+
+## Engines
+
+Every plugin gets `plugins/<Plugin>/database.yml`:
+
+```yaml
+database:
+  type: h2
+  settings:
+    max-pool-size: 0
+  h2:
+    file: database/h2
+    auto-server: false
+  mysql:
+    host: localhost
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+`h2`, `mysql`, `mariadb`, `postgresql`, `mongodb`. Only the block matching `type` is read; an
+unrecognised value falls back to `h2` and says so.
+
+H2's `auto-server` is worth knowing about: an H2 file belongs to one JVM, and the second process to
+open it is refused with *"The file is locked"*. Turning it on makes the first server serve the file to
+the others over TCP — which is what lets two plugins on one machine, or a server plus a database
+viewer, share it. For anything not on one machine, run a real database instead.
+
+<Callout type="tip" title="Leave max-pool-size at 0">
+Zero lets the engine decide, which is right almost always: an embedded database wants a handful of
+connections and a networked one is sized from the machine's cores. Raise it only if the console
+reports connection timeouts — a bigger pool against a database that is already the bottleneck makes
+things slower.
+</Callout>
+
+Plugins whose resolved settings match **share one pool**. Two plugins pointed at the same MySQL open
+one client, not two.
+
+## Types the library cannot know
+
+A component whose type is yours needs a codec, registered **before** the first
+`repository(Type.class)` — a record is compiled when its repository is created and resolves its
+codecs then:
+
+```java
+public static void registerCodecs() {
+    Databases.codec(ArenaBounds.class, ArenaBounds.CODEC);
+    Databases.codec(ArenaRules.class, Codec.of(
+            rules -> GSON.toJson(rules),
+            stored -> GSON.fromJson(stored, ArenaRules.class)));
+}
+```
+
+`Location`, `ItemStack`, `ItemStack[]` and enums are already known.
+
+## Moving data
+
+```text
+/exylialib export <plugin>
+/exylialib import <plugin> <file> [force]
+```
+
+One plugin's whole database out to a file and back: H2 to MySQL, or onto another server. Plugins can
+also expose it themselves — ExyliaEvents wraps the same calls in `/eventsadmin export`.
+
+## Redis
+
+Optional, and off by default. When configured, it makes one database look the same from every server:
+a change on one is visible on the others immediately, rather than after a cache expiry.
+
+<Callout type="warning" title="Threads">
+A future completes on a pool thread. Anything you do with the answer that touches a player or the
+world has to go back through [the scheduler](/docs/exylialib/tasks) first.
+</Callout>

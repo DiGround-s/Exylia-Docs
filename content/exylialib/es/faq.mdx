@@ -1,0 +1,85 @@
+---
+title: "Preguntas frecuentes"
+description: "Lo que más surge al construir sobre la librería."
+---
+
+## Un plugin no carga y dice que falta ExyliaLib
+
+`ExyliaLib.jar` tiene que estar en `plugins/` y declarada en `depend` en el `plugin.yml` del plugin. No
+hay respaldo empaquetado a propósito: una sola copia instalada es todo el diseño.
+
+## Mi placeholder se ve en pantalla en vez de resolver
+
+Tres causas habituales:
+
+1. Nada registró ese nombre — `Placeholders.unresolved(texto)` lista lo que no respondió.
+2. El nombre está bien pero el **prefijo** no: el nombre registrado es el prefijo del grupo, un guion
+   bajo y el nombre de la entrada.
+3. Lo estás leyendo por PlaceholderAPI, donde el nombre del plugin va delante como identificador.
+
+## Un valor muestra `{highlight}` como texto en vez de colorear
+
+Usaste `with()`, que es deliberado: inserta el valor como texto literal. `withFormatted()` es para
+valores que escribió el dueño del servidor. Equivocarse al revés deja que un jugador llamado
+`<rainbow>` recoloree tu mensaje.
+
+## Un placeholder de color en el nombre de un item no hace nada
+
+`name: "%name_color%&l%kit_name%"` no puede funcionar. La sustitución ocurre sobre el árbol de
+componentes ya parseado — un color a secas parsea a un componente vacío con un color, y ese color no
+alcanza al texto de al lado. Pasa la frase coloreada entera, o usa una plantilla con nombre por estado.
+
+## El título del menú no cambia al pasar página
+
+Eso necesita PacketEvents. Sin él el título se queda en la página en la que se abrió, y todo lo demás
+funciona con normalidad.
+
+## El menú no abre en absoluto
+
+Casi siempre un `size` que no concuerda con el `type`. Un barril son siempre veintisiete slots diga lo
+que diga `size`, y crear un inventario cuyo tamaño no concuerda con su tipo lanza antes de dibujar
+nada.
+
+## Un botón no hace nada
+
+Mira la consola de cuando se cargó el archivo: una acción que no existe compila a un botón muerto y una
+línea reportada, y el resto del menú sigue funcionando. Mira también la `condition` del slot — un slot
+cuya condición falla no está ahí en absoluto.
+
+## Mis ediciones de config se borraron tras actualizar
+
+Una clave que ningún record declara se elimina al cargar y se reporta como `UNKNOWN_KEY`. Si una sección
+cambió de forma entre versiones, hacía falta una migración — `Migration.rename` mueve un valor en vez de
+dejar que el valor por defecto lo reemplace.
+
+## Todo revienta en Folia
+
+Casi siempre una tarea en el hilo equivocado. Todo lo que va sobre un jugador pertenece a `runAtEntity`;
+`run` es para el servidor entero. Es invisible en Paper y fatal en Folia.
+
+## Una llamada a la base de datos vuelve pero mi código corre en el hilo equivocado
+
+Los futures se completan en un hilo del pool. Vuelve por `tasks.runAtEntity(player, …)` antes de tocar
+al jugador o al mundo.
+
+## Dos plugins se pelean por el mismo jugador
+
+Deberían estar usando [`Sessions`](/docs/exylialib/jugadores#un-jugador-una-actividad). `isFree`
+pregunta, `claim` decide de forma atómica, y el callback de liberación es cómo se le dice al dueño
+actual que suelte.
+
+## La API de clanes no responde nada
+
+`Clans.isSupported()` es `false` cuando no se detectó ningún plugin de clanes. La detección es por
+reflexión, así que un plugin instalado cuya API no se pueda alcanzar se salta con un aviso en consola —
+esa línea nombra también cuál se eligió.
+
+## Hologramas, nametags o esquemáticas no hacen nada
+
+Cada módulo tiene un `isSupported()` y, donde tiene sentido, un `unsupportedReason()`. Hologramas y
+nametags necesitan PacketEvents; las esquemáticas necesitan FastAsyncWorldEdit. No hacen nada en vez de
+lanzar, y merece la pena comprobarlo en vez de darlo por supuesto.
+
+## ¿Dónde pido soporte?
+
+En el [Discord de Exylia](https://discord.exylia.net).

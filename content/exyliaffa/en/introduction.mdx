@@ -1,0 +1,77 @@
+---
+title: "Introduction"
+description: "What ExyliaFFA is, what it solves, and how this documentation is organised."
+---
+
+ExyliaFFA is a free-for-all system built for servers that take it seriously: unlimited arenas,
+multiple kits, permission-gated spawns, per-arena rules, schematic-based regeneration, persistent
+stats and a full admin panel driven from in-game menus.
+
+It is not a single-arena plugin with a join command. Each arena is an independent configuration: its
+own rules, its own kits, its own spawns, its own spawn protection and its own regeneration timer.
+
+## What is included
+
+<Cards>
+  <Card title="Unlimited arenas" href="/docs/exyliaffa/arenas">
+    Own region, player cap, access permission, menu priority and spawn protection.
+  </Card>
+  <Card title="Per-arena rules" href="/docs/exyliaffa/rules">
+    Twenty-one switches: PvP, building, temporary blocks, fall damage, regeneration, cooldowns.
+  </Card>
+  <Card title="Multiple kits" href="/docs/exyliaffa/kits">
+    Selectable or random mode, per-kit permissions and a saved layout editor per player.
+  </Card>
+  <Card title="Gated spawns" href="/docs/exyliaffa/spawns">
+    Several spawn points per arena, each with its own icon, display name and permission.
+  </Card>
+  <Card title="Statistics" href="/docs/exyliaffa/stats">
+    Nine persistent counters with per-arena and global leaderboards.
+  </Card>
+  <Card title="Anti-abuse" href="/docs/exyliaffa/combat">
+    Combat tag, anti-farmkill by player and by IP, and a 1v1 link against free-hitting.
+  </Card>
+</Cards>
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21 or newer. Folia supported. |
+| Java | 21 |
+| Required dependencies | `ExyliaLib`, `FastAsyncWorldEdit`, `packetevents` |
+| Optional dependencies | `PlaceholderAPI`, `ViaVersion`, `ExyliaPracticeCore`, `ExyliaEvents`, `ExyliaSandBox` |
+
+<Callout type="note" title="About ExyliaLib">
+ExyliaLib is not a decorative dependency. Typed configuration with migrations, declarative YAML
+menus, the database, placeholders, effects and actions all come from it. Without it, the plugin does
+not start.
+</Callout>
+
+## How to read this documentation
+
+The documentation is split into four blocks, meant to be read in that order the first time:
+
+<Steps>
+  <Step title="Getting started">
+    Installation, and a first arena running within minutes.
+  </Step>
+  <Step title="Configuring">
+    Arenas, rules, kits, spawns and regeneration. This is where most of the time goes.
+  </Step>
+  <Step title="Systems">
+    Combat, streaks, statistics, scoreboard and player settings.
+  </Step>
+  <Step title="Reference">
+    Commands, permissions, placeholders, every configuration key, and the developer API.
+  </Step>
+</Steps>
+
+## Conventions
+
+- Values marked as **default** are what the plugin writes the first time it starts. If the file
+  already exists, your value is kept.
+- Identifiers between `<` and `>` are variables. `/ffa join <arenaId>` means `/ffa join nodebuff`,
+  not `/ffa join <nodebuff>`.
+- Colours use ExyliaLib palette tokens (`{primary}`, `{highlight}`, `{muted}`) and also accept
+  MiniMessage and hexadecimal codes.

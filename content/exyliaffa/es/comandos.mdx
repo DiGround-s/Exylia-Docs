@@ -1,0 +1,62 @@
+---
+title: "Comandos"
+description: "Todos los comandos de jugador y de administración, con su permiso."
+---
+
+Los comandos tienen autocompletado en todos los argumentos: identificadores de arena, de kit y
+nombres de jugador se sugieren solos.
+
+## Jugador
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/ffa` | `exyliaffa.commands.ffa` | Abre el selector de arenas. |
+| `/ffa join <arenaId>` | `exyliaffa.commands.join` | Entra a una arena. |
+| `/ffa leave` | `exyliaffa.commands.leave` | Sale de la arena actual. |
+| `/ffa spectate <arenaId>` | `exyliaffa.commands.spectate` | Entra como espectador. |
+| `/ffa stats` | `exyliaffa.commands.stats` | Abre tus estadísticas. |
+| `/ffa stats <jugador>` | `exyliaffa.commands.stats` | Abre las estadísticas de otro jugador. |
+| `/ffa streak` | `exyliaffa.commands.streak` | Muestra tu racha actual. |
+| `/ffa streak <jugador>` | `exyliaffa.commands.streak.others` | Muestra la racha de otro jugador. |
+| `/ffa settings` | `exyliaffa.commands.settings` | Abre tus ajustes personales. |
+| `/ffa kiteditor` | `exyliaffa.commands.kiteditor` | Abre el editor de layout de kits. |
+| `/ffa savekit` | `exyliaffa.commands.savekit` | Guarda el layout que estás editando. |
+| `/ffa cancelkit` | `exyliaffa.commands.cancelkit` | Sale del modo edición sin guardar. |
+| `/ffa resetkit <kitId>` | `exyliaffa.commands.resetkit` | Borra tu layout guardado de un kit. |
+| `/ffa kick <jugador>` | `exyliaffa.commands.kick` o `exyliaffa.commands.kick.<arenaId>` | Expulsa de la arena a un jugador que invitaste. |
+| `/ffa invite <jugador>` | `exyliaffa.commands.invite` o `exyliaffa.commands.invite.<arenaId>` | Invita a un jugador a tu arena. |
+| `/ffa accept <jugador>` | — | Acepta una invitación. |
+| `/ffa decline <jugador>` | — | Rechaza una invitación. |
+
+`kick` exige además que **tú hubieras invitado** a ese jugador. El permiso `exyliaffa.kick-bypass`
+levanta esa condición y permite expulsar a cualquiera de la arena.
+
+<Callout type="note" title="Además del permiso del comando">
+Entrar a una arena, elegir un spawn o usar un kit pueden exigir un permiso adicional, el que hayas
+escrito en esa arena, ese spawn o ese kit. Ver [Permisos](/docs/exyliaffa/permisos).
+</Callout>
+
+## Administración
+
+Todo `/ffaadmin` exige `exyliaffa.admin`.
+
+| Comando | Qué hace |
+|---|---|
+| `/ffaadmin` | Abre el panel de administración. |
+| `/ffaadmin reload` | Recarga configuraciones, mensajes, scoreboards y menús. |
+| `/ffaadmin resetstats <jugador> <arenaId>` | Borra las estadísticas de un jugador en una arena. |
+| `/ffaadmin resetlayout <jugador> <kitId>` | Borra el layout de kit guardado de un jugador. |
+
+## Qué hace y qué no hace `reload`
+
+Recarga lo que vive en archivos: `config.yml`, `messages.yml`, `scoreboards.yml`,
+`killstreaks.yml` y los menús. También vuelve a fijar el prefijo, de modo que un prefijo editado se
+aplica sin reiniciar.
+
+No recarga lo que vive en la base de datos, porque no hace falta: arenas, kits, spawns y
+estadísticas se leen ya actualizados.
+
+<Callout type="warning" title="Un cambio que sí pide reinicio">
+Cambiar el motor en `database.yml` exige reiniciar el servidor: el cliente se abre al arrancar y no
+se reemplaza en caliente.
+</Callout>

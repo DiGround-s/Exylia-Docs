@@ -1,0 +1,55 @@
+---
+title: "Placeholders"
+description: "The eight PlaceholderAPI placeholders the plugin answers."
+---
+
+Expansion identifier: **`exyliaevents`**. Registering them registers the expansion, so nothing is
+downloaded from eCloud.
+
+## Counters
+
+| Placeholder | Returns |
+|---|---|
+| `%exyliaevents_total_players%` | Everyone inside active events, players and spectators together. |
+| `%exyliaevents_total_participants%` | Only the players, without spectators. |
+| `%exyliaevents_total_spectators%` | Only the spectators. |
+| `%exyliaevents_active%` | How many events are active, not counting disabled ones. |
+| `%exyliaevents_waiting%` | How many are joinable right now — waiting or counting down. |
+| `%exyliaevents_in_progress%` | How many are actually playing. |
+
+`waiting` and `in_progress` do not overlap: an event counting down is joinable, and one that is
+playing is not.
+
+## One event's state
+
+```text
+%exyliaevents_status_bol_<eventId>%
+```
+
+Returns `true` when that event exists and is not disabled, `false` otherwise. The id goes on the end,
+and an id containing underscores is read whole rather than being cut at the first one.
+
+```text
+%exyliaevents_status_bol_lms1%
+```
+
+## The reader's team
+
+```text
+%exyliaevents_team_color%
+```
+
+The colour code of the team the player who reads it belongs to — `&c`, `&9`, `&a` or `&e` — in a team
+event. Empty for a player who is not in one, which is what lets it be dropped straight into a chat or
+tab format without a fallback.
+
+<Callout type="note" title="No per-player statistic placeholders">
+Kills, deaths, wins and games played are shown in `/events stats` and exposed through the API, but
+they are not registered as placeholders. See [Statistics](/docs/exyliaevents/stats).
+</Callout>
+
+## Using them in the plugin's own files
+
+The sidebars in `scoreboards.yml` and the boss bars in `config.yml` are rendered with the values the
+running event provides — `%time%`, `%round%`, `%color%` and the rest — not with these. These are for
+reading the plugin's state from **outside**: a hub scoreboard, a tab list, another plugin's menu.

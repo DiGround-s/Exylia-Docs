@@ -1,0 +1,141 @@
+---
+title: "Text and placeholders"
+description: "One parser for every player-facing string, the shared palette, and one registry for %placeholders%."
+---
+
+## Four notations, one string
+
+Everything a player reads goes through `Text` and comes out an Adventure component. All four forms mix
+freely:
+
+| Form | Example |
+|---|---|
+| Palette token | `{primary}`, `{error}` |
+| Legacy code | `&a`, `&l` |
+| Legacy hex | `&#8a51c4`, `&x&8&a&5&1&c&4` |
+| MiniMessage | `<bold>`, `<gradient:#8a51c4:#ff6b9d>…</gradient>` |
+
+```java
+Text.of("{primary}&lWELCOME &8[{success}online&8]").send(player);
+```
+
+Italics are off unless asked for, which is the opposite of vanilla's default for renamed items.
+
+## The API
+
+| Call | What it does |
+|---|---|
+| `Text.of(string)` | The chainable form. |
+| `Text.from(plugin, string)` | The same, for a message belonging to a plugin, so `%prefix%` resolves. |
+| `Text.component(string)` | Straight to a `Component`. |
+| `.with(name, value)` | Substitutes a value **as literal text**. |
+| `.withFormatted(name, value)` | Substitutes a value that carries its own formatting. |
+| `.forPlayer(player)` | Resolves `%placeholders%` for that viewer. |
+| `.forPlayerFormatted(player)` | The same, honouring resolver values that carry formatting. |
+| `.build()` / `.send(receiver)` | Finish, or finish and deliver. |
+| `.plain()` / `.legacy()` / `.raw()` | Serialisers. `legacy()` is for old APIs that demand it. |
+
+<Callout type="warning" title="with or withFormatted is a decision, not a detail">
+Getting it backwards is a bug in both directions: a display name printing `{highlight}` to the screen,
+or a player called `<rainbow>` recolouring your message. Ask **whose value it is** — a server owner
+wrote it, or a player typed it.
+</Callout>
+
+## The palette
+
+Messages name a role, not a hex value. Sixteen roles ship, defined in the library's own `colors.yml`,
+and changing one recolours every plugin in the ecosystem at once:
+
+| Token | Default | Token | Default |
+|---|---|---|---|
+| `{primary}` | `#8a51c4` | `{info}` | `#59a4ff` |
+| `{secondary}` | `#aa76de` | `{info_light}` | `#7db7ff` |
+| `{secondary_light}` | `#b48fd9` | `{accent}` | `#ff6b9d` |
+| `{letters}` | `#e7cfff` | `{neutral}` | `#6c757d` |
+| `{letters_black}` | `#a89ab5` | `{highlight}` | `#ffd700` |
+| `{error}` | `#a33b53` | `{muted}` | `#868e96` |
+| `{success}` | `#8fffc1` | `{warning}` | `#ff9500` |
+| `{success_light}` | `#a1ffc3` | `{warning_light}` | `#ffd2a8` |
+
+`Colors.get(token)` reads one as a `TextColor`, and `Colors.names()` lists them.
+
+## The prefix
+
+Nearly every message starts with the same tag. Written into each line it cannot be changed centrally;
+registered as a global placeholder, two plugins fight over `%prefix%`. So it belongs to a plugin:
+
+```java
+Prefixes.set(this, messages.prefix());                 // on enable, and again on reload
+Text.from(this, messages.ready()).send(player);        // %prefix% resolves to yours
+```
+
+<Callout type="note" title="Set it again after a reload">
+An edited prefix that is not re-registered stays stale until the next restart. Every Exylia plugin
+calls `Prefixes.set` as the last step of loading its configs for exactly this reason.
+</Callout>
+
+## Placeholders
+
+One registry, whether or not PlaceholderAPI is installed.
+
+```java
+Placeholders.group(this, "clan")
+        .describe("The reader's clan")
+        .add("name", request -> clans.of(request.requireViewer()).name())
+        .add("members", request -> clans.of(request.requireViewer()).size())
+        .register();
+```
+
+That declares `%clan_name%` and `%clan_members%`. The final name is **the group prefix, an underscore
+and the entry name** — `add("")` registers the bare prefix itself.
+
+### Arguments
+
+The longest registered name wins and whatever is left becomes arguments:
+
+```java
+.add("players", request -> occupants(request.arg(0, "")))
+```
+
+`%arena_players_the_pit%` finds the registered `arena_players` and hands over `the_pit` — the argument
+is cut from the text **as written**, so a value's capitals survive even though the name is matched
+folded.
+
+### No answer is not an empty string
+
+A resolver returning `null` means "no value", and the text keeps whatever fallback was written:
+
+```text
+%clan_name|No clan%
+```
+
+Returning `"-"` instead would make "nobody is in third place" indistinguishable from "that arena does
+not exist".
+
+### Reading them
+
+| Call | What it does |
+|---|---|
+| `Placeholders.apply(text, viewer)` | Resolve everything for a viewer. |
+| `Placeholders.applyRelational(text, viewer, target)` | Resolve a two-player placeholder. |
+| `Placeholders.compile(text)` | Compile once, resolve many times. |
+| `Placeholders.isDynamic(text)` | Whether it contains anything to resolve at all. |
+| `Placeholders.unresolved(text)` | Names nothing answered — the way to catch a typo. |
+
+### With PlaceholderAPI
+
+Registering a group registers the expansion; there is nothing to install from eCloud. Outside, the
+plugin's own name is the identifier: `total_players` registered by ExyliaFFA is read as
+`%exyliaffa_total_players%`.
+
+A group whose prefix already **is** the plugin's name is handled too — PlaceholderAPI strips that word
+as the identifier, and the library puts it back rather than making anybody write it twice.
+
+## Lines written for several lines
+
+A value containing `<nl>` becomes several lore lines. `Lines.value(section, key)` reads a config key
+that may be a string or a list into that one canonical form, normalising real line breaks and literal
+`\n` on the way.
+
+Only lines that actually mention the multi-line value are stretched, and the rest of the template
+repeats around each one — so a bullet stays a bullet on the second line.

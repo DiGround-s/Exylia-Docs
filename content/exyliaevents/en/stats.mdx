@@ -1,0 +1,54 @@
+---
+title: "Statistics"
+description: "The four counters, global and per event, and where players see them."
+---
+
+## The counters
+
+| Counter | What it counts |
+|---|---|
+| Kills | Kills made inside events |
+| Deaths | Deaths inside events |
+| Wins | Events won |
+| Games played | Events taken part in |
+
+They are tracked twice: **globally** for the player, and **per event configuration**, so a player's
+CS:GO record is separate from their Spleef record while their overall totals keep adding up.
+
+| Table | Holds |
+|---|---|
+| `events_player_stats` | The global totals. |
+| `events_player_event_stats` | One row per player per configuration. |
+
+## Where players see them
+
+| Command | Shows |
+|---|---|
+| `/events stats` | Your own statistics |
+| `/events stats <player>` | Another player's, with `exyliaevents.commands.stats.others` |
+
+The stats menu is `menus/user/stats.yml`, editable like the rest of the menus.
+
+## Reading them from code
+
+`EventsAPI` exposes the global totals directly:
+
+```java
+int kills  = EventsAPI.getPlayerKills(uuid);
+int deaths = EventsAPI.getPlayerDeaths(uuid);
+int wins   = EventsAPI.getPlayerWins(uuid);
+int games  = EventsAPI.getGamesPlayed(uuid);
+```
+
+See [API](/docs/exyliaevents/api).
+
+<Callout type="note" title="There is no leaderboard command">
+The plugin tracks statistics and shows them per player; it does not ship a top-ten menu or ranking
+placeholders. Building a leaderboard means reading the tables yourself, or reading the API from
+another plugin.
+</Callout>
+
+## Player preferences
+
+Separately from statistics, one preference is stored per player in `events_player_preferences`:
+whether event music is on. Players toggle it with `/events music`, and it survives reconnects.

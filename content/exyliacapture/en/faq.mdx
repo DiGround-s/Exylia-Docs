@@ -1,0 +1,80 @@
+---
+title: "Frequently asked questions"
+description: "The questions that come up most, answered from the code."
+---
+
+## The plugin does not start
+
+Check the console for `ExyliaLib` or `packetevents`. Both are required dependencies; without either
+the server disables ExyliaCapture by name.
+
+## The event will not start
+
+`/captureadmin start <id>` refuses when the event is disabled, has no zone, or is already running.
+The setup screen shows which pieces are still missing.
+
+## Conquest never registers a capturer
+
+Conquest attributes zones by clan tag, and it reads that from a detected clan plugin. With none
+installed, no zone can be claimed. Players without a clan are ignored in the same way. See
+[Clans](/docs/exyliacapture/clans).
+
+## My clan plugin is soft-depended but nothing works
+
+ExyliaLib detects eight: FactionsUUID, HuskTowns, ZelTeams, RunithClans, UltimateClans,
+Kingdoms/KingdomsX, SimpleClans and ExyliaClans, plus anything that registers a bridge. Detection is
+by reflection, so a plugin whose API cannot be reached is skipped and said so in the console — that
+line also names whichever one was picked.
+
+## The KOTH timer does not reset when someone else walks in
+
+By design: the holder is whoever entered the empty zone first, and progress resets only when that
+holder leaves. Pushing an opponent out of the zone is how you take it — standing next to them does
+nothing.
+
+## A placeholder shows verbatim
+
+Most often the spelling of the counter, which carries `capture` twice:
+`%exyliacapture_capture_active_events%`.
+
+The other common cause is an event created after the last reload. Per-event families are registered
+from the configurations in memory, so `/captureadmin reload` is what makes a new event's placeholders
+resolve. See [Placeholders](/docs/exyliacapture/placeholders).
+
+## The payload cart does not move
+
+The path is scanned along rails between the start and the end point. Both endpoints must be rail
+blocks and the rails between them must be connected — a gap means no path was found and the cart has
+nowhere to travel.
+
+## The cart moves backwards on its own
+
+That is `RETURNING`: nobody is within `radius` of the cart and progress has been made, so it rolls
+back at `return-speed`. Two sides in range at once is `DISPUTED` and it stops instead.
+
+## A player won while offline. Did they lose the reward?
+
+No. Rewards for an offline winner are queued in the database and handed over the next time they join.
+
+## Nothing appears on the leaderboard right after a win
+
+The top ten is a snapshot refreshed every 60 seconds. Wait a minute, or reopen the menu afterwards.
+
+## The chat is flooded during a Destroy The Core
+
+Raise `broadcast-every` on that event. It only changes how often breaks are announced; every break
+still scores.
+
+## Do several events run at once?
+
+Yes, of different types. With more than one running, the sidebar switches to a shared format showing
+up to four of them.
+
+## Does it work on Folia?
+
+The plugin declares Folia support and schedules its work through ExyliaLib's scheduler, anchored to
+the entities and regions involved.
+
+## Where do I get support?
+
+On the [Exylia Discord](https://discord.exylia.net). Licences are handled there too.

@@ -1,0 +1,83 @@
+---
+title: "Equipos, kits y loot"
+description: "Colores y balanceo de equipos, los kits que reparte un evento, y las tablas de loot de los cofres."
+---
+
+## Equipos
+
+Siete tipos son por equipos: Top Killer Teams, OITC Teams, Quake Teams, CS:GO Teams, LMS Teams, Gem
+Crawler Teams y Thimble Teams, más Splatoon y Thimble, que son juegos por equipos de por sí.
+
+Hay cuatro colores disponibles:
+
+| Equipo | Color de chat | Lana |
+|---|---|---|
+| Rojo | `&c` | `RED_WOOL` |
+| Azul | `&9` | `BLUE_WOOL` |
+| Verde | `&a` | `GREEN_WOOL` |
+| Amarillo | `&e` | `YELLOW_WOOL` |
+
+Los nombres de los equipos salen de `messages.yml`, así que se traducen con el resto del plugin.
+
+### Elegir equipo
+
+Con `team-selector-enabled` activo — el valor por defecto de todo tipo por equipos — los jugadores
+reciben un objeto selector en el lobby y eligen ellos mismos.
+
+Antes de empezar se rebalancean los equipos: quien no eligió cae en el equipo más pequeño, y se mueven
+jugadores hasta que ningún equipo tiene más de uno de diferencia con otro.
+
+<Callout type="tip" title="Apaga el selector para equipos aleatorios">
+Poner `team-selector-enabled` en `false` se salta la elección por completo — todos los asigna el
+balanceador, que es lo que quieres en un evento tipo torneo donde apilar un equipo lo arruinaría.
+</Callout>
+
+### Splatoon
+
+Splatoon lee `team-count` en vez de usar siempre dos, así que una guerra de tinta a cuatro colores es
+un ajuste y no otro tipo.
+
+## Kits
+
+Los kits pertenecen a una configuración y se editan desde la lista de kits del panel. Cada uno guarda
+inventario completo, armadura y mano secundaria, tal y como los tenías al guardarlo.
+
+| Campo | Qué es |
+|---|---|
+| `id` | Identificador interno |
+| `configId` | La configuración a la que pertenece |
+| `name` | Lo que muestra el selector |
+| `iconMaterial` | El icono en el selector |
+| Contenido | Inventario, armadura y mano secundaria |
+
+Una configuración con kits muestra el selector a los jugadores; el kit elegido es el que reciben al
+empezar. CS:GO entrega su propio equipamiento cuando no se ha elegido kit, porque sus armas son su
+propio sistema.
+
+## Tablas de loot
+
+Los tipos con cofres — Survival Games sobre todo — llenan sus cofres desde la tabla de loot de la
+configuración, no desde las tablas de vanilla.
+
+| Campo | Qué hace |
+|---|---|
+| Objeto | El ítem en sí, con su nombre, encantamientos y lore |
+| `weight` | Cuán probable es esta entrada respecto a las demás |
+| `minAmount` / `maxAmount` | El rango de cantidad que se sortea |
+| `tier` | Una etiqueta, para que una entrada pertenezca a una banda de rareza |
+
+Survival Games decide cuánto acaba en cada cofre con sus propios ajustes:
+
+```text
+min-items-per-chest: 3
+max-items-per-chest: 12
+chest-refill-interval: 180
+```
+
+Las ubicaciones de los cofres dentro de los límites se escanean y se guardan en la configuración, así
+que un cofre añadido al mapa se recoge al volver a escanear la arena.
+
+<Callout type="note" title="Los pesos son relativos, no porcentajes">
+Una entrada con peso `10` junto a otra con peso `5` sale el doble de veces. Los números no tienen que
+sumar nada en concreto.
+</Callout>

@@ -1,0 +1,5 @@
+# sharp is only used by next/image optimization. This site exports static HTML
+# with images.unoptimized, so its build script is deliberately never run and
+# pnpm is told so explicitly instead of stopping to ask on every install.
+allowBuilds:
+  sharp: false

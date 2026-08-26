@@ -1,0 +1,86 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaLib, los treinta y siete módulos que trae, y las reglas sobre las que está construida."
+---
+
+ExyliaLib es la librería compartida de la que depende cada plugin de Exylia. Se instala **una vez** en
+el servidor y nunca se empaqueta dentro de un plugin: una copia, una clase, una caché.
+
+No es un cajón de utilidades. Son treinta y siete módulos con una regla que los guía — **el servidor
+debe trabajar lo menos posible**. Donde algo puede ser un paquete en vez de estado real del servidor,
+la librería manda el paquete: sidebars, hologramas, nametags y boss bars no crean ningún equipo de
+scoreboard ni ningún armor stand.
+
+| | |
+|---|---|
+| Java | 21 |
+| API | Paper 1.21.4 |
+| Corre en | Spigot, Paper, Purpur y Folia, desde una sola build |
+| Versión documentada aquí | 1.61.0 |
+
+## Qué le da a un plugin
+
+<Cards>
+  <Card title="Configuración tipada" href="/docs/exylialib/configuracion">
+    Un archivo YAML declarado como record de Java, generado a partir de él, y migrado cuando cambia de
+    forma.
+  </Card>
+  <Card title="Menús en YAML" href="/docs/exylialib/menus">
+    Listas paginadas, plantillas, condiciones, animaciones y clics atados a acciones — sin código de
+    menús.
+  </Card>
+  <Card title="Un solo scheduler" href="/docs/exylialib/tareas">
+    La misma llamada corre en Spigot y en los hilos por región de Folia.
+  </Card>
+  <Card title="Records en base de datos" href="/docs/exylialib/base-de-datos">
+    H2, MySQL, MariaDB, PostgreSQL o MongoDB detrás de un repositorio, sin bloquear nunca.
+  </Card>
+  <Card title="Todo lo de pantalla" href="/docs/exylialib/pantalla">
+    Sidebars, hologramas, nametags y waypoints de cliente, todo por paquetes.
+  </Card>
+  <Card title="Jugadores, una vez" href="/docs/exylialib/jugadores">
+    Un único registro de reservas para que dos minijuegos no puedan tener al mismo jugador.
+  </Card>
+</Cards>
+
+La lista completa, con para qué sirve cada módulo, está en
+[Índice de módulos](/docs/exylialib/modulos).
+
+## Tres reglas que conviene conocer antes de seguir
+
+### Leer una vez, dibujar por jugador
+
+Un item, un menú y un sidebar son **definiciones** compiladas al cargar el archivo, y dibujadas por
+jugador después. Interpretar es la mitad cara y ocurre una vez; dibujar es barato y ocurre
+constantemente. Esa separación es la razón de que `Item` no sea un `ItemStack` y `UiDefinition` no sea
+una ventana abierta.
+
+### Un valor es texto salvo que digas lo contrario
+
+Cualquier cosa que se sustituya en un mensaje, un item o una fila de menú se inserta como **texto
+literal** por defecto. Un jugador llamado `{error}X` muestra esos caracteres en vez de repintar la
+línea. `withFormatted` es la otra puerta, para valores que escribió el dueño del servidor — un rango
+escrito `{highlight}&lMVP`.
+
+La pregunta nunca es de qué tipo es el valor. Es **de quién es el valor**.
+
+### Una parte rota se reporta, no es fatal
+
+Un encantamiento mal escrito se convierte en un botón muerto y una línea en consola; los otros
+cincuenta botones siguen funcionando. Un archivo que no describe un menú en absoluto sí lanza, porque
+adivinar escondería el error.
+
+<Callout type="note" title="Por qué no va empaquetada">
+Empaquetarla pondría una copia de la librería de scoreboards, la caché de cabezas y el registro de
+placeholders dentro de cada plugin. Con una sola copia instalada hay una caché que calentar, un
+registro donde mirar, y un placeholder registrado por un plugin es visible para el siguiente.
+</Callout>
+
+## Qué depende de ella
+
+Todos los plugins de Exylia: ExyliaFFA, ExyliaCapture, ExyliaEvents, ExyliaPracticeCore y el resto la
+declaran en `depend`, así que el servidor se niega a cargarlos sin ella.
+
+Algunos módulos se apoyan en plugins opcionales y lo dicen cuando faltan, en vez de fallar en silencio
+— PacketEvents para retitular un menú abierto, FastAsyncWorldEdit para las esquemáticas,
+PlaceholderAPI para exponer placeholders fuera del servidor, Vault o PlayerPoints para la economía.

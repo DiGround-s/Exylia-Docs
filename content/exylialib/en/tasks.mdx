@@ -1,0 +1,92 @@
+---
+title: "Tasks and threads"
+description: "One scheduler that runs on Spigot, Paper and Folia without a branch in your code."
+---
+
+Folia does not have a main thread. It has region threads, and a task that touches an entity has to run
+on the thread that owns that entity. Writing for both means writing every scheduled call twice — or
+calling this module, which decides for you.
+
+```java
+TaskScheduler tasks = Tasks.of(this);
+
+tasks.run(() -> broadcast());
+tasks.runLater(20L, () -> start());
+tasks.runTimer(0L, 20L, () -> tick());
+```
+
+## Where a task runs
+
+| Call | Runs on |
+|---|---|
+| `run`, `runLater`, `runTimer` | The global thread — Bukkit's main thread, or Folia's global region. |
+| `runAsync`, `runAsyncLater`, `runAsyncTimer` | A pool thread. Never touch the Bukkit API from one. |
+| `runAtEntity`, `runAtEntityLater`, `runAtEntityTimer` | The thread owning that entity. On Folia, its region. |
+| `runAtLocation`, `runAtLocationLater`, `runAtLocationTimer` | The thread owning that location. |
+| `execute` | Now if already on the right thread, scheduled otherwise. |
+
+<Callout type="warning" title="Anything about a player is `runAtEntity`">
+Teleporting, changing inventory, sending a title, reading their location: all of it belongs to the
+player's own thread. `run` is for work about the server as a whole — a broadcast, a global counter.
+Getting this wrong is invisible on Paper and a crash on Folia.
+</Callout>
+
+## Cancelling
+
+Every call returns a `TaskHandle`:
+
+```java
+TaskHandle timer = tasks.runTimer(0L, 20L, () -> tick());
+timer.cancel();
+```
+
+A repeating task that needs to cancel itself takes the handle as an argument:
+
+```java
+tasks.runTimer(0L, 20L, handle -> {
+    if (--countdown <= 0) {
+        handle.cancel();
+        return;
+    }
+    show(countdown);
+});
+```
+
+`runAtEntity` also takes a **retired** callback, run when the entity is gone before the task could:
+
+```java
+tasks.runAtEntity(player, () -> give(player, kit), () -> queueForLater(player));
+```
+
+## Asking where you are
+
+```java
+if (!tasks.isOwnedBy(player)) {
+    tasks.runAtEntity(player, () -> act(player));
+    return;
+}
+act(player);
+```
+
+| Call | Answers |
+|---|---|
+| `isGlobalThread()` | Whether this is the global thread. |
+| `isOwnedBy(entity)` | Whether this thread may touch that entity. |
+
+Coming back from a database query is the usual reason to ask: the future completes on a pool thread,
+and everything you want to do with the answer belongs to the player.
+
+```java
+kits.find(id).thenAccept(found ->
+        tasks.runAtEntity(player, () -> found.ifPresent(kit -> give(player, kit))));
+```
+
+## Ticks
+
+Delays and periods are in ticks: 20 ticks is one second. The library keeps ticks rather than seconds
+everywhere a Bukkit API would, so a number copied from an old config still means what it meant.
+
+## Cleanup
+
+A plugin's tasks are cancelled when it disables. Menus are closed first, so a button cannot answer one
+last click into a dying classloader.

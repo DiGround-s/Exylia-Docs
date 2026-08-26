@@ -1,0 +1,84 @@
+---
+title: "Frequently asked questions"
+description: "The questions that come up when building on the library."
+---
+
+## A plugin will not load, saying ExyliaLib is missing
+
+`ExyliaLib.jar` has to be in `plugins/` and declared under `depend` in the plugin's `plugin.yml`.
+There is no shaded fallback on purpose: one installed copy is the whole design.
+
+## My placeholder shows on screen instead of resolving
+
+Three usual causes:
+
+1. Nothing registered that name — `Placeholders.unresolved(text)` lists what did not answer.
+2. The name is right but the **prefix** is not: the registered name is the group prefix, an underscore
+   and the entry name.
+3. Reading it through PlaceholderAPI, where the plugin's own name is the identifier in front.
+
+## A value shows `{highlight}` as text instead of colouring
+
+You used `with()`, which is deliberate: it inserts the value as literal text. `withFormatted()` is for
+values a server owner wrote. Getting it backwards the other way lets a player named `<rainbow>`
+recolour your message.
+
+## A colour placeholder in an item name does nothing
+
+`name: "%name_color%&l%kit_name%"` cannot work. Substitution happens on the parsed component tree — a
+bare colour parses to an empty component carrying a colour, and that colour does not reach the text
+beside it. Pass the whole coloured phrase, or use a named template per state.
+
+## The menu title does not change as I page
+
+That needs PacketEvents. Without it the title stays on the page it opened at, and everything else works
+normally.
+
+## The menu will not open at all
+
+Most often a `size` that disagrees with the `type`. A barrel is always twenty-seven slots whatever
+`size` says, and creating an inventory whose size disagrees with its type throws before anything is
+drawn.
+
+## A button does nothing
+
+Check the console from when the file loaded: an action that does not exist compiles into a dead button
+and a reported line, and the rest of the menu still works. Also check the slot's `condition` — a slot
+whose condition fails is not there at all.
+
+## My config edits were wiped after an update
+
+A key no record declares is pruned on load and reported as `UNKNOWN_KEY`. If a section was reshaped
+between versions, it needed a migration — `Migration.rename` moves a value rather than letting the
+default replace it.
+
+## Everything crashes on Folia
+
+Almost always a task on the wrong thread. Anything about a player belongs to `runAtEntity`; `run` is
+for the server as a whole. It is invisible on Paper and fatal on Folia.
+
+## A database call returns but my code runs on the wrong thread
+
+Futures complete on a pool thread. Come back through `tasks.runAtEntity(player, …)` before touching
+the player or the world.
+
+## Two plugins fight over the same player
+
+They should be using [`Sessions`](/docs/exylialib/players#one-player-one-activity). `isFree` asks,
+`claim` decides atomically, and the release callback is how the current holder is told to let go.
+
+## The clan API answers nothing
+
+`Clans.isSupported()` is `false` when no clan plugin was detected. Detection is by reflection, so a
+plugin that is installed but whose API cannot be reached is skipped with a console warning — that line
+also names whichever one was picked.
+
+## Holograms, nametags or schematics do nothing
+
+Each module has an `isSupported()` and, where it makes sense, an `unsupportedReason()`. Holograms and
+nametags need PacketEvents; schematics need FastAsyncWorldEdit. They do nothing rather than throwing,
+which is worth checking for rather than assuming.
+
+## Where do I get support?
+
+On the [Exylia Discord](https://discord.exylia.net).

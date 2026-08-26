@@ -1,0 +1,87 @@
+---
+title: "Zones"
+description: "Selecting where an event happens, and what each type needs."
+---
+
+Zones are cuboids, selected in game with the shared Exylia selection wand. There is no WorldEdit
+dependency, and there are no spherical or polygonal zones.
+
+## Selecting
+
+The setup screen starts a guided flow: it hands you the wand, you mark the two corners, and the
+selection is saved back onto the event. Backing out leaves the previous zone untouched.
+
+<Steps>
+  <Step title="Open the event's setup screen">
+    From `/captureadmin`, pick the event and open its configuration.
+  </Step>
+  <Step title="Start the zone step">
+    The flow explains what to select and gives you the wand.
+  </Step>
+  <Step title="Mark two corners">
+    Left click for one, right click for the other. The volume between them is the zone.
+  </Step>
+  <Step title="Confirm">
+    The selection is written to the event. Re-selecting later replaces it.
+  </Step>
+</Steps>
+
+## What each type selects
+
+| Type | What is selected |
+|---|---|
+| `koth`, `koth_points_exclusive`, `koth_points_multi`, `koth_capture_points` | One cuboid |
+| `conquest` | One cuboid per zone, added from the zone list screen |
+| `payload` | A start location and an end location |
+| `dtc` | One block |
+
+Conquest zones are managed from their own list: add, edit name, colour, points and capture time, or
+re-select the area of one.
+
+## Being inside
+
+Presence is re-evaluated as players move, and also on join, respawn, death and gamemode change. What
+counts as playing:
+
+| Situation | Counts |
+|---|---|
+| Alive, survival or adventure, inside the zone | Yes |
+| Creative | No |
+| Spectator | No |
+| Dead | No |
+
+A player who switches to creative inside a zone stops counting immediately, and one who switches back
+starts counting again without leaving and re-entering.
+
+## The outline
+
+While an event runs, its zones are outlined with particles. It is configured globally, not per event:
+
+```yaml title="config.yml"
+particles:
+  enabled: true
+  interval-ticks: 40
+  particle: WAX_ON
+  view-distance: 48.0
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `enabled` | `true` | Draw the outline at all. |
+| `interval-ticks` | `40` | Ticks between frames. 20 ticks is one second. |
+| `particle` | `WAX_ON` | Any Bukkit particle name. |
+| `view-distance` | `48.0` | Beyond this many blocks nothing is sent, because nothing would be drawn. |
+
+<Callout type="tip">
+`interval-ticks` is the cost knob. A large arena with several running events redraws every outline on
+each frame; doubling the interval halves that work and is barely noticeable.
+</Callout>
+
+## Payload rails
+
+Payload does not use a cuboid. It takes two locations and scans the rail path between them, walking
+from rail block to neighbouring rail block. Both endpoints must be rails, and the path must be
+connected — a gap means no path, and the cart has nowhere to go.
+
+The `radius` setting decides how close a player must be to the cart to push it, measured from the cart
+itself as it moves, not from a fixed zone.

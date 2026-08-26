@@ -1,0 +1,85 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaCapture, los siete tipos de evento que trae y cómo está organizada la documentación."
+---
+
+ExyliaCapture es un plugin de eventos de captura de zona. No es un KOTH configurable: registra
+**siete tipos de evento**, cada uno con su propia lógica, y un servidor puede tener tantos eventos
+configurados corriendo a la vez como quiera, de tipos distintos y en paralelo.
+
+Todo se crea desde menús in-game: `/captureadmin` abre un panel donde se crea el evento, se le marca
+la zona con el selector, se configura, se le ponen recompensas y se programa. No se edita YAML a
+mano, y los eventos viven en la base de datos, no en un archivo.
+
+## Los tipos de evento
+
+<Cards>
+  <Card title="KOTH" href="/docs/exyliacapture/tipos-de-evento#koth">
+    Mantén la zona hasta que se agote el temporizador. Puede terminar el evento o reiniciarse para
+    siempre.
+  </Card>
+  <Card title="KOTH Points" href="/docs/exyliacapture/tipos-de-evento#koth-points">
+    Puntos por segundo dentro de la zona. Exclusive los da a un solo bando; multi a todos los que
+    estén dentro.
+  </Card>
+  <Card title="KOTH Capture Points" href="/docs/exyliacapture/tipos-de-evento#koth-capture-points">
+    Cada captura completada vale un punto y libera la zona otra vez. Gana el primero en llegar al
+    objetivo.
+  </Card>
+  <Card title="Conquest" href="/docs/exyliacapture/tipos-de-evento#conquest">
+    Varias zonas a la vez, cada una con sus puntos, disputadas por clanes. Necesita plugin de clanes.
+  </Card>
+  <Card title="Payload" href="/docs/exyliacapture/tipos-de-evento#payload">
+    Escolta un minecart por un camino de raíles. Avanza, se detiene al disputarse y retrocede solo.
+  </Card>
+  <Card title="Destroy The Core" href="/docs/exyliacapture/tipos-de-evento#destroy-the-core">
+    Rompe un bloque núcleo para sumar puntos. Se regenera con temporizador y gana quien llegue antes.
+  </Card>
+</Cards>
+
+Siete identificadores de tipo, porque KOTH Points se registra dos veces: `koth`,
+`koth_points_exclusive`, `koth_points_multi`, `koth_capture_points`, `conquest`, `payload` y `dtc`.
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. Folia soportado. |
+| Java | 21 |
+| Dependencias obligatorias | `ExyliaLib`, `packetevents` |
+| Dependencias opcionales | `PlaceholderAPI`, `ViaVersion`, un plugin de clanes, Apollo o Feather |
+
+<Callout type="note" title="Qué aporta ExyliaLib">
+Configuración tipada con migraciones, la base de datos, los menús, el selector de zona, hologramas,
+boss bars, scoreboards, placeholders, recompensas e integraciones de cliente. Sin ella el plugin no
+arranca.
+</Callout>
+
+## Qué se guarda dónde
+
+| Cosa | Dónde |
+|---|---|
+| Configuraciones de evento, zonas, ajustes, recompensas, horarios | Base de datos (`capture_event_configs`) |
+| Estadísticas de jugador y de clan | Base de datos, globales y por evento |
+| Recompensas pendientes de un jugador desconectado | Base de datos (`capture_pending_rewards`) |
+| Boss bars, hologramas, partículas, aspecto del leaderboard | `config.yml` |
+| Sidebars | `scoreboards.yml` |
+| Todos los mensajes | `messages.yml` |
+| Diseño de los menús | `menus/` |
+
+## Cómo leer esta documentación
+
+<Steps>
+  <Step title="Empezar">
+    Instalación y un primer evento funcionando desde el panel.
+  </Step>
+  <Step title="Configurar">
+    Los siete tipos con sus ajustes, zonas, recompensas y horarios.
+  </Step>
+  <Step title="Sistemas">
+    Soporte de clanes, estadísticas y todo lo que se dibuja en pantalla.
+  </Step>
+  <Step title="Referencia">
+    Comandos, placeholders, archivos de configuración, la API y el FAQ.
+  </Step>
+</Steps>

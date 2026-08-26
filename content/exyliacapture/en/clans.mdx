@@ -1,0 +1,65 @@
+---
+title: "Clans"
+description: "Which clan plugins are detected, what clan mode changes, and what happens without one."
+---
+
+Clan support is provided by ExyliaLib, not by ExyliaCapture, and it is detected automatically at
+startup — there is no setting naming which plugin to use.
+
+## What is detected
+
+ExyliaLib probes for these eight, in this order, and uses the first one that is present and
+reachable:
+
+1. **FactionsUUID / Factions**
+2. **HuskTowns**
+3. **ZelTeams**
+4. **RunithClans**
+5. **UltimateClans**
+6. **Kingdoms / KingdomsX**
+7. **SimpleClans**
+8. **ExyliaClans**
+
+Any plugin can also register a bridge with ExyliaLib, and a registered bridge beats automatic
+detection. That is the supported route for a clan plugin that is not on the list.
+
+The console line at startup says which one was picked: `Clans: detected '<name>'`, or
+`Clans: using registered bridge '<name>'`.
+
+<Callout type="note" title="Order is priority, not preference">
+The first plugin found wins, so a server running two clan plugins gets the one higher on the list.
+Every provider reaches its plugin by reflection, so a clan plugin that is installed but whose API
+cannot be reached is skipped with a console warning rather than taking the slot silently.
+</Callout>
+
+## What clan mode changes
+
+`clan-mode` is a per-event setting on KOTH Points, KOTH Capture Points, Payload and DTC. Conquest is
+clan-based always and has no toggle.
+
+With it on:
+
+| Behaviour | Individual | Clan mode |
+|---|---|---|
+| Who holds a zone | One player | The clan, so it survives one member leaving while another stays |
+| Who scores | The player | The clan's total |
+| Who wins | The player who reached the target | The clan that reached it |
+| Who is paid | The player | One representative of the clan |
+| Whose stats go up | The player | Every participating member of the clan |
+
+A player without a clan is skipped: they cannot hold the zone and their points are not attributed.
+
+<Callout type="note" title="No clan plugin, no clan mode">
+Clan scoring requires both the setting and a detected provider. With the setting on and no provider,
+the event falls back to individual scoring rather than refusing to run — except Conquest, whose zones
+cannot register a capturer at all.
+</Callout>
+
+## Clan statistics
+
+Clan statistics are tracked alongside player statistics, globally and per event: wins, points,
+captures and leaderboard points. They feed `/capture clantop` and the
+`%exyliacapture_top_clan_<n>_<stat>%` placeholders.
+
+A win is recorded for the clan whenever a winning player belongs to one — that happens in both modes,
+because the win recording looks up the winner's clan regardless of how the event was scored.

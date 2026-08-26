@@ -1,0 +1,109 @@
+---
+title: "Sidebars, hologramas y nametags"
+description: "Todo lo que se dibuja en la pantalla de un jugador, enviado como paquetes y declarado en configuración."
+---
+
+Cuatro módulos con algo en común: ninguno crea estado real en el servidor. Ningún equipo de scoreboard,
+ningún armor stand, ninguna entidad que se quede colgada.
+
+## Sidebars
+
+```java
+Scoreboards.show(this, player, config.ffa());
+```
+
+`SidebarConfig` se anida en tu propio record de config, así que el sidebar vive en el archivo del
+dueño:
+
+```yaml
+scoreboard:
+  enabled: true
+  title:
+    - "{primary}&lFFA"
+  lines:
+    - " {muted}❙ {letters}Bajas: {success}%kills%"
+    - " {muted}❙ {letters}KDR: {highlight}%kdr%"
+  update:
+    interval: 15
+    smart: true
+```
+
+| Clave | Qué hace |
+|---|---|
+| `enabled` | Mostrarlo o no — una sección puede quedarse escrita pero apagada. |
+| `title` | Una lista. Varias entradas se animan: cada refresco muestra la siguiente. |
+| `lines` | De arriba abajo. Máximo 15; las de más se descartan. |
+| `update.interval` | **Ticks** entre refrescos. 20 ticks es un segundo. |
+| `update.smart` | Enviar solo las líneas que cambiaron en vez del tablero entero. |
+
+`Scoreboards.show` devuelve un `Board`: `refresh()`, `updateData(map)`, `hide()`. Los tableros se
+**apilan por jugador** — mostrar uno pausa el anterior, y cerrarlo devuelve el anterior. Eso es lo que
+permite que el sidebar de un evento tape el de un hub sin que ninguno de los dos plugins sepa del otro.
+
+<Callout type="tip" title="Una línea que se expande">
+Un placeholder que devuelve texto con saltos de línea se convierte en varias líneas. Es cómo un solo
+valor `%objectives%` dibuja tres filas sin que el archivo sepa cuántas habrá.
+</Callout>
+
+## Hologramas
+
+```java
+Holograms.show(this, "trophy", location, config.trophy());
+```
+
+| Clave | Qué hace |
+|---|---|
+| `enabled` | Mostrarlo o no. |
+| `kind` | `TEXT`, `ITEM` o `BLOCK`. |
+| `lines` | El texto, para `TEXT`. |
+| `item` / `block` | Qué flota, para los otros dos. |
+| `offset-x/y/z` | Dónde se sitúa respecto a la ubicación dada. |
+| `view-distance` | Más allá, no se envía nada. |
+| `refresh` | Cada cuánto se vuelve a dibujar el texto. |
+
+Son paquetes de display entity: por jugador cuando el texto difiere según quién mira, compartidos cuando
+no. No existe nada en el servidor, así que un holograma no puede ser empujado por un pistón, matado por
+un mob, ni quedarse ahí si el plugin se cae.
+
+`Holograms.get(plugin, id)`, `all(plugin)`, `remove(plugin, id)` y `removeAll(plugin)` los gestionan por
+id. `isSupported()` responde con honestidad cuando falta PacketEvents.
+
+## Nametags
+
+```java
+PluginNametags tags = Nametags.of(this);
+
+tags.paint(viewer, target, style);                 // cómo un jugador ve a otro
+tags.paintEachOther(team, style);                  // un equipo entero, mutuamente
+tags.reset(viewer, target);
+tags.resetEverywhere(target);
+```
+
+La gracia entera es que es **por espectador, no por jugador**: el mismo jugador puede ser rojo para uno
+y azul para otro, que es lo que necesita un juego por equipos y lo que un equipo de scoreboard no puede
+hacer sin pelearse con el resto de plugins por el mismo nombre de equipo.
+
+El color del nombre, el del brillo y la colisión viajan juntos como un estilo. Los clientes vanilla
+están incluidos — esto no es una funcionalidad de mod de cliente.
+
+Sin PacketEvents, `Nametags.isSupported()` es `false` y cada llamada no hace nada en vez de lanzar.
+
+## Waypoints y cooldowns de cliente
+
+Para jugadores en Lunar (por Apollo) o Feather:
+
+```java
+Clients.of(this).waypoints().show(player,
+        Waypoint.at("koth", location).colour("#ff5555"));
+
+Clients.of(this).waypoints().remove(player, "koth");
+Clients.of(this).waypoints().clear(player);
+```
+
+El waypoint se indexa por **nombre**, y el nombre es la clave — dos waypoints llamados `spawn` son uno.
+Que estén separados por plugin es lo que evita que el marcador de un plugin de lobby y el de un evento
+se borren mutuamente.
+
+Los cooldowns de cliente y los marcadores de compañero funcionan igual. Un jugador cuyo cliente no
+soporta nada de esto simplemente no recibe nada; quien llama nunca ramifica según qué cliente use cada
+uno.

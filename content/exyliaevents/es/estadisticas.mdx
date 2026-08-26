@@ -1,0 +1,55 @@
+---
+title: "Estadísticas"
+description: "Los cuatro contadores, globales y por evento, y dónde los ven los jugadores."
+---
+
+## Los contadores
+
+| Contador | Qué cuenta |
+|---|---|
+| Bajas | Bajas hechas dentro de eventos |
+| Muertes | Muertes dentro de eventos |
+| Victorias | Eventos ganados |
+| Partidas jugadas | Eventos en los que se participó |
+
+Se registran dos veces: **globalmente** para el jugador, y **por configuración de evento**, así que el
+historial de CS:GO de alguien está separado del de Spleef mientras sus totales generales siguen
+sumando.
+
+| Tabla | Contiene |
+|---|---|
+| `events_player_stats` | Los totales globales. |
+| `events_player_event_stats` | Una fila por jugador y configuración. |
+
+## Dónde los ven los jugadores
+
+| Comando | Muestra |
+|---|---|
+| `/events stats` | Tus estadísticas |
+| `/events stats <jugador>` | Las de otro, con `exyliaevents.commands.stats.others` |
+
+El menú es `menus/user/stats.yml`, editable como el resto.
+
+## Leerlas desde código
+
+`EventsAPI` expone los totales globales directamente:
+
+```java
+int kills  = EventsAPI.getPlayerKills(uuid);
+int deaths = EventsAPI.getPlayerDeaths(uuid);
+int wins   = EventsAPI.getPlayerWins(uuid);
+int games  = EventsAPI.getGamesPlayed(uuid);
+```
+
+Ver [API](/docs/exyliaevents/api).
+
+<Callout type="note" title="No hay comando de leaderboard">
+El plugin registra estadísticas y las muestra por jugador; no trae un menú de top diez ni placeholders
+de ranking. Montar una clasificación implica leer las tablas por tu cuenta, o leer la API desde otro
+plugin.
+</Callout>
+
+## Preferencias del jugador
+
+Aparte de las estadísticas, se guarda una preferencia por jugador en `events_player_preferences`: si
+la música de evento está activa. Se alterna con `/events music` y sobrevive a las reconexiones.

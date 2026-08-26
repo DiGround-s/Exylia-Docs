@@ -1,0 +1,105 @@
+---
+title: "On-screen visuals"
+description: "Boss bars, holograms, sidebars and client waypoints — what each shows and where it is configured."
+---
+
+Four independent layers, each with its own configuration and its own tokens.
+
+## Boss bar
+
+One per event type, in `config.yml`, under that type's block:
+
+```yaml title="config.yml"
+koth:
+  boss-bar:
+    text: "{highlight}&l%capture_event_name%&r {muted}| {success}⚑ %capture_koth_capturer% {muted}| {info}%capture_koth_player_time% ⌚"
+    color: RED
+```
+
+The fill is the event's own progress, written every second — there is no countdown timer on the bar
+itself, because it would fight the progress the event is writing.
+
+Default colours: KOTH red, KOTH Capture Points purple, Conquest green, Payload yellow, KOTH Points
+blue, DTC red.
+
+A single event can turn its bar off with the `bossbar-enabled` setting.
+
+## Holograms
+
+Also one per event type in `config.yml`, and unlike the boss bar it is shown **even when the event is
+not running**: the last line, `%event_status%`, reads inactive, scheduled or running.
+
+```yaml title="config.yml"
+koth:
+  hologram:
+    enabled: true
+    lines:
+      - "{warning}⚔ {highlight}&l%event_name%"
+      - " "
+      - "{letters}Time: {info}%event_time%"
+      - "{letters}Capturing: {highlight}%koth_capturer%"
+      - "{letters}Cap. time: {info}%koth_player_time%"
+      - " "
+      - "%event_status%"
+```
+
+Conquest draws one hologram per zone, each with that zone's own name and progress. Payload's follows
+the cart.
+
+### Hologram tokens
+
+| Family | Tokens |
+|---|---|
+| Any event | `%event_name%`, `%event_time%`, `%event_status%` |
+| KOTH and Capture Points | `%koth_capturer%`, `%koth_player_time%`, `%koth_leader%`, `%koth_top1_name%`, `%koth_top1_pts%` |
+| KOTH Points | `%koth_leader%`, `%koth_top1_name%` … `%koth_top3_pts%` |
+| Conquest | `%conquest_zone_name%`, `%conquest_zone_capturer%`, `%conquest_zone_progress%` |
+| Payload | `%payload_progress%`, `%payload_distance_remaining%`, `%payload_capturing_clan%`, `%payload_state%` |
+| DTC | `%dtc_leader%`, `%dtc_top1_name%` … `%dtc_top3_pts%` |
+
+## Sidebars
+
+`scoreboards.yml` holds three things:
+
+| Section | Used when |
+|---|---|
+| `scoreboards` | Exactly one event is running. One sidebar per type. |
+| `compact-lines` | Two lines describing one event, used inside the shared sidebar. |
+| `multi-event` | Two or more events are running. |
+
+With several events running, each contributes its two compact lines to one shared sidebar, up to
+**four events**. The multi-event section decides the title, the separator, the two line templates —
+where `{n}` becomes the event's index, 0 to 3 — and the footer.
+
+```yaml title="scoreboards.yml"
+multi-event:
+  title: "{warning}&l⚡ EVENTS"
+  separator: ""
+  line1: " %e{n}_l1%"
+  line2: " %e{n}_l2%"
+  footer:
+    - ""
+    - " {highlight}ᴇxʏʟɪᴀ.ɴᴇᴛ"
+  update-interval: 2
+```
+
+Single-event sidebars refresh every 2 ticks by default, which is what a live capture timer needs.
+
+Sidebar tokens are the `%capture_...%` family: `%capture_event_name%`, `%capture_event_time%`,
+`%capture_zone_x%`, `%capture_zone_z%`, `%capture_koth_capturer%`, `%capture_koth_capturer_clan%`,
+`%capture_koth_player_time%`, `%capture_koth_top1_name%`, `%capture_dtc_top1_pts%`,
+`%capture_conquest_top1_clan%`, `%capture_payload_progress%` and their siblings.
+
+A single event can turn its sidebar off with the `scoreboard-enabled` setting.
+
+## Client waypoints
+
+If the player's client is Lunar with Apollo, or Feather, the running event's zone is marked on their
+screen in the event's own colour. The marker is added when the event starts and removed when it ends.
+Payload's follows the cart; DTC marks the core block.
+
+Nothing needs configuring: without a supported client, no waypoint is sent and nothing else changes.
+
+## Zone outline
+
+The particle outline around a running zone is covered in [Zones](/docs/exyliacapture/zones#the-outline).

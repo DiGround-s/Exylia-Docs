@@ -1,0 +1,96 @@
+---
+title: "Statistics"
+description: "The nine counters, how they are shown, how they are ranked, and how they are reset."
+---
+
+Statistics are per player **and per arena**. The same player has a separate row in every arena they
+have played, and leaderboards can be queried per arena or globally.
+
+## The counters
+
+| Counter | Identifier | Format |
+|---|---|---|
+| Kills | `kills` | Integer |
+| Deaths | `deaths` | Integer |
+| KDR | `kdr` | Two decimals |
+| Best streak | `best_streak` | Integer |
+| Assists | `assists` | Integer |
+| Damage dealt | `damage_dealt` | One decimal |
+| Play time | `play_time` | `1h 5m 3s` |
+| Alive time | `alive_time` | `1h 5m 3s` |
+| Kills per minute | `kills_per_minute` | Two decimals |
+
+The identifiers are what leaderboard placeholders take, and also the column names the database
+indexes for sorting.
+
+<Callout type="note" title="Decimals always use a point">
+The format is pinned to the US locale on purpose. A server hosted in Spain would write `1,50` with
+the system format, and that value would break any scoreboard or comparison reading it afterwards.
+</Callout>
+
+## Viewing statistics
+
+| Action | Command |
+|---|---|
+| Your own | `/ffa stats` |
+| Another player's | `/ffa stats <player>` |
+
+The stats menu lets you switch arena and jump to the leaderboard filtered by any of the nine
+counters.
+
+## Leaderboards
+
+Queried from the menu or from placeholders. The maximum size is set in `config.yml`:
+
+```yaml title="config.yml"
+leaderboard:
+  max-entries: 50
+```
+
+That number is also the highest position a leaderboard placeholder can answer: with `50`, asking for
+position 51 returns nothing.
+
+```text
+%exyliaffa_stats_top_kills_1%              first by kills, across every arena
+%exyliaffa_stats_top_kills_1_nodebuff%     the same, only in the "nodebuff" arena
+%exyliaffa_stats_top_value_kills_1%        their kill count instead of their name
+```
+
+The full syntax is in [Placeholders](/docs/exyliaffa/placeholders).
+
+## Resetting
+
+| Action | Command |
+|---|---|
+| One player's stats in one arena | `/ffaadmin resetstats <player> <arenaId>` |
+| Every stat of one arena | From the data menu in `/ffaadmin` |
+
+<Callout type="warning" title="There is no undo">
+Resetting an arena deletes the rows of all its players. If you are doing this in production, back the
+database up first.
+</Callout>
+
+## Assists and damage
+
+An assist is credited to anyone who damaged the victim in the **10 seconds** before their death,
+excluding whoever landed the final blow. Several players can be credited for the same death.
+
+Damage dealt accumulates across the whole session, including damage that did not end in a kill: it is
+the counter that best separates who fights from who collects other people's kills.
+
+### How KDR and kills per minute are derived
+
+```text
+kdr              = deaths == 0 ? kills : kills / deaths
+kills_per_minute = alive_minutes <= 0 ? 0 : kills / alive_minutes
+```
+
+Two practical consequences:
+
+- A player who has never died reports their kill count as KDR, not infinity. That is what lets a
+  leaderboard sort it and a scoreboard print it.
+- The rate is measured over **alive time**, not total time in the arena. Being dead or spectating
+  does not drag your kills per minute down.
+
+Both are stored in the database rather than computed on read, because it is the database that sorts
+leaderboards.

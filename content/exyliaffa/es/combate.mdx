@@ -1,0 +1,155 @@
+---
+title: "Combate y anti-abuso"
+description: "Combat tag, comandos bloqueados, anti-farmkill y el enlace 1v1 contra el free-hit."
+---
+
+Tres sistemas independientes, todos configurables en `config.yml`, que existen para que las bajas
+signifiquen algo.
+
+## Combat tag
+
+Al recibir un golpe, el jugador queda marcado en combate durante unos segundos. Mientras dure, no
+puede ejecutar los comandos de escape.
+
+```yaml title="config.yml"
+combat:
+  tag-duration: 20.0
+  blocked-commands:
+    - spawn
+    - hub
+    - lobby
+    - warp
+    - home
+    - tpa
+    - tpaccept
+    - tpyes
+    - rtp
+    - back
+  combat-actionbar:
+    action-bar:
+      text: "{primary}⚔ {error}Combat {muted}%time%s"
+      duration: 0
+      countdown: 0
+      time-style: tenths
+```
+
+<Field name="tag-duration" type="segundos" defaultValue="20.0">
+Cuánto dura la marca desde el último golpe recibido. Acepta decimales.
+</Field>
+
+<Field name="blocked-commands" type="lista" >
+Nombres de comando **sin la barra**. Se rechazan mientras el jugador esté marcado.
+</Field>
+
+<Field name="combat-actionbar" type="efecto">
+La cuenta atrás sobre la barra de acción. `%time%` es el token que rellena el temporizador; escribe
+cualquier otro y se mostrará tal cual.
+</Field>
+
+<Callout type="note" title="El jugador puede ocultarla">
+La barra de combate y sus mensajes son ajustes por jugador: quien no quiera verlos los apaga desde
+`/ffa settings`. Ver [Ajustes de jugador](/docs/exyliaffa/ajustes-jugador).
+</Callout>
+
+### Desconectarse en combate
+
+Salir del servidor con la marca de combate activa cuenta como **muerte**: se registra sin asesino,
+la víctima pierde su racha y sus estadísticas lo reflejan. No hay ajuste para desactivarlo.
+
+## Lista blanca de comandos
+
+Independiente del combat tag: filtra qué comandos existen **dentro** de una arena, esté el jugador
+marcado o no.
+
+```yaml title="config.yml"
+command-whitelist:
+  enabled: true
+  commands:
+    - msg
+    - message
+    - tell
+    - w
+    - whisper
+    - reply
+    - r
+    - respond
+    - ffa
+    - ffaadmin
+```
+
+Con `enabled: true`, cualquier comando que no esté en la lista se rechaza mientras el jugador esté
+en la arena. La comparación acepta también la forma con espacio de nombres, así que permitir `msg`
+permite igualmente `essentials:msg`. El permiso `exyliaffa.bypass.blocked-commands` salta este
+filtro. Es la forma limpia de evitar `/fly`, `/heal` o cualquier comando de otro plugin dentro
+del FFA.
+
+## Anti-farmkill
+
+Impide que una baja cuente cuando es evidente que fue regalada.
+
+```yaml title="config.yml"
+anti-farmkill:
+  enabled: true
+  same-player-enabled: true
+  same-player-max-kills: 3
+  same-player-window-seconds: 120
+  same-ip-enabled: true
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | Interruptor general del sistema. |
+| `same-player-enabled` | `true` | Limita cuántas veces cuenta matar a la misma víctima. |
+| `same-player-max-kills` | `3` | Cuántas bajas sobre la misma víctima cuentan dentro de la ventana. |
+| `same-player-window-seconds` | `120` | Duración de esa ventana, en segundos. |
+| `same-ip-enabled` | `true` | Rechaza la baja entre dos jugadores que comparten dirección IP. |
+
+<Callout type="warning" title="Qué se rechaza exactamente">
+Solo el **contador de bajas del asesino**, y con él su KDR y sus bajas por minuto. Todo lo demás
+ocurre igual:
+
+- La muerte de la víctima **sí** se registra.
+- La racha del asesino **sí** avanza.
+- Los comandos de `kill-commands.on-kill` **sí** se ejecutan.
+
+Si usas recompensas económicas por baja, tenlo en cuenta: el anti-farmkill no las bloquea.
+</Callout>
+
+## Anti free-hit
+
+El free-hit es el tercero que llega al final de un 1v1 y se lleva la baja. El sistema enlaza a dos
+jugadores que llevan varios golpes intercambiados y protege ese duelo.
+
+```yaml title="config.yml"
+anti-freehit:
+  hit-reset-window-seconds: 8
+  linked-actionbar:
+    action-bar:
+      text: "{primary}⚔ {highlight}%linked_name% {error}%linked_hearts%❤ {primary}%linked_ping%ms {muted}| {warning}%time%s"
+      duration: 0
+      countdown: 0
+      time-style: tenths
+```
+
+La activación es **por arena**, en las reglas:
+
+| Regla de arena | Por defecto | Qué hace |
+|---|---|---|
+| `antiFreeHit` | `false` | Activa el enlace en esa arena. |
+| `antiFreeHitHitsToLink` | `3` | Golpes intercambiados que crean el enlace. |
+| `antiFreeHitIsolateLinkedPlayers` | `false` | Los enlazados dejan de recibir daño de terceros. |
+
+Y `hit-reset-window-seconds` decide cuándo caduca: si pasan esos segundos sin que ninguno golpee al
+otro, el enlace se deshace.
+
+### Lo que ve el jugador enlazado
+
+La barra de acción muestra el nombre del rival, sus corazones, su ping y el tiempo que queda de
+enlace. Además, si el jugador tiene activo el ajuste de brillo, el rival se resalta con un contorno
+enviado por paquetes, sin usar equipos ni tocar el scoreboard de nadie.
+
+<Callout type="tip" title="Aislar o no aislar">
+`antiFreeHitIsolateLinkedPlayers` cambia el carácter de la arena por completo: activado, un FFA se
+convierte en una sucesión de duelos limpios; desactivado, el enlace solo informa y el caos sigue
+siendo parte del juego.
+</Callout>

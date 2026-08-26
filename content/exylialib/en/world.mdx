@@ -1,0 +1,70 @@
+---
+title: "Regions, schematics and worlds"
+description: "Areas of the world, saving and pasting boxes of it, and creating worlds from any thread."
+---
+
+## Regions
+
+An area of the world with rules attached, indexed so asking what is at a location is cheap.
+
+```java
+PluginRegions regions = Regions.of(this);
+
+List<RegionSnapshot> here = Regions.at(player.getLocation());
+```
+
+| Concept | What it is |
+|---|---|
+| Shape | Cuboid or sphere, in one world. |
+| Snapshot | An immutable view of a region as it is now. |
+| Policy | What happens where regions overlap. |
+| Events | Enter and exit, raised as players move. |
+
+The index is immutable and rebuilt on change rather than mutated, so a lookup never sees a half-written
+region and never needs a lock.
+
+`Regions.resolve(location, policy)` is the one to reach for when two regions overlap and only one
+answer makes sense: the policy decides which wins rather than each caller inventing a rule.
+
+The module also draws outlines — the particle box every arena editor uses — and handles selection with
+the shared wand.
+
+## Schematics
+
+Saving a box of the world and pasting it back, over FastAsyncWorldEdit:
+
+```java
+PluginSchematics schematics = Schematics.of(this);
+
+schematics.save("arena_main", min, max);
+schematics.regenerate("arena_main", cuboid, worldId);
+schematics.paste("arena_main", location);
+schematics.exists("arena_main");
+```
+
+It is what regenerates an arena between matches, with its chests still full. Every call is a future,
+and the work happens off the main thread.
+
+<Callout type="warning" title="Check isSupported">
+`Schematics.isSupported()` is `false` without FastAsyncWorldEdit, and `unsupportedReason()` is a string
+you can print. Every call then does nothing rather than throwing — which is worth handling, because an
+arena that silently did not regenerate looks like a plugin bug.
+</Callout>
+
+## Worlds
+
+Creating and deleting worlds through the Worlds plugin, from any thread:
+
+```java
+Worlds.create(Key.key("myplugin", "arena"), "arena_1")
+      .thenAccept(world -> paste(world));
+
+Worlds.delete(world);
+```
+
+`Worlds.isAvailable()` says whether anything can be created at all, and `backendName()` names what is
+doing it.
+
+On Folia this is the **only** way: Bukkit's own world creation is not available there. Without the
+Worlds plugin the module does nothing loudly, and the caller finds out from the future rather than from
+an exception in the middle of a startup sequence.

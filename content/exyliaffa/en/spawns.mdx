@@ -1,0 +1,64 @@
+---
+title: "Spawns"
+description: "Several spawn points per arena, with name, icon, permission and priority."
+---
+
+An arena can have as many spawns as you like. With one, players always appear there. With several, a
+selector opens on entry and on respawn.
+
+## Fields
+
+| Field | Default | What it does |
+|---|---|---|
+| `id` | generated | Internal identifier. |
+| `arenaId` | — | The arena it belongs to. |
+| `displayName` | — | Name in the selector. Accepts colours. |
+| `permission` | empty | Permission required to choose it. |
+| `iconMaterial` | `COMPASS` | Icon in the menu. |
+| `location` | — | The exact location, taken from where you stood when creating it. |
+| `priority` | `0` | Order in the menu. |
+
+## When the selector shows
+
+The spawn selector comes **before** the kit one, and only if the arena has more than one spawn. The
+full sequence on entry is:
+
+```text
+/ffa join <arena>
+   ├── more than one spawn?  → spawn selector
+   ├── kitMode SELECTABLE and more than one kit?  → kit selector
+   └── join
+```
+
+## Common uses
+
+<Cards>
+  <Card title="Map zones">
+    One spawn per region of the map lets players pick where to drop. Works very well in large arenas
+    where the centre gets crowded.
+  </Card>
+  <Card title="Premium spawns">
+    A permission-gated spawn, in an advantageous position or simply a more comfortable one, as a rank
+    reward.
+  </Card>
+  <Card title="Tactical respawn">
+    With several spawns spread out, dying does not mean always returning to the same place and being
+    camped there.
+  </Card>
+</Cards>
+
+<Callout type="warning" title="Spawns must sit inside the region">
+A spawn outside the arena bounds makes the player appear "outside" and be returned immediately.
+Always place spawns inside the marked region.
+</Callout>
+
+## Protection
+
+Spawn protection is not configured per spawn but on the arena: a radius, a shape and a mode applied
+to **all** of that arena's spawns. See
+[Arenas · Spawn protection](/docs/exyliaffa/arenas#spawn-protection).
+
+## Waypoints
+
+If the player has the waypoints setting on, each spawn of the arena is drawn as a marker on their
+client. It is switched off per player from `/ffa settings`, with no effect on anyone else.

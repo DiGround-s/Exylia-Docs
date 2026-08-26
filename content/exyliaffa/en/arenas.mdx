@@ -1,0 +1,115 @@
+---
+title: "Arenas"
+description: "Every field on an arena, what it does, and where it is stored."
+---
+
+An arena is a row in the database, not a block of YAML. It is created and edited from `/ffaadmin`,
+and each change writes a new row: nothing is mutated in shared memory, so two admins touching the
+same arena at once cannot leave it half-written.
+
+## Fields
+
+<Field name="id" type="text, max 64">
+The arena identifier, chosen by whoever created it. It is what goes in `/ffa join <id>` and in
+placeholders. It cannot be changed afterwards.
+</Field>
+
+<Field name="displayName" type="text, max 128">
+The name menus show. Accepts colours and palette tokens.
+</Field>
+
+<Field name="iconMaterial" type="material" defaultValue="DIAMOND_SWORD">
+The icon in the arena selector.
+</Field>
+
+<Field name="maxPlayers" type="integer" defaultValue="50">
+How many players fit inside at once. Spectators do not take a combat slot, but they do count towards
+the occupancy placeholder.
+</Field>
+
+<Field name="kitMode" type="SELECTABLE | RANDOM" defaultValue="SELECTABLE">
+`SELECTABLE` lets players pick a kit on entry when there is more than one. `RANDOM` hands out one at
+random among the kits that player is allowed to use.
+</Field>
+
+<Field name="resetKitAfterKill" type="boolean" defaultValue="false">
+When on, every kill refills the killer's kit back to its original state.
+</Field>
+
+<Field name="region" type="two corners">
+The arena bounds. Without a region, the arena cannot register as a playable session.
+</Field>
+
+<Field name="protectedRadius" type="integer, blocks" defaultValue="0">
+Protection radius around each spawn. `0` disables protection.
+</Field>
+
+<Field name="protectedShape" type="SPHERE | CUBOID" defaultValue="SPHERE">
+The shape of that radius.
+</Field>
+
+<Field name="protectedMode" type="NORMAL | FULL_HEIGHT" defaultValue="NORMAL">
+`FULL_HEIGHT` extends protection from bedrock to sky, which stops anyone from standing above spawn to
+hit whoever appears.
+</Field>
+
+<Field name="permission" type="text" defaultValue="empty">
+Permission required to join. Empty means anyone can. This is the mechanism for premium arenas.
+</Field>
+
+<Field name="regenerationTime" type="seconds" defaultValue="0">
+How often the arena's schematic is restored. `0` disables automatic regeneration.
+</Field>
+
+<Field name="priority" type="integer" defaultValue="0">
+Ordering in menus and in arena selection. Higher priority shows first.
+</Field>
+
+<Field name="enabled" type="boolean" defaultValue="false">
+Whether players may join at all. A newly created arena stays disabled until you switch it on.
+</Field>
+
+<Field name="saveInventoryOnLeave" type="boolean" defaultValue="false">
+Stores the inventory the player brought and gives it back on leave. Recommended where FFA coexists
+with survival, or with a lobby that hands out items.
+</Field>
+
+<Field name="rules" type="rules block">
+The twenty-one in-arena rules. See [Rules](/docs/exyliaffa/rules).
+</Field>
+
+## Spawn protection
+
+Three fields combine: the radius, the shape and the mode.
+
+| Combination | Result |
+|---|---|
+| Radius `0` | No protection. Spawn is just another point of the arena. |
+| `SPHERE` + `NORMAL` | A sphere around spawn. The natural choice in flat arenas. |
+| `CUBOID` + `NORMAL` | A cube. Useful when spawn sits on a square platform. |
+| Either + `FULL_HEIGHT` | Protection ignores height: floor to sky. |
+
+<Callout type="tip" title="Picking a radius">
+Radii of 3 to 5 blocks are usually enough. A large radius turns spawn into a shelter and players
+learn to fight on its edge.
+</Callout>
+
+## Paid arenas
+
+An arena with a `permission` is a restricted arena. The menu still shows it, but joining requires the
+permission. Combined with [kit](/docs/exyliaffa/kits) and [spawn](/docs/exyliaffa/spawns)
+permissions, it lets you design tiered access without duplicating arenas.
+
+```text
+exyliaffa.arena.vip      → the "vip" arena
+exyliaffa.kit.diamond    → the "diamond" kit in any arena
+exyliaffa.spawn.tower    → the "tower" spawn of one arena
+```
+
+The nodes are whatever you write in each field: the plugin imposes no prefix.
+
+## Live state
+
+An arena that is enabled and has a region registers as a **session** when the server starts. The
+session is what holds the list of living players, the spectators, the regeneration timer and the
+scoreboard. Disabling an arena closes its session and returns everyone to the lobby.

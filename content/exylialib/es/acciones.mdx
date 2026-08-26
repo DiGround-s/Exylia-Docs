@@ -1,0 +1,128 @@
+---
+title: "Acciones"
+description: "Acciones compiladas y con namespace, compartidas por menús, items y cualquier otra frontera de evento."
+---
+
+Una acción es una cadena en un archivo de config y un handler en Java. Los menús, los items y cualquier
+cosa que reaccione a un jugador llaman al mismo registro.
+
+```java
+PluginActions actions = Actions.of(this, "practice");
+
+actions.registerSync("join_queue", (context, args) -> {
+    queues.join(context.player(), args.string(0));
+    return ActionResult.success();
+});
+```
+
+```yaml
+actions:
+  - "practice:join_queue boxing"
+```
+
+## Namespaces
+
+El YAML público escribe siempre el id completo. Un plugin puede compilar su id local, pero
+`Actions.compile` sin plugin lo rechaza — eso evita el fallo antiguo en el que un id a secas funcionaba
+hasta que un segundo plugin registraba el mismo y ambos quedaban ambiguos.
+
+Los ids completos duplicados se rechazan. Los registros se eliminan cuando el dueño se desactiva, y una
+llamada compilada que tuviera un menú viejo se desactiva con ellos: no puede invocar código de un
+classloader muerto.
+
+`""`, `none` y `noop` compilan a un no-op real, así que un placeholder de menú que resuelve a nada no es
+un error de acción desconocida.
+
+## Compilar una vez, ejecutar barato
+
+```java
+ActionCall call = actions.compile("practice:adjust_priority -10");
+```
+
+Compilar parsea y valida el id, resuelve el registro, tokeniza los argumentos entrecomillados y retiene
+el handler. Ejecutar no hace nada de eso. Menús e items guardan la llamada compilada en la definición
+cargada en vez de compilar en cada clic.
+
+Los argumentos conservan números negativos y cadenas entrecomilladas:
+
+```java
+ActionArguments args = actions.compile(
+        "practice:set_name 'Ranked Boxing' -0.5 true").arguments();
+
+args.string(0);      // Ranked Boxing
+args.decimal(1);     // -0.5
+args.bool(2, false); // true
+```
+
+## Contexto
+
+El contexto lleva un jugador, un origen, datos tipados que aporta quien lo levantó, y un ámbito
+compartido a lo largo de una secuencia:
+
+```java
+public static final ActionKey<Integer> SLOT = ActionKey.of("ui.slot", Integer.class);
+
+ActionContext context = ActionContext.forPlayer(player)
+        .origin("menu")
+        .put(SLOT, slot)
+        .build();
+```
+
+```java
+int slot = context.require(SLOT);
+```
+
+Los menús aportan sus propias claves — `UiKeys.ENTRY` es la fila que se pulsó, que es cómo un handler
+sabe *qué* kit en vez de deducirlo del item que se dibujó.
+
+<Callout type="note" title="Lo que Actions deliberadamente no sabe">
+Clics, manos, slots, inventarios, proyectiles, permisos y cooldowns. Los menús parsean `left:` y aportan
+claves de UI; los items parsean disparadores y aportan claves de item. El núcleo sigue siendo reusable
+en vez de convertirse en un segundo framework de eventos.
+</Callout>
+
+## Síncrono y asíncrono
+
+| Registro | Corre en |
+|---|---|
+| `registerSync(id, handler)` | El hilo del jugador. |
+| `registerAsync(id, handler)` | Un hilo del pool. |
+| `register(id, handler)` | Lo decide el handler. |
+
+Cuando un paso asíncrono termina, la secuencia se reanuda en el hilo dueño del jugador — así que un paso
+que lee la base de datos y otro que abre un menú pueden estar juntos en una lista.
+
+## Secuencias
+
+```java
+ActionSequence sequence = actions.compile(List.of(
+        "practice:heal",
+        "practice:teleport spawn",
+        "practice:message 'Bienvenido de vuelta'"));
+```
+
+O construidas, cuando una config lleva retrasos:
+
+```java
+ActionSequence sequence = actions.sequence()
+        .step("practice:freeze", 0)
+        .step("practice:start", 60)      // ticks de espera antes de este paso
+        .build();
+```
+
+Solo `SUCCESS` avanza una secuencia. `STOP`, `DENIED` y `FAILED` la terminan — que es lo que convierte
+una comprobación de permiso en un primer paso y no en un envoltorio alrededor de todo lo demás.
+
+Los pasos comparten un `ActionScope`, así que uno puede dejar un valor para el siguiente. Es seguro
+entre hilos porque un paso asíncrono puede llenarlo antes de que lo lea uno síncrono posterior.
+
+## Cancelar lo que aún no ha corrido
+
+```java
+ActionExecution running = sequence.execute(context);
+session.cancelOnClose(running);
+```
+
+Sin esto, una secuencia con un paso retrasado sobrevive a la pantalla que la lanzó. Cancelar la detiene
+antes de su siguiente paso y cancela cualquier retraso pendiente. Un paso ya en curso no se interrumpe,
+pero nada posterior arranca; cancelar dos veces es inofensivo.

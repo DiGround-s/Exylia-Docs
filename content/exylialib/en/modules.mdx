@@ -1,0 +1,119 @@
+---
+title: "Module index"
+description: "All thirty-seven modules, what each is for, and where its entry point lives."
+---
+
+Every module is reached the same way: a static class named after it, usually with an `of(plugin)`
+handing back a view that belongs to your plugin.
+
+## Foundations
+
+| Module | Entry point | What it is for |
+|---|---|---|
+| Task | `Tasks.of(plugin)` | Scheduling that runs on Spigot, Paper and Folia from one call. |
+| Config | `Configs.define(plugin, name, type)` | YAML files declared and read as Java records. |
+| Text | `Text.of(string)` | Every player-facing string, into Adventure components. |
+| Placeholders | `Placeholders.group(plugin, prefix)` | One registry for `%placeholders%`, with or without PlaceholderAPI. |
+| Formats | `Formats`, `Amounts` | Numbers, money, percentages and dates a player reads — and amounts a player types. |
+| Debug | `Debug.of(plugin)` | Coloured console output, with a server-wide switch. |
+| Reloading | `Reloads.of(plugin)` | Named reload steps with contained failures, plus library-reload listeners. |
+
+## Storage
+
+| Module | Entry point | What it is for |
+|---|---|---|
+| Database | `Databases.of(plugin)` | Records in H2, MySQL, MariaDB, PostgreSQL or MongoDB. |
+| Transfer | `Transfers.of(plugin)` | A plugin's whole database out to one file and back. |
+| Redis | configuration | A shared cache that makes one database look the same from every server. |
+| Snapshots | `Snapshots.of(plugin)` | A player's state kept for later, in memory or stored. |
+
+## Interfaces
+
+| Module | Entry point | What it is for |
+|---|---|---|
+| Menus | `Menus.of(plugin)` | Menus written in configuration: lists, templates, conditions, animations. |
+| Items | `Items.of(plugin)` | Items described in configuration, read once and drawn per player. |
+| Actions | `Actions.of(plugin, namespace)` | Compiled, namespaced actions shared by menus and items. |
+| Input | `Inputs.of(plugin)` | Asking a player for text, numbers, choices or a whole form. |
+| Editors | `Editors.of(plugin)` | Screens for editing the lists a plugin configures. |
+| Wizards | `Wizards.of(plugin)` | Walking a player through several questions, applied only on confirm. |
+| Previews | `Previews.of(plugin)` | Showing one player an effect against an empty sky. |
+
+## On screen
+
+| Module | Entry point | What it is for |
+|---|---|---|
+| Effects | `Effects.play(config, viewer)` | Titles, action bars, boss bars, sounds, particles, fireworks. |
+| Sequences | `Sequences.of(plugin)` | Choreographed effects from configuration: shapes, sounds, delays. |
+| Scoreboard | `Scoreboards.show(plugin, player, config)` | Packet sidebars declared in config. |
+| Hologram | `Holograms.show(plugin, id, location, config)` | Packet holograms declared in config. |
+| Nametags | `Nametags.of(plugin)` | Name colour, glow and collision as one player sees another. |
+| Client | `Clients.of(plugin)` | Lunar and Feather waypoints, cooldowns and teammate markers. |
+| Skulls | `Skulls.player(name)` | Player heads from base64, a URL or a name — cached, never blocking. |
+
+## World
+
+| Module | Entry point | What it is for |
+|---|---|---|
+| Regions | `Regions.of(plugin)` | Shapes, a spatial index, overlap policies, enter/exit events, outlines. |
+| Schematics | `Schematics.of(plugin)` | Saving a box of the world and pasting it back. |
+| World | `Worlds.create(key, name)` | Creating and deleting worlds, from any thread. |
+
+## Players
+
+| Module | Entry point | What it is for |
+|---|---|---|
+| Sessions | `Sessions.of(plugin)` | One claim registry so two plugins cannot hold the same player. |
+| Cooldowns | `Cooldowns.of(plugin)` | The base every cooldown in the ecosystem sits on. |
+| Teleport | `Teleports.of(plugin)` | Warmups, safe landings, `/back`, requests and handovers. |
+| Combat | `Combat.isTagged(player)` | Whether a player is fighting, over DeluxeCombat or PvPManager. |
+| Clan | `Clans.clanOf(uuid)` | One API over eight clan plugins and external bridges. |
+
+## Things a player earns
+
+| Module | Entry point | What it is for |
+|---|---|---|
+| Rewards | `Rewards.of(plugin)` | Items, commands, money, odds and conditions — offline-safe. |
+| Loot | `Loot.parseAll(lines)` | What comes out of a chest, a spawner or a broken block. |
+| Economy | `Economy.balance(uuid)` | Balances, charges and transfers over Vault, PlayerPoints or your own currency. |
+
+## Not a module
+
+| Class | What it is |
+|---|---|
+| `net.exylia.lib.ExyliaLib` | The plugin itself: lifecycle and cleanup, nothing else. |
+| `net.exylia.lib.platform.Platform` | `current()`, `isFolia()`, `isPaper()`. |
+| `net.exylia.lib.internal.*` | Internal. Free to change without notice. |
+
+## Reloading
+
+```java
+Reloads.of(this)
+        .step("configs", () -> { settings.reload(); menus.reload(); })
+        .step("arenas", () -> arenas.load())
+        .run(sender);
+```
+
+Each step reports for itself: one that throws is named in the console and the sender is told how many
+succeeded. A half-reloaded plugin that says nothing is worse than one that names what failed.
+
+```java
+Reloads.onLibraryReload(this, () -> menus.reload());
+```
+
+The library's own `/exylialib reload` fires that listener. The palette changing is the usual reason to
+want it: every compiled menu is holding last week's colours until it is read again.
+
+## Debug output
+
+```java
+Debug debug = Debug.of(this);
+
+debug.success("Configs loaded");
+debug.warn("Arena 'main' has no schematic");
+debug.error("Could not reach the database", failure);
+debug.debug("Session drained: " + entries);      // only when debug is on
+```
+
+`Debug.all(true)` turns debug lines on for every plugin at once, which is the switch to reach for when
+reproducing something rather than editing each plugin's config.

@@ -1,0 +1,70 @@
+---
+title: "Regiones, esquemáticas y mundos"
+description: "Áreas del mundo, guardar y pegar cajas de él, y crear mundos desde cualquier hilo."
+---
+
+## Regiones
+
+Un área del mundo con reglas asociadas, indexada para que preguntar qué hay en una ubicación salga
+barato.
+
+```java
+PluginRegions regions = Regions.of(this);
+
+List<RegionSnapshot> aqui = Regions.at(player.getLocation());
+```
+
+| Concepto | Qué es |
+|---|---|
+| Forma | Cuboide o esfera, en un mundo. |
+| Snapshot | Una vista inmutable de una región tal y como está ahora. |
+| Política | Qué pasa donde las regiones se solapan. |
+| Eventos | Entrada y salida, levantados según se mueven los jugadores. |
+
+El índice es inmutable y se reconstruye al cambiar en vez de mutarse, así que una consulta nunca ve una
+región a medio escribir y nunca necesita un lock.
+
+`Regions.resolve(location, policy)` es lo que hay que usar cuando dos regiones se solapan y solo una
+respuesta tiene sentido: la política decide cuál gana en vez de que cada llamante invente una regla.
+
+El módulo también dibuja contornos — la caja de partículas que usa cada editor de arenas — y se encarga
+de la selección con el selector compartido.
+
+## Esquemáticas
+
+Guardar una caja del mundo y pegarla de vuelta, sobre FastAsyncWorldEdit:
+
+```java
+PluginSchematics schematics = Schematics.of(this);
+
+schematics.save("arena_main", min, max);
+schematics.regenerate("arena_main", cuboid, worldId);
+schematics.paste("arena_main", location);
+schematics.exists("arena_main");
+```
+
+Es lo que regenera una arena entre partidas, con sus cofres todavía llenos. Cada llamada es un future, y
+el trabajo ocurre fuera del hilo principal.
+
+<Callout type="warning" title="Comprueba isSupported">
+`Schematics.isSupported()` es `false` sin FastAsyncWorldEdit, y `unsupportedReason()` es una cadena que
+puedes imprimir. Cada llamada entonces no hace nada en vez de lanzar — y merece la pena manejarlo,
+porque una arena que en silencio no se regeneró parece un bug del plugin.
+</Callout>
+
+## Mundos
+
+Crear y borrar mundos con el plugin Worlds, desde cualquier hilo:
+
+```java
+Worlds.create(Key.key("myplugin", "arena"), "arena_1")
+      .thenAccept(world -> paste(world));
+
+Worlds.delete(world);
+```
+
+`Worlds.isAvailable()` dice si se puede crear algo, y `backendName()` nombra qué lo está haciendo.
+
+En Folia esta es la **única** forma: la creación de mundos de Bukkit no está disponible ahí. Sin el
+plugin Worlds el módulo no hace nada en voz alta, y quien llama se entera por el future en vez de por
+una excepción a mitad de una secuencia de arranque.

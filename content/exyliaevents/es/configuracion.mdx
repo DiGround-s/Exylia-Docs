@@ -1,0 +1,113 @@
+---
+title: "Configuración"
+description: "Los cinco archivos que escribe el plugin y qué va en cada uno."
+---
+
+Los archivos viven en `plugins/ExyliaEvents/`. Todos se escriben en el primer arranque con sus valores
+por defecto y con comentarios en cada clave.
+
+## config.yml
+
+### settings
+
+Todo sobre cómo se comportan los eventos, explicado en
+[Flujo de juego](/docs/exyliaevents/flujo-de-juego):
+
+```yaml
+settings:
+  use-main-lobby: true
+  broadcast-interval: 30
+  waiting-timeout: 300
+  broadcast-countdown-times: [30, 15, 10, 5]
+  max-events-per-player: 1
+  max-events-total: -1
+  max-events-waiting: 3
+  start-cooldown: 0
+  start-cooldown-permissions: []
+  event-music-enabled: true
+  event-music-volume: 0.5
+  event-music-interval: 150
+  event-music-discs: [...]
+```
+
+<Field name="use-main-lobby" type="booleano" defaultValue="true">
+Si a los jugadores se les envía al lobby principal guardado al salir de un evento.
+</Field>
+
+### main-lobby
+
+Un resto de una versión anterior. El lobby vive ahora en la base de datos; esta sección se lee una
+vez, en el primer arranque tras el cambio, y se copia allí. Un mundo en blanco significa que no hay
+nada que copiar.
+
+### reward-commands, command-whitelist, world-restrictions, random-events
+
+Explicados en [Recompensas](/docs/exyliaevents/recompensas) y
+[Flujo de juego](/docs/exyliaevents/flujo-de-juego).
+
+### auto-world
+
+```yaml
+auto-world:
+  clone-spacing: 500
+  clone-paste-y: 64
+```
+
+Explicado en [Arenas · El mundo automático](/docs/exyliaevents/arenas#el-mundo-automático).
+
+### Bloques visuales por tipo
+
+`tnttag`, `taggame`, `blockparty`, `buildbattle`, `quake`, `csgo`, `parkour`, `chairs`, `slap`,
+`gemcrawler`, `pillarsoffortune`, `lms`, `simonsays`, `survivalgames` y `tournament` llevan cada uno
+sus boss bars, barras de acción o títulos, además de `winner-fireworks`. Explicados en
+[Pantalla y audio](/docs/exyliaevents/visuales).
+
+## scoreboards.yml
+
+Un sidebar por tipo de evento más el tablero del lobby. Ver
+[Pantalla y audio · Sidebars](/docs/exyliaevents/visuales#sidebars).
+
+## messages.yml
+
+Todos los mensajes, con una sección `events` compartida y luego una por tipo de evento — `tnttag`,
+`taggame`, `lms`, `topkiller`, `oitc`, `quake`, `csgo`, `tntrun`, `spleef`, `splegg`, `splatoon`,
+`brackets`, `tournament`, `buildbattle`, `blockparty`, `thimble`, `parkour`, `infection`, `kingkong`,
+`slap`, `anvilrunning`, `chairs`, `gemcrawler`, `pillarsoffortune`, `simonsays`, `volcano` — más
+`teams` y `placeholders`.
+
+Los nombres de los equipos viven en `teams`, y por eso traducir el archivo traduce también los
+equipos.
+
+## scheduled-events.yml
+
+Horarios por día y hora. Ver
+[Flujo de juego · Eventos programados](/docs/exyliaevents/flujo-de-juego#eventos-programados).
+
+## buildbattle-themes.yml
+
+Los temas que se votan en Build Battle, más los materiales de los objetos de voto. Totalmente
+traducible: edita, traduce o reemplaza cada entrada. El menú de ajustes tiene un botón que restaura la
+lista original.
+
+## menus/
+
+```text
+menus/
+├── admin/    el panel, el selector de tipo, la lista y el setup de configuraciones,
+│             una pantalla de ajustes por tipo — CS:GO tiene una por arma —
+│             lista de kits y diálogos de confirmación
+└── user/     el menú principal, eventos activos, iniciar evento, estadísticas,
+    └── es/   selección de kit, selección de equipo y menú de espectador (copias en español)
+```
+
+## Migraciones
+
+`config.yml` está en la versión 2. Un archivo de la versión 1 se migra en el primer arranque tras
+actualizar: los tres tiempos de título se dividen entre veinte, porque estaban escritos en ticks y
+ahora se leen en segundos.
+
+<Callout type="warning" title="Las claves desconocidas se eliminan">
+Una clave que ningún archivo declara se borra al cargar y se reporta una vez como `UNKNOWN_KEY`.
+Mantiene los archivos limpios entre actualizaciones, y es por lo que tus propias claves no sobreviven
+en ellos.
+</Callout>

@@ -1,0 +1,83 @@
+---
+title: "Teams, kits and loot"
+description: "Team colours and balancing, the kits an event hands out, and chest loot tables."
+---
+
+## Teams
+
+Seven types are team games: Top Killer Teams, OITC Teams, Quake Teams, CS:GO Teams, LMS Teams, Gem
+Crawler Teams and Thimble Teams, plus Splatoon and Thimble, which are team games in their own right.
+
+Four colours are available:
+
+| Team | Chat colour | Wool |
+|---|---|---|
+| Red | `&c` | `RED_WOOL` |
+| Blue | `&9` | `BLUE_WOOL` |
+| Green | `&a` | `GREEN_WOOL` |
+| Yellow | `&e` | `YELLOW_WOOL` |
+
+Team names come from `messages.yml`, so they translate along with the rest of the plugin.
+
+### Picking a team
+
+With `team-selector-enabled` on — the default for every team type — players get a selector item in
+the lobby and choose their own team.
+
+Before the game starts the teams are rebalanced: anyone who did not pick lands in the smallest team,
+and players are moved until no team is more than one player larger than another.
+
+<Callout type="tip" title="Turn the selector off for random teams">
+Setting `team-selector-enabled` to `false` skips the choosing entirely — everyone is assigned by the
+balancer, which is what you want for a tournament-style event where stacking one team would ruin it.
+</Callout>
+
+### Splatoon
+
+Splatoon reads `team-count` instead of always using two, so a four-colour ink war is a setting rather
+than a different type.
+
+## Kits
+
+Kits belong to a configuration and are edited from the kit list in the admin panel. Each one stores a
+full inventory, armour and offhand, exactly as you had them when saving.
+
+| Field | What it is |
+|---|---|
+| `id` | Internal identifier |
+| `configId` | The configuration it belongs to |
+| `name` | What the selector shows |
+| `iconMaterial` | The icon in the selector |
+| Contents | Inventory, armour and offhand |
+
+A configuration with kits shows the kit selector to players; the chosen kit is what they are given
+when the game starts. CS:GO gives its own loadout when no kit is chosen, since its weapons are its
+own system.
+
+## Loot tables
+
+Chest-based types — Survival Games above all — fill their chests from the configuration's loot table
+rather than from vanilla tables.
+
+| Field | What it does |
+|---|---|
+| Item | The stack itself, with its own name, enchantments and lore |
+| `weight` | How likely this entry is relative to the others |
+| `minAmount` / `maxAmount` | The stack size range rolled per pick |
+| `tier` | A label, so an entry can belong to a rarity band |
+
+Survival Games decides how much lands in each chest with its own settings:
+
+```text
+min-items-per-chest: 3
+max-items-per-chest: 12
+chest-refill-interval: 180
+```
+
+Chest locations inside the arena bounds are scanned and cached on the configuration, so a chest added
+to the map is picked up when the arena is scanned again.
+
+<Callout type="note" title="Weights are relative, not percentages">
+An entry with weight `10` next to one with weight `5` is drawn twice as often. The numbers do not
+need to add up to anything in particular.
+</Callout>

@@ -1,0 +1,59 @@
+---
+title: "Inscripciones"
+description: "Abrir una lista, añadir jugadores, y lanzar un evento al que solo ellos entran."
+---
+
+Las inscripciones restringen una configuración a una lista concreta de jugadores. Es la forma de que
+un torneo programado quede limitado a quien se apuntó.
+
+## Los comandos
+
+Todos necesitan `exyliaevents.admin.inscriptions`, que es un nodo aparte de `exyliaevents.admin`.
+
+| Comando | Qué hace |
+|---|---|
+| `/eventsadmin inscriptions open <configId>` | Abre la lista de esa configuración. |
+| `/eventsadmin inscriptions close <configId>` | La cierra. |
+| `/eventsadmin inscriptions add <configId> <jugador>` | Añade un jugador, conectado o no. |
+| `/eventsadmin inscriptions remove <configId> <jugador>` | Quita a uno. |
+| `/eventsadmin inscriptions clear <configId>` | Vacía la lista. |
+| `/eventsadmin inscriptions startevent <configId>` | Lanza el evento con la lista en vigor. |
+
+## Qué cambia tener la lista abierta
+
+Mientras la lista de una configuración está **abierta**, solo los jugadores que estén en ella pueden
+entrar a ese evento. A cualquier otro se le rechaza con el mensaje `not-inscribed` de `messages.yml`,
+tanto si usó `/events join` como el menú.
+
+Cerrar la lista levanta la restricción: la configuración vuelve a estar abierta a todos. La lista en sí
+no se borra al cerrarla, así que puede reabrirse para una segunda ronda.
+
+## Un flujo típico
+
+<Steps>
+  <Step title="Abre la lista">
+    `/eventsadmin inscriptions open torneo1`
+  </Step>
+  <Step title="Recoge nombres">
+    El staff ejecuta `add` por cada jugador. Funciona con jugadores desconectados — la lista guarda
+    UUIDs, así que se puede apuntar a alguien días antes.
+  </Step>
+  <Step title="Lánzalo">
+    `/eventsadmin inscriptions startevent torneo1` inicia el evento con la lista aplicada.
+  </Step>
+  <Step title="Después">
+    `clear` antes de la siguiente ronda, o `close` para volver a abrir la configuración a todos.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Combina con los eventos programados">
+Abre la lista durante la semana, programa el evento para el viernes en
+[`scheduled-events.yml`](/docs/exyliaevents/flujo-de-juego#eventos-programados), y el evento arranca
+solo con únicamente los inscritos pudiendo entrar.
+</Callout>
+
+## Dónde se guarda
+
+Una fila por configuración en `event_inscriptions`: si la lista está abierta y quiénes están en ella.
+Las inscripciones sobreviven a los reinicios, y en una base de datos compartida las ve cualquier
+servidor que la lea.

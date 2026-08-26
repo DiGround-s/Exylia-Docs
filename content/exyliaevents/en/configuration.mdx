@@ -1,0 +1,108 @@
+---
+title: "Configuration"
+description: "The five files the plugin writes, and what belongs in each."
+---
+
+Files live in `plugins/ExyliaEvents/`. All are written on the first boot with their defaults and with
+comments on each key.
+
+## config.yml
+
+### settings
+
+Everything about how events behave, covered in [Game flow](/docs/exyliaevents/game-flow):
+
+```yaml
+settings:
+  use-main-lobby: true
+  broadcast-interval: 30
+  waiting-timeout: 300
+  broadcast-countdown-times: [30, 15, 10, 5]
+  max-events-per-player: 1
+  max-events-total: -1
+  max-events-waiting: 3
+  start-cooldown: 0
+  start-cooldown-permissions: []
+  event-music-enabled: true
+  event-music-volume: 0.5
+  event-music-interval: 150
+  event-music-discs: [...]
+```
+
+<Field name="use-main-lobby" type="boolean" defaultValue="true">
+Whether players are sent to the stored main lobby when they leave an event.
+</Field>
+
+### main-lobby
+
+A leftover from an older layout. The lobby lives in the database now; this section is read once, on
+the first start after the move, and copied there. A blank world means there is nothing to copy.
+
+### reward-commands, command-whitelist, world-restrictions, random-events
+
+Covered in [Rewards](/docs/exyliaevents/rewards) and
+[Game flow](/docs/exyliaevents/game-flow).
+
+### auto-world
+
+```yaml
+auto-world:
+  clone-spacing: 500
+  clone-paste-y: 64
+```
+
+Covered in [Arenas · The auto world](/docs/exyliaevents/arenas#the-auto-world).
+
+### Per-type visual blocks
+
+`tnttag`, `taggame`, `blockparty`, `buildbattle`, `quake`, `csgo`, `parkour`, `chairs`, `slap`,
+`gemcrawler`, `pillarsoffortune`, `lms`, `simonsays`, `survivalgames` and `tournament` each carry
+their own boss bars, action bars or titles, plus `winner-fireworks`. Covered in
+[On-screen and audio](/docs/exyliaevents/visuals).
+
+## scoreboards.yml
+
+One sidebar per event type plus the lobby board. See
+[On-screen and audio · Sidebars](/docs/exyliaevents/visuals#sidebars).
+
+## messages.yml
+
+Every message, with a shared `events` section and then one section per event type — `tnttag`,
+`taggame`, `lms`, `topkiller`, `oitc`, `quake`, `csgo`, `tntrun`, `spleef`, `splegg`, `splatoon`,
+`brackets`, `tournament`, `buildbattle`, `blockparty`, `thimble`, `parkour`, `infection`, `kingkong`,
+`slap`, `anvilrunning`, `chairs`, `gemcrawler`, `pillarsoffortune`, `simonsays`, `volcano` — plus
+`teams` and `placeholders`.
+
+Team names live in `teams`, which is why translating the file translates the teams as well.
+
+## scheduled-events.yml
+
+Time-of-day scheduling. See
+[Game flow · Scheduled events](/docs/exyliaevents/game-flow#scheduled-events).
+
+## buildbattle-themes.yml
+
+The themes Build Battle votes on, plus the materials the vote items use. Fully translatable: edit,
+translate or replace every entry. The settings menu has a button that restores the shipped list.
+
+## menus/
+
+```text
+menus/
+├── admin/    the panel, the type selector, the configuration list and setup,
+│             one settings screen per type — CS:GO has one per weapon —
+│             kit list and confirmation dialogs
+└── user/     the main menu, active events, start event, stats,
+    └── es/   kit selection, team selection and spectator menu (Spanish copies)
+```
+
+## Migrations
+
+`config.yml` is at version 2. A file from version 1 is migrated on the first boot after updating: the
+three title timings are divided by twenty, because they were written in ticks and are read in seconds
+now.
+
+<Callout type="warning" title="Unknown keys are removed">
+A key no file declares is deleted on load and reported once as `UNKNOWN_KEY`. It keeps the files clean
+across updates, and is why your own keys do not survive in them.
+</Callout>

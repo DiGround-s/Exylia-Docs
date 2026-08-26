@@ -1,0 +1,9 @@
+services:
+  docs:
+    build: .
+    image: exylia-docs:latest
+    container_name: exylia-docs
+    restart: unless-stopped
+    ports:
+      # Same port the dev server uses, so nothing changes between environments.
+      - "3010:80"

@@ -1,0 +1,69 @@
+---
+title: "Regeneración"
+description: "Restaurar la arena desde una esquemática, por temporizador o a mano."
+---
+
+La regeneración devuelve la arena al estado exacto en el que la guardaste. Se apoya en
+FastAsyncWorldEdit: el plugin guarda una esquemática de la región y la restaura cuando toca.
+
+## Cómo funciona
+
+<Steps>
+  <Step title="Guarda la esquemática">
+    Con la región ya marcada, usa la acción de guardar esquemática desde el panel de la arena. El
+    archivo se almacena como `ffa_arena_<arenaId>` en la carpeta de esquemáticas del servidor.
+  </Step>
+  <Step title="Define el intervalo">
+    En la configuración de la arena, `regenerationTime` son **segundos** entre regeneraciones
+    automáticas. `0` desactiva el temporizador.
+  </Step>
+  <Step title="Deja que corra">
+    Al arrancar la sesión de la arena comienza el reloj. Cada ciclo avisa a los jugadores dentro,
+    restaura los bloques y vuelve a empezar la cuenta.
+  </Step>
+  <Step title="O fuérzala">
+    El panel de administración tiene una acción de regeneración manual, que además reinicia el
+    contador.
+  </Step>
+</Steps>
+
+## Detalles importantes
+
+<Callout type="warning" title="Sin esquemática no hay regeneración">
+Si la arena no tiene una esquemática guardada, el ciclo no hace nada. El panel de configuración
+marca la esquemática como pendiente cuando falta: revisa esa lista antes de habilitar la arena.
+</Callout>
+
+- El reloj se ancla a la ubicación de la arena, no al servidor. En Folia eso importa: la
+  regeneración se ejecuta en la región que corresponde y no bloquea el resto del mundo.
+- Volver a guardar la esquemática sobrescribe la anterior. Guarda siempre con el mapa en el estado
+  que quieras como "limpio".
+- Los jugadores dentro reciben el aviso de que la arena se está regenerando y el de que ya terminó.
+  Ambos mensajes se editan en `messages.yml`.
+
+## Cuenta atrás en el scoreboard
+
+El tiempo restante está disponible en el sidebar mediante `%regen%`, incluido en las líneas por
+defecto:
+
+```yaml
+lines:
+  - " {muted}❙ {letters}Regen: {info}%regen%"
+```
+
+Con la regeneración desactivada, el valor es `-1` internamente y la línea muestra el texto que
+definas para ese caso en `messages.yml`.
+
+## Elegir un intervalo
+
+| Tipo de arena | Intervalo sugerido |
+|---|---|
+| Nodebuff sin construcción | No hace falta regenerar |
+| Arena con bloques temporales | 300–600 s |
+| Arena de construcción libre | 120–300 s |
+| Mapa decorativo delicado | 60–120 s |
+
+<Callout type="tip">
+Un intervalo demasiado corto interrumpe peleas. Si la arena se degrada rápido, suele ser mejor
+activar `playerBuildOnly` y bloques temporales que bajar el temporizador.
+</Callout>

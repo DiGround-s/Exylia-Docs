@@ -1,0 +1,82 @@
+---
+title: "Preguntas frecuentes"
+description: "Lo que más se pregunta, respondido desde el código."
+---
+
+## El plugin no arranca
+
+Busca `ExyliaLib` o `packetevents` en la consola. Ambos son dependencias obligatorias; sin cualquiera
+de ellos el servidor desactiva ExyliaCapture y lo nombra.
+
+## El evento no arranca
+
+`/captureadmin start <id>` se niega si el evento está desactivado, no tiene zona o ya está corriendo.
+La pantalla de setup muestra qué piezas faltan.
+
+## Conquest nunca registra capturador
+
+Conquest atribuye las zonas por tag de clan, y eso lo lee de un plugin de clanes detectado. Sin
+ninguno instalado, ninguna zona puede reclamarse. A los jugadores sin clan se les ignora igual. Ver
+[Clanes](/docs/exyliacapture/clanes).
+
+## Mi plugin de clanes está en soft-depend pero no funciona
+
+ExyliaLib detecta ocho: FactionsUUID, HuskTowns, ZelTeams, RunithClans, UltimateClans,
+Kingdoms/KingdomsX, SimpleClans y ExyliaClans, más cualquiera que registre un puente. La detección es
+por reflexión, así que un plugin cuya API no se pueda alcanzar se salta y se dice en consola — esa
+línea nombra también cuál se eligió.
+
+## El temporizador de KOTH no se reinicia cuando entra otro
+
+Es a propósito: el capturador es quien entró primero a la zona vacía, y el progreso solo se reinicia
+cuando ese capturador sale. Sacarlo de la zona es la forma de quitársela — estar a su lado no hace
+nada.
+
+## Un placeholder se ve tal cual
+
+Casi siempre es la escritura del contador, que lleva `capture` dos veces:
+`%exyliacapture_capture_active_events%`.
+
+La otra causa habitual es un evento creado después de la última recarga. Las familias por evento se
+registran desde las configuraciones en memoria, así que `/captureadmin reload` es lo que hace que los
+placeholders de un evento nuevo resuelvan. Ver [Placeholders](/docs/exyliacapture/placeholders).
+
+## El carro de Payload no se mueve
+
+El camino se calcula por los raíles entre el punto de inicio y el de fin. Ambos extremos deben ser
+bloques de raíl y los raíles entre ellos deben estar conectados — un hueco significa que no se
+encontró camino y el carro no tiene por dónde ir.
+
+## El carro retrocede solo
+
+Eso es `RETURNING`: no hay nadie dentro del `radius` del carro y ya había avanzado, así que vuelve a
+`return-speed`. Dos bandos en rango a la vez es `DISPUTED` y entonces se detiene.
+
+## Un jugador ganó estando desconectado. ¿Perdió la recompensa?
+
+No. Las recompensas de un ganador desconectado se encolan en la base de datos y se entregan la próxima
+vez que se conecte.
+
+## No aparece nada en el leaderboard justo después de ganar
+
+El top diez es una instantánea que se refresca cada 60 segundos. Espera un minuto, o vuelve a abrir el
+menú después.
+
+## El chat se inunda durante un Destroy The Core
+
+Sube `broadcast-every` en ese evento. Solo cambia cada cuántas roturas se anuncia; todas siguen
+puntuando.
+
+## ¿Corren varios eventos a la vez?
+
+Sí, y de tipos distintos. Con más de uno activo, el sidebar pasa a un formato compartido que muestra
+hasta cuatro.
+
+## ¿Funciona en Folia?
+
+El plugin declara soporte de Folia y programa su trabajo con el scheduler de ExyliaLib, anclado a las
+entidades y regiones implicadas.
+
+## ¿Dónde pido soporte?
+
+En el [Discord de Exylia](https://discord.exylia.net). Las licencias también se gestionan ahí.

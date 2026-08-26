@@ -1,0 +1,69 @@
+---
+title: "Recompensas y comandos"
+description: "Las cuatro ranuras de recompensa, qué pasa si el ganador está desconectado, y los comandos del evento."
+---
+
+Las recompensas se editan con el editor in-game, una lista por ranura. No se escribe YAML.
+
+## Las cuatro ranuras
+
+| Ranura | Se entrega a |
+|---|---|
+| Ganador | Quien el evento declara ganador |
+| Top 1 | Primer puesto del podio del evento |
+| Top 2 | Segundo puesto |
+| Top 3 | Tercer puesto |
+
+Qué ranuras tienen sentido depende del tipo: un KOTH normal termina con un único ganador, mientras que
+los tipos por puntos, Conquest, Payload y DTC construyen un podio y pagan los tres puestos.
+
+## Ganadores desconectados
+
+Si el jugador está conectado, la recompensa se entrega al momento. Si no, se encola en
+`capture_pending_rewards` con el nombre del evento y la posición, y se entrega la próxima vez que se
+conecte. No se pierde una recompensa porque alguien se desconectara antes de que terminara el evento.
+
+<Callout type="note" title="Se vacía antes de entregar">
+La cola se limpia antes de dar los objetos, no después, así que un fallo a mitad de entrega no puede
+duplicar la recompensa en la siguiente conexión.
+</Callout>
+
+## Eventos de clan y a quién se paga
+
+En un evento puntuado por clanes el podio es una lista de clanes, y cada uno cobra a través de **un
+representante**, elegido en este orden:
+
+1. Cualquier miembro de ese clan conectado en ese momento.
+2. Si no, un líder del clan.
+3. Si no, cualquier miembro registrado.
+
+Las estadísticas funcionan distinto a las recompensas aquí: una victoria de clan se registra para
+**todos los miembros participantes** del clan ganador, no solo para el representante. El contador de
+victorias sube para todo el clan mientras que la recompensa va a un jugador.
+
+## Comandos del evento
+
+Aparte de las recompensas, un evento lleva dos listas de comandos, editables en su propia pantalla:
+
+| Lista | Se ejecuta |
+|---|---|
+| Comandos de inicio | Cuando el evento empieza |
+| Comandos de fin | Cuando termina |
+
+Los ejecuta la consola. `%event_name%` se sustituye por el nombre visible del evento. Cada entrada
+puede llevar un nombre descriptivo en el editor para que la lista siga siendo legible.
+
+```text
+broadcast &e%event_name% &7ha comenzado
+```
+
+<Callout type="warning" title="Aquí no hay token de jugador">
+Estos comandos son sobre el evento, no sobre una persona, así que no hay `%player%` que sustituir. El
+mecanismo para dar algo a alguien son las recompensas.
+</Callout>
+
+## Formatos antiguos
+
+Un evento escrito por una versión anterior guardaba recompensas y comandos como un único bloque. La
+primera carga migra cada evento al formato actual y lo marca como migrado, así que la conversión
+ocurre una vez y no se repite.

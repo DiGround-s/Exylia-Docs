@@ -1,0 +1,88 @@
+---
+title: "Zonas"
+description: "Seleccionar dónde ocurre un evento y qué necesita cada tipo."
+---
+
+Las zonas son cuboides, seleccionados en el juego con el selector compartido de Exylia. No hay
+dependencia de WorldEdit, y no existen zonas esféricas ni poligonales.
+
+## Seleccionar
+
+La pantalla de setup lanza un flujo guiado: te entrega el selector, marcas las dos esquinas y la
+selección se guarda en el evento. Si te sales, la zona anterior queda intacta.
+
+<Steps>
+  <Step title="Abre la pantalla de setup del evento">
+    Desde `/captureadmin`, elige el evento y abre su configuración.
+  </Step>
+  <Step title="Inicia el paso de zona">
+    El flujo explica qué hay que seleccionar y te da el selector.
+  </Step>
+  <Step title="Marca dos esquinas">
+    Clic izquierdo para una, clic derecho para la otra. El volumen entre ambas es la zona.
+  </Step>
+  <Step title="Confirma">
+    La selección se escribe en el evento. Volver a seleccionarla después la reemplaza.
+  </Step>
+</Steps>
+
+## Qué selecciona cada tipo
+
+| Tipo | Qué se selecciona |
+|---|---|
+| `koth`, `koth_points_exclusive`, `koth_points_multi`, `koth_capture_points` | Un cuboide |
+| `conquest` | Un cuboide por zona, añadidas desde la lista de zonas |
+| `payload` | Una ubicación de inicio y una de fin |
+| `dtc` | Un bloque |
+
+Las zonas de Conquest se gestionan en su propia lista: añadir, editar nombre, color, puntos y tiempo
+de captura, o volver a seleccionar el área de una.
+
+## Estar dentro
+
+La presencia se reevalúa al moverse, y también al conectarse, reaparecer, morir y cambiar de modo de
+juego. Qué cuenta como jugar:
+
+| Situación | Cuenta |
+|---|---|
+| Vivo, supervivencia o aventura, dentro de la zona | Sí |
+| Creativo | No |
+| Espectador | No |
+| Muerto | No |
+
+Quien cambia a creativo dentro de una zona deja de contar al instante, y quien vuelve a survival
+vuelve a contar sin necesidad de salir y entrar.
+
+## El contorno
+
+Mientras un evento corre, sus zonas se dibujan con partículas. Se configura de forma global, no por
+evento:
+
+```yaml title="config.yml"
+particles:
+  enabled: true
+  interval-ticks: 40
+  particle: WAX_ON
+  view-distance: 48.0
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | Dibujar el contorno o no. |
+| `interval-ticks` | `40` | Ticks entre fotogramas. 20 ticks es un segundo. |
+| `particle` | `WAX_ON` | Cualquier nombre de partícula de Bukkit. |
+| `view-distance` | `48.0` | Más allá de esos bloques no se envía nada, porque no se dibujaría nada. |
+
+<Callout type="tip">
+`interval-ticks` es la palanca de coste. Un mapa grande con varios eventos activos redibuja todos los
+contornos en cada fotograma; doblar el intervalo reduce ese trabajo a la mitad y apenas se nota.
+</Callout>
+
+## Los raíles de Payload
+
+Payload no usa cuboide. Toma dos ubicaciones y calcula el camino de raíles entre ellas, saltando de
+bloque de raíl a raíl vecino. Ambos extremos deben ser raíles y el camino debe estar conectado — un
+hueco significa que no hay camino y el carro no tiene por dónde ir.
+
+El ajuste `radius` decide a qué distancia hay que estar del carro para empujarlo, medida desde el
+propio carro según avanza, no desde una zona fija.

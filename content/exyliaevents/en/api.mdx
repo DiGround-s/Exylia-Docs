@@ -1,0 +1,88 @@
+---
+title: "API"
+description: "Reading and driving events from another plugin, and the shared player claim."
+badge: "dev"
+---
+
+`net.exylia.exyliaEvents.api.EventsAPI` is static and is the supported entry point.
+
+## Reading state
+
+```java
+import net.exylia.exyliaEvents.api.EventsAPI;
+
+Optional<GameEvent> event = EventsAPI.getActiveEvent(player);
+Optional<GameEvent> byId  = EventsAPI.getEventById("lms1");
+List<GameEvent> running   = EventsAPI.getRunningEvents();
+boolean playing           = EventsAPI.isInEvent(player);
+
+Optional<EventConfiguration> config = EventsAPI.getConfiguration("lms1");
+```
+
+## Moving players
+
+```java
+boolean joined     = EventsAPI.joinEvent(player, "lms1");
+boolean spectating = EventsAPI.spectateEvent(player, "lms1");
+boolean left       = EventsAPI.leaveEvent(player);
+```
+
+Each returns whether it happened, so a failed join — event full, not joinable, player busy elsewhere —
+is a `false` rather than an exception.
+
+## Statistics
+
+```java
+int kills  = EventsAPI.getPlayerKills(uuid);
+int deaths = EventsAPI.getPlayerDeaths(uuid);
+int wins   = EventsAPI.getPlayerWins(uuid);
+int games  = EventsAPI.getGamesPlayed(uuid);
+```
+
+These are the player's global totals across every event.
+
+## The shared claim
+
+The interesting part for anyone writing another minigame: ExyliaEvents does not ask each plugin
+whether a player is busy. It asks one registry.
+
+```java
+// Is anything on the server holding this player?
+boolean free = EventsAPI.isAvailable(player);
+
+// Take them for this plugin. Atomic — this is what actually decides.
+boolean mine = EventsAPI.claim(player);
+
+// Give them back.
+EventsAPI.releaseClaim(player);
+```
+
+`isAvailable` is a question, not a reservation: between asking and acting, somebody else may have
+taken the player. `claim` is the one that decides, and it takes a release callback so whoever holds
+the player can be told to let go.
+
+The claim is **re-entrant**: a player moving from an event's lobby into the game, or from playing to
+spectating, keeps one continuous claim rather than releasing and racing to retake it.
+
+<Callout type="note" title="Why this matters">
+It is what keeps a player from being in an FFA arena and an event at once without any of those
+plugins knowing the others exist. A mode added later is covered without this code changing.
+</Callout>
+
+## Declaring the dependency
+
+```yaml title="plugin.yml"
+softdepend:
+  - ExyliaEvents
+```
+
+```java
+if (Bukkit.getPluginManager().isPluginEnabled("ExyliaEvents")) {
+    EventsAPI.joinEvent(player, "lms1");
+}
+```
+
+<Callout type="warning" title="Main thread">
+Joining, leaving and spectating teleport players, change inventories and start tasks. Call them from
+the server thread — on Folia, from the thread owning the player's region.
+</Callout>

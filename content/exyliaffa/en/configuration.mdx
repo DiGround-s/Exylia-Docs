@@ -1,0 +1,178 @@
+---
+title: "Configuration"
+description: "Complete reference for config.yml and the plugin's other files."
+---
+
+The files live in `plugins/ExyliaFFA/`. All of them are generated on the first boot with their
+defaults and with comments explaining each key.
+
+## config.yml
+
+### leaderboard
+
+```yaml
+leaderboard:
+  max-entries: 50
+```
+
+<Field name="max-entries" type="integer" defaultValue="50">
+How many players a leaderboard holds, and the highest position a leaderboard placeholder can answer.
+</Field>
+
+### combat
+
+```yaml
+combat:
+  tag-duration: 20.0
+  blocked-commands: [spawn, hub, lobby, warp, home, tpa, tpaccept, tpyes, rtp, back]
+  combat-actionbar:
+    action-bar:
+      text: "{primary}⚔ {error}Combat {muted}%time%s"
+      duration: 0
+      countdown: 0
+      time-style: tenths
+```
+
+Covered in [Combat](/docs/exyliaffa/combat#combat-tag).
+
+### anti-farmkill
+
+```yaml
+anti-farmkill:
+  enabled: true
+  same-player-enabled: true
+  same-player-max-kills: 3
+  same-player-window-seconds: 120
+  same-ip-enabled: true
+```
+
+### command-whitelist
+
+```yaml
+command-whitelist:
+  enabled: true
+  commands: [msg, message, tell, w, whisper, reply, r, respond, ffa, ffaadmin]
+```
+
+### anti-freehit
+
+```yaml
+anti-freehit:
+  hit-reset-window-seconds: 8
+  linked-actionbar:
+    action-bar:
+      text: "{primary}⚔ {highlight}%linked_name% {error}%linked_hearts%❤ {primary}%linked_ping%ms {muted}| {warning}%time%s"
+      duration: 0
+      countdown: 0
+      time-style: tenths
+```
+
+### kill-streaks
+
+```yaml
+kill-streaks:
+  enabled: true
+  reset-on-death: true
+  break-min-streak: 3
+  break-message: "<#b9a5cc>%killer% ended %player%'s ..."
+```
+
+The ladder itself is in `killstreaks.yml`. See [Kill streaks](/docs/exyliaffa/killstreaks).
+
+### respawn
+
+```yaml
+respawn:
+  leave-on-death: false
+```
+
+<Field name="leave-on-death" type="boolean" defaultValue="false">
+`true` sends whoever dies to the lobby. `false` leaves them in spectator mode with a menu to respawn
+or leave, which is what most servers want.
+</Field>
+
+### kill-commands
+
+```yaml
+kill-commands:
+  on-kill: []
+  on-death: []
+```
+
+Commands the console runs on each counted kill and on each death. They accept `%killer%` and
+`%victim%`.
+
+```yaml
+kill-commands:
+  on-kill:
+    - "eco give %killer% 25"
+  on-death:
+    - "title %victim% actionbar &7Killed by &c%killer%"
+```
+
+<Callout type="warning" title="Anti-farmkill does not filter these commands">
+`on-kill` runs on **every** kill, including one the anti-farmkill discarded for statistics. If you
+hand out money per kill, two accounts on the same IP can fund themselves by killing each other. To
+prevent it, gate the reward inside the command itself or in your economy plugin.
+</Callout>
+
+## messages.yml
+
+Every text the plugin sends, grouped by system:
+
+| Section | Contains |
+|---|---|
+| `prefix` | The prefix that fills `%prefix%` in every other message. |
+| `common` | Shared errors and responses. |
+| `ffa` | Joining, leaving, dying, arena not found, arena full, regeneration notices. |
+| `stats` | Names, icons and formatting of the nine counters. |
+| `combat` | Entering and leaving combat, blocked command. |
+| `spectator-toggle` | Spectator mode messages. |
+| `kit-editor` | Saving, cancelling and resetting a layout. |
+| `invite` | Invitations between players. |
+| `kill-streaks` | Streak notifications and announcements. |
+| `anti-freehit` | The 1v1 link notice. |
+| `admin` | Admin panel responses. |
+| `player-settings` | Settings menu texts. |
+
+They all begin with `%prefix%`; delete it from a specific line to send that one without a prefix.
+
+## scoreboards.yml
+
+See [Scoreboard](/docs/exyliaffa/scoreboard).
+
+## killstreaks.yml
+
+See [Kill streaks](/docs/exyliaffa/killstreaks#the-ladder).
+
+## database.yml
+
+See [Installation · Database](/docs/exyliaffa/installation#database).
+
+## menus/
+
+Menus are editable YAML, in two folders:
+
+```text
+menus/
+├── user/          FFA selector, kits, spawns, stats, spectator, settings
+│   └── es/        the same screens in Spanish
+└── admin/         panel, arenas, rules, kits, spawns, data, confirmations
+```
+
+You can change titles, sizes, icons, slots, lore and sounds. The action keys on each button are what
+tie it to what it does: keep them.
+
+## Migrations
+
+The plugin versions its files and migrates them on its own, keeping your edits.
+
+| File | Version | What it migrates |
+|---|---|---|
+| `config.yml` | 3 | Reshapes the two action bars and corrects the countdown token to `%time%`. |
+| `scoreboards.yml` | 2 | Points the lines at the renamed occupancy placeholder. |
+
+<Callout type="warning" title="Unknown keys are deleted">
+A key no file declares is removed on load and reported once as `UNKNOWN_KEY`. That is what keeps the
+files clean after an update, and also why adding keys of your own to these files is a bad idea.
+</Callout>

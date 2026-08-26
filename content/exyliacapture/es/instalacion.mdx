@@ -1,0 +1,95 @@
+---
+title: "Instalación"
+description: "Dependencias, primer arranque, archivos generados y base de datos."
+---
+
+## Antes de empezar
+
+Dos plugins deben estar en `plugins/` **antes** del primer arranque. Sin cualquiera de ellos el
+servidor desactiva ExyliaCapture y lo dice en consola.
+
+| Plugin | Para qué |
+|---|---|
+| `ExyliaLib` | Configuración, base de datos, menús, selector de zona, hologramas, boss bars, placeholders, recompensas. |
+| `packetevents` | La capa de paquetes sobre la que van las integraciones de cliente. |
+
+Opcionales:
+
+- **PlaceholderAPI** — para leer los valores del plugin desde otros plugins.
+- **Un plugin de clanes** — obligatorio para Conquest y para el modo clan del resto. Ver
+  [Clanes](/docs/exyliacapture/clanes).
+- **Apollo o Feather** — dibuja un waypoint en pantalla sobre la zona del evento activo.
+- **ViaVersion** — clientes antiguos.
+
+## Instalar
+
+<Steps>
+  <Step title="Coloca los jars">
+    Copia `ExyliaCapture.jar`, `ExyliaLib.jar` y `packetevents` en `plugins/`.
+  </Step>
+  <Step title="Arranca el servidor">
+    El primer arranque escribe los archivos de configuración y crea seis tablas.
+  </Step>
+  <Step title="Abre el panel">
+    Con `exyliacapture.admin`, ejecuta `/captureadmin`. Todo lo demás ocurre ahí.
+  </Step>
+</Steps>
+
+## Archivos generados
+
+Todos en `plugins/ExyliaCapture/`.
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | Zona horaria del scheduler, partículas, boss bar y holograma por tipo, menús de leaderboard. |
+| `messages.yml` | Todos los mensajes, agrupados por sistema. |
+| `scoreboards.yml` | Un sidebar por tipo de evento, más el compartido para varios a la vez. |
+| `database.yml` | Motor de base de datos. H2 por defecto, embebido. |
+| `menus/` | El diseño de los menús, de administración y de jugador. |
+
+<Callout type="note" title="Los eventos no están en un archivo">
+La configuración de un evento — tipo, zona, ajustes, recompensas, comandos y horarios — es una fila
+en `capture_event_configs`. Se crea y edita desde `/captureadmin`, y eso permite que varios servidores
+compartan los mismos eventos apuntando al mismo MySQL.
+</Callout>
+
+## Tablas
+
+| Tabla | Contiene |
+|---|---|
+| `capture_event_configs` | Los eventos configurados. |
+| `capture_player_stats` | Estadísticas globales de jugador. |
+| `capture_player_event_stats` | Estadísticas de jugador por evento. |
+| `capture_clan_stats` | Estadísticas globales de clan. |
+| `capture_clan_event_stats` | Estadísticas de clan por evento. |
+| `capture_pending_rewards` | Recompensas pendientes de quien ganó estando desconectado. |
+
+## Elegir motor
+
+Por defecto **H2**: un archivo en la carpeta del plugin, sin instalar nada.
+
+```yaml title="plugins/ExyliaCapture/database.yml"
+database:
+  type: mysql
+  settings:
+    max-pool-size: 0
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Motores soportados: `h2`, `mysql`, `mariadb`, `postgresql` y `mongodb`. Solo se lee el bloque que
+coincide con `type`; un valor no reconocido vuelve a `h2` y lo avisa en consola.
+
+<Callout type="warning" title="Cambiar de motor exige reiniciar">
+El cliente de base de datos se abre al arrancar. `/captureadmin reload` recarga archivos y eventos;
+no reemplaza el cliente.
+</Callout>
+
+## Actualizar
+
+Reemplaza el jar y reinicia. `config.yml` está versionado y migra solo, conservando tus ediciones —
+ver [Configuración · Migraciones](/docs/exyliacapture/configuracion#migraciones).

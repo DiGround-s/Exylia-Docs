@@ -1,0 +1,111 @@
+---
+title: "Configuration"
+description: "YAML files declared as Java records, generated from them, and migrated when they change shape."
+---
+
+The record is the source of truth. The YAML file is **output**, not input: it is generated from the
+record's no-argument constructor, comments included, and read back into the same shape.
+
+```java
+ConfigFile<Settings> settings = Configs.define(this, "config", Settings.class).load();
+int pool = settings.get().database().poolSize();
+```
+
+## Declaring a file
+
+```java
+public record Storage(
+        @Comment("Connections kept open. Rule of thumb: cores × 2.")
+        @Key("pool-size")
+        int poolSize,
+
+        @Comment("Where player data lives.")
+        String host) {
+
+    /** The defaults the file is generated from. */
+    public Storage() {
+        this(10, "localhost");
+    }
+}
+```
+
+| Annotation | What it does |
+|---|---|
+| `@Key("other-name")` | The YAML key differs from the record component's name. |
+| `@Comment("…")` | Written above the value in the file. Repeatable — several lines, in order. |
+
+Nested records become nested sections, so a file's structure is the record tree.
+
+<Callout type="tip" title="Comments are the manual">
+They are what a server owner reads instead of your documentation. Say what the value changes, in what
+unit and in what range — `Seconds a player stays tagged after being hit`, not `tag duration`.
+</Callout>
+
+## Reading and writing
+
+| Call | What it does |
+|---|---|
+| `get()` | The current snapshot. A field access, never a re-parse. |
+| `reload()` | Re-reads the file. Returns the problems found; an empty list means clean. |
+| `onReload(consumer)` | Runs after each successful reload. |
+| `save()` | Writes the current snapshot to disk. |
+| `update(operator)` | Change and persist in one step. |
+| `issues()` | Problems from the last load. |
+| `schema()` | A read-only description of the record type. |
+
+```java
+settings.update(current -> current.withHost("10.0.0.5"));
+```
+
+## Versions and migrations
+
+A file gets a `config-version` marker once you declare one, and migrations carry an older file
+forward on the first boot after an update:
+
+```java
+config = Configs.define(this, "config", Settings.class)
+        .version(3)
+        .migration(1, MIGRATION_FROM_1)
+        .migration(2, MIGRATION_FROM_2)
+        .load();
+```
+
+Steps run in order, however far behind the file is. A migration is built from four operations:
+
+| Operation | What it does |
+|---|---|
+| `Migration.rename(from, to)` | Moves a value to a new path. A missing source is left alone. |
+| `Migration.remove(path)` | Deletes a key. |
+| `Migration.transform(path, rewrite)` | Rewrites the value in place. Skipped when the key is absent. |
+| `Migration.all(steps…)` | Several of the above as one migration. |
+
+```java
+public static final Migration MIGRATION_FROM_1 = Migration.all(
+        Migration.rename("combat.combat-actionbar.text",
+                         "combat.combat-actionbar.action-bar.text"),
+        Migration.remove("combat.combat-actionbar.update-interval"));
+```
+
+<Callout type="warning" title="A rename without a migration deletes the owner's edits">
+A key no record declares is pruned on load. That is what keeps files clean across updates — and it is
+exactly why reshaping a section without a migration silently throws away whatever a server owner had
+written there. Rename in the record and migrate in the same commit.
+</Callout>
+
+`transform` is the right tool when a value's *meaning* changed rather than its place — a token that
+was renamed, a number that was in ticks and is now in seconds. It rewrites what is there instead of
+replacing it with the shipped default, so an owner's wording and colours survive.
+
+## Unknown keys
+
+Any key no record declares is removed on load and reported once as `UNKNOWN_KEY`. It is a one-way
+operation, so a section that is being dropped deliberately deserves a note in the code saying so.
+
+## Reloading everything a plugin owns
+
+```java
+List<ConfigIssue> issues = Configs.reloadAll(this);
+```
+
+Each `ConfigIssue` says which file, which path and what was wrong. A bad value costs that value, not
+the file: the rest loads and the default fills the gap.

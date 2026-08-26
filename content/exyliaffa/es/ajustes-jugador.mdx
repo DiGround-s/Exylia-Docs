@@ -1,0 +1,65 @@
+---
+title: "Ajustes de jugador"
+description: "Los diez interruptores que cada jugador controla desde /ffa settings."
+---
+
+Cada jugador decide qué ve. Los ajustes se guardan en la base de datos y sobreviven a reconexiones y
+a reinicios.
+
+Se abren con `/ffa settings`.
+
+## Los ajustes
+
+| Ajuste | Clave interna | Qué controla |
+|---|---|---|
+| Scoreboard | `scoreboard` | Muestra u oculta el sidebar dentro de la arena. |
+| Waypoints de spawn | `waypoints` | Marcadores del cliente sobre cada spawn de la arena. |
+| Barra de combate | `combat_bar` | La cuenta atrás del combat tag sobre la barra de acción. |
+| Barra de enlace | `linked_bar` | La barra con el rival del 1v1: nombre, corazones, ping y tiempo. |
+| Mensajes de combate | `combat_msgs` | Los avisos de entrar y salir de combate. |
+| Notificaciones de racha | `ks_notifs` | Los avisos de tu propia racha. |
+| Anuncios de racha | `ks_broadcasts` | Los anuncios de las rachas de los demás. |
+| Anuncios de bajas | `kd_broadcasts` | Los mensajes de baja y muerte del resto de jugadores. |
+| Brillo del rival | `glow` | El contorno luminoso del jugador con el que estás enlazado. |
+| Pista de espectador | `spec_hint` | La ayuda sobre la barra de acción en modo espectador. |
+
+Todos empiezan activados, salvo el scoreboard, que empieza según lo que diga `scoreboards.yml`.
+
+## Un ajuste apagado globalmente no se puede encender
+
+Si un administrador desactiva el sidebar en `scoreboards.yml`, el ajuste de scoreboard del jugador
+deja de tener efecto: la decisión global manda. El menú lo refleja en lugar de dejar encender algo
+que no va a aparecer.
+
+<Callout type="note" title="Por qué esto importa">
+Es la diferencia entre "el jugador lo tiene apagado" y "el servidor no lo ofrece". Sin esa
+distinción, un jugador podría activar una opción y pensar que el plugin está roto porque no ocurre
+nada.
+</Callout>
+
+## Waypoints de spawn
+
+Con el ajuste activo, cada spawn de la arena se dibuja como un marcador rojo en el cliente del
+jugador. Los marcadores son propios de este plugin: no pisan ni borran los que dibuje tu plugin de
+lobby, y desaparecen al salir de la arena o al desactivar ExyliaFFA.
+
+Un spawn sin ubicación asignada no dibuja nada.
+
+## Brillo del rival
+
+Cuando el enlace 1v1 está activo en la arena y el jugador tiene `glow` encendido, el rival se
+resalta con un contorno. Se envía por paquetes con packetevents, así que:
+
+- No usa equipos de scoreboard, y por tanto no pisa los prefijos de tu plugin de rangos.
+- Solo lo ve el jugador enlazado, no el servidor entero.
+- Desaparece en cuanto el enlace caduca.
+
+## Personalizar el menú
+
+El menú es un archivo YAML como el resto: `menus/user/settings.yml`, con su traducción al español en
+`menus/user/es/settings.yml`. Puedes cambiar iconos, posiciones, textos y sonidos sin tocar código.
+
+<Callout type="tip">
+Si añades o mueves items, respeta las claves de acción que ya trae cada botón: son ellas las que
+enlazan el botón con el ajuste que alterna.
+</Callout>

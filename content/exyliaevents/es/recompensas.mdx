@@ -1,0 +1,63 @@
+---
+title: "Recompensas"
+description: "Recompensas por evento, comandos globales, y qué pasa si el ganador está desconectado."
+---
+
+Hay dos capas de recompensa independientes: la que lleva cada configuración, y los comandos que
+`config.yml` ejecuta para todos los eventos.
+
+## Recompensas por evento
+
+Cada configuración tiene dos listas, editables con el editor de recompensas del panel:
+
+| Lista | Se entrega a |
+|---|---|
+| Recompensas de ganador | Quien el evento declara ganador |
+| Recompensas de participante | Todos los demás que jugaron |
+
+Se entregan un instante después de terminar el evento, para que los objetos lleguen cuando el jugador
+ya ha vuelto al lobby y no a un inventario que está a punto de vaciarse.
+
+## Comandos globales de recompensa
+
+`config.yml` lleva comandos de consola que se ejecutan en todos los eventos, sea cual sea la
+configuración:
+
+```yaml title="config.yml"
+reward-commands:
+  only-on-random-events: false
+  participant:
+    - "console: give %player% coal 1"
+  winner:
+    - "console: give %player% diamond 1"
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `only-on-random-events` | `false` | En `true`, estos comandos solo se ejecutan en eventos lanzados por el programador. |
+| `participant` | un ejemplo | Comandos por cada participante. `%player%` se sustituye. |
+| `winner` | un ejemplo | Comandos por cada ganador. |
+
+<Callout type="tip" title="only-on-random-events">
+Existe para que un miembro del staff probando un evento a mano no reparta premios. Actívalo y solo
+pagarán los eventos lanzados automáticamente — ver
+[Flujo de juego](/docs/exyliaevents/flujo-de-juego#eventos-automáticos).
+</Callout>
+
+## Ganadores desconectados
+
+Si un jugador está desconectado en el reparto, sus recompensas de configuración se encolan en
+`event_pending_rewards` junto al nombre del evento y si ganó, y se entregan la próxima vez que entre.
+No se pierde nada porque alguien se desconectara en los últimos segundos.
+
+## Qué capa usar
+
+| Quieres | Usa |
+|---|---|
+| Premios distintos por evento | Las listas de recompensa de la configuración |
+| El mismo premio en todos los eventos del servidor | Los comandos globales |
+| Dinero de economía, permisos, llaves de cofre | Comandos globales, o comandos dentro del editor |
+| Objetos físicos, exactamente como los configuraste | Las listas de recompensa |
+
+Las dos capas se ejecutan en el mismo evento, así que una configuración con recompensas propias **y**
+comandos globales entrega ambas cosas.

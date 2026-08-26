@@ -1,0 +1,90 @@
+---
+title: "Placeholders"
+description: "Todos los placeholders de PlaceholderAPI que registra el plugin."
+---
+
+Identificador de la expansión: **`exyliaffa`**. No hay que descargar nada desde eCloud: registrar los
+placeholders registra la expansión.
+
+## Ocupación
+
+| Placeholder | Devuelve |
+|---|---|
+| `%exyliaffa_total_players%` | Jugadores dentro de cualquier arena, vivos y espectadores. |
+| `%exyliaffa_arena_players_<arenaId>%` | Jugadores dentro de esa arena concreta. |
+
+```text
+%exyliaffa_arena_players_nodebuff%
+%exyliaffa_arena_players_the_pit%
+```
+
+Un identificador de arena con guiones bajos funciona: se reconstruye entero, no se corta por el
+primer guion.
+
+<Callout type="note" title="Arena inexistente devuelve vacío, no cero">
+Si la arena no existe, el placeholder no responde nada, para que puedas distinguir "no hay nadie" de
+"esa arena no existe". Una arena vacía sí devuelve `0`.
+</Callout>
+
+## Racha
+
+| Placeholder | Devuelve |
+|---|---|
+| `%exyliaffa_current_streak%` | La racha actual del jugador que lo lee. |
+
+## Leaderboards
+
+La forma general es:
+
+```text
+%exyliaffa_stats_top_<stat>_<posición>%
+%exyliaffa_stats_top_<stat>_<posición>_<arenaId>%
+%exyliaffa_stats_top_value_<stat>_<posición>%
+%exyliaffa_stats_top_value_<stat>_<posición>_<arenaId>%
+```
+
+- Sin `value`, devuelve el **nombre** del jugador en esa posición.
+- Con `value`, devuelve **su cifra** en esa estadística.
+- Sin arena, la clasificación es global; con arena, se limita a ella.
+
+Estadísticas admitidas:
+
+```text
+kills          deaths        kdr
+best_streak    assists       damage_dealt
+play_time      alive_time    kills_per_minute
+```
+
+### Ejemplos
+
+```text
+%exyliaffa_stats_top_kills_1%                     primero por bajas, en todo el servidor
+%exyliaffa_stats_top_kills_1_nodebuff%            primero por bajas en "nodebuff"
+%exyliaffa_stats_top_value_kills_1_nodebuff%      sus bajas, en lugar de su nombre
+%exyliaffa_stats_top_best_streak_3%               tercero por mejor racha
+%exyliaffa_stats_top_value_kills_per_minute_1%    el mejor ritmo de bajas por minuto
+```
+
+<Callout type="warning" title="El límite es max-entries">
+`leaderboard.max-entries` en `config.yml` decide la posición más alta que se puede consultar. Con el
+valor por defecto de `50`, pedir la posición 51 no devuelve nada.
+</Callout>
+
+## Cuando no hay respuesta
+
+Un placeholder sin respuesta devuelve **vacío**, nunca un guion ni un cero de relleno. Eso permite
+que quien lo escribe decida el texto alternativo:
+
+```yaml
+lines:
+  - "Top 1: %exyliaffa_stats_top_kills_1%"
+```
+
+Si nadie ocupa esa posición, la línea queda sin nombre en lugar de mostrar un símbolo que parece un
+error del plugin.
+
+## Dentro del sidebar del plugin
+
+Las líneas de `scoreboards.yml` tienen además tokens propios de sesión (`%arena%`, `%players%`,
+`%kills%`, `%deaths%`, `%kdr%`, `%streak%`, `%regen%`) que no necesitan prefijo porque los resuelve
+la propia sesión. Ver [Scoreboard](/docs/exyliaffa/scoreboard).

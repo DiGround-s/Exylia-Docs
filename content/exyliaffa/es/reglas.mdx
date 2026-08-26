@@ -1,0 +1,83 @@
+---
+title: "Reglas de arena"
+description: "Los veintiún interruptores que definen cómo se juega dentro de una arena."
+---
+
+Cada arena guarda su propio bloque de reglas. Se editan desde el menú **Reglas** dentro de la
+configuración de la arena en `/ffaadmin`, y se aplican en caliente: no hace falta reiniciar ni que
+los jugadores vuelvan a entrar.
+
+## Combate
+
+| Regla | Por defecto | Qué hace |
+|---|---|---|
+| `pvp` | `true` | Permite el daño entre jugadores. Desactivado, la arena se vuelve un lobby. |
+| `fallDamage` | `true` | Daño por caída dentro de la arena. |
+| `healthRegeneration` | `true` | Regeneración natural de vida. Desactívala en arenas tipo nodebuff. |
+| `foodDecrease` | `true` | Bajada de hambre. Desactivada, la comida deja de importar. |
+| `healOnKill` | `true` | Cura por completo al asesino tras una baja. |
+| `clearEffectsOnKill` | `false` | Limpia los efectos de poción del asesino tras una baja. |
+
+## Construcción
+
+| Regla | Por defecto | Qué hace |
+|---|---|---|
+| `blockBreak` | `true` | Permite romper bloques. |
+| `blockPlace` | `true` | Permite colocar bloques. |
+| `playerBuildOnly` | `false` | Solo se pueden romper bloques colocados por jugadores. Protege el mapa original. |
+| `temporaryBlocks` | `false` | Los bloques colocados desaparecen solos. |
+| `temporaryBlocksSeconds` | `0` | Cuántos segundos duran esos bloques antes de desaparecer. |
+| `reGiveBlocks` | `false` | Devuelve el bloque al inventario cuando desaparece o se rompe. |
+| `interact` | `true` | Permite interactuar con cofres, botones, puertas y similares. |
+
+<Callout type="tip" title="La combinación de arena limpia">
+`playerBuildOnly: true` + `temporaryBlocks: true` + `temporaryBlocksSeconds: 8` +
+`reGiveBlocks: true` es la receta clásica: los jugadores pueden usar bloques para pelear, el mapa no
+se degrada y nadie se queda sin bloques.
+</Callout>
+
+## Objetos
+
+| Regla | Por defecto | Qué hace |
+|---|---|---|
+| `itemDrop` | `true` | Permite tirar objetos al suelo. |
+| `itemPickup` | `true` | Permite recoger objetos del suelo. |
+| `dropItemsOnDeath` | `false` | El jugador que muere suelta su inventario. |
+| `enderPearlCooldown` | `0` | Segundos de espera entre perlas. `0` desactiva el cooldown. |
+| `goldenAppleCooldown` | `0` | Segundos de espera entre manzanas de oro. `0` lo desactiva. |
+
+<Callout type="warning" title="dropItemsOnDeath y los kits">
+Si activas `dropItemsOnDeath` con kits que se rellenan al morir, el suelo se llena de objetos
+duplicados. Actívalo solo en arenas donde el loot forme parte del juego.
+</Callout>
+
+## Anti free-hit por arena
+
+| Regla | Por defecto | Qué hace |
+|---|---|---|
+| `antiFreeHit` | `false` | Activa el enlace 1v1 en esta arena. |
+| `antiFreeHitHitsToLink` | `3` | Golpes necesarios entre dos jugadores para considerarlos enlazados. |
+| `antiFreeHitIsolateLinkedPlayers` | `false` | Dos enlazados dejan de recibir daño de terceros hasta que el enlace termina. |
+
+El enlace caduca solo cuando pasan los segundos definidos en `anti-freehit.hit-reset-window-seconds`
+de `config.yml` sin que ninguno de los dos golpee al otro. El detalle completo del sistema está en
+[Combate](/docs/exyliaffa/combate).
+
+## Perfiles habituales
+
+<Cards>
+  <Card title="NoDebuff">
+    `healthRegeneration: false`, `blockBreak: false`, `blockPlace: false`, `healOnKill: true`,
+    `resetKitAfterKill` activado en la arena.
+  </Card>
+  <Card title="Sumo">
+    `pvp: true`, `fallDamage: false`, `blockBreak: false`, `blockPlace: false`, `itemDrop: false`.
+  </Card>
+  <Card title="Build UHC">
+    `playerBuildOnly: true`, `temporaryBlocks: true` con 10 segundos, `reGiveBlocks: true`,
+    `goldenAppleCooldown: 8`.
+  </Card>
+  <Card title="Caos">
+    Todo activo, `dropItemsOnDeath: true`, sin cooldowns. Funciona bien con regeneración corta.
+  </Card>
+</Cards>

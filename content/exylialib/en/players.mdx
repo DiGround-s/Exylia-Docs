@@ -1,0 +1,159 @@
+---
+title: "Players"
+description: "One claim registry, cooldowns, teleports, snapshots, clans, combat and heads."
+---
+
+## One player, one activity
+
+The problem this solves: three minigames on one server, each with a `isInGame(player)` method, each
+asking the other two by reflection, each answering about a moment that had already passed by the time
+the join ran.
+
+```java
+PluginSessions sessions = Sessions.of(this);
+
+if (!Sessions.isFree(player)) {
+    Sessions.holder(player).ifPresent(claim ->
+            Text.of("Busy in " + claim.kind()).send(player));
+    return;
+}
+
+sessions.claim(player, "Event", () -> leaveEvent(player))
+        .ifPresent(claim -> join(player));
+```
+
+| Call | What it does |
+|---|---|
+| `Sessions.isFree(player)` | Whether anything holds them. A question, not a reservation. |
+| `Sessions.holder(player)` | Who holds them, and what they called it. |
+| `sessions.claim(player, kind, onRelease)` | Take them. **Atomic** — this is what actually decides. |
+| `sessions.mine(player)` | The claim, if it is ours. |
+| `sessions.release(player)` | Give them back. |
+
+<Callout type="warning" title="isFree is not a reservation">
+Between asking and acting, somebody else may have taken the player. `claim` is the one that decides,
+and it returns empty when it lost the race. The release callback is how whoever holds them is told to
+let go.
+</Callout>
+
+The claim is **re-entrant** for its owner: a player moving from an event's lobby into the game, or from
+playing into spectating, keeps one continuous claim rather than releasing and racing to retake it.
+
+Nothing in the registry knows which modes exist, so a mode added later is covered without touching it.
+
+## Cooldowns
+
+The base every cooldown in the ecosystem sits on, so a bar can display one without owning it:
+
+```java
+PluginCooldowns cooldowns = Cooldowns.of(this);
+
+cooldowns.startSeconds(player, "pearl", 16);
+cooldowns.isActive(player, "pearl");
+cooldowns.remainingSeconds(player, "pearl");
+```
+
+`CooldownScope` widens the key beyond one player — a cooldown per arena, per clan or server-wide.
+`ItemCooldowns` puts the vanilla cooldown sweep on an item at the same time, so the client greys it
+out.
+
+An effect can read a running cooldown instead of counting on its own — see
+[Effects · Timers](/docs/exylialib/effects#timers).
+
+## Teleports
+
+Moving a player is rarely just `player.teleport(...)`:
+
+```java
+PluginTeleports teleports = Teleports.of(this);
+
+teleports.to(player, spawn)
+         .warmup(Duration.ofSeconds(3))
+         .cancelOnMove()
+         .cancelOnDamage()
+         .go();
+```
+
+| Call | What it does |
+|---|---|
+| `to(player, location)` | A request, configured then sent. |
+| `toAll(players, location)` | A group at once. |
+| `back(player)` | Where they were before the last teleport. |
+| `lastLocationOf(player)` | That location, without moving them. |
+| `request(from, to, …)` | A `/tpa`-style request. |
+| `accept(target, from)` / `deny(…)` | Answering one. |
+
+Warmups, safe landings, `/back` history and cross-server handovers all live here, and every one of them
+runs on the player's own thread.
+
+## Snapshots
+
+A player's state kept for later — in memory while a menu is open, or stored so it survives a restart:
+
+```java
+PluginSnapshots snapshots = Snapshots.of(this);
+
+Snapshot held = snapshots.capture(player);            // in memory, right now
+snapshots.saveAndClear(player, "event:lms1");         // stored, and the player emptied
+snapshots.restore(player, "event:lms1");              // given back
+```
+
+`capture` is the in-memory one for a menu that will hand the state back in a moment. `save` writes it
+under a context id so it survives a restart, and `saveAndClear` does both halves of "put this away and
+give them the kit" in one call.
+
+It is what gives a player their survival inventory back after an event, and what lets a kit editor hand
+back what somebody was carrying when they opened it.
+
+## Clans
+
+One API over eight clan plugins, detected automatically at startup:
+
+```java
+if (Clans.isSupported()) {
+    Optional<String> tag = Clans.clanTag(player.getUniqueId());
+    Optional<Clan> clan  = Clans.clanOf(player.getUniqueId());
+}
+```
+
+Detection order — the first one present and reachable wins:
+
+1. FactionsUUID / Factions
+2. HuskTowns
+3. ZelTeams
+4. RunithClans
+5. UltimateClans
+6. Kingdoms / KingdomsX
+7. SimpleClans
+8. ExyliaClans
+
+Every provider reaches its plugin by reflection, so one that is installed but whose API cannot be
+reached is skipped with a warning rather than taking the slot silently. A plugin not on the list
+registers a `ClanBridge`, and a registered bridge beats automatic detection.
+
+Alliances and rivalries are part of the API, and providers that have no concept of them answer empty
+rather than guessing.
+
+## Combat
+
+Whether a player is fighting, over DeluxeCombat, PvPManager or a bridge you write:
+
+```java
+if (Combat.isTagged(player)) {
+    return;
+}
+```
+
+The point is the same as clans: your plugin asks one question and does not care which plugin answers.
+
+## Heads
+
+```java
+Skulls.player("Notch").build();
+Skulls.texture(base64).build();
+Skulls.url(url).build();
+```
+
+Cached, shared across plugins, and **never blocking**: a head that has not been fetched yet comes back
+plain and is replaced when it arrives. That is why a menu full of player heads opens instantly instead
+of freezing the server on a Mojang lookup.

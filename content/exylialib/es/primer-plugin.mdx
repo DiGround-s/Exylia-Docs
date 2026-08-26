@@ -1,0 +1,152 @@
+---
+title: "Un primer plugin"
+description: "Config, un comando, un menú y una tabla — de principio a fin, un archivo cada uno."
+badge: "guía"
+---
+
+Todo lo de abajo es API real. Es el camino más corto desde un plugin vacío hasta uno que guarda algo,
+muestra un menú y se puede recargar.
+
+## La configuración
+
+Un archivo YAML es un record de Java. El record es la fuente de verdad; el archivo se genera a partir
+de él.
+
+```java title="Settings.java"
+public record Settings(
+        @Comment("Cuántos kits puede tener un jugador.")
+        @Key("max-kits")
+        int maxKits,
+
+        @Comment("Se muestra encima de la lista de kits.")
+        String header) {
+
+    /** Los valores por defecto con los que se genera el archivo. */
+    public Settings() {
+        this(3, "{primary}&lTUS KITS");
+    }
+}
+```
+
+```java
+settings = Configs.define(this, "config", Settings.class).load();
+int max = settings.get().maxKits();
+```
+
+`get()` es un acceso a campo, nunca un reparseo, así que leer un valor dentro de un bucle no cuesta
+nada.
+
+## La tabla
+
+Otro record, anotado con dónde vive:
+
+```java title="Kit.java"
+@Table("my_kits")
+public record Kit(
+        @Id(length = 64) String id,
+        @Column(length = 36) String owner,
+        @Column(length = 128) String name,
+        @Column(length = Column.UNBOUNDED) ItemStack[] contents) {
+}
+```
+
+```java
+Repository<Kit> kits = Databases.of(this).repository(Kit.class);
+
+kits.find(id).thenAccept(found ->
+        tasks.runAtEntity(player, () -> found.ifPresent(kit -> give(player, kit))));
+```
+
+Cada llamada devuelve un `CompletableFuture` y ninguna bloquea. Volver a Bukkit significa volver por el
+scheduler — `runAtEntity` sobre el jugador, que en Folia es el hilo de su región.
+
+## El menú
+
+El menú es un archivo, no código:
+
+```yaml title="menus/kits.yml"
+title: '{primary}&lKITS {muted}%current_page%/%total_pages%'
+size: 54
+animation: center_out
+
+pagination:
+  slots: '10-16,19-25,28-34'
+  item_template:
+    material: "%kit_icon%"
+    name: "{warning}&l%kit_name%"
+    lore:
+      - "{muted}Clic para equipar"
+    actions:
+      - "myplugin:equip %kit_id%"
+  navigation:
+    previous: { slot: 45, material: ARROW, name: "{muted}Atrás" }
+    next:     { slot: 53, material: ARROW, name: "{muted}Siguiente" }
+
+filler:
+  global:
+    material: BLACK_STAINED_GLASS_PANE
+    hide_tooltip: true
+```
+
+Se carga una vez y se abre barato:
+
+```java
+menus.load("kits", YamlConfiguration.loadConfiguration(
+        new File(getDataFolder(), "menus/kits.yml")));
+
+menus.open(player, "kits");
+```
+
+Llenar la lista es donde tus datos se encuentran con la plantilla:
+
+```java
+UiSession session = menus.openNow(player, menus.definition("kits").orElseThrow(), Map.of());
+
+session.entries(owned.stream()
+        .map(kit -> UiEntry.of(kit)
+                .with("kit_name", kit.name())
+                .with("kit_icon", kit.icon())
+                .with("kit_id", kit.id())
+                .build())
+        .toList());
+```
+
+## La acción detrás del botón
+
+`myplugin:equip %kit_id%` es una acción. Regístrala una vez y cualquier menú, item o frontera de
+evento puede llamarla:
+
+```java
+Actions.of(this).registerSync("equip", (context, args) -> {
+    Player player = context.player();
+    Kit kit = (Kit) context.require(UiKeys.ENTRY);   // la fila que se pulsó
+    give(player, kit);
+    return ActionResult.success();
+});
+```
+
+La fila la lleva el clic, así que nada tiene que deducir qué kit se dibujó dónde. Ver
+[Acciones](/docs/exylialib/acciones).
+
+## Recargar
+
+Declara los pasos una vez y `/myplugin reload` pasa a ser una llamada que dice qué paso falló en vez
+de morirse a medias:
+
+```java
+Reloads.of(this)
+        .step("configs", () -> { settings.reload(); menus.reload(); })
+        .step("kits", () -> kitManager.load());
+
+// Y cuando cambien los colores de la propia librería:
+Reloads.onLibraryReload(this, () -> menus.reload());
+```
+
+## Lo que no tuviste que escribir
+
+Ningún listener de inventario, ningún mapa por UUID, ningún parseo de YAML, ningún malabar de hilos
+alrededor de la base de datos, ningún equipo de scoreboard para un nametag, y ninguna rama para Folia
+en ninguna parte.
+
+Siguiente: [Configuración](/docs/exylialib/configuracion) para el formato del archivo, o
+[Menús](/docs/exylialib/menus) para todo lo que puede decir un menú.

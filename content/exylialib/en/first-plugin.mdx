@@ -1,0 +1,150 @@
+---
+title: "A first plugin"
+description: "Config, a command, a menu and a database table — end to end, in one file each."
+badge: "guide"
+---
+
+Everything below is real API. It is the shortest path from an empty plugin to one that stores
+something, shows a menu and can be reloaded.
+
+## The configuration
+
+A YAML file is a Java record. The record is the source of truth; the file is generated from it.
+
+```java title="Settings.java"
+public record Settings(
+        @Comment("How many kits a player may own.")
+        @Key("max-kits")
+        int maxKits,
+
+        @Comment("Shown above the kit list.")
+        String header) {
+
+    /** The defaults the file is generated from. */
+    public Settings() {
+        this(3, "{primary}&lYOUR KITS");
+    }
+}
+```
+
+```java
+settings = Configs.define(this, "config", Settings.class).load();
+int max = settings.get().maxKits();
+```
+
+`get()` is a field access, never a re-parse, so reading a value inside a loop costs nothing.
+
+## The table
+
+A record again, annotated with where it lives:
+
+```java title="Kit.java"
+@Table("my_kits")
+public record Kit(
+        @Id(length = 64) String id,
+        @Column(length = 36) String owner,
+        @Column(length = 128) String name,
+        @Column(length = Column.UNBOUNDED) ItemStack[] contents) {
+}
+```
+
+```java
+Repository<Kit> kits = Databases.of(this).repository(Kit.class);
+
+kits.find(id).thenAccept(found ->
+        tasks.runAtEntity(player, () -> found.ifPresent(kit -> give(player, kit))));
+```
+
+Every call returns a `CompletableFuture` and none of them blocks. Coming back to Bukkit means coming
+back through the scheduler — `runAtEntity` on the player, which on Folia is that player's region
+thread.
+
+## The menu
+
+The menu is a file, not code:
+
+```yaml title="menus/kits.yml"
+title: '{primary}&lKITS {muted}%current_page%/%total_pages%'
+size: 54
+animation: center_out
+
+pagination:
+  slots: '10-16,19-25,28-34'
+  item_template:
+    material: "%kit_icon%"
+    name: "{warning}&l%kit_name%"
+    lore:
+      - "{muted}Click to equip"
+    actions:
+      - "myplugin:equip %kit_id%"
+  navigation:
+    previous: { slot: 45, material: ARROW, name: "{muted}Back" }
+    next:     { slot: 53, material: ARROW, name: "{muted}Next" }
+
+filler:
+  global:
+    material: BLACK_STAINED_GLASS_PANE
+    hide_tooltip: true
+```
+
+Loaded once, opened cheaply:
+
+```java
+menus.load("kits", YamlConfiguration.loadConfiguration(
+        new File(getDataFolder(), "menus/kits.yml")));
+
+menus.open(player, "kits");
+```
+
+Filling the list is where your data meets the template:
+
+```java
+UiSession session = menus.openNow(player, menus.definition("kits").orElseThrow(), Map.of());
+
+session.entries(owned.stream()
+        .map(kit -> UiEntry.of(kit)
+                .with("kit_name", kit.name())
+                .with("kit_icon", kit.icon())
+                .with("kit_id", kit.id())
+                .build())
+        .toList());
+```
+
+## The action behind the button
+
+`myplugin:equip %kit_id%` is an action. Register it once and every menu, item and event boundary can
+call it:
+
+```java
+Actions.of(this).registerSync("equip", (context, args) -> {
+    Player player = context.player();
+    Kit kit = (Kit) context.require(UiKeys.ENTRY);   // the row that was clicked
+    give(player, kit);
+    return ActionResult.success();
+});
+```
+
+The row is carried by the click, so nothing has to work out which kit was drawn where. See
+[Actions](/docs/exylialib/actions).
+
+## Reloading
+
+Declare the steps once and `/myplugin reload` becomes one call that reports which step failed rather
+than dying halfway:
+
+```java
+Reloads.of(this)
+        .step("configs", () -> { settings.reload(); menus.reload(); })
+        .step("kits", () -> kitManager.load());
+
+// And when the library's own colours change:
+Reloads.onLibraryReload(this, () -> menus.reload());
+```
+
+## What you did not have to write
+
+No inventory listener, no per-player map keyed by UUID, no YAML parsing, no thread juggling around
+the database, no scoreboard team for a nametag, and no Folia branch anywhere.
+
+Next: [Configuration](/docs/exylialib/configuration) for the file format, or
+[Menus](/docs/exylialib/menus) for everything a menu file can say.

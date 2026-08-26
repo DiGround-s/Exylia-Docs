@@ -1,0 +1,89 @@
+---
+title: "Preguntas frecuentes"
+description: "Lo que más se pregunta, respondido desde el código."
+---
+
+## El plugin no arranca
+
+Busca `ExyliaLib`, `FastAsyncWorldEdit` o `packetevents` en la consola. Los tres son obligatorios.
+
+## El evento no arranca
+
+La pantalla de setup lista lo que falta. Una configuración necesita spawn de lobby, spawn de
+espectadores, al menos un punto de spawn y límites completos — y estar activada.
+
+Si todo eso está, mira los límites: `max-events-total`, `max-events-waiting` y
+`max-events-per-player` de `config.yml` pueden rechazar un inicio, igual que un cooldown.
+
+## Pillars of Fortune dice que faltan puntos de spawn
+
+Da a cada jugador su propio pilar, así que necesita tantos puntos de spawn como `max-players`. Baja el
+máximo o añade puntos; el mensaje dice cuántos tienes y cuántos hacen falta.
+
+## La arena no se restaura entre partidas
+
+Guarda la esquemática desde la pantalla de setup. Restaurar pega `event_bounds_<id>` sobre los
+límites, y sin ese archivo no hay nada que pegar.
+
+## Brackets o Build Battle solo corren una partida
+
+Los dos clonan la arena en el mundo automático, y clonar también necesita la esquemática. Mira la
+consola al arrancar: si el mundo automático falló al inicializarse lo dice, y el evento recurre a los
+spawns de la propia configuración.
+
+## Spleef o TNT Run no hace nada al romper un bloque
+
+Esos tipos buscan materiales concretos. Spleef rompe `SNOW_BLOCK`; TNT Run quita un bloque del suelo
+solo si tiene `TNT` justo debajo. La lista completa está en
+[Arenas](/docs/exyliaevents/arenas#materiales-que-espera-cada-tipo).
+
+## Los jugadores no quedan eliminados al caer
+
+Casi todos los juegos de caída eliminan al tocar `WATER`, no al caer al vacío. Pon agua bajo la arena.
+
+## Un jugador no puede entrar y dice que está ocupado
+
+Los eventos comparten un registro de reservas con el resto de plugins de Exylia. Un jugador en una
+arena de FFA, en una cola de práctica o en la sandbox está retenido por ese plugin y no puede entrar a
+un evento hasta que salga.
+
+## Solo algunos jugadores pueden entrar a mi evento
+
+Probablemente la lista de inscripción de esa configuración está abierta.
+`/eventsadmin inscriptions close <id>` la levanta. Ver
+[Inscripciones](/docs/exyliaevents/inscripciones).
+
+## Los jugadores de un mundo no pueden entrar
+
+Es `world-restrictions` de `config.yml`. `BLACKLIST` rechaza los mundos de la lista, `WHITELIST` solo
+permite esos, y `exyliaevents.world.bypass` ignora la regla.
+
+## Se bloquean comandos dentro de un evento
+
+Es `command-whitelist`, activa por defecto. Añade lo que necesites a la lista, o concede
+`exyliaevents.bypass.blocked-commands` al staff.
+
+## No se entregaron las recompensas
+
+Dos causas. `reward-commands.only-on-random-events` en `true` hace que los comandos globales solo
+corran en eventos lanzados automáticamente. Y a quien estuviera desconectado al terminar se le encolan
+las recompensas — le llegan en su siguiente conexión.
+
+## ¿Hace falta TAB?
+
+No. Los sidebars funcionan sin él. TAB solo se encarga de restaurar el scoreboard y el nametag
+normales del jugador al salir de un evento.
+
+## ¿Pueden correr varios eventos a la vez?
+
+Sí, sujeto a `max-events-total`. Los jugadores de un evento se ocultan a los de otro, así que dos
+arenas cercanas no se muestran las partidas entre sí.
+
+## ¿Funciona en Folia?
+
+Sí. En Folia el mundo automático se crea con el plugin Worlds, porque la creación de mundos de Bukkit
+no está disponible ahí.
+
+## ¿Dónde pido soporte?
+
+En el [Discord de Exylia](https://discord.exylia.net). Las licencias también se gestionan ahí.

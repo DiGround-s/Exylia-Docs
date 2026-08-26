@@ -1,0 +1,124 @@
+---
+title: "API"
+description: "Las tres fachadas públicas para integrar ExyliaFFA desde otro plugin."
+badge: "dev"
+---
+
+La API es estática y está pensada para llamarse por reflexión desde otro classloader, que es
+exactamente como la usan ExyliaPracticeCore, ExyliaEvents y ExyliaSandBox.
+
+Paquete: `net.exylia.exyliaFFA.api`.
+
+## FFAAPI
+
+Todo lo relacionado con sesiones, kits y menús.
+
+```java
+import net.exylia.exyliaFFA.api.FFAAPI;
+
+// Menús
+FFAAPI.openSelector(player);
+
+// Entrar
+FFAAPI.joinFFA(player, "nodebuff");
+FFAAPI.joinFFAWithSpawn(player, "nodebuff", spawnId);
+FFAAPI.joinFFAWithKit(player, "nodebuff", spawnId, kitId);
+
+// Reaparecer
+FFAAPI.respawnFFA(player);
+FFAAPI.respawnFFAWithSpawn(player, "nodebuff", spawnId);
+FFAAPI.respawnFFAWithKit(player, "nodebuff", spawnId, kitId);
+
+// Salir y espectar
+FFAAPI.leaveFFA(player);
+FFAAPI.spectateFFA(player, "nodebuff");
+FFAAPI.kickFFA(staff, target);
+
+// Invitaciones
+FFAAPI.inviteFFA(inviter, target);
+FFAAPI.acceptInvite(player, "DiGround");
+FFAAPI.declineInvite(player, "DiGround");
+
+// Kits
+FFAAPI.editKit(player);
+FFAAPI.saveKit(player);
+FFAAPI.cancelKit(player);
+FFAAPI.resetKit(player, kitId);
+
+// Estado
+boolean inFfa      = FFAAPI.isInFFA(player);
+boolean editing    = FFAAPI.isEditing(player);
+boolean available  = FFAAPI.isAvailable(player);
+String  reason     = FFAAPI.getUnavailableReason(player);
+int     streak     = FFAAPI.getCurrentStreak(player);
+
+Optional<FFASession> session = FFAAPI.getPlayerSession(player);
+```
+
+Los tres escalones de entrada existen porque el flujo real tiene tres pasos: `joinFFA` abre el
+selector de spawn si hace falta, ese selector llama a `joinFFAWithSpawn`, y si además hay que elegir
+kit, se llega a `joinFFAWithKit`. Si tu integración ya sabe spawn y kit, llama directamente al
+tercero y no se abre ningún menú.
+
+<Callout type="note" title="isAvailable y getUnavailableReason">
+Van en pareja. `isAvailable` responde si el jugador puede entrar a un FFA ahora mismo — no está en
+cola de práctica, ni en un evento, ni en la sandbox —, y `getUnavailableReason` explica por qué no.
+Consulta la primera antes de invitar o teletransportar.
+</Callout>
+
+## StatsAPI
+
+```java
+import net.exylia.exyliaFFA.api.StatsAPI;
+import net.exylia.exyliaFFA.stats.model.StatsType;
+
+Optional<PlayerStatsEntity> stats = StatsAPI.getStats(player, "nodebuff");
+
+CompletableFuture<List<PlayerStatsEntity>> top =
+        StatsAPI.getLeaderboard("nodebuff", StatsType.KILLS);
+
+StatsAPI.resetPlayerStats(player, "nodebuff");
+StatsAPI.resetPlayerStats(uuid, "nodebuff");
+StatsAPI.resetArenaStats("nodebuff");
+```
+
+`getLeaderboard` devuelve un `CompletableFuture` porque consulta la base de datos: encadena con
+`thenAccept` y vuelve al hilo principal antes de tocar la API de Bukkit.
+
+## PlayerSettingsAPI
+
+```java
+import net.exylia.exyliaFFA.api.PlayerSettingsAPI;
+import net.exylia.exyliaFFA.settings.model.PlayerSetting;
+
+boolean on = PlayerSettingsAPI.isEnabled(player, PlayerSetting.SCOREBOARD);
+boolean onOffline = PlayerSettingsAPI.isEnabled(uuid, PlayerSetting.GLOW_LINKED_PLAYER);
+
+boolean nuevo = PlayerSettingsAPI.toggle(player, PlayerSetting.COMBAT_ACTION_BAR);
+
+PlayerSettingsAPI.openSettings(player);
+```
+
+Constantes de `PlayerSetting`: `SCOREBOARD`, `SPAWN_WAYPOINTS`, `COMBAT_ACTION_BAR`,
+`LINKED_ACTION_BAR`, `COMBAT_MESSAGES`, `KILL_STREAK_NOTIFICATIONS`, `KILL_STREAK_BROADCASTS`,
+`KILL_DEATH_BROADCASTS`, `GLOW_LINKED_PLAYER`, `SPECTATOR_ACTIONBAR_HINT`.
+
+## Declarar la dependencia
+
+```yaml title="plugin.yml"
+softdepend:
+  - ExyliaFFA
+```
+
+Con `softdepend`, tu plugin carga aunque ExyliaFFA no esté; comprueba la presencia antes de llamar:
+
+```java
+if (Bukkit.getPluginManager().isPluginEnabled("ExyliaFFA")) {
+    FFAAPI.openSelector(player);
+}
+```
+
+<Callout type="warning" title="Hilo principal">
+Salvo `getLeaderboard`, todos los métodos esperan ejecutarse en el hilo del jugador. En Folia, eso
+significa el hilo de la región donde está el jugador.
+</Callout>

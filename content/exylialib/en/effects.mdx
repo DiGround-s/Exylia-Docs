@@ -1,0 +1,126 @@
+---
+title: "Effects and sequences"
+description: "Titles, action bars, boss bars, sounds, particles and fireworks — declared by the owner, played by the plugin."
+---
+
+The plugin says *what happened*. The server owner decides what that looks like.
+
+```java
+Effects.play(config.onWin(), player);
+```
+
+## EffectConfig
+
+Six optional sections that nest inside your own config record like any other. An unwritten section
+does nothing.
+
+| Section | Fields |
+|---|---|
+| `title` | `text`, `subtitle`, `fadeIn`, `stay`, `fadeOut`, `countdown`, `timeStyle` |
+| `action-bar` | `text`, `duration`, `countdown`, `timeStyle` |
+| `boss-bar` | `text`, `colour`, `overlay`, `countdown`, `countUp`, `progress`, `timeStyle` |
+| `sound` | `name`, `volume`, `pitch`, `category` |
+| `particle` | `name`, `count`, `spread`, `speed` |
+| `firework` | `colours`, `fades`, `shape`, `flicker`, `trail` |
+
+```yaml
+combat-actionbar:
+  action-bar:
+    text: "{primary}⚔ {error}Combat {muted}%time%s"
+    duration: 0
+    countdown: 0
+    time-style: tenths
+```
+
+Times are **seconds with decimals** — `countdown: 3.3` is 3.3 real seconds. `%time%` belongs to the
+effect, never to the global placeholder registry: two countdowns on screen must not show the same
+number. `time-style` is a `TimeFormats` style name — `auto`, `tenths`, `clock`.
+
+<Callout type="warning" title="A duration of zero means stay">
+It does not mean expire immediately. A bar whose countdown is driven by the plugin — a combat tag
+writing its own remaining time — wants `duration: 0` so it lives until something stops it.
+</Callout>
+
+## A whole effect on one line
+
+Kit and class files often carry a sound or a particle in a single field, so callers do not have to
+split it themselves:
+
+```java
+Effects.soundFrom("BLOCK_ANVIL_PLACE|1|1").show(player);
+Effects.particleFrom("CLOUD|80|1.5|1.5|1.5|1.5").at(location).show(player);
+Effects.particleFrom("FLAME|20|0.5").at(location).show(player);   // one spread value
+```
+
+`NAME|volume|pitch` for sounds, `NAME|count|dx|dy|dz|speed` for particles, and a shorter
+`NAME|count|spread|speed` is accepted too. Pipe is the only separator — a namespaced key like
+`minecraft:flame` carries a colon that has to survive the split. Missing parts fall back to full
+volume and pitch, count 1, no spread.
+
+## Builders
+
+```java
+Effects.title("{success}&lWIN").subtitle("{muted}%player%").show(player);
+Effects.bossBar("{primary}Starting in {highlight}%time%").countdown(10).showAll();
+Effects.firework().shape("BALL_LARGE").colours("#8a51c4").at(location).show();
+```
+
+## Timers
+
+`Timer` is the clock behind a timed effect — a value, not a task.
+
+| Factory | What it is |
+|---|---|
+| `Timer.countdown(seconds)` | Runs to zero. |
+| `Timer.countUp()` / `countUp(total)` | Elapsed-time displays. |
+| `Timer.ofCooldown(player, key)` | Reads a running cooldown instead of counting on its own. |
+
+`ofCooldown` is the one worth knowing: the cooldown stays the truth — shared and persistent — and the
+display just looks at it, finishing the moment the cooldown does. `advance` and `extend` do nothing on
+such a timer; give the time through `Cooldowns` and the bar shows it.
+
+`Ticks` converts: `fromSeconds`, `toSeconds`, `fromMillis`, `toMillis`, and `parse(text, fallback)`
+understanding `s`, `ms`, `t`, `m` and `h` suffixes.
+
+## Playing and stopping
+
+| Call | What it does |
+|---|---|
+| `Effects.play(config, viewer)` | Play it for one player, returning a `Display`. |
+| `Effects.playAll(config)` | Every online viewer. |
+| `Effects.stopFor(viewer)` | Stop whatever this plugin is showing them. |
+| `Effects.stopAll(pluginName)` | Stop everything a plugin owns. |
+
+A `Display` is the handle: `text(...)` rewrites what a bar says without restarting it, and `stop()`
+takes it down.
+
+## Sequences
+
+A sequence is choreography written in configuration — shapes, sounds and delays, compiled once:
+
+```java
+PluginSequences sequences = Sequences.of(this);
+Sequence intro = sequences.compile(config.onCapture());
+
+sequences.play(intro, SequenceTarget.at(location));
+sequences.play(intro, SequenceTarget.of(player));
+```
+
+A sequence is compiled from the lines a config holds and played against a location or a player.
+`sequences.shape(name, shape)` adds a shape of your own to the ones it already knows.
+
+Entries carry odds, conditions and an audience, so "one in five times, only if the player is
+crouching, seen by everyone within twenty blocks" is configuration rather than code. They are edited
+in-game with `Sequences.of(plugin).editor(effects)` — see
+[Input, editors and wizards](/docs/exylialib/input-and-editors#editing-a-list-of-things).
+
+## Previews
+
+Showing one player an effect against an empty sky and putting them back afterwards:
+
+```java
+Previews.of(this).show(player, sequence);
+```
+
+It is what an editor uses so somebody choosing a kill effect can see it before saving, without firing
+it into a live arena.

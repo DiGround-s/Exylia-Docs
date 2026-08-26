@@ -1,0 +1,124 @@
+---
+title: "API"
+description: "The three public facades for integrating ExyliaFFA from another plugin."
+badge: "dev"
+---
+
+The API is static, and deliberately so: it is meant to be called reflectively from another
+classloader, which is exactly how ExyliaPracticeCore, ExyliaEvents and ExyliaSandBox use it.
+
+Package: `net.exylia.exyliaFFA.api`.
+
+## FFAAPI
+
+Everything to do with sessions, kits and menus.
+
+```java
+import net.exylia.exyliaFFA.api.FFAAPI;
+
+// Menus
+FFAAPI.openSelector(player);
+
+// Joining
+FFAAPI.joinFFA(player, "nodebuff");
+FFAAPI.joinFFAWithSpawn(player, "nodebuff", spawnId);
+FFAAPI.joinFFAWithKit(player, "nodebuff", spawnId, kitId);
+
+// Respawning
+FFAAPI.respawnFFA(player);
+FFAAPI.respawnFFAWithSpawn(player, "nodebuff", spawnId);
+FFAAPI.respawnFFAWithKit(player, "nodebuff", spawnId, kitId);
+
+// Leaving and spectating
+FFAAPI.leaveFFA(player);
+FFAAPI.spectateFFA(player, "nodebuff");
+FFAAPI.kickFFA(staff, target);
+
+// Invitations
+FFAAPI.inviteFFA(inviter, target);
+FFAAPI.acceptInvite(player, "DiGround");
+FFAAPI.declineInvite(player, "DiGround");
+
+// Kits
+FFAAPI.editKit(player);
+FFAAPI.saveKit(player);
+FFAAPI.cancelKit(player);
+FFAAPI.resetKit(player, kitId);
+
+// State
+boolean inFfa      = FFAAPI.isInFFA(player);
+boolean editing    = FFAAPI.isEditing(player);
+boolean available  = FFAAPI.isAvailable(player);
+String  reason     = FFAAPI.getUnavailableReason(player);
+int     streak     = FFAAPI.getCurrentStreak(player);
+
+Optional<FFASession> session = FFAAPI.getPlayerSession(player);
+```
+
+The three join steps exist because the real flow has three: `joinFFA` opens the spawn selector when
+needed, that selector calls `joinFFAWithSpawn`, and if a kit still has to be chosen it reaches
+`joinFFAWithKit`. If your integration already knows the spawn and the kit, call the third directly
+and no menu opens.
+
+<Callout type="note" title="isAvailable and getUnavailableReason">
+They come as a pair. `isAvailable` answers whether the player can join an FFA right now — not queued
+for practice, not inside an event, not in the sandbox — and `getUnavailableReason` explains why not.
+Check the first before inviting or teleporting.
+</Callout>
+
+## StatsAPI
+
+```java
+import net.exylia.exyliaFFA.api.StatsAPI;
+import net.exylia.exyliaFFA.stats.model.StatsType;
+
+Optional<PlayerStatsEntity> stats = StatsAPI.getStats(player, "nodebuff");
+
+CompletableFuture<List<PlayerStatsEntity>> top =
+        StatsAPI.getLeaderboard("nodebuff", StatsType.KILLS);
+
+StatsAPI.resetPlayerStats(player, "nodebuff");
+StatsAPI.resetPlayerStats(uuid, "nodebuff");
+StatsAPI.resetArenaStats("nodebuff");
+```
+
+`getLeaderboard` returns a `CompletableFuture` because it queries the database: chain with
+`thenAccept` and come back to the main thread before touching the Bukkit API.
+
+## PlayerSettingsAPI
+
+```java
+import net.exylia.exyliaFFA.api.PlayerSettingsAPI;
+import net.exylia.exyliaFFA.settings.model.PlayerSetting;
+
+boolean on = PlayerSettingsAPI.isEnabled(player, PlayerSetting.SCOREBOARD);
+boolean offline = PlayerSettingsAPI.isEnabled(uuid, PlayerSetting.GLOW_LINKED_PLAYER);
+
+boolean now = PlayerSettingsAPI.toggle(player, PlayerSetting.COMBAT_ACTION_BAR);
+
+PlayerSettingsAPI.openSettings(player);
+```
+
+`PlayerSetting` constants: `SCOREBOARD`, `SPAWN_WAYPOINTS`, `COMBAT_ACTION_BAR`, `LINKED_ACTION_BAR`,
+`COMBAT_MESSAGES`, `KILL_STREAK_NOTIFICATIONS`, `KILL_STREAK_BROADCASTS`, `KILL_DEATH_BROADCASTS`,
+`GLOW_LINKED_PLAYER`, `SPECTATOR_ACTIONBAR_HINT`.
+
+## Declaring the dependency
+
+```yaml title="plugin.yml"
+softdepend:
+  - ExyliaFFA
+```
+
+With `softdepend`, your plugin loads even without ExyliaFFA; check before calling:
+
+```java
+if (Bukkit.getPluginManager().isPluginEnabled("ExyliaFFA")) {
+    FFAAPI.openSelector(player);
+}
+```
+
+<Callout type="warning" title="Main thread">
+Apart from `getLeaderboard`, every method expects to run on the player's thread. On Folia that means
+the thread of the region the player is in.
+</Callout>

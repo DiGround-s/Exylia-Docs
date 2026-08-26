@@ -1,0 +1,57 @@
+---
+title: "Commands and permissions"
+description: "Every command, its aliases, and the single permission node the plugin declares."
+---
+
+## Player
+
+| Command | Aliases | What it does |
+|---|---|---|
+| `/capture` | `/cap` | Opens the event list: what is running, what is scheduled. |
+| `/capture top` | `leaderboard`, `lb` | Opens the player leaderboard. |
+| `/capture clantop` | `clanlb` | Opens the clan leaderboard. |
+
+None of these declares a permission, so every player can use them by default.
+
+## Administration
+
+| Command | Aliases | What it does |
+|---|---|---|
+| `/captureadmin` | `/cadmin` | Opens the admin panel. |
+| `/captureadmin start <configId>` | | Starts a configured event now. |
+| `/captureadmin stop <eventId>` | | Stops a running event. |
+| `/captureadmin list` | | Lists what is running. |
+| `/captureadmin reload` | | Reloads the configuration files, the events and the menus. |
+
+Both arguments autocomplete: `start` suggests configured event ids, `stop` suggests the ids of events
+currently running.
+
+## Permissions
+
+| Node | Grants |
+|---|---|
+| `exyliacapture.admin` | The whole `/captureadmin` command: the panel, start, stop, list and reload. |
+
+That is the only node the plugin declares. There is no per-event permission and no permission on the
+player commands.
+
+<Callout type="warning" title="One node covers everything">
+`exyliacapture.admin` includes creating, editing and deleting event configurations, not only starting
+and stopping them. Give it to administration, not to moderation.
+</Callout>
+
+<Callout type="tip" title="Restricting the player commands">
+If you need `/capture` gated, most permission plugins can deny a command node directly — the plugin
+itself has nothing to configure for it.
+</Callout>
+
+## What reload covers
+
+`/captureadmin reload` re-reads `config.yml`, `messages.yml` and `scoreboards.yml`, reloads the event
+configurations and menus, re-registers the per-event placeholders and restarts the scheduler with the
+current entries. The prefix is set again too, so an edited prefix applies without a restart.
+
+Each step reports for itself: a step that fails is named in the console and the sender is told how
+many succeeded.
+
+It does **not** reopen the database connection. Changing `database.yml` needs a server restart.

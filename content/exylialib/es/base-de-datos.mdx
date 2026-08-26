@@ -1,0 +1,147 @@
+---
+title: "Base de datos"
+description: "Records guardados en H2, MySQL, MariaDB, PostgreSQL o MongoDB — un pool, sin reflexión por fila, sin bloquear."
+---
+
+Una tabla es un record. No hay DAO, ni SQL en tu plugin, ni configuración de ORM.
+
+```java
+@Table("player_stats")
+public record PlayerStats(
+        @Id(length = 36) String uuid,
+        @Column int kills,
+        @Column int deaths,
+        @Column("created_at") long createdAt) {
+}
+```
+
+```java
+Repository<PlayerStats> stats = Databases.of(this).repository(PlayerStats.class);
+```
+
+La tabla se crea al primer uso, y un componente nuevo se convierte en una columna nueva.
+
+## Anotaciones
+
+| Anotación | Qué hace |
+|---|---|
+| `@Table("nombre")` | La tabla en la que vive este record. |
+| `@Id(length = …)` | La clave primaria. |
+| `@Column` | Un componente guardado. `@Column("otro_nombre")` cuando el nombre de columna difiere. |
+| `@Column(length = Column.UNBOUNDED)` | Texto sin límite — `TEXT` en H2, `LONGTEXT` en MySQL. |
+| `@Indexed` / `@Index(…)` | Índices, incluidos compuestos y descendentes. |
+
+## Leer y escribir
+
+Todo devuelve un `CompletableFuture` y nada bloquea el servidor:
+
+```java
+stats.find(uuid);                    // Optional<PlayerStats>
+stats.findAll();
+stats.exists(uuid);
+stats.count();
+
+stats.save(record);                  // insert o update
+stats.saveAll(records);
+stats.update(record);
+stats.insert(record);                // claves generadas
+stats.insertReturning(record);
+stats.delete(uuid);
+```
+
+### Consultas
+
+```java
+stats.where("arenaId", "nodebuff")
+     .orderByDescending("kills")
+     .limit(10)
+     .find();
+```
+
+| Llamada | Qué hace |
+|---|---|
+| `where(columna, valor)` | Filtrar. Encadenable. |
+| `orderBy` / `orderByDescending` | Ordenar. |
+| `limit(filas)` / `skip(filas)` | Paginar. |
+| `find()` / `findFirst()` | Ejecutarla. |
+| `count()` / `delete()` | Contar o borrar lo que coincida. |
+
+La ordenación ocurre en la base de datos, y por eso un leaderboard guarda sus valores derivados en vez
+de calcularlos al leer: una base de datos no puede ordenar por algo que solo Java sabe deducir.
+
+## Motores
+
+Cada plugin recibe su `plugins/<Plugin>/database.yml`:
+
+```yaml
+database:
+  type: h2
+  settings:
+    max-pool-size: 0
+  h2:
+    file: database/h2
+    auto-server: false
+  mysql:
+    host: localhost
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+`h2`, `mysql`, `mariadb`, `postgresql`, `mongodb`. Solo se lee el bloque que coincide con `type`; un
+valor no reconocido cae a `h2` y lo dice.
+
+El `auto-server` de H2 conviene conocerlo: un archivo de H2 pertenece a una JVM, y el segundo proceso
+que lo abre recibe *"The file is locked"*. Activarlo hace que el primer servidor sirva el archivo a los
+demás por TCP — que es lo que permite compartirlo entre dos plugins de una máquina, o un servidor más
+un visor de base de datos. Para cualquier cosa que no esté en una máquina, monta una base de datos de
+verdad.
+
+<Callout type="tip" title="Deja max-pool-size en 0">
+Cero deja decidir al motor, que es lo correcto casi siempre: una base de datos embebida quiere un
+puñado de conexiones y una en red se dimensiona por los núcleos de la máquina. Súbelo solo si la consola
+reporta timeouts de conexión — un pool más grande contra una base de datos que ya es el cuello de
+botella la hace más lenta.
+</Callout>
+
+Los plugins cuyos ajustes resueltos coinciden **comparten un pool**. Dos plugins apuntando al mismo
+MySQL abren un cliente, no dos.
+
+## Tipos que la librería no puede conocer
+
+Un componente cuyo tipo es tuyo necesita un codec, registrado **antes** del primer
+`repository(Tipo.class)` — un record se compila cuando se crea su repositorio y resuelve sus codecs en
+ese momento:
+
+```java
+public static void registerCodecs() {
+    Databases.codec(ArenaBounds.class, ArenaBounds.CODEC);
+    Databases.codec(ArenaRules.class, Codec.of(
+            rules -> GSON.toJson(rules),
+            stored -> GSON.fromJson(stored, ArenaRules.class)));
+}
+```
+
+`Location`, `ItemStack`, `ItemStack[]` y los enums ya se conocen.
+
+## Mover datos
+
+```text
+/exylialib export <plugin>
+/exylialib import <plugin> <archivo> [force]
+```
+
+La base de datos entera de un plugin a un archivo y de vuelta: de H2 a MySQL, o a otro servidor. Los
+plugins también pueden exponerlo ellos mismos — ExyliaEvents envuelve las mismas llamadas en
+`/eventsadmin export`.
+
+## Redis
+
+Opcional, y apagado por defecto. Configurado, hace que una base de datos se vea igual desde cada
+servidor: un cambio en uno es visible en los otros al momento, en vez de tras expirar una caché.
+
+<Callout type="warning" title="Hilos">
+Un future se completa en un hilo del pool. Todo lo que hagas con la respuesta que toque a un jugador o
+al mundo tiene que volver antes por [el scheduler](/docs/exylialib/tareas).
+</Callout>

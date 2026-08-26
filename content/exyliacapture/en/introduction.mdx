@@ -1,0 +1,83 @@
+---
+title: "Introduction"
+description: "What ExyliaCapture is, the seven event types it ships, and how the docs are organised."
+---
+
+ExyliaCapture is a zone-capture event plugin. It is not one configurable KOTH: it registers **seven
+event types**, each with its own logic, and a server can run as many configured events at once as it
+likes — of different types, at the same time.
+
+Everything is created from in-game menus: `/captureadmin` opens a panel where an event is created,
+given a zone with the shared selection wand, configured, given rewards and scheduled. No YAML is
+edited by hand, and the events themselves live in the database, not in a file.
+
+## The event types
+
+<Cards>
+  <Card title="KOTH" href="/docs/exyliacapture/event-types#koth">
+    Hold the zone until the capture timer runs out. Can end the event or reset and run forever.
+  </Card>
+  <Card title="KOTH Points" href="/docs/exyliacapture/event-types#koth-points">
+    Points every second while inside. Exclusive gives them to one holder; multi gives them to
+    everyone in the zone.
+  </Card>
+  <Card title="KOTH Capture Points" href="/docs/exyliacapture/event-types#koth-capture-points">
+    Each completed capture is worth one point and frees the zone again. First to the target wins.
+  </Card>
+  <Card title="Conquest" href="/docs/exyliacapture/event-types#conquest">
+    Several zones at once, each worth its own points, disputed by clans. Needs a clan plugin.
+  </Card>
+  <Card title="Payload" href="/docs/exyliacapture/event-types#payload">
+    Escort a minecart along a rail path. It advances, stalls when disputed and rolls back when left.
+  </Card>
+  <Card title="Destroy The Core" href="/docs/exyliacapture/event-types#destroy-the-core">
+    Break a core block for points. It regenerates on a timer and the race is to the target.
+  </Card>
+</Cards>
+
+Seven type identifiers, because KOTH Points registers twice: `koth`, `koth_points_exclusive`,
+`koth_points_multi`, `koth_capture_points`, `conquest`, `payload` and `dtc`.
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21 or newer. Folia supported. |
+| Java | 21 |
+| Required dependencies | `ExyliaLib`, `packetevents` |
+| Optional dependencies | `PlaceholderAPI`, `ViaVersion`, a clan plugin, Apollo or Feather |
+
+<Callout type="note" title="What ExyliaLib brings">
+Typed configuration with migrations, the database, the menus, the zone selection wand, holograms,
+boss bars, scoreboards, placeholders, rewards and the client integrations. Without it the plugin does
+not start.
+</Callout>
+
+## What is stored where
+
+| Thing | Where |
+|---|---|
+| Event configurations, zones, settings, rewards, schedules | Database (`capture_event_configs`) |
+| Player and clan statistics | Database, global and per event |
+| Rewards owed to an offline player | Database (`capture_pending_rewards`) |
+| Boss bars, holograms, particles, leaderboard look | `config.yml` |
+| Sidebars | `scoreboards.yml` |
+| Every message | `messages.yml` |
+| Menu layouts | `menus/` |
+
+## How to read this documentation
+
+<Steps>
+  <Step title="Getting started">
+    Installation and a first event running from the panel.
+  </Step>
+  <Step title="Configuring">
+    The seven types and their settings, zones, rewards and schedules.
+  </Step>
+  <Step title="Systems">
+    Clan support, statistics and everything drawn on screen.
+  </Step>
+  <Step title="Reference">
+    Commands, placeholders, configuration files, the API and the FAQ.
+  </Step>
+</Steps>

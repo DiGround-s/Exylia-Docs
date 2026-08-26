@@ -1,0 +1,73 @@
+---
+title: "First steps"
+description: "Create, configure and run your first event from the panel."
+badge: "guide"
+---
+
+Everything below happens in `/captureadmin`. Nothing needs a text editor.
+
+## Creating an event
+
+<Steps>
+  <Step title="Open the panel">
+    `/captureadmin` lists the configured events and lets you create one.
+  </Step>
+  <Step title="Pick a type">
+    The type selector shows the seven types with a short description of each. The type decides which
+    settings screen you get afterwards, and it is chosen once.
+  </Step>
+  <Step title="Give it an id">
+    The id is the key: it is what `/captureadmin start <id>` takes and what placeholders name.
+  </Step>
+  <Step title="Select the zone">
+    The setup screen hands you the selection wand: left click for one corner, right click for the
+    other. The zone is a cuboid. Payload asks for a start and an end point instead, and Destroy The
+    Core asks for a single block.
+  </Step>
+  <Step title="Tune the settings">
+    Each type has its own screen — capture time, target points, speeds, regeneration. The defaults
+    are listed in [Event types](/docs/exyliacapture/event-types).
+  </Step>
+  <Step title="Add rewards">
+    Winner, and first, second and third place, edited with the reward editor. See
+    [Rewards](/docs/exyliacapture/rewards).
+  </Step>
+  <Step title="Enable it">
+    An event that is not enabled cannot be started, by hand or by schedule.
+  </Step>
+  <Step title="Start it">
+    `/captureadmin start <id>`, or a schedule. `/captureadmin list` shows what is running and
+    `/captureadmin stop <id>` ends it.
+  </Step>
+</Steps>
+
+## What a running event needs
+
+| Type | Zone requirement |
+|---|---|
+| `koth`, `koth_points_exclusive`, `koth_points_multi`, `koth_capture_points` | One cuboid zone |
+| `conquest` | One or more zones, each with its own name, colour, points and capture time |
+| `payload` | A start location and an end location, joined by rails |
+| `dtc` | One block location |
+
+<Callout type="warning" title="Conquest needs a clan plugin">
+Conquest attributes captures by clan tag. With no clan provider detected, its zones never register a
+capturer. See [Clans](/docs/exyliacapture/clans).
+</Callout>
+
+## Who counts as playing
+
+Being inside the zone is geometry; counting is not. A player is ignored while they are **dead**, in
+**creative** or in **spectator** mode. Switching gamemode inside a zone is re-evaluated immediately,
+not on the next sweep.
+
+## A sensible first event
+
+A plain `koth` is the shortest path to something working:
+
+- `capture-time` at the default `30000` ms.
+- Leave `infinite` off so the event ends on the first capture.
+- Set a winner reward.
+- Start it by hand with `/captureadmin start <id>` before trusting it to a schedule.
+
+Once that runs, [Scheduling](/docs/exyliacapture/scheduling) makes it recurring.

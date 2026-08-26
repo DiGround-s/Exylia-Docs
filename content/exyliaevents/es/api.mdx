@@ -1,0 +1,89 @@
+---
+title: "API"
+description: "Leer y controlar eventos desde otro plugin, y la reserva compartida de jugador."
+badge: "dev"
+---
+
+`net.exylia.exyliaEvents.api.EventsAPI` es estática y es el punto de entrada soportado.
+
+## Consultar estado
+
+```java
+import net.exylia.exyliaEvents.api.EventsAPI;
+
+Optional<GameEvent> event = EventsAPI.getActiveEvent(player);
+Optional<GameEvent> byId  = EventsAPI.getEventById("lms1");
+List<GameEvent> running   = EventsAPI.getRunningEvents();
+boolean playing           = EventsAPI.isInEvent(player);
+
+Optional<EventConfiguration> config = EventsAPI.getConfiguration("lms1");
+```
+
+## Mover jugadores
+
+```java
+boolean joined     = EventsAPI.joinEvent(player, "lms1");
+boolean spectating = EventsAPI.spectateEvent(player, "lms1");
+boolean left       = EventsAPI.leaveEvent(player);
+```
+
+Cada uno devuelve si ocurrió, así que una entrada fallida — evento lleno, no admite entrada, jugador
+ocupado en otra cosa — es un `false` y no una excepción.
+
+## Estadísticas
+
+```java
+int kills  = EventsAPI.getPlayerKills(uuid);
+int deaths = EventsAPI.getPlayerDeaths(uuid);
+int wins   = EventsAPI.getPlayerWins(uuid);
+int games  = EventsAPI.getGamesPlayed(uuid);
+```
+
+Son los totales globales del jugador en todos los eventos.
+
+## La reserva compartida
+
+La parte interesante para quien escriba otro minijuego: ExyliaEvents no pregunta a cada plugin si un
+jugador está ocupado. Se lo pregunta a un único registro.
+
+```java
+// ¿Hay algo en el servidor que tenga a este jugador?
+boolean free = EventsAPI.isAvailable(player);
+
+// Tomarlo para este plugin. Atómico — esto es lo que decide de verdad.
+boolean mine = EventsAPI.claim(player);
+
+// Devolverlo.
+EventsAPI.releaseClaim(player);
+```
+
+`isAvailable` es una pregunta, no una reserva: entre preguntar y actuar, otro puede haberse llevado al
+jugador. `claim` es lo que decide, y acepta un callback de liberación para poder avisar a quien lo
+tenga de que lo suelte.
+
+La reserva es **reentrante**: un jugador que pasa del lobby del evento a la partida, o de jugar a
+espectar, mantiene una única reserva continua en vez de soltarla y competir por recuperarla.
+
+<Callout type="note" title="Por qué importa">
+Es lo que evita que un jugador esté en una arena de FFA y en un evento a la vez sin que ninguno de
+esos plugins sepa que los otros existen. Un modo añadido más tarde queda cubierto sin tocar este
+código.
+</Callout>
+
+## Declarar la dependencia
+
+```yaml title="plugin.yml"
+softdepend:
+  - ExyliaEvents
+```
+
+```java
+if (Bukkit.getPluginManager().isPluginEnabled("ExyliaEvents")) {
+    EventsAPI.joinEvent(player, "lms1");
+}
+```
+
+<Callout type="warning" title="Hilo principal">
+Entrar, salir y espectar teletransportan jugadores, cambian inventarios y arrancan tareas. Llámalos
+desde el hilo del servidor — en Folia, desde el hilo dueño de la región del jugador.
+</Callout>

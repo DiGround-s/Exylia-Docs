@@ -1,0 +1,82 @@
+---
+title: "Kits"
+description: "Per-arena kits, hand-out modes, permissions, and the player's layout editor."
+---
+
+A kit belongs to an arena. It stores the full inventory, armour and offhand exactly as you had them
+when you saved it from the panel.
+
+## Fields
+
+| Field | Default | What it does |
+|---|---|---|
+| `id` | generated | The kit's internal identifier. It is what `/ffa resetkit <kitId>` takes. |
+| `arenaId` | — | The arena it belongs to. Kits are not shared between arenas. |
+| `name` | — | Name shown in the selector. Accepts colours. |
+| `iconMaterial` | `CHEST` | Icon in the selection menu. |
+| `permission` | empty | Permission required to use it. Empty means available to everyone. |
+| `priority` | `0` | Order in the selector. Higher priority, higher up. |
+
+## Hand-out modes
+
+The mode is decided by the arena, not by the kit.
+
+<Cards>
+  <Card title="SELECTABLE">
+    With more than one kit available, the selector opens on entry. The player picks, and that is the
+    kit they respawn with for the rest of the session.
+  </Card>
+  <Card title="RANDOM">
+    The plugin hands out one at random among the kits the player has permission to use. Ideal for
+    chaos arenas or to force variety.
+  </Card>
+</Cards>
+
+If there is only one kit, no menu shows: it is handed over directly.
+
+## Layout editor
+
+Every player can rearrange a kit to taste without changing its contents. The layout is theirs and is
+stored in the database.
+
+<Steps>
+  <Step title="Open the editor">
+    `/ffa kiteditor` opens the selector of editable kits.
+  </Step>
+  <Step title="Rearrange">
+    Move items to the slots you want. While editing you are invulnerable and cannot break or place
+    blocks, drop or pick up items, interact or fire projectiles: the kit is only reordered, never
+    changed in contents.
+  </Step>
+  <Step title="Save">
+    `/ffa savekit` stores the arrangement. From then on, every time you receive that kit it arrives
+    ordered that way.
+  </Step>
+  <Step title="Discard">
+    `/ffa cancelkit` leaves edit mode without saving. `/ffa resetkit <kitId>` deletes your layout and
+    returns to the original order.
+  </Step>
+</Steps>
+
+<Callout type="note" title="An admin can reset it too">
+`/ffaadmin resetlayout <player> <kitId>` deletes another player's saved layout. Useful when a kit
+changes contents and the old layout no longer makes sense.
+</Callout>
+
+## Permission-gated kits
+
+A kit's `permission` field works like an arena's: empty and anyone uses it; set and only holders of
+that node do.
+
+In `RANDOM` mode, kits the player is not allowed to use **do not enter their draw**. That gives a
+premium rank a wider spread of kits without needing a separate arena.
+
+## Refilling the kit after a kill
+
+This is an arena setting, `resetKitAfterKill`. When on, killing refills the killer's kit to its
+original state: same potions, same food, same durability.
+
+<Callout type="tip">
+In nodebuff arenas it pairs with `healOnKill` so that a clean kill leaves the winner at full again.
+Without it, the first player to string two kills together dominates the arena by attrition.
+</Callout>

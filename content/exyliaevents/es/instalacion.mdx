@@ -1,0 +1,104 @@
+---
+title: "Instalación"
+description: "Dependencias, primer arranque, los archivos que escribe y las tablas que crea."
+---
+
+## Antes de empezar
+
+Tres plugins deben estar en `plugins/` **antes** del primer arranque.
+
+| Plugin | Para qué |
+|---|---|
+| `ExyliaLib` | Configuración, base de datos, menús, hologramas, scoreboards, placeholders, recompensas, esquemáticas. |
+| `FastAsyncWorldEdit` | Guardar cada arena como esquemática, restaurarla tras la partida y clonarla. |
+| `packetevents` | La capa de paquetes detrás de los efectos de cliente. |
+
+Opcionales, y cada uno solo añade algo:
+
+- **PlaceholderAPI** — leer los contadores del plugin desde fuera.
+- **Worlds** — es como se crea el mundo automático **en Folia**. Fuera de Folia el plugin lo crea con
+  Bukkit y no hace falta.
+- **ExyliaPracticeCore**, **ExyliaFFA**, **ExyliaSandBox** — un jugador ocupado en uno de ellos no
+  puede ser metido en un evento, y al revés.
+- **ViaVersion**, **WorldGuard**, **TAB**, **floodgate**, **Apollo**, **Feather** — declaraciones de
+  orden de carga para servidores que los usen.
+
+## Instalar
+
+<Steps>
+  <Step title="Coloca los jars">
+    `ExyliaEvents.jar` más las tres dependencias en `plugins/`.
+  </Step>
+  <Step title="Arranca el servidor">
+    El primer arranque escribe cinco archivos de configuración y crea las tablas.
+  </Step>
+  <Step title="Define el lobby principal">
+    Desde `/eventsadmin`. Es adonde vuelven los jugadores al salir de un evento.
+  </Step>
+  <Step title="Crea tu primer evento">
+    Explicado en [Primeros pasos](/docs/exyliaevents/primeros-pasos).
+  </Step>
+</Steps>
+
+## Archivos generados
+
+En `plugins/ExyliaEvents/`:
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | Límites, cooldowns, temporizadores, lista blanca de comandos, reglas de mundo, eventos aleatorios, música, boss bars por tipo. |
+| `messages.yml` | Todos los mensajes, con una sección por tipo de evento. |
+| `scoreboards.yml` | Un sidebar por tipo de evento, más el del lobby. |
+| `scheduled-events.yml` | Horarios por día y hora. |
+| `buildbattle-themes.yml` | Los temas que se votan en Build Battle. |
+| `menus/` | Diseño de los menús: panel de administración, una pantalla de ajustes por tipo, y los menús de jugador. |
+
+## Tablas
+
+| Tabla | Contiene |
+|---|---|
+| `event_configurations` | Los eventos configurados. |
+| `events_player_stats` | Estadísticas globales de jugador. |
+| `events_player_event_stats` | Estadísticas por jugador y evento. |
+| `events_player_preferences` | Preferencias por jugador, hoy el interruptor de música. |
+| `events_settings` | Ajustes del servidor, hoy la ubicación del lobby principal. |
+| `event_kits` | Kits de una configuración. |
+| `event_loot_entries` | Tablas de loot para los tipos con cofres. |
+| `event_inscriptions` | Listas de inscripción. |
+| `event_pending_rewards` | Recompensas pendientes de jugadores desconectados. |
+
+## Motor de base de datos
+
+Por defecto H2, embebido. Para compartir configuraciones y estadísticas entre servidores, apunta
+`database.yml` a una base de datos real:
+
+```yaml title="plugins/ExyliaEvents/database.yml"
+database:
+  type: mysql
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Motores: `h2`, `mysql`, `mariadb`, `postgresql`, `mongodb`.
+
+<Callout type="warning" title="Las esquemáticas son de cada servidor">
+Las configuraciones viajan por la base de datos, pero los archivos `.schem` viven en el disco de cada
+servidor. Un segundo servidor leyendo la misma base de datos sigue necesitando esos archivos para
+restaurar o clonar una arena.
+</Callout>
+
+## Copias de seguridad
+
+`/eventsadmin export` vuelca todas las tablas en `plugins/ExyliaEvents/dumps/` e informa de cuántas
+filas escribió. `/eventsadmin import <archivo>` lee uno de esos archivos desde la misma carpeta. Vale
+la pena antes de un cambio arriesgado en producción, y es también la forma de mover un conjunto de
+configuraciones entre motores.
+
+## Actualizar
+
+Reemplaza el jar y reinicia. `config.yml` está versionado y migra solo — ver
+[Configuración · Migraciones](/docs/exyliaevents/configuracion#migraciones).

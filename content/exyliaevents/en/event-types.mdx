@@ -1,0 +1,307 @@
+---
+title: "Event types"
+description: "The thirty-four registered types, what each one is, and the settings that matter with their defaults."
+---
+
+Thirty-four types are registered: twenty-seven solo games and seven team variants. The type is chosen
+when the configuration is created and cannot be changed afterwards.
+
+## The catalogue
+
+| Type id | Name | Category | Teams |
+|---|---|---|---|
+| `tnttag` | TNT Tag | Round elimination | — |
+| `taggame` | Tag Game | Round elimination | — |
+| `simonsays` | Simon Says | Round elimination | — |
+| `blockparty` | Block Party | Round survival | — |
+| `chairs` | Chairs | Round survival | — |
+| `tntrun` | TNT Run | Survival | — |
+| `spleef` | Spleef | Survival | — |
+| `splegg` | Splegg | Survival | — |
+| `volcano` | Volcano | Survival | — |
+| `anvilrunning` | Anvil Running | Survival / Reflexes | — |
+| `lms` | Last Man Standing | PvP Elimination | — |
+| `topkiller` | Top Killer | PvP by kills | — |
+| `oitc` | OITC | PvP precision | — |
+| `quake` | Quake | PvP Precision | — |
+| `csgo` | CS:GO | PvP Deathmatch | — |
+| `slap` | Slap | PvP Zone control | — |
+| `gemcrawler` | Gem Crawler | PvP Collection | — |
+| `pillarsoffortune` | Pillars of Fortune | PvP Survival | — |
+| `survivalgames` | Survival Games | PvP Survival | — |
+| `infection` | Infection | Infection / Tag | — |
+| `kingkong` | King Kong | Chase | — |
+| `brackets` | Brackets | 1v1 Tournament | — |
+| `tournament` | Tournament | Sequential 1v1 | — |
+| `buildbattle` | Build Battle | Creative Building | — |
+| `parkour` | Parkour | Parkour | — |
+| `thimble` | Thimble | Parkour / Skill | Yes |
+| `splatoon` | Splatoon | Team territorial | Yes |
+| `topkiller_teams` | Top Killer Teams | Team PvP | Yes |
+| `oitc_teams` | OITC Teams | Team PvP | Yes |
+| `quake_teams` | Quake Teams | Team PvP | Yes |
+| `csgo_teams` | CS:GO Teams | Team PvP | Yes |
+| `lms_teams` | LMS Teams | Team Elimination | Yes |
+| `gemcrawler_teams` | Gem Crawler Teams | Team Collection | Yes |
+| `thimble_teams` | Thimble Teams | Team Precision | Yes |
+
+## Settings every type shares
+
+| Setting | Default | What it does |
+|---|---|---|
+| `countdown` | `30` | Seconds from having enough players to the game starting. |
+| `duration` | `0` in most types | Seconds the game may last. `0` means it ends by its own rules instead. |
+| `min-players` | `2` | Players needed before the countdown begins. |
+| `max-players` | `32` | How many fit. |
+| `grace-period` | `5` where the type has one | Seconds at the start with no damage. |
+
+Team types also get `team-selector-enabled`, on by default.
+
+## Round elimination
+
+### TNT Tag
+
+| Setting | Default |
+|---|---|
+| `min-players` | `4` |
+| `round-duration` | `30` |
+| `tagged-percentage` | `25` |
+| `transfer-cooldown` | `0.5` |
+| `glow-effect` | `true` |
+| `normal-player-speed` | `2` |
+| `tnt-player-speed` | `3` |
+| `tnt-item` | `TNT` |
+| `respawn-at-spawn-after-round` | `5` |
+| `round-pause` | `2` |
+
+A share of players start tagged; at the end of each round whoever still holds the TNT is out. Tagged
+players move faster and glow, and passing it has a short cooldown so two players cannot swap it
+instantly.
+
+### Tag Game
+
+Same core as TNT Tag, plus building: `temporary-blocks` on with `temporary-blocks-seconds` of `15`,
+`re-give-blocks` on, `enderpearl-regive-seconds` `8` and `enderpearl-throw-cooldown` `3`.
+
+### Simon Says
+
+| Setting | Default |
+|---|---|
+| `action-time` | `8` |
+| `min-action-time` | `2` |
+| `time-decrease-interval` | `5` |
+| `round-pause` | `3` |
+
+An instruction is called, and whoever fails to follow it in time is eliminated. The window shrinks as
+rounds go by, down to `min-action-time`.
+
+## Round survival
+
+### Block Party
+
+| Setting | Default |
+|---|---|
+| `min-players` | `4` |
+| `max-players` | `24` |
+| `round-duration` | `10` |
+| `round-pause` | `3` |
+| `pvp-round` | `5` |
+| `time-reduction-per-round` | `1` |
+| `min-round-duration` | `3` |
+| `initial-colors` | `3` |
+| `max-colors` | `10` |
+
+The floor is recoloured, a colour is called, and everything else disappears. Rounds get shorter and
+add colours as they go, and from round `pvp-round` onwards players can fight.
+
+### Chairs
+
+| Setting | Default |
+|---|---|
+| `chair-percentage` | `80` |
+| `chair-color` | `RED` |
+| `music-duration-min` | `10` |
+| `music-duration-max` | `20` |
+| `rush-duration` | `8` |
+| `round-pause` | `3` |
+
+Musical chairs: fewer seats than players, music of random length, and a rush when it stops.
+
+## Survival
+
+### TNT Run
+
+| Setting | Default |
+|---|---|
+| `block-break-delay` | `8` |
+| `double-jump-cooldown` | `1.5` |
+| `double-jump-limit` | `3` |
+| `double-jump-power` | `1.0` |
+
+The floor falls away behind you. Double jumps are limited, which is what keeps it from being solved
+by hovering.
+
+### Spleef and Splegg
+
+Spleef: `snowballs-per-break` `1`, `snowball-knockback` on, `fall-damage` off.
+
+Splegg: `breakable-material` `SNOW_BLOCK`, `projectile-type` `EGG`, `explosion-radius` `1`,
+`starting-ammo` `16`, `ammo-per-break` `1`, `max-ammo` `64`, `shot-cooldown` `0.0`,
+`knockback-enabled` on, `fall-damage` off.
+
+### Volcano
+
+| Setting | Default |
+|---|---|
+| `stage-delay` | `20` |
+| `initial-blocks-per-second` | `3` |
+| `acceleration-interval` | `10` |
+
+The floor floods upwards, faster over time.
+
+### Anvil Running
+
+| Setting | Default |
+|---|---|
+| `initial-anvil-rate` | `20` |
+| `min-anvil-rate` | `3` |
+| `rate-decrease-interval` | `10` |
+| `rate-decrease-amount` | `2` |
+| `anvils-per-wave` | `1` |
+| `anvils-increase-interval` | `15` |
+| `target-anvils` | `true` |
+| `target-anvil-interval` | `2` |
+| `break-ground-blocks` | `true` |
+| `anvil-damage` | `true` |
+
+Anvils fall, faster and in greater numbers as it goes. With `target-anvils` on, some of them aim at
+players rather than falling at random.
+
+## PvP
+
+### Last Man Standing
+
+`drop-items-on-death` off, `block-break` off, `block-place` off, `player-build-only` off,
+`temporary-blocks` off with `temporary-blocks-seconds` `15`, `golden-apple-on-kill` on with
+`golden-apple-amount` `1`.
+
+### Top Killer and OITC
+
+Both: `kills-to-win` `20`, `respawn-delay` `3`, `golden-apple-on-kill` on, `reset-kit-on-kill` off.
+OITC adds `arrow-limit` `1` — one arrow, one kill, pick it back up.
+
+### Quake
+
+| Setting | Default |
+|---|---|
+| `kills-to-win` | `25` |
+| `max-players` | `16` |
+| `weapon-cooldown` | `20` |
+| `dash-cooldown` | `60` |
+| `dash-power` | `1.2` |
+| `dash-vertical` | `0.4` |
+| `no-regen-duration` | `3` |
+
+### CS:GO
+
+The deepest settings screen in the plugin: `kills-to-win` `25`, `headshot-multiplier` `1.5`,
+`recoil-enabled` on, `weapon-switch-delay` `20`, and then a block per weapon — pistol, AK-47, sniper,
+shotgun, SMG and rocket launcher — each with its own enable switch, damage, cooldown, range, one-shot
+flag and spread.
+
+The sniper alone has six spread values, one per stance: perfect, airborne, crouch-still,
+crouch-moving, stand-still and stand-moving.
+
+<Callout type="tip" title="Each weapon has its own menu">
+`menus/admin/csgo_*_settings.yml` is one screen per weapon, so tuning the AK does not mean scrolling
+past the shotgun.
+</Callout>
+
+### Slap
+
+`points-to-win` `100`, `respawn-delay` `3`. Points come from standing on the capture block — see
+[Arenas](/docs/exyliaevents/arenas#materials-each-type-expects).
+
+### Gem Crawler
+
+`gem-spawn-interval` `5`, `win-gems` `10`, `win-countdown` `10`, `respawn-delay` `3`. Gems spawn,
+players collect, and holding the lead for the countdown wins it.
+
+### Pillars of Fortune
+
+`max-players` `20`, `item-interval` `10`, `mode` `DEFAULT`. Each player gets their own pillar, which
+is why this type needs **one spawn point per player**.
+
+### Survival Games
+
+`max-players` `20`, `grace-period` `15`, `chest-refill-interval` `180`, `min-items-per-chest` `3`,
+`max-items-per-chest` `12`. Chests are filled from the configuration's loot table — see
+[Teams and kits](/docs/exyliaevents/teams-and-kits#loot-tables).
+
+## Chase and infection
+
+### Infection
+
+`min-players` `4`, `max-players` `24`, `duration` `300`, `infected-percentage` `25`,
+`infection-cooldown` `0.5`, `glow-effect` on, `infected-speed` `2`, `survivor-speed` `3`,
+`eliminate-on-infect` off. Survivors who last the duration win.
+
+### King Kong
+
+`min-players` `3`, `runner-respawn` on, `respawn-delay` `3`, `kong-speed-level` `2`, `kong-glow` on.
+
+## Tournaments and building
+
+### Brackets
+
+`match-duration` `120`, `match-end-delay` `3`, `round-delay` `3`, `max-arenas` `8`,
+`heal-between-rounds` on. Matches run **in parallel** in cloned arenas, up to `max-arenas` at once.
+
+### Tournament
+
+`match-duration` `120`, `match-intro-delay` `5`, `match-end-delay` `3`, `round-delay` `3`,
+`heal-between-matches` on. The same bracket idea run **one match at a time**, with the crowd watching
+and a freeze and intro before each fight.
+
+### Build Battle
+
+`max-players` `16`, `theme-vote-duration` `20`, `theme-options` `5`, `build-duration` `300`,
+`vote-duration-per-plot` `20`, `results-duration` `15`. Each builder gets a cloned plot; themes come
+from `buildbattle-themes.yml` and are voted on before building starts.
+
+## Precision and parkour
+
+### Parkour
+
+Only the shared settings. Checkpoints and the finish are pressure plates in the arena.
+
+### Thimble
+
+`respawn-delay` `2`. Players dive into water tiles; a filled tile is a point. Also exists as
+`thimble_teams`.
+
+### Splatoon
+
+| Setting | Default |
+|---|---|
+| `duration` | `180` |
+| `team-count` | `2` |
+| `weapon-delay` | `0.1` |
+| `weapon-damage` | `2.0` |
+| `paint-radius` | `2` |
+| `ink-trail` | `true` |
+| `respawn-delay` | `3` |
+| `fall-damage` | `false` |
+| `double-jump-enabled` | `true` |
+| `double-jump-cooldown` | `2.0` |
+| `double-jump-limit` | `-1` |
+| `double-jump-power` | `0.8` |
+
+Paint more ground than the other team before the duration runs out. `double-jump-limit` of `-1` means
+unlimited.
+
+## Team variants
+
+Seven types exist in a team version: Top Killer, OITC, Quake, CS:GO, LMS, Gem Crawler and Thimble.
+They keep their solo settings and add the team layer described in
+[Teams and kits](/docs/exyliaevents/teams-and-kits).

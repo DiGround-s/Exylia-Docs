@@ -1,0 +1,169 @@
+---
+title: "Items"
+description: "An item described in YAML — menu icon, kit entry, special item or shield — read once and drawn per viewer."
+---
+
+A menu icon, a special item, a kit entry, a lobby hotbar slot and a shield are the same block of YAML.
+This is the one parser for all of them.
+
+```java
+PluginItems items = Items.of(this);
+
+Item icon = items.parse(section);              // once, when the file loads
+ItemStack stack = items.render(icon, player);  // whenever somebody looks at it
+```
+
+`Item` is a **definition**, not an `ItemStack`. It holds its placeholders unresolved, is shared by
+every player who sees it, and can be compared, cached and tested without a running server. Turning one
+into an item is per-viewer work.
+
+## The object
+
+`material` decides what the item is, and carries more than a material name:
+
+| Written as | Means |
+|---|---|
+| `DIAMOND_SWORD` | A material |
+| `%kit_icon%` | A material the viewer decides |
+| `basehead-<base64>` | A head, by texture |
+| `urlhead-<url>` | A head, by skin URL |
+| `playerhead-Notch` | A head, by player name |
+| `playerhead-%player_name%` | A head whose owner depends on the row |
+| `bytes:<base64>` | A serialised item |
+
+Both `-` and `:` separate a prefix from its payload, case-insensitively. Heads never block: a texture
+or URL never touches the network, and a player head that has not been fetched yet comes back plain.
+
+<Callout type="note" title="A placeholder is read twice">
+`material: "%arena_icon%"` is a material when the file is read, because that is all it can be before
+anybody fills it in. The resolved text then goes back through the table above — so `%arena_icon%`
+holding `headbase-eyJ0…` draws the head. Only values that carried a placeholder are read twice.
+</Callout>
+
+## Text
+
+| Key | Meaning |
+|---|---|
+| `name` | The name painted on the item. |
+| `display-name` | The name in plain form, for messages and logs. |
+| `lore` | Tooltip lines. `<nl>`, real line breaks and literal `\n` split one entry into several. |
+| `amount` | Stack size, as a number or a placeholder. |
+
+`name` and `display-name` are **separate**, not a fallback pair: one is painted on the item — bold,
+gradient-filled, with a counter in it — and the other is what a plugin quotes back to a player.
+
+## Appearance
+
+| Key | Meaning |
+|---|---|
+| `glow`, `glowing` | The enchantment shimmer, with no tooltip line. |
+| `hide-tooltip` | Hides the tooltip entirely. |
+| `hide-attributes` | Hides everything vanilla writes by itself. |
+| `unbreakable` | Marks it unbreakable. |
+| `custom-model-data` | The model number. |
+| `max_stack_size` | The stack limit. |
+| `flags`, `item-flags` | `ItemFlag` names to hide. |
+| `item_model` | An item model key, `namespace:key`. |
+| `tooltip_style` | A tooltip style key. |
+| `enchantments` | A section of `NAME: level`, or a list of `NAME:level`. |
+
+Underscore and hyphen spellings both work throughout.
+
+## Traits
+
+Only some materials have these, so they live in a separate record — the other few thousand items carry
+one shared reference instead of six null fields each.
+
+```yaml
+potion:
+  base_type: HEALING
+  upgraded: true            # STRONG_HEALING
+  color: "#ff4d4d"
+  custom_effects:
+    - type: SPEED
+      amplifier: "%level%"  # resolved per viewer
+      duration: 600
+
+armor_trim:
+  pattern: "%helmet_trim_pattern%"
+  material: "%helmet_trim_material%"
+
+banner_patterns:
+  base_color: WHITE
+  patterns:
+    - pattern: STRIPE_BOTTOM
+      color: LIGHT_GRAY
+
+banner_design: "%shield_preview%"   # a design computed per viewer
+
+force-consumable: true
+consumable-time: 1.0
+consumable-nutrition: 6
+consumable-saturation: 14.4
+consumable-sound: ITEM_HONEY_BOTTLE_DRINK
+
+attributes:
+  - "attack_damage|8"
+  - "movement_speed|0.05"
+
+nbt:
+  kind: special
+  uses: 3
+```
+
+A trait that does not fit its material does nothing. A potion set on a sword is a leftover key in a
+config file, not a reason to fail while drawing a menu.
+
+<Callout type="note" title="Why `nbt` needs a plugin">
+Values written with `nbt` are stored under the **owning plugin's** namespace, so two plugins can both
+write `id` onto an item without colliding. `Items.parse` without a plugin is fine for definitions that
+carry no stored values, which is nearly all of them.
+</Callout>
+
+## Storing what somebody is holding
+
+The other direction, for an icon picker:
+
+```java
+String icon = Source.of(player.getInventory().getItemInMainHand()).raw();
+```
+
+A plain item is stored as its material name — `STONE`, not four hundred characters of base64. Anything
+carrying meta is stored whole as `bytes:`. An empty hand is `AIR`.
+
+**The name and the lore are dropped.** Everything the item looks like is kept — model, colour,
+patterns, glint — but whatever draws the icon writes its own name and lore. They are also nearly all
+of an item's size: a kit sword's gradient name serialises as component JSON and runs past the 512
+characters an icon column allows.
+
+### Naming one for a person
+
+```java
+Source.of(config.icon()).label();      // "Nether Star"
+```
+
+| Stored as | Reads as |
+|---|---|
+| `NETHER_STAR` | `Nether Star` |
+| `playerhead-Notch` | `Notch's Head` |
+| `basehead-…`, `urlhead-…` | `Custom Head` |
+| `playerhead-%player_name%` | `Player Head` |
+| `bytes:…` | The material inside it, or `Custom Item` |
+
+`label()` is for a person; `raw()` is what goes back into a config or a column.
+
+### Drawing one back
+
+```java
+ItemStack icon = Items.icon(home.icon());
+```
+
+One call, the whole grammar, no plugin and no viewer — for a caller holding a bare string out of a
+column. A menu icon does not need it: write `material: "%home_icon%"` and the row resolves it with the
+viewer.
+
+<Callout type="tip" title="Unreadable comes back as paper">
+A string that names nothing, or a `bytes:` value that cannot be decoded, renders as paper rather than
+as nothing. An unreadable row is still a row somebody has to see and delete, and paper reads as "this
+could not be read" where a stone block reads as somebody's configuration.
+</Callout>

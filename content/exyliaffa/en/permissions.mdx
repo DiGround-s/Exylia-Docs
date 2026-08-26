@@ -1,0 +1,100 @@
+---
+title: "Permissions"
+description: "The plugin's own nodes, and the ones you define on arenas, kits and spawns."
+---
+
+There are two kinds of permission: the ones the plugin declares, and the ones you write into each
+arena, kit or spawn.
+
+## Plugin nodes
+
+| Node | Grants |
+|---|---|
+| `exyliaffa.admin` | The full `/ffaadmin` panel and all of its actions. |
+| `exyliaffa.commands.ffa` | `/ffa` |
+| `exyliaffa.commands.join` | `/ffa join` |
+| `exyliaffa.commands.leave` | `/ffa leave` |
+| `exyliaffa.commands.spectate` | `/ffa spectate` |
+| `exyliaffa.commands.stats` | `/ffa stats`, own and others' |
+| `exyliaffa.commands.streak` | `/ffa streak` |
+| `exyliaffa.commands.streak.others` | `/ffa streak <player>` |
+| `exyliaffa.commands.settings` | `/ffa settings` |
+| `exyliaffa.commands.kiteditor` | `/ffa kiteditor` |
+| `exyliaffa.commands.savekit` | `/ffa savekit` |
+| `exyliaffa.commands.cancelkit` | `/ffa cancelkit` |
+| `exyliaffa.commands.resetkit` | `/ffa resetkit` |
+| `exyliaffa.commands.invite` | `/ffa invite` in any arena |
+| `exyliaffa.commands.invite.<arenaId>` | `/ffa invite` in that arena only |
+| `exyliaffa.commands.kick` | `/ffa kick` in any arena |
+| `exyliaffa.commands.kick.<arenaId>` | `/ffa kick` in that arena only |
+| `exyliaffa.kick-bypass` | Removing players you did not invite |
+| `exyliaffa.bypass.blocked-commands` | Ignoring the command whitelist inside an arena |
+
+<Callout type="note" title="The per-arena nodes">
+`invite` and `kick` accept an arena identifier as a suffix. Give the general node to administration
+and the per-arena node to whoever should only manage their own.
+</Callout>
+
+## Permissions you define
+
+These do not exist until you write them. The plugin imposes no prefix: the node is literally the text
+you put in the field.
+
+| Where it is written | Effect |
+|---|---|
+| An arena's `permission` field | Only holders may join that arena. |
+| A kit's `permission` field | Only holders may use that kit. In `RANDOM` mode it is left out of their draw. |
+| A spawn's `permission` field | Only holders may choose that spawn. |
+
+Leaving the field empty means "no restriction", which is the default in all three cases.
+
+## A scheme that works
+
+Name the nodes after what they grant, not after the rank receiving them. Ranks change; contents do
+not.
+
+```text
+exyliaffa.arena.vip          the "vip" arena
+exyliaffa.arena.events       the events arena, enabled only when it runs
+exyliaffa.kit.premium        the premium kit in any arena
+exyliaffa.spawn.tower        the elevated spawn of the main arena
+```
+
+With LuckPerms:
+
+```text
+/lp group vip permission set exyliaffa.arena.vip true
+/lp group vip permission set exyliaffa.kit.premium true
+```
+
+<Callout type="tip" title="Temporary permissions">
+A time-limited kit permission makes an excellent streak reward:
+
+```yaml
+commands:
+  - "lp user %player% permission settemp exyliaffa.kit.premium true 10m"
+```
+</Callout>
+
+## Recommendation for the base player
+
+The player commands are worth granting to the default group in full: they are harmless, and their
+absence only generates support tickets.
+
+```text
+/lp group default permission set exyliaffa.commands.ffa true
+/lp group default permission set exyliaffa.commands.join true
+/lp group default permission set exyliaffa.commands.leave true
+/lp group default permission set exyliaffa.commands.stats true
+/lp group default permission set exyliaffa.commands.settings true
+```
+
+<Callout type="warning" title="exyliaffa.bypass.blocked-commands">
+It lets a player run any command inside an arena, skipping the whitelist. On a server with `/fly` or
+`/heal` that is effectively a combat advantage: give it to staff only.
+</Callout>
+
+<Callout type="warning" title="exyliaffa.admin">
+It grants the entire panel, deleting arenas and resetting statistics included. Give it to actual
+administration, not to moderation.
+</Callout>
