@@ -1,0 +1,56 @@
+---
+title: "The community library"
+description: "Sharing a design by id, the browser, and how use counts work."
+---
+
+A design can be registered in a shared library, given an id, and imported by anybody who knows that
+id. It is the difference between a design being one player's and being something the server passes
+around.
+
+## Registering and importing
+
+Registering a design puts it in `shield_design_library` with its owner and a use count. What travels is
+the **id** — a number a player can type or share in chat.
+
+| Action | What happens |
+|---|---|
+| Register | The design is stored under the player's name and gets an id. |
+| Import by id | The design is copied into one of the importer's slots. |
+| Browse | The most-used designs, ordered by how many people have taken them. |
+
+The import prompt is asked through chat when a player imports without naming an id, and its wording is
+in `config.yml`:
+
+```yaml
+prompt:
+  prompt_text: "{info}Enter the design ID to import {muted}(or {error}cancel{muted} to go back):"
+```
+
+## Use counts
+
+`shield_design_uses` records **who** has used which design, not just how many times. That is what makes
+the browser's ordering meaningful: a design taken by forty different players ranks above one taken
+forty times by its own author.
+
+## Ownership
+
+A design in the library has an owner, and ownership decides who may edit or delete it. Importing a
+design does not transfer it — the importer gets a copy in their slot, and the original stays where it
+is.
+
+<Callout type="note" title="Importing what you already own is not a second entry">
+Registering a design you already have in the library returns the existing id rather than creating a
+duplicate. That is what stops the browser from filling with forty copies of the same shield under forty
+ids.
+</Callout>
+
+## Permissions still apply
+
+An imported design is drawn from **the importer's** permissions, not the author's. A design using a
+pattern the importer does not own is not a way around the palette — which is the reason the palette can
+be sold at all while the library stays open.
+
+## The browser menu
+
+`menus/community_browser.yml` is an ExyliaLib menu like any other: icons, slots, titles, lore, sounds
+and animations are all editable, and the list itself is paginated.

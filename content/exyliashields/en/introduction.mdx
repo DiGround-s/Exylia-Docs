@@ -1,0 +1,58 @@
+---
+title: "Introduction"
+description: "What ExyliaShields is: a layered shield design editor players use from a menu."
+---
+
+ExyliaShields is a shield design editor. A player stacks patterns and colours into a design, saves it
+in a numbered slot, and whatever is in the active slot is applied to the shield they carry — no
+loom, no banner, no crafting.
+
+**41 patterns and 16 colours**, layered up to six deep by default.
+
+## The four screens
+
+| Screen | What it is for |
+|---|---|
+| **Slots** | The player's saved designs. Create, select, reset, delete. `/shields` opens here. |
+| **Design editor** | Building one design: add a layer, dye it, remove it, preview it. |
+| **Colour picker** | Choosing the colour for the layer being added. |
+| **Community browser** | The most-used designs on the server, importable by id. |
+
+## Slots
+
+A design lives in a slot, and how many slots a player gets is a permission —
+`exyliashields.max_slots.<n>`. That is the shape of the product: the free rank gets one, a paid rank
+gets five, and the higher node wins so an upgrade never revokes the lower one.
+
+The **active** slot is what gets applied. Switching slots is how a player changes shields without
+rebuilding anything.
+
+## Layers
+
+A design is a stack of layers, each a pattern plus a colour, on top of a base. `max_layers` in
+`shields.yml` caps the stack — six by default.
+
+<Callout type="note" title="Patterns and colours are permissions too">
+`exyliashields.pattern.<id>` and `exyliashields.color.<id>`, with `*` for all of each. A design is
+built from what the player is allowed to use, so a rank can be sold as a palette rather than as a
+number of slots.
+</Callout>
+
+## When the design is applied
+
+Whenever the shield they are holding changes: swapping hands, clicking in the inventory, scrolling the
+hotbar, or any inventory slot changing. The design is stored against the player, not the item — a
+shield that breaks and is replaced comes back decorated.
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21 or newer. Folia supported. |
+| Required | `ExyliaLib`, `packetevents` |
+| Optional | `PlaceholderAPI` |
+
+<Callout type="warning" title="No placeholders">
+Unlike the other cosmetic plugins in the ecosystem, this one registers none. What it exposes instead
+is [an API](/docs/exyliashields/api) another plugin can read.
+</Callout>

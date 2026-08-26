@@ -1,0 +1,63 @@
+---
+title: "API"
+description: "Reading and applying designs from another plugin."
+badge: "dev"
+---
+
+`ShieldsAPI` is static and is the supported way for another plugin to read what somebody is wearing, or
+to stamp a design onto an item.
+
+## Reading
+
+```java
+ShieldDesign active = ShieldsAPI.getActiveDesign(player);
+ShieldDesign inSlot = ShieldsAPI.getSlotDesign(player, 2);
+
+int slot   = ShieldsAPI.getActiveSlot(player);
+int max    = ShieldsAPI.getMaxSlots(player);
+int used   = ShieldsAPI.getSlotCount(player);
+```
+
+`getActiveDesign` returns `null` when the player wears none, so a caller that draws it has to say what
+"no design" looks like.
+
+## Applying
+
+```java
+ShieldsAPI.applyActiveDesign(player);
+ShieldsAPI.applyDesignToShield(shield, design);
+```
+
+`applyActiveDesign` is what to call after your own plugin hands somebody a shield — a kit, a crate, an
+arena loadout. Without it the player carries a plain shield until the next inventory change wakes the
+listener.
+
+`applyDesignToShield` stamps a design onto an `ItemStack` you hold, which is the one to use when the
+shield is not in a player's inventory yet.
+
+## Permissions
+
+```java
+boolean pattern = ShieldsAPI.hasPatternPermission(player, "stripe_bottom");
+boolean colour  = ShieldsAPI.hasColorPermission(player, "red");
+```
+
+The same checks the plugin makes, so a menu of your own greys out exactly what this one would.
+
+## Declaring the dependency
+
+```yaml title="plugin.yml"
+softdepend:
+  - ExyliaShields
+```
+
+```java
+if (Bukkit.getPluginManager().isPluginEnabled("ExyliaShields")) {
+    ShieldsAPI.applyActiveDesign(player);
+}
+```
+
+<Callout type="warning" title="Main thread">
+Applying a design writes to a player's inventory. Call it from the player's own thread — on Folia,
+their region's.
+</Callout>

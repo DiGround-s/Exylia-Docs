@@ -1,0 +1,79 @@
+---
+title: "Designs, slots and layers"
+description: "How a design is built, where it is stored, and what limits it."
+---
+
+## A design is a stack of layers
+
+Each layer is a **pattern** plus a **colour**. They are applied in order, so the last one added sits on
+top. `max_layers` in `shields.yml` caps the stack at six by default.
+
+```yaml
+max_layers: 6
+```
+
+Raising it is a one-line change, but every layer is a banner pattern the client renders on every shield
+in view — the vanilla ceiling exists for a reason, and six is already generous.
+
+## Slots
+
+A player's designs live in numbered slots, and the **active** one is what gets applied to their shield.
+
+| Action in the slot menu | What it does |
+|---|---|
+| Create | Start a new design in a free slot. |
+| Select | Make that slot the active one. |
+| Reset | Empty the design, keep the slot. |
+| Delete | Remove the slot entirely. |
+
+How many slots a player may have is `exyliashields.max_slots.<n>`. The check counts **down** from the
+highest granted, so giving a rank `max_slots.5` on top of `max_slots.1` is an upgrade rather than a
+conflict.
+
+<Callout type="warning" title="No node means no slots">
+`getMaxSlots` returns `0` for a player with none of those nodes — the menu opens with nothing to save
+into. Grant at least `exyliashields.max_slots.1` to everybody who should be able to use the plugin at
+all.
+</Callout>
+
+## The editor
+
+| Button | What it does |
+|---|---|
+| Add pattern | Adds a layer with the currently selected colour. |
+| Dye | Opens the colour picker for the next layer. |
+| Remove layer | Takes the top layer off. |
+| Toggle preview | Shows the design on the shield as you build it. |
+| Import | Brings in a design from the library by id. |
+
+The preview toggle is what makes the editor usable: without it you are choosing patterns blind. Its
+icons and labels are configurable in `config.yml`.
+
+## Patterns and colours
+
+41 patterns and 16 colours ship in `shields.yml`. Both are permissioned:
+
+```text
+exyliashields.pattern.stripe_bottom
+exyliashields.pattern.*
+exyliashields.color.red
+exyliashields.color.*
+```
+
+A player only builds from what they are allowed to use, which is what lets a palette be a product: the
+free rank gets the plain patterns and four colours, a paid rank gets the rest.
+
+## Where a design is stored
+
+In `player_shield_data`, as the player's slots and which one is active — **not** on the shield item.
+Consequences worth knowing:
+
+- A shield that breaks and is replaced comes back decorated.
+- A shield dropped and picked up by somebody else does **not** carry the design with it.
+- Changing the active slot changes every shield that player holds, without touching an item.
+
+## When it is applied
+
+On any change to what the player is holding: swapping hands, an inventory click, scrolling the hotbar,
+or any inventory slot changing at all. That last one is the catch-all that covers a shield arriving
+from a kit, a crate or a plugin.

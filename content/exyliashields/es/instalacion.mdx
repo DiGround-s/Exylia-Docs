@@ -1,0 +1,100 @@
+---
+title: "Instalación"
+description: "Dependencias, los archivos que escribe, y qué controla config.yml."
+---
+
+## Instalar
+
+<Steps>
+  <Step title="Coloca los jars">
+    `ExyliaShields.jar`, más `ExyliaLib` y `packetevents`, en `plugins/`.
+  </Step>
+  <Step title="Arranca el servidor">
+    Escribe `config.yml`, `shields.yml` y cuatro archivos de menú, y crea tres tablas.
+  </Step>
+  <Step title="Da ranuras y una paleta">
+    Un jugador sin nodo `max_slots` no tiene dónde guardar un diseño. Ver
+    [Comandos y permisos](/docs/exyliashields/comandos).
+  </Step>
+</Steps>
+
+## Archivos
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | El sistema forzado, los valores del editor, y el texto de importación. |
+| `shields.yml` | `max_layers`, los 41 patrones y los 16 colores. |
+| `menus/slots.yml` | La pantalla de ranuras. |
+| `menus/design_editor.yml` | El editor. |
+| `menus/color_picker.yml` | El selector de color. |
+| `menus/community_browser.yml` | La biblioteca compartida. |
+| `database.yml` | Dónde se guarda todo. H2 por defecto. |
+
+## Tablas
+
+| Tabla | Contiene |
+|---|---|
+| `player_shield_data` | Las ranuras de cada jugador y cuál está activa. |
+| `shield_design_library` | Diseños registrados para compartir, con dueño y contador de usos. |
+| `shield_design_uses` | Quién ha usado qué diseño de la biblioteca. |
+
+## config.yml
+
+```yaml
+force_system: true
+
+ui:
+  default_dye_color: "PURPLE"
+  preview:
+    enabled_material: "LIME_DYE"
+    disabled_material: "GRAY_DYE"
+    enabled_status: "{success}Enabled"
+    disabled_status: "{error}Disabled"
+
+prompt:
+  prompt_text: "{info}Enter the design ID to import {muted}(or {error}cancel{muted} to go back):"
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `force_system` | `true` | Solo los jugadores con `exyliashields.use` pueden llevar diseños en sus escudos. |
+| `ui.default_dye_color` | `PURPLE` | El color seleccionado al abrir el editor. |
+| `ui.preview.*` | ver arriba | El objeto y el texto del interruptor de vista previa, encendido y apagado. |
+| `prompt.prompt_text` | ver arriba | Lo que se le pregunta a un jugador que importa sin nombrar un id. |
+
+<Callout type="warning" title="force_system quita, no solo bloquea">
+Con esto activo, a un jugador **sin** `exyliashields.use` se le retira el diseño del escudo cada vez que
+se equipa uno. Esa es la gracia — es cómo un rango caducado deja de mostrar un diseño que ya no posee —
+pero significa que hay que conceder el nodo antes de que nadie pueda conservar uno.
+</Callout>
+
+## shields.yml
+
+```yaml
+max_layers: 6
+
+shield_patterns:
+  stripe_bottom:
+    name: "Base Stripe"
+    item:
+      material: WHITE_BANNER
+      banner_patterns:
+        base_color: WHITE
+        patterns:
+          - pattern: STRIPE_BOTTOM
+            color: LIGHT_GRAY
+
+shield_colors:
+  white:
+    name: "White"
+    item: WHITE_BANNER
+```
+
+`max_layers` limita la profundidad de un diseño. Cada patrón nombra el patrón de vanilla que aplica y
+el estandarte con el que se **dibuja** en el menú; cada color, su nombre visible y su icono.
+
+Las claves son los ids de permiso: `stripe_bottom` es `exyliashields.pattern.stripe_bottom`.
+
+## Actualizar
+
+Reemplaza el jar y reinicia. `/shields reload` relee los archivos de este plugin.

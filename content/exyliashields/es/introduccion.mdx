@@ -1,0 +1,58 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaShields: un editor de escudos por capas que los jugadores usan desde un menú."
+---
+
+ExyliaShields es un editor de diseños de escudo. Un jugador apila patrones y colores en un diseño, lo
+guarda en una ranura numerada, y lo que haya en la ranura activa se aplica al escudo que lleve — sin
+telar, sin estandarte, sin crafteo.
+
+**41 patrones y 16 colores**, apilables hasta seis capas por defecto.
+
+## Las cuatro pantallas
+
+| Pantalla | Para qué sirve |
+|---|---|
+| **Ranuras** | Los diseños guardados del jugador. Crear, seleccionar, vaciar, borrar. `/shields` abre aquí. |
+| **Editor de diseño** | Construir un diseño: añadir capa, teñirla, quitarla, previsualizar. |
+| **Selector de color** | Elegir el color de la capa que se va a añadir. |
+| **Explorador comunitario** | Los diseños más usados del servidor, importables por id. |
+
+## Ranuras
+
+Un diseño vive en una ranura, y cuántas ranuras tiene un jugador es un permiso —
+`exyliashields.max_slots.<n>`. Esa es la forma del producto: el rango gratuito tiene una, uno de pago
+tiene cinco, y gana el nodo más alto, así que subir de rango nunca revoca el de abajo.
+
+La ranura **activa** es la que se aplica. Cambiar de ranura es cómo un jugador cambia de escudo sin
+reconstruir nada.
+
+## Capas
+
+Un diseño es una pila de capas, cada una un patrón más un color, sobre una base. `max_layers` en
+`shields.yml` limita la pila — seis por defecto.
+
+<Callout type="note" title="Patrones y colores también son permisos">
+`exyliashields.pattern.<id>` y `exyliashields.color.<id>`, con `*` para todos de cada uno. Un diseño se
+construye con lo que el jugador tiene permitido usar, así que un rango se puede vender como una paleta
+y no como un número de ranuras.
+</Callout>
+
+## Cuándo se aplica el diseño
+
+Cada vez que cambia el escudo que lleva: intercambiar manos, hacer clic en el inventario, girar la
+hotbar, o que cambie cualquier ranura del inventario. El diseño se guarda contra el jugador, no contra
+el objeto — un escudo que se rompe y se reemplaza vuelve decorado.
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. Folia soportado. |
+| Obligatorios | `ExyliaLib`, `packetevents` |
+| Opcional | `PlaceholderAPI` |
+
+<Callout type="warning" title="Sin placeholders">
+A diferencia de los otros plugins cosméticos del ecosistema, este no registra ninguno. Lo que expone en
+su lugar es [una API](/docs/exyliashields/api) que otro plugin puede leer.
+</Callout>

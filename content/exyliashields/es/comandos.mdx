@@ -1,0 +1,61 @@
+---
+title: "Comandos y permisos"
+description: "Dos comandos, y un esquema de permisos montado sobre ranuras y una paleta."
+---
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/shields` | `exyliashields.command.shields` | Abre el menú de ranuras. |
+| `/shields reload` | `exyliashields.admin` | Recarga los archivos de este plugin. |
+
+Todo lo demás — el editor, el selector de color, el explorador — se alcanza desde dentro de los menús.
+
+<Callout type="note" title="Abrirlo en una entrada concurrida">
+Si la fila del jugador aún no ha llegado de la base de datos, `/shields` la lee y abre el menú cuando
+llega, en vez de fallar. Eso es un instante en una entrada concurrida, no un error.
+</Callout>
+
+## Permisos
+
+| Nodo | Concede |
+|---|---|
+| `exyliashields.command.shields` | Abrir el menú. |
+| `exyliashields.admin` | `/shields reload`. |
+| `exyliashields.use` | Conservar un diseño en el escudo, con `force_system` activo. |
+| `exyliashields.max_slots.<n>` | Esa cantidad de ranuras. Gana el más alto concedido. |
+| `exyliashields.pattern.<id>` | Un patrón. |
+| `exyliashields.pattern.*` | Todos los patrones. |
+| `exyliashields.color.<id>` | Un color. |
+| `exyliashields.color.*` | Todos los colores. |
+
+### Las tres cosas que necesita un jugador
+
+Quien solo puede abrir el menú no puede hacer nada dentro. El acceso que funciona son tres nodos:
+
+```text
+/lp group default permission set exyliashields.command.shields true
+/lp group default permission set exyliashields.use true
+/lp group default permission set exyliashields.max_slots.1 true
+```
+
+Y después vendes la paleta y las ranuras:
+
+```text
+/lp group vip permission set exyliashields.max_slots.5 true
+/lp group vip permission set exyliashields.color.* true
+/lp group mvp permission set exyliashields.pattern.* true
+```
+
+<Callout type="warning" title="force_system y exyliashields.use">
+Con `force_system: true` — el valor por defecto — a un jugador sin `exyliashields.use` se le **retira**
+el diseño cada vez que se equipa un escudo. Concédelo junto con las ranuras, o apaga el sistema en
+`config.yml` si no quieres los diseños limitados así.
+</Callout>
+
+## Qué abarca reload
+
+`/shields reload` relee `config.yml`, `shields.yml` y los cuatro menús. No recarga la librería — para
+eso está `/exylialib reload` — y no toca lo que los jugadores tengan guardado, que vive en la base de
+datos.

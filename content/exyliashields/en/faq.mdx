@@ -1,0 +1,57 @@
+---
+title: "Frequently asked questions"
+description: "The questions that come up most."
+---
+
+## The plugin does not start
+
+`ExyliaLib` and `packetevents` are both required. Without either, the server disables it by name.
+
+## The menu opens but a player cannot save anything
+
+They have no slot. `exyliashields.max_slots.<n>` is what grants them, and a player with none of those
+nodes gets zero — grant at least `exyliashields.max_slots.1`.
+
+## Designs disappear from shields
+
+That is `force_system`, on by default: a player without `exyliashields.use` has their design stripped
+whenever they equip a shield. Grant the node, or turn the system off in `config.yml`.
+
+## Half the patterns are locked
+
+They are permissions: `exyliashields.pattern.<id>` and `exyliashields.color.<id>`, with `*` for all of
+each. That is the palette, and it is meant to be sold.
+
+## A player's design vanished when their shield broke
+
+It should not — the design is stored against the player, not the item, so a replacement shield comes
+back decorated on the next inventory change. If it stays plain, check `exyliashields.use` and whether
+the slot is still the active one.
+
+## Can a player wear somebody else's shield?
+
+Not by picking the item up: the design travels with the player, not the shield. What they can do is
+import the design from the library by id, which copies it into one of their own slots.
+
+## An imported design looks wrong
+
+An import is drawn from the **importer's** permissions. A design built with a pattern they do not own
+cannot be used to bypass the palette.
+
+## How deep can a design go?
+
+`max_layers` in `shields.yml`, six by default. Every layer is a banner pattern the client renders on
+every shield in view, so raising it has a real cost.
+
+## Are there placeholders?
+
+No. This plugin registers none — what it has instead is [an API](/docs/exyliashields/api) for reading
+the active design, the slot counts and the permission checks.
+
+## Does it work on Folia?
+
+Yes, it declares Folia support.
+
+## Where do I get support?
+
+On the [Exylia Discord](https://discord.exylia.net).

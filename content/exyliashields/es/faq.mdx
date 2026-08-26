@@ -1,0 +1,58 @@
+---
+title: "Preguntas frecuentes"
+description: "Lo que más se pregunta."
+---
+
+## El plugin no arranca
+
+`ExyliaLib` y `packetevents` son obligatorios. Sin cualquiera de ellos, el servidor lo desactiva y lo
+nombra.
+
+## El menú abre pero un jugador no puede guardar nada
+
+No tiene ranura. `exyliashields.max_slots.<n>` es lo que las concede, y un jugador sin ninguno de esos
+nodos se queda a cero — concede al menos `exyliashields.max_slots.1`.
+
+## Los diseños desaparecen de los escudos
+
+Es `force_system`, activo por defecto: a un jugador sin `exyliashields.use` se le retira el diseño cada
+vez que se equipa un escudo. Concede el nodo, o apaga el sistema en `config.yml`.
+
+## La mitad de los patrones están bloqueados
+
+Son permisos: `exyliashields.pattern.<id>` y `exyliashields.color.<id>`, con `*` para todos de cada
+uno. Esa es la paleta, y está pensada para venderse.
+
+## El diseño de un jugador se fue al romperse su escudo
+
+No debería — el diseño se guarda contra el jugador, no contra el objeto, así que un escudo de repuesto
+vuelve decorado en el siguiente cambio de inventario. Si sigue liso, revisa `exyliashields.use` y si la
+ranura sigue siendo la activa.
+
+## ¿Puede un jugador llevar el escudo de otro?
+
+Recogiendo el objeto no: el diseño viaja con el jugador, no con el escudo. Lo que sí puede hacer es
+importar el diseño de la biblioteca por su id, que lo copia a una de sus propias ranuras.
+
+## Un diseño importado se ve mal
+
+Una importación se dibuja con los permisos de **quien importa**. Un diseño construido con un patrón que
+no posee no sirve para saltarse la paleta.
+
+## ¿Cuántas capas admite un diseño?
+
+`max_layers` en `shields.yml`, seis por defecto. Cada capa es un patrón de estandarte que el cliente
+dibuja en cada escudo a la vista, así que subirlo tiene un coste real.
+
+## ¿Hay placeholders?
+
+No. Este plugin no registra ninguno — lo que tiene en su lugar es [una API](/docs/exyliashields/api)
+para leer el diseño activo, el número de ranuras y las comprobaciones de permiso.
+
+## ¿Funciona en Folia?
+
+Sí, declara soporte de Folia.
+
+## ¿Dónde pido soporte?
+
+En el [Discord de Exylia](https://discord.exylia.net).

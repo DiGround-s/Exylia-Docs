@@ -256,6 +256,31 @@ function cosmeticNav(effectsEn: string, effectsEs: string): NavGroup[] {
   ];
 }
 
+const SHIELDS_NAV: NavGroup[] = [
+  {
+    label: { en: "Getting started", es: "Empezar" },
+    pages: [
+      page("introduction", "introduction", "introduccion"),
+      page("installation", "installation", "instalacion"),
+    ],
+  },
+  {
+    label: { en: "Configuring", es: "Configurar" },
+    pages: [
+      page("designs", "designs", "disenos"),
+      page("community", "community", "comunidad"),
+    ],
+  },
+  {
+    label: { en: "Reference", es: "Referencia" },
+    pages: [
+      page("commands", "commands", "comandos"),
+      page("api", "api", "api"),
+      page("faq", "faq", "faq"),
+    ],
+  },
+];
+
 export const plugins: Plugin[] = [
   {
     id: "exyliaffa",
@@ -417,6 +442,29 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: cosmeticNav("effects", "efectos"),
+    links: [
+      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
+      { label: "Discord", href: "https://discord.exylia.net" },
+    ],
+  },
+  {
+    id: "exyliashields",
+    name: "ExyliaShields",
+    tagline: { en: "A shield design editor in a menu", es: "Un editor de escudos en un menú" },
+    summary: {
+      en: "41 patterns and 16 colours layered into custom shield designs, saved in numbered slots, sold by permission and shareable through a community library.",
+      es: "41 patrones y 16 colores en capas para diseñar escudos, guardados en ranuras numeradas, vendidos por permiso y compartibles en una biblioteca comunitaria.",
+    },
+    version: "1.0.3",
+    status: "stable",
+    category: { en: "Cosmetic", es: "Cosmético" },
+    minecraft: "1.21+",
+    tags: [
+      { en: "Shields", es: "Escudos" },
+      { en: "Editor", es: "Editor" },
+      { en: "Folia", es: "Folia" },
+    ],
+    nav: SHIELDS_NAV,
     links: [
       { label: "SpigotMC", href: "https://link.exylia.net/@services" },
       { label: "Discord", href: "https://discord.exylia.net" },

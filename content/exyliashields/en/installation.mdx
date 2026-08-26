@@ -1,0 +1,100 @@
+---
+title: "Installation"
+description: "Dependencies, the files it writes, and what config.yml controls."
+---
+
+## Installing
+
+<Steps>
+  <Step title="Drop in the jars">
+    `ExyliaShields.jar`, plus `ExyliaLib` and `packetevents`, into `plugins/`.
+  </Step>
+  <Step title="Start the server">
+    It writes `config.yml`, `shields.yml` and four menu files, and creates three tables.
+  </Step>
+  <Step title="Grant slots and a palette">
+    A player with no `max_slots` node has nowhere to save a design. See
+    [Commands and permissions](/docs/exyliashields/commands).
+  </Step>
+</Steps>
+
+## Files
+
+| File | Contents |
+|---|---|
+| `config.yml` | The force system, editor defaults, and the import prompt. |
+| `shields.yml` | `max_layers`, the 41 patterns and the 16 colours. |
+| `menus/slots.yml` | The slot screen. |
+| `menus/design_editor.yml` | The editor. |
+| `menus/color_picker.yml` | The colour picker. |
+| `menus/community_browser.yml` | The shared library. |
+| `database.yml` | Where everything is stored. H2 by default. |
+
+## Tables
+
+| Table | Holds |
+|---|---|
+| `player_shield_data` | Each player's slots and which one is active. |
+| `shield_design_library` | Designs registered for sharing, with an owner and a use count. |
+| `shield_design_uses` | Who has used which library design. |
+
+## config.yml
+
+```yaml
+force_system: true
+
+ui:
+  default_dye_color: "PURPLE"
+  preview:
+    enabled_material: "LIME_DYE"
+    disabled_material: "GRAY_DYE"
+    enabled_status: "{success}Enabled"
+    disabled_status: "{error}Disabled"
+
+prompt:
+  prompt_text: "{info}Enter the design ID to import {muted}(or {error}cancel{muted} to go back):"
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `force_system` | `true` | Only players with `exyliashields.use` may have designs on their shields. |
+| `ui.default_dye_color` | `PURPLE` | The colour selected when the editor opens. |
+| `ui.preview.*` | see above | The item and text of the preview toggle, on and off. |
+| `prompt.prompt_text` | see above | What a player is asked when importing a design without naming one. |
+
+<Callout type="warning" title="force_system strips, it does not just block">
+With it on, a player **without** `exyliashields.use` has their shield design removed whenever they
+equip a shield. That is the point — it is how an expired rank stops showing a design it no longer
+owns — but it means the node has to be granted before anybody can keep one.
+</Callout>
+
+## shields.yml
+
+```yaml
+max_layers: 6
+
+shield_patterns:
+  stripe_bottom:
+    name: "Base Stripe"
+    item:
+      material: WHITE_BANNER
+      banner_patterns:
+        base_color: WHITE
+        patterns:
+          - pattern: STRIPE_BOTTOM
+            color: LIGHT_GRAY
+
+shield_colors:
+  white:
+    name: "White"
+    item: WHITE_BANNER
+```
+
+`max_layers` caps how deep a design may go. Each pattern names the vanilla pattern it applies and the
+banner it is **drawn as** in the menu; each colour names its display name and icon.
+
+The keys are the permission ids: `stripe_bottom` is `exyliashields.pattern.stripe_bottom`.
+
+## Updating
+
+Replace the jar and restart. `/shields reload` re-reads this plugin's own files.

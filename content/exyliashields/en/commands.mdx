@@ -1,0 +1,61 @@
+---
+title: "Commands and permissions"
+description: "Two commands, and a permission scheme built around slots and a palette."
+---
+
+## Commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/shields` | `exyliashields.command.shields` | Opens the slot menu. |
+| `/shields reload` | `exyliashields.admin` | Reloads this plugin's files. |
+
+Everything else — the editor, the colour picker, the browser — is reached from inside the menus.
+
+<Callout type="note" title="Opening on a busy join">
+If a player's row has not arrived from the database yet, `/shields` reads it and opens the menu when it
+does, rather than failing. That is a moment on a busy join, not an error.
+</Callout>
+
+## Permissions
+
+| Node | Grants |
+|---|---|
+| `exyliashields.command.shields` | Opening the menu. |
+| `exyliashields.admin` | `/shields reload`. |
+| `exyliashields.use` | Keeping a design on a shield, when `force_system` is on. |
+| `exyliashields.max_slots.<n>` | That many slots. The highest granted wins. |
+| `exyliashields.pattern.<id>` | One pattern. |
+| `exyliashields.pattern.*` | Every pattern. |
+| `exyliashields.color.<id>` | One colour. |
+| `exyliashields.color.*` | Every colour. |
+
+### The three things a player needs
+
+A player who can only open the menu cannot do anything in it. Working access is three nodes:
+
+```text
+/lp group default permission set exyliashields.command.shields true
+/lp group default permission set exyliashields.use true
+/lp group default permission set exyliashields.max_slots.1 true
+```
+
+Then sell the palette and the slots:
+
+```text
+/lp group vip permission set exyliashields.max_slots.5 true
+/lp group vip permission set exyliashields.color.* true
+/lp group mvp permission set exyliashields.pattern.* true
+```
+
+<Callout type="warning" title="force_system and exyliashields.use">
+With `force_system: true` — the default — a player without `exyliashields.use` has their design
+**stripped** whenever they equip a shield. Grant it alongside the slots, or turn the system off in
+`config.yml` if you do not want designs gated that way.
+</Callout>
+
+## What reload covers
+
+`/shields reload` re-reads `config.yml`, `shields.yml` and the four menus. It does not reload the
+library — that is what `/exylialib reload` is for — and it does not touch what players have saved,
+which lives in the database.

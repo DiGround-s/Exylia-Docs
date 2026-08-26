@@ -1,0 +1,64 @@
+---
+title: "API"
+description: "Leer y aplicar diseños desde otro plugin."
+badge: "dev"
+---
+
+`ShieldsAPI` es estática y es la vía soportada para que otro plugin lea lo que alguien lleva puesto, o
+para estampar un diseño en un objeto.
+
+## Leer
+
+```java
+ShieldDesign active = ShieldsAPI.getActiveDesign(player);
+ShieldDesign inSlot = ShieldsAPI.getSlotDesign(player, 2);
+
+int slot   = ShieldsAPI.getActiveSlot(player);
+int max    = ShieldsAPI.getMaxSlots(player);
+int used   = ShieldsAPI.getSlotCount(player);
+```
+
+`getActiveDesign` devuelve `null` cuando el jugador no lleva ninguno, así que quien lo dibuje tiene que
+decidir qué aspecto tiene "sin diseño".
+
+## Aplicar
+
+```java
+ShieldsAPI.applyActiveDesign(player);
+ShieldsAPI.applyDesignToShield(shield, design);
+```
+
+`applyActiveDesign` es lo que hay que llamar después de que tu propio plugin le dé un escudo a alguien —
+un kit, una caja, un equipamiento de arena. Sin eso el jugador lleva un escudo liso hasta que el
+siguiente cambio de inventario despierte al listener.
+
+`applyDesignToShield` estampa un diseño en un `ItemStack` que tengas en la mano, que es el que se usa
+cuando el escudo aún no está en el inventario de nadie.
+
+## Permisos
+
+```java
+boolean pattern = ShieldsAPI.hasPatternPermission(player, "stripe_bottom");
+boolean colour  = ShieldsAPI.hasColorPermission(player, "red");
+```
+
+Las mismas comprobaciones que hace el plugin, así que un menú tuyo apaga exactamente lo mismo que el
+suyo.
+
+## Declarar la dependencia
+
+```yaml title="plugin.yml"
+softdepend:
+  - ExyliaShields
+```
+
+```java
+if (Bukkit.getPluginManager().isPluginEnabled("ExyliaShields")) {
+    ShieldsAPI.applyActiveDesign(player);
+}
+```
+
+<Callout type="warning" title="Hilo principal">
+Aplicar un diseño escribe en el inventario de un jugador. Llámalo desde el hilo del propio jugador — en
+Folia, el de su región.
+</Callout>

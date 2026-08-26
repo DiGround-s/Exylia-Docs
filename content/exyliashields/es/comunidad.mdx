@@ -1,0 +1,56 @@
+---
+title: "La biblioteca comunitaria"
+description: "Compartir un diseño por id, el explorador, y cómo funcionan los contadores de uso."
+---
+
+Un diseño se puede registrar en una biblioteca compartida, recibir un id, e importarlo cualquiera que
+conozca ese id. Es la diferencia entre que un diseño sea de un jugador y que sea algo que el servidor
+se pasa.
+
+## Registrar e importar
+
+Registrar un diseño lo guarda en `shield_design_library` con su dueño y un contador de usos. Lo que
+viaja es el **id** — un número que un jugador puede teclear o compartir por chat.
+
+| Acción | Qué pasa |
+|---|---|
+| Registrar | El diseño se guarda a nombre del jugador y recibe un id. |
+| Importar por id | El diseño se copia a una de las ranuras de quien importa. |
+| Explorar | Los diseños más usados, ordenados por cuánta gente los ha tomado. |
+
+El aviso de importación se pregunta por chat cuando un jugador importa sin nombrar un id, y su
+redacción está en `config.yml`:
+
+```yaml
+prompt:
+  prompt_text: "{info}Enter the design ID to import {muted}(or {error}cancel{muted} to go back):"
+```
+
+## Contadores de uso
+
+`shield_design_uses` registra **quién** ha usado cada diseño, no solo cuántas veces. Eso es lo que hace
+que el orden del explorador signifique algo: un diseño tomado por cuarenta jugadores distintos va por
+delante de uno tomado cuarenta veces por su propio autor.
+
+## Propiedad
+
+Un diseño de la biblioteca tiene dueño, y la propiedad decide quién puede editarlo o borrarlo. Importar
+un diseño no lo transfiere — quien importa recibe una copia en su ranura, y el original se queda donde
+está.
+
+<Callout type="note" title="Registrar algo que ya tienes no crea una segunda entrada">
+Registrar un diseño que ya está en la biblioteca a tu nombre devuelve el id existente en vez de crear
+un duplicado. Es lo que evita que el explorador se llene de cuarenta copias del mismo escudo con
+cuarenta ids.
+</Callout>
+
+## Los permisos siguen aplicando
+
+Un diseño importado se dibuja con los permisos de **quien importa**, no con los del autor. Un diseño que
+usa un patrón que quien importa no posee no es una forma de saltarse la paleta — que es la razón por la
+que la paleta se puede vender teniendo la biblioteca abierta.
+
+## El menú del explorador
+
+`menus/community_browser.yml` es un menú de ExyliaLib como cualquier otro: iconos, slots, títulos, lore,
+sonidos y animaciones son editables, y la lista está paginada.
