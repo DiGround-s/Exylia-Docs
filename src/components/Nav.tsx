@@ -14,7 +14,6 @@ import type { SearchEntry } from "@/lib/docs";
 export function Nav({ entries, lang }: { entries: SearchEntry[]; lang: Lang }) {
   const links = [
     { label: dict.nav.plugins[lang], href: `/${lang}#plugins` },
-    { label: "ExyliaFFA", href: `/${lang}/docs/exyliaffa` },
     { label: dict.nav.ecosystem[lang], href: `/${lang}#ecosistema` },
   ];
 
