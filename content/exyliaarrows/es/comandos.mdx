@@ -1,0 +1,52 @@
+---
+title: "Comandos y permisos"
+description: "Cuatro comandos, y los nodos que deciden quién tiene qué."
+---
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/arrows` | `exyliarrows.command.arrows` | Abre el menú de efectos. |
+| `/arrows reset` | `exyliarrows.command.arrows` | Quita el efecto elegido. |
+| `/arrows toggleParticles` | `exyliarrows.command.arrows` | Rota el modo de visibilidad y reabre el menú. |
+| `/arrows reload` | `exyliarrows.admin` | Recarga los archivos de este plugin. |
+
+Alias: `/arroweffects` y `/arrow-effects`.
+
+`reload` relee `config.yml`, `effects.yml` y el menú. No recarga la librería — para eso está
+`/exylialib reload`.
+
+## Permisos
+
+<Callout type="warning" title="Una `a`, no dos">
+Todos los nodos son `exyliarrows`, no `exyliaarrows`. Parece una errata y no lo es — es lo que
+comprueba el plugin, así que un nodo escrito con la letra doblada no concede nada.
+</Callout>
+
+| Nodo | Concede |
+|---|---|
+| `exyliarrows.command.arrows` | El menú, `reset` y `toggleParticles`. |
+| `exyliarrows.admin` | `/arrows reload`. |
+| Lo que diga el `permission` de un efecto | Ese efecto. |
+| `exyliarrows.effect.*` | Todos los efectos, sean cuales sean sus nodos propios. |
+
+Un efecto se posee si está concedido su propio `permission` **o** `exyliarrows.effect.*`.
+
+```text
+/lp group default permission set exyliarrows.command.arrows true
+/lp group vip permission set exyliarrows.effect.fire_trail true
+/lp group mvp permission set exyliarrows.effect.* true
+```
+
+<Callout type="note" title="No hay nodo de categoría">
+A diferencia de los plugins de muertes y golpes, aquí las categorías son solo una agrupación del menú —
+no existe `exyliarrows.category.elemental`. Vender una categoría entera significa conceder el nodo de
+cada efecto, o escribir esos efectos con un nodo compartido en su campo `permission`.
+</Callout>
+
+## Una configuración sensata
+
+Dale el menú a todos y vende lo de dentro. Sin `exyliarrows.command.arrows` el menú no se puede abrir, y
+tampoco `reset` ni `toggleParticles` — lo que significa que el jugador tampoco puede apagarse las
+partículas.

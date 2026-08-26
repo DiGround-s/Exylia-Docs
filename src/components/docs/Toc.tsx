@@ -33,7 +33,7 @@ export function Toc({ headings, lang }: { headings: Heading[]; lang: Lang }) {
   if (headings.length === 0) return null;
 
   return (
-    <aside className="sticky top-24 hidden max-h-[calc(100vh-7rem)] w-[220px] shrink-0 overflow-y-auto scroll-thin pb-16 xl:block">
+    <aside className="sticky top-[124px] hidden max-h-[calc(100vh-9.75rem)] w-[220px] shrink-0 overflow-y-auto scroll-thin pb-16 xl:block">
       <p className="eyebrow mb-4">{dict.docs.onThisPage[lang]}</p>
       <ul className="flex flex-col border-l hair">
         {headings.map((h) => {

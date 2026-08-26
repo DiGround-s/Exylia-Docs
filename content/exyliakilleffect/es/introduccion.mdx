@@ -1,0 +1,70 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaKillEffect y con qué viene."
+---
+
+ExyliaKillEffect lanza un efecto de partículas donde ocurrió una baja. Los jugadores eligen el suyo
+desde un menú, y cuáles pueden elegir lo deciden los permisos — que es lo que lo convierte en algo
+vendible.
+
+Vienen **144 efectos en 14 categorías** en `effects.yml`: infernal, glacial, storm, void, arcane,
+celestial, cosmic, nature, mythic, shadow, ancient, wind, sakura y primal.
+
+## Cómo funciona
+
+<Steps>
+  <Step title="Un jugador abre el menú">
+    `/killeffect` muestra las categorías, y dentro de una, sus efectos.
+  </Step>
+  <Step title="Elige uno">
+    La elección se guarda en la base de datos, así que sobrevive a un reinicio.
+  </Step>
+  <Step title="Mata algo">
+    El efecto se lanza en la ubicación de la víctima.
+  </Step>
+</Steps>
+
+Qué bajas cuentan es configurable: todas, o solo los tipos de entidad que listes.
+
+## Qué es cada efecto
+
+Un efecto es una **secuencia** — una lista de formas, partículas, sonidos y pausas, en orden:
+
+```yaml
+EMBER_BURST:
+  category: infernal
+  name: "<gradient:#D1693F:#D1523F><bold>EMBER BURST</bold></gradient>"
+  material: BLAZE_POWDER
+  priority: 1
+  effects:
+    - '[CIRCLE] FLAME;radius:1.5;points:24;y:0.1'
+    - '[SOUND] ENTITY_BLAZE_DEATH;1.5;0.8'
+    - '[DELAY] 0.15'
+    - '[BEAM] FLAME;height:3.5;points:24'
+    - '[EXPLOSION]'
+```
+
+Todo es editable, y puedes escribir los tuyos. La sintaxis completa está en
+[Efectos](/docs/exyliakilleffect/efectos).
+
+## Visibilidad
+
+Cada jugador elige qué ve, y la elección es solo suya:
+
+| Modo | Qué ve |
+|---|---|
+| `ALL` | Todos los efectos, los suyos y los de los demás. |
+| `NONE` | Ninguno. |
+| `SELF_ONLY` | Solo los suyos. |
+| `OTHERS_ONLY` | Solo los de los demás. |
+
+Es una decisión por observador, así que alguien en `NONE` deja de ver partículas sin quitárselas a
+nadie más.
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. Folia soportado. |
+| Obligatorios | `ExyliaLib`, `packetevents` |
+| Opcional | `PlaceholderAPI` |

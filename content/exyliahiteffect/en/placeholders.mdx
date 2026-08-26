@@ -1,0 +1,38 @@
+---
+title: "Placeholders"
+description: "The seven PlaceholderAPI placeholders, and what they answer when nothing is chosen."
+---
+
+Identifier: **`exyliahiteffect`**. PlaceholderAPI is optional — without it the plugin works and these
+are simply not exposed.
+
+| Placeholder | Returns |
+|---|---|
+| `%exyliahiteffect_effect%` | The chosen effect's id. |
+| `%exyliahiteffect_effect_name%` | Its display name, with its colours. |
+| `%exyliahiteffect_effect_description%` | Its description, flattened to one line. |
+| `%exyliahiteffect_effect_material%` | The material it is drawn with. |
+| `%exyliahiteffect_effect_category%` | The category id. |
+| `%exyliahiteffect_effect_category_name%` | The category's display name. |
+| `%exyliahiteffect_has_effect%` | `true` or `false`. |
+
+## With nothing chosen
+
+| Placeholder | Answers |
+|---|---|
+| `has_effect` | `false` |
+| `effect_description` | Empty |
+| `effect_material` | A fallback material |
+| Everything else | Whatever `placeholders.none` says in `config.yml` — `None` by default |
+
+Safe to drop into a scoreboard without a fallback of their own:
+
+```yaml
+lines:
+  - " {muted}❙ {letters}Hit: {highlight}%exyliahiteffect_effect_name%"
+```
+
+<Callout type="tip" title="Pairs with the kill plugin">
+If you run ExyliaKillEffect too, both expose the same seven names under their own identifiers — so one
+scoreboard line each, written the same way.
+</Callout>

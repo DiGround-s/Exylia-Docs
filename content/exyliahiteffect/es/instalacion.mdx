@@ -1,0 +1,69 @@
+---
+title: "Instalación"
+description: "Dependencias, archivos que escribe, y los ajustes de config.yml."
+---
+
+## Instalar
+
+<Steps>
+  <Step title="Coloca los jars">
+    `ExyliaHitEffect.jar`, más `ExyliaLib` y `packetevents`, en `plugins/`.
+  </Step>
+  <Step title="Arranca el servidor">
+    Escribe `config.yml`, `effects.yml` y `menus/main.yml`, y crea su tabla.
+  </Step>
+  <Step title="Da los permisos">
+    Ver [Comandos y permisos](/docs/exyliahiteffect/comandos).
+  </Step>
+</Steps>
+
+## Archivos
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | Qué víctimas cuentan, la visibilidad por defecto, y los nombres de los modos. |
+| `effects.yml` | Las 9 categorías y los 80 efectos. |
+| `menus/main.yml` | El diseño del menú, editable como cualquier menú de ExyliaLib. |
+| `database.yml` | Dónde se guardan las selecciones. H2 por defecto. |
+
+Las selecciones viven en la tabla `hiteffect_players`: el efecto elegido y el modo de visibilidad, por
+jugador.
+
+## config.yml
+
+```yaml
+placeholders:
+  none: "None"
+
+effects:
+  all-mobs: false
+  allowed-mobs:
+    - PLAYER
+    - MANNEQUIN
+    - ZOMBIE
+
+particles:
+  default-visibility: "ALL"
+  name-all: "All"
+  name-none: "None"
+  name-self-only: "Self Only"
+  name-others-only: "Others Only"
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `placeholders.none` | `None` | Lo que muestran los placeholders sin nada elegido. |
+| `effects.all-mobs` | `false` | `true` lo lanza con cualquier víctima viva. `false` lo limita a la lista. |
+| `effects.allowed-mobs` | `PLAYER`, `MANNEQUIN`, `ZOMBIE` | Tipos de entidad que lo disparan al ser golpeados. |
+| `particles.default-visibility` | `ALL` | Con qué empieza un jugador. |
+| `particles.name-*` | ver arriba | Cómo se llama cada modo en menús y placeholders. |
+
+<Callout type="warning" title="all-mobs pesa más aquí que en un plugin de muertes">
+Un efecto de golpe salta en cada impacto que conecta, no una vez por muerte. Con `all-mobs: true` un
+jugador abriéndose paso por una granja de mobs lanza una secuencia entera por golpe. Mantén la lista
+limitada salvo que sepas que eso es lo que quieres.
+</Callout>
+
+## Actualizar
+
+Reemplaza el jar y reinicia. `/hiteffect reload` relee los archivos de este plugin.

@@ -1,0 +1,127 @@
+---
+title: "Efectos y categorías"
+description: "El formato de effects.yml, y la sintaxis completa de secuencias para escribir los tuyos."
+---
+
+## El archivo
+
+`effects.yml` tiene dos secciones: las categorías, y los efectos que pertenecen a ellas.
+
+```yaml
+categories:
+  infernal:
+    material: FIRE_CHARGE
+    name: 'Infernal'
+    priority: 1
+
+kill_effects:
+  EMBER_BURST:
+    category: infernal
+    name: "<gradient:#D1693F:#D1523F><bold>EMBER BURST</bold></gradient>"
+    material: BLAZE_POWDER
+    description:
+      - 'Las llamas y la lava estallan en un círculo ardiente.'
+      - 'Cierra con una {highlight}explosión{neutral} en el centro.'
+    priority: 1
+    effects:
+      - '[CIRCLE] FLAME;radius:1.5;points:24;y:0.1'
+      - '[SOUND] ENTITY_BLAZE_DEATH;1.5;0.8'
+      - '[DELAY] 0.15'
+      - '[EXPLOSION]'
+```
+
+| Clave | Qué hace |
+|---|---|
+| `category` | Bajo qué categoría aparece. |
+| `name` | Lo que muestra el menú. Acepta tokens de paleta, MiniMessage y degradados. |
+| `material` | El icono en el menú. |
+| `description` | Líneas de lore. Una lista es una línea por entrada; una cadena se parte por `<nl>`. |
+| `priority` | Orden dentro de la categoría. Menor primero. |
+| `effects` | La secuencia en sí. |
+
+Una categoría acepta `material`, `name` y `priority`.
+
+<Callout type="note" title="El id del efecto es el permiso">
+`EMBER_BURST` se convierte en `exyliakilleffect.effect.ember_burst`. Renombrar un efecto se lo revoca a
+todo el que tuviera el permiso viejo, así que renombra con cuidado en un servidor en producción.
+</Callout>
+
+## Sintaxis de secuencias
+
+Cada línea es un token entre corchetes y luego sus argumentos separados por `;`.
+
+### Tokens que no son formas
+
+| Token | Argumentos |
+|---|---|
+| `[DELAY] 0.15` | Segundos de espera antes de la siguiente línea. |
+| `[PARTICLE] FLAME` | `count:` `offset:x,y,z` `speed:` `y:` `color:` `size:` `block:` |
+| `[SOUND] NOMBRE;volumen;tono` | También `volume:` `pitch:` |
+| `[LIGHTNING]` | `volume:` `pitch:` — destello, chispas y trueno. Sin rayo, sin fuego, sin daño. |
+| `[EXPLOSION]` | `count:` `y:` |
+| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
+| `[BLOCK_BREAK] STONE` | `count:` `offset:` `y:` |
+| `[POTION] speed;100;1` | También `duration:` `amplifier:` |
+| `[TITLE] título;subtítulo;in;stay;out` | Tiempos en segundos. |
+| `[ACTION_BAR] texto` | |
+| `[MESSAGE] texto` | Una línea de chat. |
+| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
+
+### Formas
+
+Veinte:
+
+`CIRCLE` `SPHERE` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO` `STAR` `CAGE` `DISC` `VORTEX` `WAVE`
+`CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS` `ARCH` `CLAW`
+
+Todas aceptan `color:` `size:` `count:` `ticks:` `interval:` `y:` además de sus propios parámetros —
+`radius:`, `points:`, `height:`, `turns:`, `arms:`, `spikes:` y demás, según la forma.
+
+```yaml
+- '[SPIRAL] FLAME;height:4.0;radius:1.0;turns:3;points:60'
+- '[CIRCLE] DUST;radius:2.0;points:32;color:255,80,0;size:2.0'
+```
+
+<Callout type="tip" title="ticks: es la palanca del ritmo">
+`ticks:1` dibuja la forma entera en un fotograma. Más alto la dibuja a lo largo del tiempo, que es lo
+que hace que una espiral parezca estar dibujándose en vez de aparecer de golpe.
+</Callout>
+
+### Colores
+
+`DUST` es la partícula que acepta color: `color:255,80,0` en RGB, con `size:` para el tamaño del punto.
+
+## Escribir los tuyos
+
+<Steps>
+  <Step title="Añade la entrada">
+    Una clave nueva bajo `kill_effects`, con una `category` que exista.
+  </Step>
+  <Step title="Escribe la secuencia">
+    Empieza con una forma, un sonido y un retraso. Añade capas desde ahí.
+  </Step>
+  <Step title="Recarga">
+    `/killeffect reload`.
+  </Step>
+  <Step title="Concédelo">
+    `exyliakilleffect.effect.<id en minúsculas>`, o la categoría entera.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="El coste es por línea y por baja">
+Una secuencia de veinte líneas con `count:50` partículas cada una son doscientos paquetes en una arena
+concurrida. Los efectos que vienen rondan las ocho líneas; eso es un techo deliberado, no una
+casualidad.
+</Callout>
+
+## Categorías como productos
+
+El permiso de una categoría concede todo lo que hay dentro:
+
+```text
+exyliakilleffect.category.infernal    todos los efectos infernales
+exyliakilleffect.effect.ember_burst   solo ese
+exyliakilleffect.effect.*             todos
+```
+
+Es lo que permite vender un rango como "todos los efectos celestiales" sin listar once nodos.

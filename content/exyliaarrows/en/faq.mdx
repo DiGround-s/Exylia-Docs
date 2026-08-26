@@ -1,0 +1,56 @@
+---
+title: "Frequently asked questions"
+description: "The questions that come up most."
+---
+
+## The plugin does not start
+
+`ExyliaLib` and `packetevents` are both required. Without either, the server disables it by name.
+
+## The permissions do nothing
+
+Check the spelling: it is `exyliarrows`, with one `a`, not `exyliaarrows`. That single letter is the
+most common reason a correctly-written node grants nothing.
+
+## The menu will not open
+
+That needs `exyliarrows.command.arrows`. The same node also covers `reset` and `toggleParticles`, so
+without it a player cannot turn their particles off either.
+
+## Nothing happens when a player shoots
+
+1. **Do they own the effect?** Its `permission` field, or `exyliarrows.effect.*`.
+2. **Does the effect apply to that projectile?** An effect with `projectile-types` only fires on those,
+   and with `projectiles.all-types: false` the config's list applies.
+3. **Do its triggers cover what happened?** An effect written with only `HIT_ENTITY` does nothing when
+   the arrow hits a wall.
+4. **Is anyone set to see it?** A player on `NONE` sees nothing, including their own.
+
+## The trail keeps drawing after the arrow lands
+
+It should stop the moment the projectile stops being valid. If it lingers, the arrow probably landed in
+an unloaded chunk and never fired a hit event — which is what `trail.max-duration` catches, ten seconds
+by default. Never set that to zero.
+
+## Trails lag the server
+
+`trail.default-interval` is the global knob: `2` is a step every tenth of a second, `1` doubles every
+trail at once. Prefer raising an individual effect's `trail-interval`, and keep trails to one or two
+`[PARTICLE]` lines — a shape in a trail is a shape drawn every tick of the flight.
+
+## Can I have an effect only on ender pearls?
+
+Yes — give that effect a `projectile-types` list with `ENDER_PEARL` in it.
+
+## Can I sell a whole category?
+
+Not with one node: there is no category permission here. Either grant each effect's node, or give a
+group of effects the same string in their `permission` field and sell that.
+
+## Does it work on Folia?
+
+Yes. The trail task is tied to the projectile, so it runs on that projectile's region.
+
+## Where do I get support?
+
+On the [Exylia Discord](https://discord.exylia.net).

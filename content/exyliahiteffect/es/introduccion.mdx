@@ -1,0 +1,70 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaHitEffect y con qué viene."
+---
+
+ExyliaHitEffect lanza un efecto de partículas sobre a quien golpeas, en el momento del impacto. Los
+jugadores eligen el suyo desde un menú, y los permisos deciden cuáles pueden elegir.
+
+Vienen **80 efectos en 9 categorías** en `effects.yml`: impact, elemental, arcane, nature, premium,
+sculk, breeze, spectral y toxic.
+
+## Cómo funciona
+
+<Steps>
+  <Step title="Un jugador abre el menú">
+    `/hiteffect` muestra las categorías, y dentro de una, sus efectos.
+  </Step>
+  <Step title="Elige uno">
+    La elección se guarda en la base de datos y sobrevive a un reinicio.
+  </Step>
+  <Step title="Golpea algo">
+    El efecto se lanza sobre la víctima.
+  </Step>
+</Steps>
+
+El disparador es cualquier daño hecho por un jugador a una entidad viva. Qué víctimas cuentan es
+configurable: todas, o solo los tipos de entidad que listes.
+
+<Callout type="note" title="Se lanza un bloque más arriba">
+El efecto se ancla un bloque por encima de los pies de la víctima, para que caiga sobre el cuerpo y no
+en el suelo — algo que importa mucho más en un efecto de golpe que en uno de muerte, porque la víctima
+sigue de pie cuando salta.
+</Callout>
+
+## Qué es cada efecto
+
+Un efecto es una **secuencia** — formas, partículas, sonidos y pausas en orden:
+
+```yaml
+effects:
+  - '[BURST] CRIT;radius:1.0;count:30'
+  - '[SOUND] ENTITY_PLAYER_ATTACK_CRIT;1.0;1.4'
+  - '[DELAY] 0.1'
+  - '[PARTICLE] CRIT;count:20;offset:0.3,0.3,0.3'
+```
+
+Todo es editable y puedes escribir los tuyos. La sintaxis completa está en
+[Efectos](/docs/exyliahiteffect/efectos).
+
+## Visibilidad
+
+Cada jugador elige qué ve, y la elección es solo suya:
+
+| Modo | Qué ve |
+|---|---|
+| `ALL` | Todos los efectos. |
+| `NONE` | Ninguno. |
+| `SELF_ONLY` | Solo los suyos. |
+| `OTHERS_ONLY` | Solo los de los demás. |
+
+Aquí importa más que en un plugin de muertes: un efecto de golpe salta en cada impacto, así que quien
+los encuentre molestos en una pelea puede apagarlos sin afectar a nadie.
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. Folia soportado. |
+| Obligatorios | `ExyliaLib`, `packetevents` |
+| Opcional | `PlaceholderAPI` |

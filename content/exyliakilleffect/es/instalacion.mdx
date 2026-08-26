@@ -1,0 +1,71 @@
+---
+title: "Instalación"
+description: "Dependencias, archivos que escribe, y los ajustes de config.yml."
+---
+
+## Instalar
+
+<Steps>
+  <Step title="Coloca los jars">
+    `ExyliaKillEffect.jar`, más `ExyliaLib` y `packetevents`, en `plugins/`.
+  </Step>
+  <Step title="Arranca el servidor">
+    Escribe `config.yml`, `effects.yml` y `menus/main.yml`, y crea su tabla.
+  </Step>
+  <Step title="Da los permisos">
+    Nada es usable hasta que los jugadores puedan abrir el menú y tengan al menos un efecto. Ver
+    [Comandos y permisos](/docs/exyliakilleffect/comandos).
+  </Step>
+</Steps>
+
+## Archivos
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | Qué bajas cuentan, la visibilidad por defecto, y los nombres de los modos. |
+| `effects.yml` | Las 14 categorías y los 144 efectos. |
+| `menus/main.yml` | El diseño del menú, editable como cualquier menú de ExyliaLib. |
+| `database.yml` | Dónde se guardan las selecciones. H2 por defecto. |
+
+Las selecciones viven en la tabla `killeffect_players`: el efecto elegido y el modo de visibilidad, por
+jugador.
+
+## config.yml
+
+```yaml
+placeholders:
+  none: "None"
+
+effects:
+  all-mobs: false
+  allowed-mobs:
+    - PLAYER
+    - MANNEQUIN
+    - ZOMBIE
+
+particles:
+  default-visibility: "ALL"
+  name-all: "All"
+  name-none: "None"
+  name-self-only: "Self Only"
+  name-others-only: "Others Only"
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `placeholders.none` | `None` | Lo que muestran los placeholders cuando no hay efecto elegido. |
+| `effects.all-mobs` | `false` | `true` lanza el efecto con cualquier baja. `false` lo limita a la lista. |
+| `effects.allowed-mobs` | `PLAYER`, `MANNEQUIN`, `ZOMBIE` | Tipos de entidad cuya muerte lanza un efecto. |
+| `particles.default-visibility` | `ALL` | Con qué empieza un jugador: `ALL`, `NONE`, `SELF_ONLY`, `OTHERS_ONLY`. |
+| `particles.name-*` | ver arriba | Cómo se llama cada modo en menús y placeholders. |
+
+<Callout type="tip" title="all-mobs en un servidor de farmeo">
+`all-mobs: true` significa que cada zombie de una granja dispara una secuencia entera. La lista por
+defecto existe porque un efecto de muerte suele ser para PvP: mantenla limitada salvo que quieras
+partículas en cada muerte de mob.
+</Callout>
+
+## Actualizar
+
+Reemplaza el jar y reinicia. `/killeffect reload` relee los archivos de este plugin sin tocar el resto
+del servidor.

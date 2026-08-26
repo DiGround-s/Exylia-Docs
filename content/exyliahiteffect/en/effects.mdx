@@ -1,0 +1,108 @@
+---
+title: "Effects and categories"
+description: "The effects.yml format, and the full sequence syntax for writing your own."
+---
+
+## The file
+
+`effects.yml` has two sections: the categories, and the effects that belong to them.
+
+```yaml
+categories:
+  impact:
+    material: DIAMOND_SWORD
+    name: 'Impact'
+    priority: 1
+
+hit_effects:
+  CRIT_BURST:
+    category: impact
+    name: "<gradient:#FFD700:#FF8C00><bold>CRIT BURST</bold></gradient>"
+    material: IRON_SWORD
+    description:
+      - 'A sharp burst of crit particles on impact.'
+    priority: 1
+    effects:
+      - '[BURST] CRIT;radius:1.0;count:30'
+      - '[SOUND] ENTITY_PLAYER_ATTACK_CRIT;1.0;1.4'
+```
+
+| Key | What it does |
+|---|---|
+| `category` | Which category it appears under. |
+| `name` | What the menu shows. Palette tokens, MiniMessage and gradients all work. |
+| `material` | The icon in the menu. |
+| `description` | Lore lines. A list is one line per entry; a single string splits on `<nl>`. |
+| `priority` | Ordering inside the category. Lower first. |
+| `effects` | The sequence itself. |
+
+A category takes `material`, `name` and `priority`.
+
+<Callout type="note" title="The effect id is the permission">
+`CRIT_BURST` becomes `exyliahiteffect.effect.crit_burst`. Renaming an effect renames its node and
+revokes it from everyone who had the old one.
+</Callout>
+
+## Sequence syntax
+
+Every line is a token in brackets, then arguments separated by `;`.
+
+### Non-shape tokens
+
+| Token | Arguments |
+|---|---|
+| `[DELAY] 0.15` | Seconds to wait before the next line. |
+| `[PARTICLE] CRIT` | `count:` `offset:x,y,z` `speed:` `y:` `color:` `size:` `block:` |
+| `[SOUND] NAME;volume;pitch` | Also `volume:` `pitch:` |
+| `[LIGHTNING]` | `volume:` `pitch:` — flash, sparks and thunder only. |
+| `[EXPLOSION]` | `count:` `y:` |
+| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
+| `[BLOCK_BREAK] STONE` | `count:` `offset:` `y:` |
+| `[POTION] speed;100;1` | Also `duration:` `amplifier:` |
+| `[TITLE] title;subtitle;in;stay;out` | Times in seconds. |
+| `[ACTION_BAR] text` | |
+| `[MESSAGE] text` | A chat line. |
+| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
+
+### Shapes
+
+Twenty of them:
+
+`CIRCLE` `SPHERE` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO` `STAR` `CAGE` `DISC` `VORTEX` `WAVE`
+`CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS` `ARCH` `CLAW`
+
+Every shape accepts `color:` `size:` `count:` `ticks:` `interval:` `y:` on top of its own parameters.
+
+<Callout type="tip" title="Keep hit effects short">
+A hit effect fires several times a second in a real fight. `[DELAY]` lines and long shapes that were
+fine on a kill effect will overlap themselves here — the shipped effects are two to five lines for
+that reason, where the kill effects run to eight.
+</Callout>
+
+## Writing your own
+
+<Steps>
+  <Step title="Add the entry">
+    A new key under `hit_effects`, with a `category` that exists.
+  </Step>
+  <Step title="Keep it brief">
+    One shape, one sound. Test it in a real fight, not on a stationary dummy.
+  </Step>
+  <Step title="Reload">
+    `/hiteffect reload`.
+  </Step>
+  <Step title="Grant it">
+    `exyliahiteffect.effect.<id in lowercase>`, or the whole category.
+  </Step>
+</Steps>
+
+## Categories as products
+
+```text
+exyliahiteffect.category.premium    every premium effect
+exyliahiteffect.effect.crit_burst   just that one
+exyliahiteffect.effect.*            all of them
+```
+
+The shipped `premium` category exists for exactly this: a rank that grants one node and unlocks a
+whole tier.

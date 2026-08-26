@@ -1,0 +1,48 @@
+---
+title: "Commands and permissions"
+description: "Two commands, and the permission nodes that decide who owns what."
+---
+
+## Commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/killeffect` | `exyliakilleffect.command.killeffect` | Opens the effect menu. |
+| `/killeffect reload` | `exyliakilleffect.admin` | Reloads this plugin's files. |
+
+`reload` re-reads `config.yml`, `effects.yml` and the menu. It does **not** reload the library —
+recolouring every plugin on the server is what `/exylialib reload` is for.
+
+## Permissions
+
+| Node | Grants |
+|---|---|
+| `exyliakilleffect.command.killeffect` | Opening the menu. |
+| `exyliakilleffect.admin` | `/killeffect reload`. |
+| `exyliakilleffect.effect.<id>` | One effect, by its id in lowercase. |
+| `exyliakilleffect.effect.*` | Every effect. |
+| `exyliakilleffect.category.<id>` | Every effect in that category. |
+
+An effect is owned if **either** its own node or its category's node is granted.
+
+```text
+/lp group vip permission set exyliakilleffect.category.infernal true
+/lp group mvp permission set exyliakilleffect.effect.ember_burst true
+```
+
+<Callout type="note" title="A revoked effect is dropped, not hidden">
+Permissions change while a player is offline. When somebody kills with an effect they no longer own,
+the plugin clears their selection instead of playing it — so a rank that expired stops paying out
+immediately rather than at the next menu visit.
+</Callout>
+
+## A sensible setup
+
+Give everyone the menu, then sell what is inside it:
+
+```text
+/lp group default permission set exyliakilleffect.command.killeffect true
+```
+
+Without that node the menu cannot be opened at all, which is rarely what you want — a player who
+cannot see the catalogue cannot want anything in it.

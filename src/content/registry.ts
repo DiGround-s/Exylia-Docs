@@ -232,6 +232,30 @@ const LIB_NAV: NavGroup[] = [
   },
 ];
 
+function cosmeticNav(effectsEn: string, effectsEs: string): NavGroup[] {
+  return [
+    {
+      label: { en: "Getting started", es: "Empezar" },
+      pages: [
+        page("introduction", "introduction", "introduccion"),
+        page("installation", "installation", "instalacion"),
+      ],
+    },
+    {
+      label: { en: "Configuring", es: "Configurar" },
+      pages: [page("effects", effectsEn, effectsEs)],
+    },
+    {
+      label: { en: "Reference", es: "Referencia" },
+      pages: [
+        page("commands", "commands", "comandos"),
+        page("placeholders", "placeholders", "placeholders"),
+        page("faq", "faq", "faq"),
+      ],
+    },
+  ];
+}
+
 export const plugins: Plugin[] = [
   {
     id: "exyliaffa",
@@ -301,6 +325,98 @@ export const plugins: Plugin[] = [
       { en: "Clans", es: "Clanes" },
     ],
     nav: CAPTURE_NAV,
+    links: [
+      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
+      { label: "Discord", href: "https://discord.exylia.net" },
+    ],
+  },
+  {
+    id: "exyliakilleffect",
+    name: "ExyliaKillEffect",
+    tagline: { en: "Particle effects on every kill", es: "Efectos de partículas en cada baja" },
+    summary: {
+      en: "144 kill effects across 14 categories, chosen from a menu, sold by permission and written as sequences a server owner can edit.",
+      es: "144 efectos de muerte en 14 categorías, elegidos desde un menú, vendidos por permiso y escritos como secuencias que el dueño puede editar.",
+    },
+    version: "1.0.8",
+    status: "stable",
+    category: { en: "Cosmetic", es: "Cosmético" },
+    minecraft: "1.21+",
+    tags: [
+      { en: "Particles", es: "Partículas" },
+      { en: "Cosmetic", es: "Cosmético" },
+      { en: "Folia", es: "Folia" },
+    ],
+    nav: cosmeticNav("effects", "efectos"),
+    links: [
+      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
+      { label: "Discord", href: "https://discord.exylia.net" },
+    ],
+  },
+  {
+    id: "exyliahiteffect",
+    name: "ExyliaHitEffect",
+    tagline: { en: "Particle effects on every hit", es: "Efectos de partículas en cada golpe" },
+    summary: {
+      en: "80 hit effects across 9 categories, played on the victim as they are struck, chosen from a menu and gated by permission.",
+      es: "80 efectos de golpe en 9 categorías, lanzados sobre la víctima al recibir el impacto, elegidos desde un menú y limitados por permiso.",
+    },
+    version: "1.0.8",
+    status: "stable",
+    category: { en: "Cosmetic", es: "Cosmético" },
+    minecraft: "1.21+",
+    tags: [
+      { en: "Particles", es: "Partículas" },
+      { en: "Combat", es: "Combate" },
+      { en: "Folia", es: "Folia" },
+    ],
+    nav: cosmeticNav("effects", "efectos"),
+    links: [
+      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
+      { label: "Discord", href: "https://discord.exylia.net" },
+    ],
+  },
+  {
+    id: "exyliaarmortrims",
+    name: "ExyliaArmorTrims",
+    tagline: { en: "Armour trims without a smithing table", es: "Trims de armadura sin mesa de forja" },
+    summary: {
+      en: "18 patterns and 11 materials applied to equipped armour from a menu, per piece, sold by permission and reapplied whenever armour is equipped.",
+      es: "18 patrones y 11 materiales aplicados a la armadura equipada desde un menú, pieza por pieza, vendidos por permiso y reaplicados al equiparse.",
+    },
+    version: "1.0.10",
+    status: "stable",
+    category: { en: "Cosmetic", es: "Cosmético" },
+    minecraft: "1.21+",
+    tags: [
+      { en: "Trims", es: "Trims" },
+      { en: "Cosmetic", es: "Cosmético" },
+      { en: "Folia", es: "Folia" },
+    ],
+    nav: cosmeticNav("trims", "trims"),
+    links: [
+      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
+      { label: "Discord", href: "https://discord.exylia.net" },
+    ],
+  },
+  {
+    id: "exyliaarrows",
+    name: "ExyliaArrows",
+    tagline: { en: "Trails and impacts on every projectile", es: "Estelas e impactos en cada proyectil" },
+    summary: {
+      en: "65 projectile effects across 6 categories, with five triggers — launch, trail, hit, hit entity and hit block — chosen from a menu and gated by permission.",
+      es: "65 efectos de proyectil en 6 categorías, con cinco disparadores — lanzamiento, estela, impacto, impacto a entidad e impacto a bloque — elegidos desde un menú y limitados por permiso.",
+    },
+    version: "1.0.3",
+    status: "stable",
+    category: { en: "Cosmetic", es: "Cosmético" },
+    minecraft: "1.21+",
+    tags: [
+      { en: "Particles", es: "Partículas" },
+      { en: "Projectiles", es: "Proyectiles" },
+      { en: "Folia", es: "Folia" },
+    ],
+    nav: cosmeticNav("effects", "efectos"),
     links: [
       { label: "SpigotMC", href: "https://link.exylia.net/@services" },
       { label: "Discord", href: "https://discord.exylia.net" },

@@ -1,0 +1,38 @@
+---
+title: "Placeholders"
+description: "The seven PlaceholderAPI placeholders, and what they answer when nothing is chosen."
+---
+
+Identifier: **`exyliakilleffect`**. PlaceholderAPI is optional — without it the plugin works and these
+simply are not exposed.
+
+| Placeholder | Returns |
+|---|---|
+| `%exyliakilleffect_effect%` | The chosen effect's id. |
+| `%exyliakilleffect_effect_name%` | Its display name, with its colours. |
+| `%exyliakilleffect_effect_description%` | Its description, flattened to one line. |
+| `%exyliakilleffect_effect_material%` | The material it is drawn with. |
+| `%exyliakilleffect_effect_category%` | The category id. |
+| `%exyliakilleffect_effect_category_name%` | The category's display name. |
+| `%exyliakilleffect_has_effect%` | `true` or `false`. |
+
+## With nothing chosen
+
+| Placeholder | Answers |
+|---|---|
+| `has_effect` | `false` |
+| `effect_description` | Empty |
+| `effect_material` | A fallback material |
+| Everything else | Whatever `placeholders.none` says in `config.yml` — `None` by default |
+
+That is what makes them safe to drop into a scoreboard without a fallback of their own:
+
+```yaml
+lines:
+  - " {muted}❙ {letters}Effect: {highlight}%exyliakilleffect_effect_name%"
+```
+
+<Callout type="tip" title="effect_material is for menus">
+It is the icon of whatever they chose, which is what lets another plugin's menu draw their current
+effect without knowing anything about this one.
+</Callout>

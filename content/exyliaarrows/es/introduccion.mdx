@@ -1,0 +1,65 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaArrows y con qué viene."
+---
+
+ExyliaArrows pone efectos de partículas en los proyectiles: una estela detrás de una flecha en vuelo,
+un estallido donde cae, o las dos cosas. Los jugadores eligen el suyo desde un menú, y los permisos
+deciden cuáles pueden elegir.
+
+Vienen **65 efectos en 6 categorías** en `effects.yml`: elemental, magic, nature, cosmic, dark y
+special.
+
+## Cinco disparadores
+
+Un efecto declara en qué momentos salta, y uno puede declarar varios:
+
+| Disparador | Salta |
+|---|---|
+| `LAUNCH` | En el instante en que el proyectil sale del jugador. |
+| `TRAIL` | Repetidamente mientras vuela. |
+| `HIT` | Donde caiga, contra lo que sea. |
+| `HIT_ENTITY` | Solo al golpear algo vivo. |
+| `HIT_BLOCK` | Solo al golpear un bloque. |
+
+`fire_trail` está escrito con `TRAIL` y `HIT`, que es la pareja habitual: llamas detrás de la flecha y
+un estallido donde cae.
+
+<Callout type="note" title="HIT y los dos específicos se acumulan">
+`HIT` salta con cualquier aterrizaje. Añadir `HIT_ENTITY` encima no lo duplica — el efecto se lanza si
+coincide cualquiera de sus disparadores. Usa `HIT_ENTITY` solo cuando quieras algo que ocurra
+únicamente sobre una persona.
+</Callout>
+
+## No solo flechas
+
+Por defecto cualquier proyectil lanzado lleva el efecto. Apágalo y pasa a una lista — `ARROW`,
+`SPECTRAL_ARROW`, `TIPPED_ARROW`, `EGG`, `SNOWBALL`, `WIND_CHARGE`, `ENDER_PEARL` — y un efecto
+concreto puede declarar su propia lista.
+
+## Cómo funciona
+
+<Steps>
+  <Step title="Un jugador abre el menú">
+    `/arrows` muestra las categorías, y dentro de una, sus efectos.
+  </Step>
+  <Step title="Elige uno">
+    La elección se guarda en la base de datos y sobrevive a un reinicio.
+  </Step>
+  <Step title="Dispara">
+    Ocurre lo que digan los disparadores del efecto.
+  </Step>
+</Steps>
+
+## Visibilidad
+
+Cada jugador elige qué ve, y la elección es solo suya: `ALL`, `NONE`, `SELF_ONLY` u `OTHERS_ONLY`.
+`/arrows toggleParticles` la rota sin abrir nada.
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. Folia soportado. |
+| Obligatorios | `ExyliaLib`, `packetevents` |
+| Opcional | `PlaceholderAPI` |

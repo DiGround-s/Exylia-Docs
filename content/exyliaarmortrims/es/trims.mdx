@@ -1,0 +1,97 @@
+---
+title: "Patrones y materiales"
+description: "El catálogo completo, cómo se compone un trim, y cómo se editan los menús."
+---
+
+Un trim es un **patrón** más un **material**: el patrón es la forma estampada en la armadura, el
+material es en qué está estampada. Se eligen por separado, y se permisionan por separado.
+
+## Patrones
+
+Dieciocho, que son todos los de vanilla:
+
+| Patrón | Patrón | Patrón |
+|---|---|---|
+| Sentry | Ward | Shaper |
+| Dune | Eye | Silence |
+| Coast | Vex | Raiser |
+| Wild | Tide | Host |
+| Snout | Rib | Flow |
+| Spire | Wayfinder | Bolt |
+
+## Materiales
+
+Once:
+
+Quartz · Iron · Netherite · Redstone · Copper · Gold · Emerald · Diamond · Lapis · Amethyst · Resin
+
+Son 198 combinaciones, elegidas por pieza de armadura.
+
+## Por pieza
+
+Casco, peto, pantalones y botas conservan cada uno su patrón y su material. Nada obliga a que
+coincidan, y es a propósito — un set descompensado es un aspecto que alguien eligió, y los permisos se
+pueden escribir hasta el nivel de la pieza si prefieres venderlas por separado.
+
+## Nombres e iconos
+
+`trims.yml` decide cómo se llama cada uno y con qué se dibuja en el menú:
+
+```yaml
+trim_patterns:
+  SENTRY:
+    name: "Sentry"
+    material: "SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE"
+  FLOW:
+    name: "Flow"
+    material: "FLOW_ARMOR_TRIM_SMITHING_TEMPLATE"
+
+trim_materials:
+  NETHERITE:
+    name: "Netherite"
+    material: "NETHERITE_INGOT"
+  RESIN:
+    name: "Resin"
+    material: "RESIN_BRICK"
+```
+
+`name` acepta tokens de paleta, MiniMessage y degradados como cualquier otro texto de Exylia, así que
+un material premium puede ir en dorado en el menú:
+
+```yaml
+  NETHERITE:
+    name: "{highlight}&lNetherite"
+```
+
+<Callout type="warning" title="La clave es el permiso">
+`SENTRY` es `exyliaarmortrims.trim.pattern.sentry`. Las claves son además los ids de trim de vanilla
+que aplica el juego, así que renombrar una rompe tanto el permiso como el propio trim. Cambia `name`,
+nunca la clave.
+</Callout>
+
+## Los menús
+
+Tres archivos, editables como cualquier menú de ExyliaLib — iconos, slots, títulos, lore, sonidos y
+animaciones:
+
+| Archivo | Pantalla |
+|---|---|
+| `menus/main.yml` | El selector de pieza de armadura. |
+| `menus/pattern.yml` | La lista de patrones. |
+| `menus/material.yml` | La lista de materiales. |
+
+Las dos listas están paginadas, y un patrón o material para el que el jugador no tiene permiso se
+dibuja con su propia plantilla — así que una entrada bloqueada puede parecer bloqueada en vez de
+limitarse a no estar.
+
+## Cuándo se aplica el trim
+
+En cada cambio de armadura. El plugin escucha el equipamiento y reaplica el trim guardado a lo que haya
+en cada una de las cuatro ranuras.
+
+Eso significa que:
+
+- Un set recién sacado de un kit sale con trim en cuanto se pone.
+- Morir y volver a equiparse mantiene el aspecto.
+- Una pieza sin selección guardada se deja tal cual estaba — incluido un trim real que alguien forjara
+  a mano.

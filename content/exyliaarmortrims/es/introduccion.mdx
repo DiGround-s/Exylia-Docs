@@ -1,0 +1,51 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaArmorTrims y con qué viene."
+---
+
+ExyliaArmorTrims permite a un jugador ponerle trims a su armadura desde un menú, sin mesa de forja y
+sin gastar plantillas. La elección es cosmética, se guarda por jugador y por pieza, y se reaplica sola
+cada vez que se equipa armadura.
+
+**18 patrones y 11 materiales**, que son todas las combinaciones de vanilla — 198 aspectos por pieza.
+
+| | |
+|---|---|
+| Patrones | Sentry, Dune, Coast, Wild, Ward, Eye, Vex, Tide, Snout, Rib, Spire, Wayfinder, Shaper, Silence, Raiser, Host, Flow, Bolt |
+| Materiales | Quartz, Iron, Netherite, Redstone, Copper, Gold, Emerald, Diamond, Lapis, Amethyst, Resin |
+
+## Cómo funciona
+
+<Steps>
+  <Step title="Un jugador abre el menú">
+    `/armortrim` abre la pantalla principal, que lleva a un menú de patrones y otro de materiales.
+  </Step>
+  <Step title="Elige por pieza">
+    Casco, peto, pantalones y botas se eligen por separado — un casco con trim de oro sobre botas con
+    trim de diamante es una combinación válida.
+  </Step>
+  <Step title="Se equipa armadura">
+    El trim se aplica a lo que lleve puesto, cada vez que la armadura cambia.
+  </Step>
+</Steps>
+
+<Callout type="note" title="La selección sobrevive a la armadura">
+El trim se guarda contra el jugador, no contra el objeto. Morir y conseguir armadura nueva, o cambiar
+de set entre partidas, lo vuelve a aplicar — que es lo que lo convierte en una ventaja cosmética de
+rango y no en una edición puntual de un objeto.
+</Callout>
+
+## Qué le cuesta al jugador
+
+Nada dentro del juego. Ni mesa de forja, ni plantilla, ni material gastado. Lo que lo limita son los
+permisos: qué patrones y materiales puede elegir, opcionalmente hasta el nivel de la pieza concreta.
+
+Eso es lo que lo hace vendible — ver [Comandos y permisos](/docs/exyliaarmortrims/comandos).
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. Folia soportado. |
+| Obligatorios | `ExyliaLib`, `packetevents` |
+| Opcional | `PlaceholderAPI` |

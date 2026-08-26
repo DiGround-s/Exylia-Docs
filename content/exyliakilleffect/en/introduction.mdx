@@ -1,0 +1,69 @@
+---
+title: "Introduction"
+description: "What ExyliaKillEffect is and what it ships with."
+---
+
+ExyliaKillEffect plays a particle effect where a kill happened. Players pick theirs from a menu, and
+which ones they may pick is decided by permissions — which is what makes it something to sell.
+
+**144 effects across 14 categories** ship in `effects.yml`: infernal, glacial, storm, void, arcane,
+celestial, cosmic, nature, mythic, shadow, ancient, wind, sakura and primal.
+
+## How it works
+
+<Steps>
+  <Step title="A player opens the menu">
+    `/killeffect` shows the categories, then the effects inside one.
+  </Step>
+  <Step title="They pick one">
+    The choice is stored in the database, so it survives a restart.
+  </Step>
+  <Step title="They kill something">
+    The effect plays at the victim's location.
+  </Step>
+</Steps>
+
+Which kills count is configurable: everything, or only the entity types you list.
+
+## What each effect is
+
+An effect is a **sequence** — a list of shapes, particles, sounds and pauses, played in order:
+
+```yaml
+EMBER_BURST:
+  category: infernal
+  name: "<gradient:#D1693F:#D1523F><bold>EMBER BURST</bold></gradient>"
+  material: BLAZE_POWDER
+  priority: 1
+  effects:
+    - '[CIRCLE] FLAME;radius:1.5;points:24;y:0.1'
+    - '[SOUND] ENTITY_BLAZE_DEATH;1.5;0.8'
+    - '[DELAY] 0.15'
+    - '[BEAM] FLAME;height:3.5;points:24'
+    - '[EXPLOSION]'
+```
+
+Everything about them is editable, and you can write your own. The full syntax is in
+[Effects](/docs/exyliakilleffect/effects).
+
+## Visibility
+
+Every player chooses what they see, and the choice is theirs alone:
+
+| Mode | What they see |
+|---|---|
+| `ALL` | Every effect, theirs and everyone else's. |
+| `NONE` | None at all. |
+| `SELF_ONLY` | Only their own. |
+| `OTHERS_ONLY` | Only other people's. |
+
+It is a per-observer decision, so somebody on `NONE` stops seeing particles without stopping anyone
+else's.
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21 or newer. Folia supported. |
+| Required | `ExyliaLib`, `packetevents` |
+| Optional | `PlaceholderAPI` |

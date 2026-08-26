@@ -1,0 +1,36 @@
+---
+title: "Commands and permissions"
+description: "Two commands, and the permission nodes that decide who owns what."
+---
+
+## Commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/hiteffect` | `exyliahiteffect.command.hiteffect` | Opens the effect menu. |
+| `/hiteffect reload` | `exyliahiteffect.admin` | Reloads this plugin's files. |
+
+`reload` re-reads `config.yml`, `effects.yml` and the menu. It does not reload the library — that is
+what `/exylialib reload` is for.
+
+## Permissions
+
+| Node | Grants |
+|---|---|
+| `exyliahiteffect.command.hiteffect` | Opening the menu. |
+| `exyliahiteffect.admin` | `/hiteffect reload`. |
+| `exyliahiteffect.effect.<id>` | One effect, by its id in lowercase. |
+| `exyliahiteffect.effect.*` | Every effect. |
+| `exyliahiteffect.category.<id>` | Every effect in that category. |
+
+An effect is owned if **either** its own node or its category's node is granted.
+
+```text
+/lp group default permission set exyliahiteffect.command.hiteffect true
+/lp group vip permission set exyliahiteffect.category.premium true
+```
+
+<Callout type="note" title="A revoked effect is dropped, not hidden">
+Permissions change while a player is offline. On the next hit with an effect they no longer own, the
+plugin clears their selection instead of playing it.
+</Callout>

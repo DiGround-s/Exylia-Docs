@@ -1,0 +1,69 @@
+---
+title: "Installation"
+description: "Dependencies, files it writes, and the settings in config.yml."
+---
+
+## Installing
+
+<Steps>
+  <Step title="Drop in the jars">
+    `ExyliaHitEffect.jar`, plus `ExyliaLib` and `packetevents`, into `plugins/`.
+  </Step>
+  <Step title="Start the server">
+    It writes `config.yml`, `effects.yml` and `menus/main.yml`, and creates its table.
+  </Step>
+  <Step title="Grant the permissions">
+    See [Commands and permissions](/docs/exyliahiteffect/commands).
+  </Step>
+</Steps>
+
+## Files
+
+| File | Contents |
+|---|---|
+| `config.yml` | Which victims count, the default visibility, and the visibility mode names. |
+| `effects.yml` | The 9 categories and 80 effects. |
+| `menus/main.yml` | The menu layout, editable like any ExyliaLib menu. |
+| `database.yml` | Where selections are stored. H2 by default. |
+
+Selections live in the `hiteffect_players` table: the chosen effect and the visibility mode, per
+player.
+
+## config.yml
+
+```yaml
+placeholders:
+  none: "None"
+
+effects:
+  all-mobs: false
+  allowed-mobs:
+    - PLAYER
+    - MANNEQUIN
+    - ZOMBIE
+
+particles:
+  default-visibility: "ALL"
+  name-all: "All"
+  name-none: "None"
+  name-self-only: "Self Only"
+  name-others-only: "Others Only"
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `placeholders.none` | `None` | What the placeholders show when nothing is chosen. |
+| `effects.all-mobs` | `false` | `true` plays on any living victim. `false` limits it to the list. |
+| `effects.allowed-mobs` | `PLAYER`, `MANNEQUIN`, `ZOMBIE` | Entity types that trigger it when hit. |
+| `particles.default-visibility` | `ALL` | What a player starts with. |
+| `particles.name-*` | see above | How each mode is named in menus and placeholders. |
+
+<Callout type="warning" title="all-mobs is heavier here than in a kill plugin">
+A hit effect fires on every swing that lands, not once per death. With `all-mobs: true` a player
+tunnelling through a mob farm plays a full sequence per hit. Keep the list limited unless you know
+that is what you want.
+</Callout>
+
+## Updating
+
+Replace the jar and restart. `/hiteffect reload` re-reads this plugin's own files.

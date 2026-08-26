@@ -1,0 +1,52 @@
+---
+title: "Preguntas frecuentes"
+description: "Lo que más se pregunta."
+---
+
+## El plugin no arranca
+
+`ExyliaLib` y `packetevents` son obligatorios. Sin cualquiera de ellos, el servidor lo desactiva y lo
+nombra.
+
+## El menú no abre
+
+Necesita `exyliahiteffect.command.hiteffect`. Es un nodo aparte de poseer efectos.
+
+Hasta la versión 1.0.8 este nodo se escribía `exyliahiteffect.command.killeffect`, heredado del plugin
+hermano. Si concediste la grafía antigua, cámbiala — la vieja ya no hace nada.
+
+## No pasa nada cuando un jugador golpea
+
+1. **¿Está permitida la víctima?** `effects.all-mobs` es `false` por defecto, así que solo cuentan
+   `PLAYER`, `MANNEQUIN` y `ZOMBIE`.
+2. **¿Posee el efecto?** Una selección para la que ya no tiene permiso se borra, no se lanza.
+3. **¿Hay alguien configurado para verlo?** Un jugador en `NONE` no ve nada, ni lo suyo.
+
+## Los efectos se solapan en una pelea
+
+Es la naturaleza de un disparador por golpe, y por eso los que vienen son cortos. Un efecto con líneas
+`[DELAY]` seguirá dibujándose cuando llegue el siguiente golpe. Quita los retrasos, baja el `count:`, o
+usa `ticks:1` para que la forma se dibuje en un fotograma en vez de a lo largo del tiempo.
+
+## El efecto aparece a los pies de la víctima
+
+No debería — se ancla un bloque más arriba a propósito. Si se ve bajo, revisa el `y:` de las líneas de
+forma de tu propio efecto, que se aplica encima de ese bloque.
+
+## ¿Puedo usar aquí efectos de muerte?
+
+La sintaxis es idéntica, así que una secuencia se copia sin más. Otra cosa es que *se lea* bien: una
+espiral de cuatro segundos pensada para una muerte aquí salta en cada golpe.
+
+## Un jugador dice que su efecto desapareció
+
+Se le fue el permiso. El plugin borra una selección que ya no puede justificar en vez de lanzar algo a
+lo que el jugador no tiene derecho.
+
+## ¿Funciona en Folia?
+
+Sí, declara soporte de Folia.
+
+## ¿Dónde pido soporte?
+
+En el [Discord de Exylia](https://discord.exylia.net).

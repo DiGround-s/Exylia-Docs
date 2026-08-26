@@ -1,0 +1,139 @@
+---
+title: "Efectos y categorías"
+description: "El formato de effects.yml, los cinco disparadores, y la sintaxis de secuencias para escribir los tuyos."
+---
+
+## El archivo
+
+Dos secciones: las categorías, y los efectos que pertenecen a ellas.
+
+```yaml
+categories:
+  elemental:
+    name: 'Elemental'
+    material: FIRE_CHARGE
+    priority: 1
+
+effects:
+  fire_trail:
+    category: elemental
+    priority: 1
+    icon: BLAZE_ROD
+    name: '&c🔥 &lFire Trail'
+    permission: 'exyliarrows.effect.fire_trail'
+    lore:
+      - '&7Las llamas persiguen cada disparo.'
+    triggers:
+      - TRAIL
+      - HIT
+    trail-interval: 1
+    effects:
+      - '[PARTICLE] FLAME;count:6;offset:0.1,0.1,0.1;speed:0.02'
+      - '[PARTICLE] SMALL_FLAME;count:4;offset:0.05,0.05,0.05'
+```
+
+| Clave | Qué hace |
+|---|---|
+| `category` | Bajo qué categoría aparece. |
+| `priority` | Orden dentro de la categoría. Menor primero. |
+| `icon` | El objeto en el menú. `material` también vale. |
+| `name` | Lo que muestra el menú. Tokens de paleta, MiniMessage y códigos legacy funcionan. |
+| `permission` | El nodo que lo posee. **Se escribe explícitamente, no se deriva de la clave.** |
+| `lore` | Las líneas del tooltip. `description` también vale. |
+| `triggers` | Cuándo salta. Uno o más de los cinco. |
+| `trail-interval` | Ticks entre pasos de estela. Si falta, usa `trail.default-interval`. |
+| `trail-max-duration` | Segundos que puede vivir esta estela. Si falta, usa `trail.max-duration`. |
+| `projectile-types` | Limita este efecto a ciertos proyectiles. Vacío significa lo que permita la config. |
+| `effects` | La secuencia en sí. |
+| `actions` | Acciones que se ejecutan junto con él. |
+
+<Callout type="note" title="Aquí el permiso es un campo, no el id">
+A diferencia de los plugins hermanos de muertes y golpes, el nodo se escribe dentro de la entrada.
+Renombrar la clave `fire_trail` **no** cambia quién lo posee — eso lo decide la línea `permission`. Es
+escribir un poco más y una sorpresa menos.
+</Callout>
+
+## Los cinco disparadores
+
+| Disparador | Salta |
+|---|---|
+| `LAUNCH` | Una vez, cuando el proyectil sale del jugador. |
+| `TRAIL` | Cada `trail-interval` ticks mientras vuela. |
+| `HIT` | Donde caiga, contra lo que sea. |
+| `HIT_ENTITY` | Solo al golpear algo vivo. |
+| `HIT_BLOCK` | Solo al golpear un bloque. |
+
+Un efecto se lanza si coincide **cualquiera** de sus disparadores, así que `HIT` más `HIT_ENTITY` es lo
+mismo que `HIT` a secas. Usa los específicos por su cuenta cuando la gracia sea distinguir una persona
+de una pared.
+
+## La estela
+
+La estela es una tarea repetitiva atada al propio proyectil, así que en Folia corre en la región de ese
+proyectil. Se detiene cuando:
+
+- El proyectil deja de ser válido — cayó, desapareció o lo recogieron.
+- Pasan los segundos de `trail-max-duration`, lo que ocurra antes.
+
+Lo segundo es la red de seguridad para una flecha que cae en un chunk descargado y nunca dispara el
+evento de impacto.
+
+## Sintaxis de secuencias
+
+Cada línea es un token entre corchetes y luego argumentos separados por `;`.
+
+| Token | Argumentos |
+|---|---|
+| `[PARTICLE] FLAME` | `count:` `offset:x,y,z` `speed:` `y:` `color:` `size:` `block:` |
+| `[SOUND] NOMBRE;volumen;tono` | También `volume:` `pitch:` |
+| `[DELAY] 0.15` | Segundos. |
+| `[LIGHTNING]` | `volume:` `pitch:` — solo destello, chispas y trueno. |
+| `[EXPLOSION]` | `count:` `y:` |
+| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
+| `[BLOCK_BREAK] STONE` | `count:` `offset:` `y:` |
+| `[POTION] speed;100;1` | También `duration:` `amplifier:` |
+| `[TITLE] título;subtítulo;in;stay;out` | Tiempos en segundos. |
+| `[ACTION_BAR] texto` | |
+| `[MESSAGE] texto` | Una línea de chat. |
+| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
+
+### Formas
+
+`CIRCLE` `SPHERE` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO` `STAR` `CAGE` `DISC` `VORTEX` `WAVE`
+`CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS` `ARCH` `CLAW`
+
+Todas aceptan `color:` `size:` `count:` `ticks:` `interval:` `y:` además de sus propios parámetros.
+
+<Callout type="warning" title="Una estela no es sitio para una forma">
+Las estelas que vienen son una o dos líneas `[PARTICLE]`, y es a propósito: una línea de estela salta
+cada uno o dos ticks durante todo el vuelo. Un `[SPIRAL]` ahí es una espiral por tick. Guarda las formas
+para `HIT`, que salta una sola vez.
+</Callout>
+
+## Escribir los tuyos
+
+<Steps>
+  <Step title="Añade la entrada">
+    Una clave nueva bajo `effects`, con una `category` que exista y un `permission` que elijas tú.
+  </Step>
+  <Step title="Elige disparadores">
+    `TRAIL` más `HIT` es la pareja habitual. Mantén la estela en una o dos líneas de partículas.
+  </Step>
+  <Step title="Recarga">
+    `/arrows reload`.
+  </Step>
+  <Step title="Concédelo">
+    Lo que hayas escrito en `permission`.
+  </Step>
+</Steps>
+
+## Limitar un proyectil
+
+```yaml
+  ender_flash:
+    projectile-types:
+      - ENDER_PEARL
+```
+
+Un efecto con `projectile-types` solo salta con esos. Vacío — el caso normal — significa que sigue lo
+que permita `config.yml`.

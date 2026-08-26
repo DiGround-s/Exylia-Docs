@@ -1,0 +1,83 @@
+---
+title: "Installation"
+description: "Dependencies, files it writes, and the settings in config.yml."
+---
+
+## Installing
+
+<Steps>
+  <Step title="Drop in the jars">
+    `ExyliaArrows.jar`, plus `ExyliaLib` and `packetevents`, into `plugins/`.
+  </Step>
+  <Step title="Start the server">
+    It writes `config.yml`, `effects.yml` and `menus/main.yml`, and creates its table.
+  </Step>
+  <Step title="Grant the permissions">
+    See [Commands and permissions](/docs/exyliaarrows/commands).
+  </Step>
+</Steps>
+
+## Files
+
+| File | Contents |
+|---|---|
+| `config.yml` | Which projectiles count, trail pacing and safety, and the visibility modes. |
+| `effects.yml` | The 6 categories and 65 effects. |
+| `menus/main.yml` | The menu layout, editable like any ExyliaLib menu. |
+| `database.yml` | Where selections are stored. H2 by default. |
+
+Selections live in the `arrows_players` table: the chosen effect and the visibility mode, per player.
+
+## config.yml
+
+```yaml
+placeholders:
+  none: "None"
+
+projectiles:
+  all-types: true
+  default-allowed-types:
+    - ARROW
+    - SPECTRAL_ARROW
+    - TIPPED_ARROW
+    - EGG
+    - SNOWBALL
+    - WIND_CHARGE
+    - ENDER_PEARL
+
+trail:
+  default-interval: 2
+  max-duration: 10
+
+particles:
+  default-visibility: "ALL"
+  name-all: "All"
+  name-none: "None"
+  name-self-only: "Self Only"
+  name-others-only: "Others Only"
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `placeholders.none` | `None` | What the placeholders show when nothing is chosen. |
+| `projectiles.all-types` | `true` | `true` applies effects to any launched projectile. |
+| `projectiles.default-allowed-types` | 7 types | Used only when `all-types` is off **and** the effect names no types of its own. |
+| `trail.default-interval` | `2` | Ticks between trail steps when the effect does not set its own. |
+| `trail.max-duration` | `10` | Seconds a trail may live before it is cancelled. |
+| `particles.default-visibility` | `ALL` | What a player starts with. |
+| `particles.name-*` | see above | How each mode is named in menus and placeholders. |
+
+<Callout type="warning" title="max-duration is not decoration">
+An arrow that lands in an unloaded chunk never fires a hit event. Without the cap its trail would draw
+particles until the server stopped. Ten seconds is generous for a bow; lower it if your effects are
+heavy, never set it to zero.
+</Callout>
+
+<Callout type="tip" title="default-interval is the cost knob">
+`2` is a trail step every tenth of a second. `1` doubles the particle volume of every trail on the
+server at once — tune the individual effect's `trail-interval` instead if only one needs to be denser.
+</Callout>
+
+## Updating
+
+Replace the jar and restart. `/arrows reload` re-reads this plugin's own files.

@@ -166,7 +166,7 @@ export function Sidebar({
   lang: Lang;
 }) {
   return (
-    <aside className="sticky top-24 hidden max-h-[calc(100vh-7rem)] w-[248px] shrink-0 overflow-y-auto scroll-thin pb-16 pr-4 lg:block">
+    <aside className="sticky top-[124px] hidden max-h-[calc(100vh-9.75rem)] w-[248px] shrink-0 overflow-y-auto scroll-thin pb-16 pr-4 lg:block">
       <PluginSwitcher current={plugin} lang={lang} />
       <div className="mt-8">
         <NavTree sections={sections} lang={lang} />
@@ -199,7 +199,7 @@ export function MobileNav({
 
   return (
     <>
-      <div className="sticky top-[65px] z-40 -mx-6 mb-8 border-b border-white/[0.06] bg-ink-950/85 px-6 py-3 backdrop-blur-xl lg:hidden">
+      <div className="sticky top-[93px] z-40 -mx-6 mb-8 border-b border-white/[0.06] bg-ink-950/85 px-6 py-3 backdrop-blur-xl lg:hidden">
         <button onClick={() => setOpen(true)} className="flex items-center gap-2.5 text-white/60">
           <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none">
             <path d="M2.5 4h11M2.5 8h11M2.5 12h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

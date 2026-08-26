@@ -1,0 +1,63 @@
+---
+title: "Introduction"
+description: "What ExyliaArrows is and what it ships with."
+---
+
+ExyliaArrows puts particle effects on projectiles: a trail behind an arrow in flight, a burst where it
+lands, or both. Players pick theirs from a menu, and permissions decide which ones they may pick.
+
+**65 effects across 6 categories** ship in `effects.yml`: elemental, magic, nature, cosmic, dark and
+special.
+
+## Five triggers
+
+An effect names which moments it fires at, and one effect can name several:
+
+| Trigger | Fires |
+|---|---|
+| `LAUNCH` | The instant the projectile leaves the player. |
+| `TRAIL` | Repeatedly while it flies. |
+| `HIT` | Wherever it lands, whatever it hit. |
+| `HIT_ENTITY` | Only when it hits a living thing. |
+| `HIT_BLOCK` | Only when it hits a block. |
+
+`fire_trail` is written with `TRAIL` and `HIT`, which is the common pair: flames behind the arrow, a
+burst where it lands.
+
+<Callout type="note" title="HIT and the two specific ones stack">
+`HIT` fires on any landing. Adding `HIT_ENTITY` on top does not double it — the effect plays if any of
+its triggers matches. Use `HIT_ENTITY` alone when you want something that only happens on a person.
+</Callout>
+
+## Not only arrows
+
+By default any launched projectile carries the effect. Turn that off and it falls back to a list —
+`ARROW`, `SPECTRAL_ARROW`, `TIPPED_ARROW`, `EGG`, `SNOWBALL`, `WIND_CHARGE`, `ENDER_PEARL` — and an
+individual effect can name its own list instead.
+
+## How it works
+
+<Steps>
+  <Step title="A player opens the menu">
+    `/arrows` shows the categories, then the effects inside one.
+  </Step>
+  <Step title="They pick one">
+    The choice is stored in the database and survives a restart.
+  </Step>
+  <Step title="They shoot">
+    Whatever the effect's triggers say happens, happens.
+  </Step>
+</Steps>
+
+## Visibility
+
+Every player chooses what they see, and the choice is theirs alone: `ALL`, `NONE`, `SELF_ONLY` or
+`OTHERS_ONLY`. `/arrows toggleParticles` cycles it without opening anything.
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21 or newer. Folia supported. |
+| Required | `ExyliaLib`, `packetevents` |
+| Optional | `PlaceholderAPI` |

@@ -1,0 +1,76 @@
+---
+title: "Instalación"
+description: "Dependencias, los archivos que escribe, y el único ajuste de config.yml."
+---
+
+## Instalar
+
+<Steps>
+  <Step title="Coloca los jars">
+    `ExyliaArmorTrims.jar`, más `ExyliaLib` y `packetevents`, en `plugins/`.
+  </Step>
+  <Step title="Arranca el servidor">
+    Escribe `config.yml`, `trims.yml` y tres archivos de menú, y crea su tabla.
+  </Step>
+  <Step title="Da los permisos">
+    No se puede elegir nada hasta que estén concedidos un patrón y un material. Ver
+    [Comandos y permisos](/docs/exyliaarmortrims/comandos).
+  </Step>
+</Steps>
+
+## Archivos
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | Un ajuste de comportamiento, y el texto de reserva de los placeholders. |
+| `trims.yml` | Los 18 patrones y 11 materiales, con sus nombres visibles e iconos. |
+| `menus/main.yml` | La pantalla principal. |
+| `menus/pattern.yml` | El selector de patrones. |
+| `menus/material.yml` | El selector de materiales. |
+| `database.yml` | Dónde se guardan las selecciones. H2 por defecto. |
+
+Las selecciones viven en la tabla `player_data`, como un único valor JSON con la elección de cada
+pieza.
+
+## config.yml
+
+```yaml
+validate-permissions-on-armor-equip: true
+
+placeholders:
+  none: "None"
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `validate-permissions-on-armor-equip` | `true` | Borra las selecciones que un jugador ya no puede usar, comprobado al equiparse armadura. |
+| `placeholders.none` | `None` | Lo que muestran los placeholders para una pieza sin nada elegido. |
+
+<Callout type="note" title="Los permisos se aplican igualmente">
+Apagar el ajuste no permite que un rango caducado conserve su trim — una selección que el jugador no
+puede usar no se aplica. Lo que cambia es si la selección guardada se **borra**. Déjalo activo y un
+rango caducado pierde la elección; apágalo y la elección queda dormida, lista si el rango vuelve.
+</Callout>
+
+## trims.yml
+
+Nombres visibles e iconos de cada patrón y material:
+
+```yaml
+trim_patterns:
+  SENTRY:
+    name: "Sentry"
+    material: "SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE"
+
+trim_materials:
+  QUARTZ:
+    name: "Quartz"
+    material: "QUARTZ"
+```
+
+Las claves son los ids de trim de vanilla, así que este archivo es donde se **nombran y se dibujan**,
+no donde se definen. Renombrar una clave es renombrar su nodo de permiso.
+
+## Actualizar
+
+Reemplaza el jar y reinicia. `/armortrim reload` relee los archivos de este plugin.

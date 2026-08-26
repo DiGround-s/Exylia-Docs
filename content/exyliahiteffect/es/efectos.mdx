@@ -1,0 +1,108 @@
+---
+title: "Efectos y categorías"
+description: "El formato de effects.yml, y la sintaxis completa de secuencias para escribir los tuyos."
+---
+
+## El archivo
+
+`effects.yml` tiene dos secciones: las categorías, y los efectos que pertenecen a ellas.
+
+```yaml
+categories:
+  impact:
+    material: DIAMOND_SWORD
+    name: 'Impact'
+    priority: 1
+
+hit_effects:
+  CRIT_BURST:
+    category: impact
+    name: "<gradient:#FFD700:#FF8C00><bold>CRIT BURST</bold></gradient>"
+    material: IRON_SWORD
+    description:
+      - 'Un estallido seco de partículas de crítico al impactar.'
+    priority: 1
+    effects:
+      - '[BURST] CRIT;radius:1.0;count:30'
+      - '[SOUND] ENTITY_PLAYER_ATTACK_CRIT;1.0;1.4'
+```
+
+| Clave | Qué hace |
+|---|---|
+| `category` | Bajo qué categoría aparece. |
+| `name` | Lo que muestra el menú. Tokens de paleta, MiniMessage y degradados funcionan. |
+| `material` | El icono en el menú. |
+| `description` | Líneas de lore. Una lista es una línea por entrada; una cadena se parte por `<nl>`. |
+| `priority` | Orden dentro de la categoría. Menor primero. |
+| `effects` | La secuencia en sí. |
+
+Una categoría acepta `material`, `name` y `priority`.
+
+<Callout type="note" title="El id del efecto es el permiso">
+`CRIT_BURST` se convierte en `exyliahiteffect.effect.crit_burst`. Renombrar un efecto renombra su nodo
+y se lo revoca a todo el que tuviera el viejo.
+</Callout>
+
+## Sintaxis de secuencias
+
+Cada línea es un token entre corchetes y luego argumentos separados por `;`.
+
+### Tokens que no son formas
+
+| Token | Argumentos |
+|---|---|
+| `[DELAY] 0.15` | Segundos de espera antes de la siguiente línea. |
+| `[PARTICLE] CRIT` | `count:` `offset:x,y,z` `speed:` `y:` `color:` `size:` `block:` |
+| `[SOUND] NOMBRE;volumen;tono` | También `volume:` `pitch:` |
+| `[LIGHTNING]` | `volume:` `pitch:` — solo destello, chispas y trueno. |
+| `[EXPLOSION]` | `count:` `y:` |
+| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
+| `[BLOCK_BREAK] STONE` | `count:` `offset:` `y:` |
+| `[POTION] speed;100;1` | También `duration:` `amplifier:` |
+| `[TITLE] título;subtítulo;in;stay;out` | Tiempos en segundos. |
+| `[ACTION_BAR] texto` | |
+| `[MESSAGE] texto` | Una línea de chat. |
+| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
+
+### Formas
+
+Veinte:
+
+`CIRCLE` `SPHERE` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO` `STAR` `CAGE` `DISC` `VORTEX` `WAVE`
+`CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS` `ARCH` `CLAW`
+
+Todas aceptan `color:` `size:` `count:` `ticks:` `interval:` `y:` además de sus propios parámetros.
+
+<Callout type="tip" title="Mantén cortos los efectos de golpe">
+Un efecto de golpe salta varias veces por segundo en una pelea real. Las líneas `[DELAY]` y las formas
+largas que iban bien en un efecto de muerte aquí se solapan consigo mismas — los que vienen tienen de
+dos a cinco líneas por eso, donde los de muerte llegan a ocho.
+</Callout>
+
+## Escribir los tuyos
+
+<Steps>
+  <Step title="Añade la entrada">
+    Una clave nueva bajo `hit_effects`, con una `category` que exista.
+  </Step>
+  <Step title="Que sea breve">
+    Una forma, un sonido. Pruébalo en una pelea real, no sobre un muñeco quieto.
+  </Step>
+  <Step title="Recarga">
+    `/hiteffect reload`.
+  </Step>
+  <Step title="Concédelo">
+    `exyliahiteffect.effect.<id en minúsculas>`, o la categoría entera.
+  </Step>
+</Steps>
+
+## Categorías como productos
+
+```text
+exyliahiteffect.category.premium    todos los efectos premium
+exyliahiteffect.effect.crit_burst   solo ese
+exyliahiteffect.effect.*            todos
+```
+
+La categoría `premium` que viene existe justo para esto: un rango que concede un nodo y desbloquea un
+nivel entero.

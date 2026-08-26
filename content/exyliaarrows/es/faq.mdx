@@ -1,0 +1,58 @@
+---
+title: "Preguntas frecuentes"
+description: "Lo que más se pregunta."
+---
+
+## El plugin no arranca
+
+`ExyliaLib` y `packetevents` son obligatorios. Sin cualquiera de ellos, el servidor lo desactiva y lo
+nombra.
+
+## Los permisos no hacen nada
+
+Mira la escritura: es `exyliarrows`, con una `a`, no `exyliaarrows`. Esa única letra es el motivo más
+común de que un nodo bien escrito no conceda nada.
+
+## El menú no abre
+
+Necesita `exyliarrows.command.arrows`. Ese mismo nodo cubre `reset` y `toggleParticles`, así que sin él
+un jugador tampoco puede apagarse las partículas.
+
+## No pasa nada cuando un jugador dispara
+
+1. **¿Posee el efecto?** Su campo `permission`, o `exyliarrows.effect.*`.
+2. **¿Aplica el efecto a ese proyectil?** Un efecto con `projectile-types` solo salta con esos, y con
+   `projectiles.all-types: false` manda la lista de la config.
+3. **¿Cubren sus disparadores lo que pasó?** Un efecto escrito solo con `HIT_ENTITY` no hace nada
+   cuando la flecha da en una pared.
+4. **¿Hay alguien configurado para verlo?** Un jugador en `NONE` no ve nada, ni lo suyo.
+
+## La estela sigue dibujándose después de caer la flecha
+
+Debería parar en cuanto el proyectil deja de ser válido. Si se queda, lo más probable es que la flecha
+cayera en un chunk descargado y nunca disparara el evento de impacto — que es justo lo que caza
+`trail.max-duration`, diez segundos por defecto. No lo pongas nunca a cero.
+
+## Las estelas lagean el servidor
+
+`trail.default-interval` es la palanca global: `2` es un paso cada décima de segundo, `1` duplica todas
+las estelas a la vez. Es mejor subir el `trail-interval` de un efecto concreto, y mantener las estelas
+en una o dos líneas `[PARTICLE]` — una forma en una estela es una forma dibujada en cada tick del
+vuelo.
+
+## ¿Puedo tener un efecto solo en perlas de ender?
+
+Sí — dale a ese efecto una lista `projectile-types` con `ENDER_PEARL` dentro.
+
+## ¿Puedo vender una categoría entera?
+
+No con un solo nodo: aquí no hay permiso de categoría. O concedes el nodo de cada efecto, o le pones a
+un grupo de efectos la misma cadena en su campo `permission` y vendes esa.
+
+## ¿Funciona en Folia?
+
+Sí. La tarea de la estela va atada al proyectil, así que corre en la región de ese proyectil.
+
+## ¿Dónde pido soporte?
+
+En el [Discord de Exylia](https://discord.exylia.net).

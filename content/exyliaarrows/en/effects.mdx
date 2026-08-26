@@ -1,0 +1,138 @@
+---
+title: "Effects and categories"
+description: "The effects.yml format, the five triggers, and the sequence syntax for writing your own."
+---
+
+## The file
+
+Two sections: the categories, and the effects that belong to them.
+
+```yaml
+categories:
+  elemental:
+    name: 'Elemental'
+    material: FIRE_CHARGE
+    priority: 1
+
+effects:
+  fire_trail:
+    category: elemental
+    priority: 1
+    icon: BLAZE_ROD
+    name: '&c🔥 &lFire Trail'
+    permission: 'exyliarrows.effect.fire_trail'
+    lore:
+      - '&7Blazing flames chase your every shot.'
+    triggers:
+      - TRAIL
+      - HIT
+    trail-interval: 1
+    effects:
+      - '[PARTICLE] FLAME;count:6;offset:0.1,0.1,0.1;speed:0.02'
+      - '[PARTICLE] SMALL_FLAME;count:4;offset:0.05,0.05,0.05'
+```
+
+| Key | What it does |
+|---|---|
+| `category` | Which category it appears under. |
+| `priority` | Ordering inside the category. Lower first. |
+| `icon` | The item in the menu. `material` also works. |
+| `name` | What the menu shows. Palette tokens, MiniMessage and legacy codes all work. |
+| `permission` | The node that owns it. **Written explicitly, not derived from the key.** |
+| `lore` | The tooltip lines. `description` also works. |
+| `triggers` | When it fires. One or more of the five. |
+| `trail-interval` | Ticks between trail steps. Falls back to `trail.default-interval`. |
+| `trail-max-duration` | Seconds this trail may live. Falls back to `trail.max-duration`. |
+| `projectile-types` | Restrict this effect to certain projectiles. Empty means whatever the config allows. |
+| `effects` | The sequence itself. |
+| `actions` | Actions to run alongside it. |
+
+<Callout type="note" title="The permission is a field here, not the id">
+Unlike the sibling kill and hit plugins, the node is written into the entry. Renaming the key
+`fire_trail` does **not** change who owns it — the `permission` line does. That is more typing and one
+less surprise.
+</Callout>
+
+## The five triggers
+
+| Trigger | Fires |
+|---|---|
+| `LAUNCH` | Once, as the projectile leaves the player. |
+| `TRAIL` | Every `trail-interval` ticks while it flies. |
+| `HIT` | Wherever it lands, whatever it hit. |
+| `HIT_ENTITY` | Only on hitting a living thing. |
+| `HIT_BLOCK` | Only on hitting a block. |
+
+An effect plays if **any** of its triggers matches, so `HIT` plus `HIT_ENTITY` is the same as `HIT`
+alone. Use the specific ones on their own when the point is to distinguish a person from a wall.
+
+## The trail
+
+The trail is a repeating task tied to the projectile itself, so on Folia it runs on that projectile's
+region. It stops when:
+
+- The projectile is no longer valid — it landed, despawned or was picked up.
+- `trail-max-duration` seconds pass, whichever comes first.
+
+That second one is the safety net for an arrow that lands in an unloaded chunk and never fires a hit
+event.
+
+## Sequence syntax
+
+Every line is a token in brackets, then arguments separated by `;`.
+
+| Token | Arguments |
+|---|---|
+| `[PARTICLE] FLAME` | `count:` `offset:x,y,z` `speed:` `y:` `color:` `size:` `block:` |
+| `[SOUND] NAME;volume;pitch` | Also `volume:` `pitch:` |
+| `[DELAY] 0.15` | Seconds. |
+| `[LIGHTNING]` | `volume:` `pitch:` — flash, sparks and thunder only. |
+| `[EXPLOSION]` | `count:` `y:` |
+| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
+| `[BLOCK_BREAK] STONE` | `count:` `offset:` `y:` |
+| `[POTION] speed;100;1` | Also `duration:` `amplifier:` |
+| `[TITLE] title;subtitle;in;stay;out` | Times in seconds. |
+| `[ACTION_BAR] text` | |
+| `[MESSAGE] text` | A chat line. |
+| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
+
+### Shapes
+
+`CIRCLE` `SPHERE` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO` `STAR` `CAGE` `DISC` `VORTEX` `WAVE`
+`CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS` `ARCH` `CLAW`
+
+All take `color:` `size:` `count:` `ticks:` `interval:` `y:` on top of their own parameters.
+
+<Callout type="warning" title="A trail is not the place for a shape">
+The shipped trails are one or two `[PARTICLE]` lines, and that is deliberate: a trail line fires every
+one or two ticks for the whole flight. A `[SPIRAL]` there is a spiral per tick. Save the shapes for
+`HIT`, which fires once.
+</Callout>
+
+## Writing your own
+
+<Steps>
+  <Step title="Add the entry">
+    A new key under `effects`, with a `category` that exists and a `permission` you choose.
+  </Step>
+  <Step title="Pick triggers">
+    `TRAIL` plus `HIT` is the usual pair. Keep the trail to a particle line or two.
+  </Step>
+  <Step title="Reload">
+    `/arrows reload`.
+  </Step>
+  <Step title="Grant it">
+    Whatever you wrote in `permission`.
+  </Step>
+</Steps>
+
+## Restricting a projectile
+
+```yaml
+  ender_flash:
+    projectile-types:
+      - ENDER_PEARL
+```
+
+An effect with `projectile-types` only fires on those. Empty — the usual case — means it follows what
+`config.yml` allows.

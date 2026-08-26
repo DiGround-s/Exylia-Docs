@@ -1,0 +1,51 @@
+---
+title: "Introduction"
+description: "What ExyliaArmorTrims is and what it ships with."
+---
+
+ExyliaArmorTrims lets a player put armour trims on their gear from a menu, with no smithing table and
+no templates consumed. The choice is cosmetic, stored per player and per armour piece, and reapplied
+automatically whenever they equip armour.
+
+**18 patterns and 11 materials**, which is every vanilla combination — 198 looks per piece.
+
+| | |
+|---|---|
+| Patterns | Sentry, Dune, Coast, Wild, Ward, Eye, Vex, Tide, Snout, Rib, Spire, Wayfinder, Shaper, Silence, Raiser, Host, Flow, Bolt |
+| Materials | Quartz, Iron, Netherite, Redstone, Copper, Gold, Emerald, Diamond, Lapis, Amethyst, Resin |
+
+## How it works
+
+<Steps>
+  <Step title="A player opens the menu">
+    `/armortrim` opens the main screen, which leads to a pattern menu and a material menu.
+  </Step>
+  <Step title="They pick per piece">
+    Helmet, chestplate, leggings and boots are chosen separately — a gold-trimmed helmet over
+    diamond-trimmed boots is a valid combination.
+  </Step>
+  <Step title="They equip armour">
+    The trim is applied to whatever they are wearing, every time armour changes.
+  </Step>
+</Steps>
+
+<Callout type="note" title="The selection outlives the armour">
+The trim is stored against the player, not against the item. Dying and getting fresh armour, or
+switching sets between matches, reapplies it — which is what makes it a cosmetic rank perk rather than
+a one-time item edit.
+</Callout>
+
+## What it costs the player
+
+Nothing in game. No smithing table, no template, no material consumed. What limits it is permissions:
+which patterns and materials a player may choose, optionally down to the individual armour piece.
+
+That is what makes it sellable — see [Commands and permissions](/docs/exyliaarmortrims/commands).
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21 or newer. Folia supported. |
+| Required | `ExyliaLib`, `packetevents` |
+| Optional | `PlaceholderAPI` |

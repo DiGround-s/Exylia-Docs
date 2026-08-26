@@ -1,0 +1,52 @@
+---
+title: "Frequently asked questions"
+description: "The questions that come up most."
+---
+
+## The plugin does not start
+
+`ExyliaLib` and `packetevents` are both required. Without either, the server disables it by name.
+
+## The menu opens but everything is locked
+
+Patterns and materials are separate permissions, and a trim needs both. Granting every pattern with no
+material grants nothing usable. See [Commands and permissions](/docs/exyliaarmortrims/commands).
+
+## The trim does not appear on the armour
+
+It is applied when armour is equipped. Re-equip the piece, or check that the player still has
+permission for both halves of what they chose — a selection they cannot use is not applied.
+
+## A player lost their trim after their rank expired
+
+That is `validate-permissions-on-armor-equip`, on by default: a selection the player can no longer use
+is deleted the next time they equip armour. Turn it off and the choice stays stored and comes back when
+the rank does.
+
+## Does it consume smithing templates?
+
+No. Nothing is consumed and no smithing table is involved — the trim is applied to the item directly
+from the stored selection.
+
+## Does it overwrite a trim somebody smithed themselves?
+
+Only on a piece where they have chosen something in the menu. A piece with no stored selection is left
+exactly as it is, real vanilla trim included.
+
+## Can I translate the menus?
+
+Yes. `trims.yml` holds the display names and the three files under `menus/` hold every piece of text
+the screens draw. Edit them in place; nothing else needs to know.
+
+## Can I add my own patterns?
+
+No. The keys in `trims.yml` are vanilla trim ids that the game applies; the file names and draws them,
+it does not define them. What you can change is `name` and `material`.
+
+## Does it work on Folia?
+
+Yes, it declares Folia support.
+
+## Where do I get support?
+
+On the [Exylia Discord](https://discord.exylia.net).

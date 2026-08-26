@@ -14,6 +14,10 @@ export const dict = {
     search: { en: "Search", es: "Buscar" },
     menu: { en: "Menu", es: "Menú" },
     docsSuffix: { en: "/ docs", es: "/ docs" },
+    aiNotice: {
+      en: "Content generated with AI — it may contain mistakes.",
+      es: "Contenido generado con IA — puede contener errores.",
+    },
   },
   search: {
     placeholder: { en: "Search the documentation…", es: "Buscar en la documentación…" },

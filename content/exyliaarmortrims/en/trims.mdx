@@ -1,0 +1,94 @@
+---
+title: "Patterns and materials"
+description: "The full catalogue, how a trim is composed, and how the menus are edited."
+---
+
+A trim is a **pattern** plus a **material**: the pattern is the shape stamped on the armour, the
+material is what it is stamped in. Both are chosen separately, and both are permissioned separately.
+
+## Patterns
+
+Eighteen, which is every vanilla one:
+
+| Pattern | Pattern | Pattern |
+|---|---|---|
+| Sentry | Ward | Shaper |
+| Dune | Eye | Silence |
+| Coast | Vex | Raiser |
+| Wild | Tide | Host |
+| Snout | Rib | Flow |
+| Spire | Wayfinder | Bolt |
+
+## Materials
+
+Eleven:
+
+Quartz · Iron · Netherite · Redstone · Copper · Gold · Emerald · Diamond · Lapis · Amethyst · Resin
+
+That is 198 combinations, chosen per armour piece.
+
+## Per piece
+
+Helmet, chestplate, leggings and boots each keep their own pattern and material. Nothing forces them to
+match, which is deliberate — a mismatched set is a look somebody chose, and permissions can be written
+down to the individual piece if you would rather sell them separately.
+
+## Naming and icons
+
+`trims.yml` decides what each one is called and what it is drawn as in the menu:
+
+```yaml
+trim_patterns:
+  SENTRY:
+    name: "Sentry"
+    material: "SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE"
+  FLOW:
+    name: "Flow"
+    material: "FLOW_ARMOR_TRIM_SMITHING_TEMPLATE"
+
+trim_materials:
+  NETHERITE:
+    name: "Netherite"
+    material: "NETHERITE_INGOT"
+  RESIN:
+    name: "Resin"
+    material: "RESIN_BRICK"
+```
+
+`name` accepts palette tokens, MiniMessage and gradients like any other Exylia text, so a premium
+material can be written in gold in the menu:
+
+```yaml
+  NETHERITE:
+    name: "{highlight}&lNetherite"
+```
+
+<Callout type="warning" title="The key is the permission">
+`SENTRY` is `exyliaarmortrims.trim.pattern.sentry`. The keys are also the vanilla trim ids the game
+applies, so renaming one breaks both the permission and the trim itself. Change `name`, never the key.
+</Callout>
+
+## The menus
+
+Three files, editable like any ExyliaLib menu — icons, slots, titles, lore, sounds and animations:
+
+| File | Screen |
+|---|---|
+| `menus/main.yml` | The armour piece chooser. |
+| `menus/pattern.yml` | The pattern list. |
+| `menus/material.yml` | The material list. |
+
+Both list menus are paginated, and a pattern or material the player lacks permission for is drawn with
+its own template — so a locked entry can look locked rather than simply being absent.
+
+## When the trim is applied
+
+On every armour change. The plugin listens for the equip, then reapplies the stored trim to whatever
+is in each of the four slots.
+
+That means:
+
+- A fresh set out of a kit is trimmed the moment it goes on.
+- Dying and re-equipping keeps the look.
+- A piece with no stored selection is left exactly as it was — including a real vanilla trim somebody
+  smithed themselves.

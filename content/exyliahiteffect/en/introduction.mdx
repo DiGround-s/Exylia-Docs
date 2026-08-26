@@ -1,0 +1,70 @@
+---
+title: "Introduction"
+description: "What ExyliaHitEffect is and what it ships with."
+---
+
+ExyliaHitEffect plays a particle effect on whoever you hit, at the moment you hit them. Players pick
+theirs from a menu, and permissions decide which ones they may pick.
+
+**80 effects across 9 categories** ship in `effects.yml`: impact, elemental, arcane, nature, premium,
+sculk, breeze, spectral and toxic.
+
+## How it works
+
+<Steps>
+  <Step title="A player opens the menu">
+    `/hiteffect` shows the categories, then the effects inside one.
+  </Step>
+  <Step title="They pick one">
+    The choice is stored in the database and survives a restart.
+  </Step>
+  <Step title="They hit something">
+    The effect plays on the victim.
+  </Step>
+</Steps>
+
+The trigger is any damage dealt by a player to a living entity. Which victims count is configurable:
+everything, or only the entity types you list.
+
+<Callout type="note" title="It plays a block up">
+The effect is anchored one block above the victim's feet, so it lands on the body rather than in the
+ground — which matters far more for a hit effect than for a kill effect, since the victim is standing
+up when it fires.
+</Callout>
+
+## What each effect is
+
+An effect is a **sequence** — shapes, particles, sounds and pauses played in order:
+
+```yaml
+effects:
+  - '[BURST] CRIT;radius:1.0;count:30'
+  - '[SOUND] ENTITY_PLAYER_ATTACK_CRIT;1.0;1.4'
+  - '[DELAY] 0.1'
+  - '[PARTICLE] CRIT;count:20;offset:0.3,0.3,0.3'
+```
+
+Everything is editable and you can write your own. The full syntax is in
+[Effects](/docs/exyliahiteffect/effects).
+
+## Visibility
+
+Every player chooses what they see, and the choice is theirs alone:
+
+| Mode | What they see |
+|---|---|
+| `ALL` | Every effect. |
+| `NONE` | None at all. |
+| `SELF_ONLY` | Only their own. |
+| `OTHERS_ONLY` | Only other people's. |
+
+This matters more here than in a kill plugin: a hit effect fires on every swing, so a player who
+finds them distracting in a fight can turn them off without affecting anybody else.
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21 or newer. Folia supported. |
+| Required | `ExyliaLib`, `packetevents` |
+| Optional | `PlaceholderAPI` |

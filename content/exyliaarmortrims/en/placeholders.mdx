@@ -1,0 +1,52 @@
+---
+title: "Placeholders"
+description: "Seven placeholders, each asked about one armour piece."
+---
+
+Identifier: **`exyliaarmortrims`**. PlaceholderAPI is optional.
+
+Every placeholder names an **armour piece** first, then what you want to know:
+
+```text
+%exyliaarmortrims_<piece>_<value>%
+```
+
+Pieces: `helmet`, `chestplate`, `leggings`, `boots`.
+
+| Value | Returns |
+|---|---|
+| `pattern` | The chosen pattern's id. |
+| `pattern_name` | Its display name from `trims.yml`. |
+| `pattern_material` | The item the pattern is drawn with. |
+| `material` | The chosen material's id. |
+| `material_name` | Its display name. |
+| `material_item` | The item the material is drawn with. |
+| `has_trim` | `true` or `false`. |
+
+## Examples
+
+```text
+%exyliaarmortrims_helmet_pattern_name%
+%exyliaarmortrims_boots_material_name%
+%exyliaarmortrims_chestplate_has_trim%
+```
+
+## With nothing chosen
+
+Anything asked about a piece with no selection returns whatever `placeholders.none` says in
+`config.yml` — `None` by default. `has_trim` returns `false`.
+
+An unknown piece name returns the same fallback rather than an error, so a typo shows as `None`
+instead of leaving the placeholder on screen.
+
+```yaml
+lines:
+  - " {muted}❙ {letters}Helmet: {highlight}%exyliaarmortrims_helmet_pattern_name%"
+  - " {muted}❙ {letters}Boots: {highlight}%exyliaarmortrims_boots_pattern_name%"
+```
+
+<Callout type="tip" title="The two _material placeholders are different things">
+`material` and `material_name` are about the **trim** material — netherite, quartz. `pattern_material`
+and `material_item` are the **icons** those things are drawn with, for a menu that wants to show the
+current choice.
+</Callout>

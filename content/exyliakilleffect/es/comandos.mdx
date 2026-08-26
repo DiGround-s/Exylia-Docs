@@ -1,0 +1,48 @@
+---
+title: "Comandos y permisos"
+description: "Dos comandos, y los nodos que deciden quién tiene qué."
+---
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/killeffect` | `exyliakilleffect.command.killeffect` | Abre el menú de efectos. |
+| `/killeffect reload` | `exyliakilleffect.admin` | Recarga los archivos de este plugin. |
+
+`reload` relee `config.yml`, `effects.yml` y el menú. **No** recarga la librería — recolorear todos los
+plugins del servidor es para lo que está `/exylialib reload`.
+
+## Permisos
+
+| Nodo | Concede |
+|---|---|
+| `exyliakilleffect.command.killeffect` | Abrir el menú. |
+| `exyliakilleffect.admin` | `/killeffect reload`. |
+| `exyliakilleffect.effect.<id>` | Un efecto, por su id en minúsculas. |
+| `exyliakilleffect.effect.*` | Todos los efectos. |
+| `exyliakilleffect.category.<id>` | Todos los efectos de esa categoría. |
+
+Un efecto se posee si está concedido **o** su nodo propio **o** el de su categoría.
+
+```text
+/lp group vip permission set exyliakilleffect.category.infernal true
+/lp group mvp permission set exyliakilleffect.effect.ember_burst true
+```
+
+<Callout type="note" title="Un efecto revocado se descarta, no se oculta">
+Los permisos cambian mientras un jugador está desconectado. Cuando alguien mata con un efecto que ya no
+posee, el plugin le borra la selección en vez de lanzarlo — así que un rango caducado deja de pagar al
+instante y no en la siguiente visita al menú.
+</Callout>
+
+## Una configuración sensata
+
+Dale el menú a todos y vende lo de dentro:
+
+```text
+/lp group default permission set exyliakilleffect.command.killeffect true
+```
+
+Sin ese nodo el menú no se puede abrir, que rara vez es lo que quieres — quien no puede ver el catálogo
+no puede querer nada de él.

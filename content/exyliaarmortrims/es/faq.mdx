@@ -1,0 +1,53 @@
+---
+title: "Preguntas frecuentes"
+description: "Lo que más se pregunta."
+---
+
+## El plugin no arranca
+
+`ExyliaLib` y `packetevents` son obligatorios. Sin cualquiera de ellos, el servidor lo desactiva y lo
+nombra.
+
+## El menú abre pero está todo bloqueado
+
+Patrones y materiales son permisos separados, y un trim necesita los dos. Conceder todos los patrones
+sin ningún material no concede nada usable. Ver [Comandos y permisos](/docs/exyliaarmortrims/comandos).
+
+## El trim no aparece en la armadura
+
+Se aplica al equiparse. Vuelve a ponerte la pieza, o comprueba que el jugador siga teniendo permiso
+para las dos mitades de lo que eligió — una selección que no puede usar no se aplica.
+
+## Un jugador perdió su trim al caducar su rango
+
+Es `validate-permissions-on-armor-equip`, activo por defecto: una selección que el jugador ya no puede
+usar se borra la próxima vez que se equipe armadura. Apágalo y la elección se queda guardada y vuelve
+cuando vuelva el rango.
+
+## ¿Gasta plantillas de forja?
+
+No. No se gasta nada y no hay mesa de forja de por medio — el trim se aplica al objeto directamente
+desde la selección guardada.
+
+## ¿Sobrescribe un trim que alguien forjó a mano?
+
+Solo en una pieza donde haya elegido algo en el menú. Una pieza sin selección guardada se deja tal cual,
+con su trim real de vanilla incluido.
+
+## ¿Puedo traducir los menús?
+
+Sí. `trims.yml` guarda los nombres visibles y los tres archivos de `menus/` guardan cada texto que
+dibujan las pantallas. Edítalos ahí mismo; nada más necesita enterarse.
+
+## ¿Puedo añadir mis propios patrones?
+
+No. Las claves de `trims.yml` son ids de trim de vanilla que aplica el juego; el archivo los nombra y
+los dibuja, no los define. Lo que sí puedes cambiar es `name` y `material`.
+
+## ¿Funciona en Folia?
+
+Sí, declara soporte de Folia.
+
+## ¿Dónde pido soporte?
+
+En el [Discord de Exylia](https://discord.exylia.net).

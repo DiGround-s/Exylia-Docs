@@ -1,0 +1,51 @@
+---
+title: "Preguntas frecuentes"
+description: "Lo que más se pregunta."
+---
+
+## El plugin no arranca
+
+`ExyliaLib` y `packetevents` son obligatorios. Sin cualquiera de ellos, el servidor lo desactiva y lo
+nombra.
+
+## No pasa nada cuando un jugador mata
+
+Tres cosas que comprobar, en orden:
+
+1. **¿Está permitida la víctima?** `effects.all-mobs` es `false` por defecto, así que solo cuentan
+   `PLAYER`, `MANNEQUIN` y `ZOMBIE` hasta que añadas más.
+2. **¿Posee el efecto?** Una selección para la que ya no tiene permiso se borra en vez de lanzarse.
+3. **¿Hay alguien configurado para verlo?** Un jugador en `NONE` no ve nada, ni siquiera lo suyo.
+
+## El menú no abre
+
+Necesita `exyliakilleffect.command.killeffect`. Es un nodo aparte de poseer efectos.
+
+## Un jugador dice que su efecto desapareció
+
+Se le fue el permiso — normalmente un rango que caducó. El plugin borra una selección que ya no puede
+justificar en vez de lanzar algo a lo que el jugador no tiene derecho.
+
+## Renombré un efecto y todo el mundo lo perdió
+
+El id es el permiso: `EMBER_BURST` es `exyliakilleffect.effect.ember_burst`. Renombrar la clave
+renombra el nodo. Renómbralo también en el plugin de permisos, o no lo renombres.
+
+## Los efectos lagean el servidor en peleas grandes
+
+Cada baja lanza una secuencia entera. Mira el `count:` de las líneas de partículas y cuántas líneas
+tiene el efecto — los que vienen se quedan en unas ocho por eso. `ticks:` reparte una forma en el tiempo
+en vez de mandarla toda en un fotograma.
+
+## ¿Puedo escribir mis propios efectos?
+
+Sí, para eso está `effects.yml`. La sintaxis completa — veinte formas y doce tokens más — está en
+[Efectos](/docs/exyliakilleffect/efectos).
+
+## ¿Funciona en Folia?
+
+Sí, declara soporte de Folia.
+
+## ¿Dónde pido soporte?
+
+En el [Discord de Exylia](https://discord.exylia.net).

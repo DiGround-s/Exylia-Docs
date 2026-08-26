@@ -1,0 +1,126 @@
+---
+title: "Effects and categories"
+description: "The effects.yml format, and the full sequence syntax for writing your own."
+---
+
+## The file
+
+`effects.yml` has two sections: the categories, and the effects that belong to them.
+
+```yaml
+categories:
+  infernal:
+    material: FIRE_CHARGE
+    name: 'Infernal'
+    priority: 1
+
+kill_effects:
+  EMBER_BURST:
+    category: infernal
+    name: "<gradient:#D1693F:#D1523F><bold>EMBER BURST</bold></gradient>"
+    material: BLAZE_POWDER
+    description:
+      - 'Flames and lava erupt in a blazing circle.'
+      - 'Closes with an {highlight}explosion{neutral} at the centre.'
+    priority: 1
+    effects:
+      - '[CIRCLE] FLAME;radius:1.5;points:24;y:0.1'
+      - '[SOUND] ENTITY_BLAZE_DEATH;1.5;0.8'
+      - '[DELAY] 0.15'
+      - '[EXPLOSION]'
+```
+
+| Key | What it does |
+|---|---|
+| `category` | Which category it appears under. |
+| `name` | What the menu shows. Accepts palette tokens, MiniMessage and gradients. |
+| `material` | The icon in the menu. |
+| `description` | Lore lines. A list is one line per entry; a single string splits on `<nl>`. |
+| `priority` | Ordering inside the category. Lower first. |
+| `effects` | The sequence itself. |
+
+A category takes `material`, `name` and `priority`.
+
+<Callout type="note" title="The effect id is the permission">
+`EMBER_BURST` becomes `exyliakilleffect.effect.ember_burst`. Renaming an effect revokes it from
+everyone who had the old permission, so rename with care on a live server.
+</Callout>
+
+## Sequence syntax
+
+Every line is a token in brackets, then its arguments separated by `;`.
+
+### Non-shape tokens
+
+| Token | Arguments |
+|---|---|
+| `[DELAY] 0.15` | Seconds to wait before the next line. |
+| `[PARTICLE] FLAME` | `count:` `offset:x,y,z` `speed:` `y:` `color:` `size:` `block:` |
+| `[SOUND] NAME;volume;pitch` | Also `volume:` `pitch:` |
+| `[LIGHTNING]` | `volume:` `pitch:` — flash, sparks and thunder. No strike, no fire, no damage. |
+| `[EXPLOSION]` | `count:` `y:` |
+| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
+| `[BLOCK_BREAK] STONE` | `count:` `offset:` `y:` |
+| `[POTION] speed;100;1` | Also `duration:` `amplifier:` |
+| `[TITLE] title;subtitle;in;stay;out` | Times in seconds. |
+| `[ACTION_BAR] text` | |
+| `[MESSAGE] text` | A chat line. |
+| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
+
+### Shapes
+
+Twenty of them:
+
+`CIRCLE` `SPHERE` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO` `STAR` `CAGE` `DISC` `VORTEX` `WAVE`
+`CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS` `ARCH` `CLAW`
+
+Every shape accepts `color:` `size:` `count:` `ticks:` `interval:` `y:` on top of its own parameters —
+`radius:`, `points:`, `height:`, `turns:`, `arms:`, `spikes:` and the rest, depending on the shape.
+
+```yaml
+- '[SPIRAL] FLAME;height:4.0;radius:1.0;turns:3;points:60'
+- '[CIRCLE] DUST;radius:2.0;points:32;color:255,80,0;size:2.0'
+```
+
+<Callout type="tip" title="ticks: is the pacing knob">
+`ticks:1` draws the whole shape in one frame. Anything higher draws it over time, which is what makes
+a spiral look like it is being drawn rather than appearing at once.
+</Callout>
+
+### Colours
+
+`DUST` is the particle that takes a colour: `color:255,80,0` as RGB, with `size:` for the dot size.
+
+## Writing your own
+
+<Steps>
+  <Step title="Add the entry">
+    A new key under `kill_effects`, with a `category` that exists.
+  </Step>
+  <Step title="Write the sequence">
+    Start with a shape, a sound and a delay. Add layers from there.
+  </Step>
+  <Step title="Reload">
+    `/killeffect reload`.
+  </Step>
+  <Step title="Grant it">
+    `exyliakilleffect.effect.<id in lowercase>`, or the whole category.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="Cost is per line, per kill">
+A sequence of twenty lines with `count:50` particles each is two hundred packets on a busy arena.
+The shipped effects sit around eight lines; that is a deliberate ceiling, not a coincidence.
+</Callout>
+
+## Categories as products
+
+A category permission grants everything inside it:
+
+```text
+exyliakilleffect.category.infernal    every infernal effect
+exyliakilleffect.effect.ember_burst   just that one
+exyliakilleffect.effect.*             all of them
+```
+
+That is what lets a rank be sold as "all celestial effects" without listing eleven nodes.

@@ -1,0 +1,36 @@
+---
+title: "Comandos y permisos"
+description: "Dos comandos, y los nodos que deciden quién tiene qué."
+---
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/hiteffect` | `exyliahiteffect.command.hiteffect` | Abre el menú de efectos. |
+| `/hiteffect reload` | `exyliahiteffect.admin` | Recarga los archivos de este plugin. |
+
+`reload` relee `config.yml`, `effects.yml` y el menú. No recarga la librería — para eso está
+`/exylialib reload`.
+
+## Permisos
+
+| Nodo | Concede |
+|---|---|
+| `exyliahiteffect.command.hiteffect` | Abrir el menú. |
+| `exyliahiteffect.admin` | `/hiteffect reload`. |
+| `exyliahiteffect.effect.<id>` | Un efecto, por su id en minúsculas. |
+| `exyliahiteffect.effect.*` | Todos los efectos. |
+| `exyliahiteffect.category.<id>` | Todos los efectos de esa categoría. |
+
+Un efecto se posee si está concedido **o** su nodo propio **o** el de su categoría.
+
+```text
+/lp group default permission set exyliahiteffect.command.hiteffect true
+/lp group vip permission set exyliahiteffect.category.premium true
+```
+
+<Callout type="note" title="Un efecto revocado se descarta, no se oculta">
+Los permisos cambian mientras un jugador está desconectado. En el siguiente golpe con un efecto que ya
+no posee, el plugin le borra la selección en vez de lanzarlo.
+</Callout>

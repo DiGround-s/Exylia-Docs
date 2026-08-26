@@ -1,0 +1,75 @@
+---
+title: "Installation"
+description: "Dependencies, the files it writes, and the one setting in config.yml."
+---
+
+## Installing
+
+<Steps>
+  <Step title="Drop in the jars">
+    `ExyliaArmorTrims.jar`, plus `ExyliaLib` and `packetevents`, into `plugins/`.
+  </Step>
+  <Step title="Start the server">
+    It writes `config.yml`, `trims.yml` and three menu files, and creates its table.
+  </Step>
+  <Step title="Grant the permissions">
+    Nothing can be chosen until a pattern and a material are granted. See
+    [Commands and permissions](/docs/exyliaarmortrims/commands).
+  </Step>
+</Steps>
+
+## Files
+
+| File | Contents |
+|---|---|
+| `config.yml` | One behaviour setting, and the placeholder fallback. |
+| `trims.yml` | The 18 patterns and 11 materials, with their display names and icons. |
+| `menus/main.yml` | The main screen. |
+| `menus/pattern.yml` | The pattern picker. |
+| `menus/material.yml` | The material picker. |
+| `database.yml` | Where selections are stored. H2 by default. |
+
+Selections live in the `player_data` table, as one JSON value holding every piece's choice.
+
+## config.yml
+
+```yaml
+validate-permissions-on-armor-equip: true
+
+placeholders:
+  none: "None"
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `validate-permissions-on-armor-equip` | `true` | Removes saved selections a player can no longer use, checked when they equip armour. |
+| `placeholders.none` | `None` | What the placeholders show for a piece with nothing chosen. |
+
+<Callout type="note" title="Permissions are enforced either way">
+Turning the setting off does not let an expired rank keep its trim — a selection the player cannot use
+is not applied. What it changes is whether the stored selection is **deleted**. Leave it on and an
+expired rank loses the choice; turn it off and the choice sits dormant, ready if the rank comes back.
+</Callout>
+
+## trims.yml
+
+Display names and icons for each pattern and material:
+
+```yaml
+trim_patterns:
+  SENTRY:
+    name: "Sentry"
+    material: "SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE"
+
+trim_materials:
+  QUARTZ:
+    name: "Quartz"
+    material: "QUARTZ"
+```
+
+The keys are the vanilla trim ids, so this file is where they are **named and drawn**, not where they
+are defined. Renaming a key is renaming its permission node.
+
+## Updating
+
+Replace the jar and restart. `/armortrim reload` re-reads this plugin's own files.

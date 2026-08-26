@@ -35,7 +35,7 @@ export default async function DocsLayout({
         />
       </div>
 
-      <div className="mx-auto flex w-full max-w-docs gap-10 px-6 pt-[104px]">
+      <div className="mx-auto flex w-full max-w-docs gap-10 px-6 pt-[132px]">
         <Sidebar plugin={entry} sections={getNav(resolved.plugin, lang)} lang={lang} />
         <main className="min-w-0 flex-1 pb-8">{children}</main>
       </div>

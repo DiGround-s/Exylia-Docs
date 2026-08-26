@@ -1,0 +1,47 @@
+---
+title: "Placeholders"
+description: "Seis placeholders de PlaceholderAPI, y qué responden cuando no hay nada elegido."
+---
+
+Identificador: **`exyliarrows`** — una sola `a`, como los nodos de permiso. PlaceholderAPI es opcional.
+
+| Placeholder | Devuelve |
+|---|---|
+| `%exyliarrows_effect%` | El id del efecto elegido. |
+| `%exyliarrows_effect_name%` | Su nombre visible, con sus colores. |
+| `%exyliarrows_effect_category%` | El id de la categoría. |
+| `%exyliarrows_effect_category_name%` | El nombre visible de la categoría. |
+| `%exyliarrows_effect_icon%` | El objeto con el que se dibuja. |
+| `%exyliarrows_has_effect%` | `true` o `false`. |
+
+## Sin nada elegido
+
+`has_effect` devuelve `false`; todo lo demás devuelve lo que diga `placeholders.none` en `config.yml` —
+`None` por defecto.
+
+```yaml
+lines:
+  - " {muted}❙ {letters}Flecha: {highlight}%exyliarrows_effect_name%"
+```
+
+<Callout type="note" title="Aquí no hay placeholder de descripción">
+Los plugins de muertes y golpes exponen `effect_description`; este no. Lo que tiene en su lugar es
+`effect_icon`, que es el objeto del menú — útil para que el menú de otro plugin dibuje la elección
+actual del jugador.
+</Callout>
+
+## Leerlo desde código
+
+`ArrowsAPI` es la pequeña superficie pública, para un plugin que quiera fijar o consultar una
+selección:
+
+```java
+ArrowsAPI.getEffect("fire_trail");
+ArrowsAPI.getAllEffects();
+ArrowsAPI.getPlayerData(uuid);
+ArrowsAPI.setPlayerEffect(player, "fire_trail");
+ArrowsAPI.resetPlayerEffect(player);
+```
+
+`setPlayerEffect` es la que merece la pena señalar: es cómo una caja, una recompensa de misión o un
+plugin de rangos le da un efecto a alguien sin pasar por el menú.

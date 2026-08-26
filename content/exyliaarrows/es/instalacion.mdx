@@ -1,0 +1,85 @@
+---
+title: "Instalación"
+description: "Dependencias, archivos que escribe, y los ajustes de config.yml."
+---
+
+## Instalar
+
+<Steps>
+  <Step title="Coloca los jars">
+    `ExyliaArrows.jar`, más `ExyliaLib` y `packetevents`, en `plugins/`.
+  </Step>
+  <Step title="Arranca el servidor">
+    Escribe `config.yml`, `effects.yml` y `menus/main.yml`, y crea su tabla.
+  </Step>
+  <Step title="Da los permisos">
+    Ver [Comandos y permisos](/docs/exyliaarrows/comandos).
+  </Step>
+</Steps>
+
+## Archivos
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | Qué proyectiles cuentan, el ritmo y el tope de las estelas, y los modos de visibilidad. |
+| `effects.yml` | Las 6 categorías y los 65 efectos. |
+| `menus/main.yml` | El diseño del menú, editable como cualquier menú de ExyliaLib. |
+| `database.yml` | Dónde se guardan las selecciones. H2 por defecto. |
+
+Las selecciones viven en la tabla `arrows_players`: el efecto elegido y el modo de visibilidad, por
+jugador.
+
+## config.yml
+
+```yaml
+placeholders:
+  none: "None"
+
+projectiles:
+  all-types: true
+  default-allowed-types:
+    - ARROW
+    - SPECTRAL_ARROW
+    - TIPPED_ARROW
+    - EGG
+    - SNOWBALL
+    - WIND_CHARGE
+    - ENDER_PEARL
+
+trail:
+  default-interval: 2
+  max-duration: 10
+
+particles:
+  default-visibility: "ALL"
+  name-all: "All"
+  name-none: "None"
+  name-self-only: "Self Only"
+  name-others-only: "Others Only"
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `placeholders.none` | `None` | Lo que muestran los placeholders sin nada elegido. |
+| `projectiles.all-types` | `true` | `true` aplica los efectos a cualquier proyectil lanzado. |
+| `projectiles.default-allowed-types` | 7 tipos | Solo se usa si `all-types` está apagado **y** el efecto no declara tipos propios. |
+| `trail.default-interval` | `2` | Ticks entre pasos de estela cuando el efecto no marca el suyo. |
+| `trail.max-duration` | `10` | Segundos que puede vivir una estela antes de cancelarse. |
+| `particles.default-visibility` | `ALL` | Con qué empieza un jugador. |
+| `particles.name-*` | ver arriba | Cómo se llama cada modo en menús y placeholders. |
+
+<Callout type="warning" title="max-duration no es decoración">
+Una flecha que cae en un chunk descargado nunca dispara el evento de impacto. Sin el tope, su estela
+dibujaría partículas hasta que parara el servidor. Diez segundos es generoso para un arco; bájalo si
+tus efectos son pesados, pero nunca lo pongas a cero.
+</Callout>
+
+<Callout type="tip" title="default-interval es la palanca del coste">
+`2` es un paso de estela cada décima de segundo. `1` duplica de golpe el volumen de partículas de todas
+las estelas del servidor — mejor ajusta el `trail-interval` del efecto concreto si solo uno necesita ir
+más denso.
+</Callout>
+
+## Actualizar
+
+Reemplaza el jar y reinicia. `/arrows reload` relee los archivos de este plugin.

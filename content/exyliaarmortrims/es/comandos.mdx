@@ -1,0 +1,69 @@
+---
+title: "Comandos y permisos"
+description: "Dos comandos, y un esquema de permisos que baja hasta la pieza de armadura."
+---
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/armortrim` | `exyliaarmortrims.command.armortrim` | Abre el menú de trims. |
+| `/armortrim reload` | `exyliaarmortrims.admin` | Recarga los archivos de este plugin. |
+
+`reload` relee `config.yml`, `trims.yml` y los tres menús. No recarga la librería — para eso está
+`/exylialib reload`.
+
+## Esquema de permisos
+
+Patrones y materiales se conceden por separado, y cada uno se puede conceder para **todas las piezas** o
+para **una pieza**:
+
+| Nodo | Concede |
+|---|---|
+| `exyliaarmortrims.trim.pattern.<patrón>` | Ese patrón, en cualquier pieza. |
+| `exyliaarmortrims.trim.pattern.<patrón>.<pieza>` | Ese patrón, solo en esa pieza. |
+| `exyliaarmortrims.trim.pattern.*` | Todos los patrones. |
+| `exyliaarmortrims.trim.pattern.*.<pieza>` | Todos los patrones, solo en esa pieza. |
+| `exyliaarmortrims.trim.material.<material>` | Ese material, en cualquier pieza. |
+| `exyliaarmortrims.trim.material.<material>.<pieza>` | Ese material, solo en esa pieza. |
+| `exyliaarmortrims.trim.material.*` | Todos los materiales. |
+| `exyliaarmortrims.trim.material.*.<pieza>` | Todos los materiales, solo en esa pieza. |
+
+Piezas: `helmet`, `chestplate`, `leggings`, `boots`. Los nombres de patrón y material van en minúsculas.
+
+Una elección se permite si coincide **cualquiera** de las cuatro formas, así que el nodo general y el
+de pieza conviven sin estorbarse.
+
+### Ejemplos
+
+```text
+# Un rango que lo desbloquea todo
+/lp group vip permission set exyliaarmortrims.trim.pattern.* true
+/lp group vip permission set exyliaarmortrims.trim.material.* true
+
+# Un material premium, en todas las piezas
+/lp group mvp permission set exyliaarmortrims.trim.material.netherite true
+
+# Un adelanto solo para el casco, al grupo por defecto
+/lp group default permission set exyliaarmortrims.trim.pattern.*.helmet true
+/lp group default permission set exyliaarmortrims.trim.material.quartz.helmet true
+```
+
+<Callout type="tip" title="Un trim necesita las dos mitades">
+Conceder todos los patrones sin ningún material no concede nada usable. Véndelos en pareja, o vende los
+patrones a lo ancho y los materiales como la mitad escasa — es el reparto en el que acaban casi todos
+los servidores.
+</Callout>
+
+## Qué pasa cuando se va un permiso
+
+Una selección que el jugador ya no puede usar **no se aplica**, digan lo que digan los ajustes.
+
+Con `validate-permissions-on-armor-equip: true` — el valor por defecto — además se **borra** la próxima
+vez que se equipe armadura, así que el menú muestra que no hay nada elegido. Con el ajuste apagado, la
+selección se queda guardada y vuelve a funcionar si el rango regresa.
+
+## Abrir el menú
+
+`exyliaarmortrims.command.armortrim` es aparte de poseer cualquier trim. Dáselo a todos: quien no puede
+ver el catálogo no puede querer nada de él.

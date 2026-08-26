@@ -1,0 +1,52 @@
+---
+title: "Commands and permissions"
+description: "Four commands, and the nodes that decide who owns what."
+---
+
+## Commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/arrows` | `exyliarrows.command.arrows` | Opens the effect menu. |
+| `/arrows reset` | `exyliarrows.command.arrows` | Clears the chosen effect. |
+| `/arrows toggleParticles` | `exyliarrows.command.arrows` | Cycles the visibility mode and reopens the menu. |
+| `/arrows reload` | `exyliarrows.admin` | Reloads this plugin's files. |
+
+Aliases: `/arroweffects` and `/arrow-effects`.
+
+`reload` re-reads `config.yml`, `effects.yml` and the menu. It does not reload the library — that is
+what `/exylialib reload` is for.
+
+## Permissions
+
+<Callout type="warning" title="One `a`, not two">
+Every node here is `exyliarrows`, not `exyliaarrows`. It reads like a typo and is not — it is what the
+plugin checks, so a node written with the doubled letter grants nothing.
+</Callout>
+
+| Node | Grants |
+|---|---|
+| `exyliarrows.command.arrows` | The menu, `reset` and `toggleParticles`. |
+| `exyliarrows.admin` | `/arrows reload`. |
+| Whatever an effect's `permission` says | That effect. |
+| `exyliarrows.effect.*` | Every effect, whatever their own nodes are. |
+
+An effect is owned if its own `permission` is granted **or** `exyliarrows.effect.*` is.
+
+```text
+/lp group default permission set exyliarrows.command.arrows true
+/lp group vip permission set exyliarrows.effect.fire_trail true
+/lp group mvp permission set exyliarrows.effect.* true
+```
+
+<Callout type="note" title="There is no category node">
+Unlike the kill and hit plugins, categories are a menu grouping only — there is no
+`exyliarrows.category.elemental`. Selling a whole category means granting each effect's node, or
+writing those effects with a shared node in their `permission` field.
+</Callout>
+
+## A sensible setup
+
+Give everyone the menu and sell what is inside it. Without `exyliarrows.command.arrows` the menu
+cannot be opened at all, and neither can `reset` or `toggleParticles` — which means a player cannot
+turn particles off either.

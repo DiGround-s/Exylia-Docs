@@ -36,6 +36,21 @@ export function Nav({ entries, lang }: { entries: SearchEntry[]; lang: Lang }) {
           scrolled ? "glass-nav border-b border-white/[0.06]" : "border-b border-transparent"
         }`}
       >
+        <div className="border-b border-white/[0.06] bg-ink-950/70 backdrop-blur-xl">
+          <p className="mx-auto flex max-w-docs items-center justify-center gap-2 px-6 py-1.5 text-center font-mono text-[10.5px] uppercase tracking-[0.14em] text-white/40">
+            <svg className="h-3 w-3 shrink-0 text-white/30" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M8 2.2l1.3 3.4L12.7 7l-3.4 1.4L8 11.8 6.7 8.4 3.3 7l3.4-1.4L8 2.2z"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinejoin="round"
+              />
+              <path d="M12.4 11.2l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5.5-1.3z" fill="currentColor" />
+            </svg>
+            {dict.nav.aiNotice[lang]}
+          </p>
+        </div>
+
         <nav className="mx-auto flex max-w-docs items-center justify-between gap-6 px-6 py-4">
           <div className="flex items-center gap-3">
             <Link href={`/${lang}`} className="group shrink-0">

@@ -1,0 +1,51 @@
+---
+title: "Frequently asked questions"
+description: "The questions that come up most."
+---
+
+## The plugin does not start
+
+`ExyliaLib` and `packetevents` are both required. Without either, the server disables it by name.
+
+## The menu will not open
+
+That needs `exyliahiteffect.command.hiteffect`. It is separate from owning any effect.
+
+Up to version 1.0.8 this node was spelled `exyliahiteffect.command.killeffect`, inherited from the
+sibling plugin. If you granted the old spelling, switch it — the old one no longer does anything.
+
+## Nothing plays when a player hits
+
+1. **Is the victim allowed?** `effects.all-mobs` is `false` by default, so only `PLAYER`,
+   `MANNEQUIN` and `ZOMBIE` count.
+2. **Do they own the effect?** A selection they no longer have permission for is cleared, not played.
+3. **Is anyone set to see it?** A player on `NONE` sees nothing, including their own.
+
+## Effects overlap into a mess during a fight
+
+That is the nature of a per-hit trigger, and it is why the shipped effects are short. An effect with
+`[DELAY]` lines will still be drawing when the next hit lands. Cut the delays, lower `count:`, or use
+`ticks:1` so a shape is drawn in one frame instead of over time.
+
+## The effect appears at the victim's feet
+
+It should not — it is anchored a block up on purpose. If it looks low, check the `y:` on the shape
+lines in your own effect, which is applied on top of that block.
+
+## Can I use kill effects here?
+
+The syntax is identical, so a sequence copies across. Whether it *reads* well is another question: a
+four-second spiral designed for a death fires on every swing here.
+
+## A player says their effect disappeared
+
+Their permission for it went away. The plugin clears a selection it can no longer justify rather than
+playing something the player is not entitled to.
+
+## Does it work on Folia?
+
+Yes, it declares Folia support.
+
+## Where do I get support?
+
+On the [Exylia Discord](https://discord.exylia.net).
