@@ -1,0 +1,119 @@
+---
+title: "Reglas de kit"
+description: "Cada interruptor, número y atributo de un kit, con su valor por defecto y qué lo aplica realmente."
+---
+
+Las reglas se guardan como JSON en la fila del kit y se editan desde `/epc` → **Manage Kits** → un kit
+→ **Kit rules**. La mayoría se convierten en políticas sobre la región de la arena mientras dura la
+partida; el resto las aplica el propio listener de la partida.
+
+## Construcción
+
+| Regla | Defecto | Qué hace |
+|---|---|---|
+| `build` | off | Los jugadores pueden poner bloques |
+| `block-break` | off | Los jugadores pueden romper bloques |
+| `interact` | on | Los jugadores pueden interactuar con bloques |
+| `player-build-only` | off | Solo pueden romperse los bloques que pusieron los jugadores |
+| `disappearing-blocks-delay` | `0` | Segundos hasta que un bloque colocado desaparece. `0` lo desactiva. |
+| `re-give-blocks` | off | El bloque se devuelve cuando desaparece |
+
+<Callout type="note" title="El modo aventura se deduce, no se configura">
+El jugador pasa a modo aventura cuando `build`, `block-break` y `player-build-only` están los tres
+apagados, y a supervivencia en cualquier otro caso. No hay ajuste de modo de juego.
+</Callout>
+
+Poner y romper bloques también está bloqueado dentro de los [radios de protección de spawn y de
+regiones extra](/docs/exyliapractice/arenas#radios-de-protección) de la arena, independientemente de
+estas reglas.
+
+## Objetos
+
+| Regla | Defecto | Qué hace |
+|---|---|---|
+| `item-drop` | on | Se pueden soltar objetos |
+| `item-pickup` | on | Se pueden recoger objetos |
+| `ender-pearl-cooldown` | `0` | Enfriamiento entre perlas. `0` usa el del servidor. |
+| `golden-apple-cooldown` | `0` | Enfriamiento de los dos tipos de manzana dorada, en segundos. `0` lo desactiva. |
+
+<Callout type="note" title="Los dos enfriamientos van en segundos">
+A diferencia de `hit-delay`, justo debajo, estos dos son segundos y no ticks: `1` es aproximadamente la
+perla vainilla. Las versiones anteriores etiquetaban mal el de la perla como `ticks` en el menú de
+reglas; el valor que guardaba siempre fueron segundos, así que un kit existente no necesita cambio.
+</Callout>
+
+## Daño y vida
+
+| Regla | Defecto | Qué hace |
+|---|---|---|
+| `pvp` | on | Los jugadores pueden dañarse |
+| `fall-damage` | on | Se aplica el daño por caída |
+| `disabled-damage` | off | Todo el daño está apagado |
+| `health-regeneration` | on | Regeneración natural |
+| `food-decreasing` | on | El hambre baja |
+| `hit-delay` | `20` | El `maximumNoDamageTicks` del jugador: la ventana de invulnerabilidad tras un golpe, en ticks |
+
+`hit-delay` sí está en ticks. `20` es lo vainilla; bájalo para kits de combo.
+
+## Condiciones de victoria
+
+| Regla | Defecto | Qué hace |
+|---|---|---|
+| `hits-to-win` | `0` | El jugador que ha *recibido* esos golpes queda eliminado. `0` lo desactiva. |
+| `points-to-win` | `-1` | Puntos necesarios para ganar. `-1` lo desactiva. |
+| `kills-give-points` | on | Una eliminación da un punto |
+| `revive-time` | `0` | Segundos que un eliminado observa antes de reaparecer. `0` desactiva las reapariciones. |
+
+<Callout type="note" title="Hits-to-win cuenta golpes recibidos, no dados">
+El `%hits%` del sidebar son tus propios golpes *recibidos*, y `%opp_hits%` los del rival. Un kit de
+boxeo es `hits-to-win: 100` y nada más.
+</Callout>
+
+Los puntos y las reapariciones juntos son lo que convierte un 1v1 en un primero a N: una eliminación
+puntúa, el perdedor revive tras `revive-time` segundos y la arena opcionalmente se regenera entre
+puntos.
+
+## Movimiento y objetivos
+
+| Regla | Defecto | Qué hace |
+|---|---|---|
+| `iron-plate-checkpoints` | off | Las placas de presión de peso pesado fijan un checkpoint. Morir o salir de la arena te devuelve ahí en vez de eliminarte. |
+| `regenerate-after-point` | off | La arena se restaura desde su esquemático entre puntos |
+
+Los checkpoints son por placa y de un solo uso: volver a pisar el mismo bloque no lo rearma, pero una
+placa nueva sí. Se reinician al empezar cada ronda y cada punto.
+
+## Estado inicial
+
+| Regla | Defecto | Qué hace |
+|---|---|---|
+| `start-health` | `-1` | Vida con la que empieza. `-1` significa completa. |
+| `start-food` | `-1` | Nivel de comida. `-1` significa 20. |
+| `start-saturation` | `-1` | Saturación. `-1` significa 20. |
+
+## Atributos
+
+Se ajustan en **Kit attributes**. `-1` en cualquiera significa «deja el valor vainilla».
+
+| Atributo | Vainilla |
+|---|---|
+| `max-health` | 20 |
+| `attack-damage` | 1 |
+| `movement-speed` | 0.1 |
+| `knockback-resistance` | 0 |
+
+Los atributos se aplican como valores base al empezar la partida y de nuevo tras cada reinicio de
+punto.
+
+## Efectos de poción
+
+Se ajustan en **Potion effects**. Cada entrada es un nombre de efecto, un amplificador y una duración
+en segundos; una duración de `-1` dura toda la partida.
+
+Antes se retira cualquier efecto que el jugador tuviera, así que lo que da el kit es exactamente lo que
+el jugador tiene.
+
+## Condiciones especiales
+
+El último bloque de la pantalla de reglas. Ocho disparadores, tres acciones: ver [su propia
+página](/docs/exyliapractice/condiciones-especiales).

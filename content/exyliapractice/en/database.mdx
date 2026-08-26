@@ -1,0 +1,96 @@
+---
+title: "Database"
+description: "The seventeen tables, what each one holds, and how the two stat tiers relate."
+---
+
+The plugin stores everything through ExyliaLib's database module, so which engine backs it — MySQL,
+SQLite, H2, MongoDB — is configured once in ExyliaLib and not here. Tables are created and migrated
+automatically.
+
+## The seventeen tables
+
+| Table | Holds |
+|---|---|
+| `practice_arenas` | One arena: spawns, regions, protection radii, extra regions |
+| `practice_kits` | One kit: loadout, categories, compatible arenas, playability flags, rules JSON |
+| `practice_kit_categories` | One category |
+| `practice_player_kits` | One player's saved loadout slot for one kit |
+| `practice_player_season_stats` | One player's counters for one kit in one season |
+| `practice_player_lifetime_stats` | The same, across every season |
+| `practice_player_stats` | The pre-season table. Read once by the migration, never written again. |
+| `practice_match_history` | One player's side of one finished match, inventory included |
+| `practice_game_log` | One row per match played: kit, arena, mode, player count, whether it was cancelled |
+| `practice_seasons` | One season: number, name, start, end, whether it is active |
+| `practice_settings` | A single row: lobby spawn, kit editor spawn, global boost, current season |
+| `practice_player_settings` | One player's `/settings` |
+| `practice_elo_boosts` | One player's active LP boost |
+| `practice_pvp_regions` | One PvP zone |
+| `practice_portal_regions` | One portal |
+| `practice_jumpads` | One jump pad and all its locations |
+| `practice_web_outbox` | Payloads waiting to reach the web API |
+
+## The two stat tiers
+
+`practice_player_season_stats` and `practice_player_lifetime_stats` hold the same columns. The
+difference is what resets:
+
+| | Season | Lifetime |
+|---|---|---|
+| Reset by a rotation | Effectively — the new season starts empty | Never |
+| Read by leaderboards | Yes | No |
+| Read by sidebars and placeholders | Yes | No |
+| Key | `<season>:<kit>` denormalised into `seasonKit` | `<player>:<kit>` |
+
+Both are written in the same commit at the end of a match, so they can never disagree.
+
+The **global** ladder is stored in both under the kit id `global`, which is what lets one query answer
+both a per-kit and an overall leaderboard.
+
+<Callout type="note" title="Why winRate and kdr are columns">
+They are stored rather than computed on read so the database can order a leaderboard by them against
+an index. Editing `wins` by hand through `/epc stats set` recalculates them.
+</Callout>
+
+## Indexes that matter
+
+| Table | Indexed on |
+|---|---|
+| `practice_player_season_stats` | `season`, `playerUuid`, `playerName` |
+| `practice_player_lifetime_stats` | `playerUuid`, `playerName` |
+| `practice_match_history` | `matchId`, `season` |
+| `practice_game_log` | `kitId`, `arenaId`, `cancelled` |
+| `practice_player_kits` | `playerUuid`, `kitId` |
+| `practice_web_outbox` | `kind`, `nextAttemptAt` |
+| `practice_seasons` | `active` |
+
+Leaderboards order and limit **inside the database** against the season index; match history does the
+same against the played-at index. Nothing pages a whole table into memory.
+
+## Migrating from ExyliaCommons
+
+Two separate migrations exist:
+
+**Automatic, on first boot.** If `practice_player_stats` has rows, every one is attributed to season 1
+and copied into both the season and lifetime tiers. It runs in the background without blocking
+startup, is resumable if the server dies part-way through, and only ever reads the legacy table — so
+it can be re-run safely.
+
+**Manual, on a dump.** `/epc migrate <file> [--skip-stats]` converts an exported ExyliaCommons v2
+database dump into this plugin's schema. `--skip-stats` converts arenas, kits and settings without
+touching player statistics.
+
+## Export and import
+
+| Command | What it does |
+|---|---|
+| `/epc export [filename]` | Write a dump. With no name, a timestamped file in the dumps folder. |
+| `/epc import <filename>` | Load one back |
+
+Both go through ExyliaLib's transfer module, so a dump taken on SQLite can be imported into MySQL.
+
+<Callout type="warning" title="Restart after an import">
+An import loads rows straight into the live tables and does not invalidate anything the server is
+already holding in memory — arenas, kits, categories, loaded player stats. Take an export first, run
+the import with nobody online, and restart the server before letting anybody back in. Otherwise the
+old in-memory copies are written back over the imported rows.
+</Callout>

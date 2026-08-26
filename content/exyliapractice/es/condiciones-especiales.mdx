@@ -1,0 +1,65 @@
+---
+title: "Condiciones especiales"
+description: "Ocho disparadores, tres acciones, y los modos de juego que salen de combinarlos."
+---
+
+Una condición especial es una regla de la forma *cuando le pase esto a un jugador, haz aquello*. Viven
+en el kit, en `/epc` → **Manage Kits** → un kit → **Kit rules** → **Special conditions**.
+
+## Los ocho disparadores
+
+| Disparador | Se dispara cuando el jugador |
+|---|---|
+| `TOUCH_WATER` | está en agua |
+| `TOUCH_LAVA` | está en lava |
+| `TOUCH_END_GATEWAY` | está en una pasarela del End |
+| `TOUCH_END_PORTAL` | está en un portal del End |
+| `TOUCH_NETHER_PORTAL` | está en un portal del Nether |
+| `STEP_ON_GOLD_PRESSURE_PLATE` | pisa una placa de presión de peso ligero |
+| `FALL_INTO_VOID` | cae al vacío |
+| `ENTER_FAR_AWAY_EXTRA_REGION` | entra en la [región extra más lejana a su spawn](/docs/exyliapractice/regiones-extra) |
+
+Todos los disparadores de bloque se comprueban sobre el bloque en el que están los pies del jugador, y
+solo cuando cambia de bloque: quedarse quieto en lava dispara una vez, no cada tick.
+
+## Las tres acciones
+
+| Acción | Qué ocurre |
+|---|---|
+| `ADD_POINT` | El jugador gana un punto. Si con eso llega a `points-to-win`, gana la ronda o la partida. |
+| `LOSS_POINT` | El jugador pierde un punto. |
+| `DEATH` | El jugador queda eliminado; o, con `iron-plate-checkpoints` activo y un checkpoint fijado, se le cura y se le devuelve ahí con 2 segundos de invulnerabilidad. |
+
+Un disparador puede llevar **varias** acciones; se aplican en el orden en que se activaron.
+
+## Qué se puede montar con ellas
+
+<Cards>
+  <Card title="Sumo">
+    `TOUCH_WATER` → `DEATH`. Kit sin objetos, PvP activo, arena como plataforma sobre agua.
+  </Card>
+  <Card title="Captura">
+    `ENTER_FAR_AWAY_EXTRA_REGION` → `ADD_POINT`, dos regiones extra, `points-to-win: 3`.
+  </Card>
+  <Card title="Carrera de parkour">
+    `FALL_INTO_VOID` → `DEATH` con `iron-plate-checkpoints` activo, para que una caída devuelva a la
+    última placa pesada. `STEP_ON_GOLD_PRESSURE_PLATE` → `ADD_POINT` en la meta.
+  </Card>
+  <Card title="Bridge">
+    `FALL_INTO_VOID` → `DEATH`, `ENTER_FAR_AWAY_EXTRA_REGION` → `ADD_POINT`, `build` activo,
+    `regenerate-after-point` activo.
+  </Card>
+</Cards>
+
+<Callout type="note" title="Los puntos pueden bajar de cero">
+`LOSS_POINT` resta sin suelo, así que un jugador que lo dispare muchas veces muestra un marcador
+negativo en el sidebar. No le cuesta nada más allá de la pantalla —solo se resuelve un ganador desde un
+marcador positivo— pero acompaña `LOSS_POINT` de algo que termine la ronda si quieres que sea decisivo.
+</Callout>
+
+## Relación con las reapariciones
+
+Un jugador eliminado en un kit con `revive-time` mayor que cero observa esos segundos y vuelve en su
+spawn, en vez de terminar la partida. Eso es lo que convierte una condición `DEATH` en un castigo y no
+en una derrota, y es como un kit de bridge o de parkour se juega a un total de puntos y no a un solo
+error.

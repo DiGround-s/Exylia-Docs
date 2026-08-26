@@ -1,0 +1,76 @@
+---
+title: "Permissions"
+description: "Every node the plugin checks, and the two that count downwards."
+---
+
+## The full list
+
+| Node | What it grants |
+|---|---|
+| `exyliapractice.admin` | The admin menu, `/epc` and every one of its subcommands, and every admin button in every menu |
+| `exyliapractice.party.open` | Reserved for the open/closed party toggle |
+| `exyliapractice.party.announce` | `/party announce` |
+| `exyliapractice.bypass.command-whitelist` | Run any command while in a match, in a queue or in a PvP zone |
+| `exyliapractice.lobby.fly` | Flight in the lobby. Also disables double jump, since flying replaces it. |
+| `exyliapractice.lobby.bypass` | Always visible to everybody in the lobby, whatever their visibility settings say |
+| `exyliapractice.lobby.vip` | Counted as a VIP by the **show VIP** visibility setting |
+| `exyliapractice.party.max_slots.<n>` | A party of up to `<n>` members |
+| `exyliapractice.party.max_slots.*` | A party of up to `party.max-size` |
+| `exyliapractice.kits.max_slots.<n>` | `<n>` saved loadouts per kit in the kit editor |
+
+Nothing else is checked. Every player command works with no node at all.
+
+## The two counting nodes
+
+Both `party.max_slots.<n>` and `kits.max_slots.<n>` are read by scanning downwards for the highest
+number the player actually has, so:
+
+- Giving `max_slots.5` on top of `max_slots.1` is an **upgrade**, not a conflict. A rank ladder can add
+  nodes without removing the ones below.
+- The nodes need no registration. Any integer works.
+
+They differ in what happens with no node at all:
+
+| Node | With none |
+|---|---|
+| `exyliapractice.kits.max_slots.<n>` | **1** loadout — the kit editor works for everybody by default |
+| `exyliapractice.party.max_slots.<n>` | `party.default-max-size`, 10 by default |
+
+`party.max_slots` is additionally capped by `party.max-size` (100 by default), so no permission can
+create a party larger than the config allows.
+
+<Callout type="note" title="Party size is the leader's permission">
+The ceiling is checked against whoever is leader when the size is changed, not against the member
+joining. Handing leadership to somebody with a lower ceiling does not shrink an already-large party.
+</Callout>
+
+## Suggested setup
+
+```yaml
+default:
+  # nothing — every player command already works
+
+vip:
+  - exyliapractice.lobby.vip
+  - exyliapractice.party.announce
+  - exyliapractice.kits.max_slots.3
+  - exyliapractice.party.max_slots.15
+
+premium:
+  - exyliapractice.lobby.fly
+  - exyliapractice.kits.max_slots.10
+  - exyliapractice.party.max_slots.30
+
+staff:
+  - exyliapractice.lobby.bypass
+  - exyliapractice.bypass.command-whitelist
+
+admin:
+  - exyliapractice.admin
+```
+
+<Callout type="warning" title="`exyliapractice.admin` is all or nothing">
+Every admin action — creating arenas, editing kits, rotating seasons, clearing every player's stats,
+importing a database dump — is behind that one node. There is no split between a builder who sets up
+arenas and an operator who can wipe the ladder.
+</Callout>

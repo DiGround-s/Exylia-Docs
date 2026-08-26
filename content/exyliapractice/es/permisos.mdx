@@ -1,0 +1,76 @@
+---
+title: "Permisos"
+description: "Todos los nodos que comprueba el plugin, y los dos que cuentan hacia abajo."
+---
+
+## La lista completa
+
+| Nodo | Qué concede |
+|---|---|
+| `exyliapractice.admin` | El menú de administración, `/epc` y todos sus subcomandos, y todos los botones de admin de todos los menús |
+| `exyliapractice.party.open` | Reservado para el interruptor de party abierta/cerrada |
+| `exyliapractice.party.announce` | `/party announce` |
+| `exyliapractice.bypass.command-whitelist` | Ejecutar cualquier comando estando en partida, en cola o en una zona PvP |
+| `exyliapractice.lobby.fly` | Vuelo en el lobby. También desactiva el doble salto, porque volar lo sustituye. |
+| `exyliapractice.lobby.bypass` | Siempre visible para todos en el lobby, digan lo que digan sus ajustes de visibilidad |
+| `exyliapractice.lobby.vip` | Cuenta como VIP para el ajuste de visibilidad **show VIP** |
+| `exyliapractice.party.max_slots.<n>` | Una party de hasta `<n>` miembros |
+| `exyliapractice.party.max_slots.*` | Una party de hasta `party.max-size` |
+| `exyliapractice.kits.max_slots.<n>` | `<n>` loadouts guardados por kit en el editor de kits |
+
+No se comprueba nada más. Todos los comandos de jugador funcionan sin ningún nodo.
+
+## Los dos nodos que cuentan
+
+Tanto `party.max_slots.<n>` como `kits.max_slots.<n>` se leen recorriendo hacia abajo hasta el número
+más alto que el jugador tenga de verdad, así que:
+
+- Dar `max_slots.5` encima de `max_slots.1` es una **mejora**, no un conflicto. Una escalera de rangos
+  puede añadir nodos sin quitar los de abajo.
+- Los nodos no hay que registrarlos. Vale cualquier entero.
+
+Se diferencian en qué pasa sin ningún nodo:
+
+| Nodo | Sin ninguno |
+|---|---|
+| `exyliapractice.kits.max_slots.<n>` | **1** loadout: el editor de kits funciona para todos por defecto |
+| `exyliapractice.party.max_slots.<n>` | `party.default-max-size`, 10 por defecto |
+
+`party.max_slots` está además limitado por `party.max-size` (100 por defecto), así que ningún permiso
+puede crear una party mayor de lo que permita la configuración.
+
+<Callout type="note" title="El tamaño de party es el permiso del líder">
+El techo se comprueba contra quien sea líder al cambiar el tamaño, no contra el miembro que entra.
+Ceder el liderazgo a alguien con un techo menor no encoge una party ya grande.
+</Callout>
+
+## Montaje sugerido
+
+```yaml
+default:
+  # nada: todos los comandos de jugador ya funcionan
+
+vip:
+  - exyliapractice.lobby.vip
+  - exyliapractice.party.announce
+  - exyliapractice.kits.max_slots.3
+  - exyliapractice.party.max_slots.15
+
+premium:
+  - exyliapractice.lobby.fly
+  - exyliapractice.kits.max_slots.10
+  - exyliapractice.party.max_slots.30
+
+staff:
+  - exyliapractice.lobby.bypass
+  - exyliapractice.bypass.command-whitelist
+
+admin:
+  - exyliapractice.admin
+```
+
+<Callout type="warning" title="`exyliapractice.admin` es todo o nada">
+Todas las acciones de administración —crear arenas, editar kits, rotar temporadas, borrar las
+estadísticas de todos, importar un volcado de base de datos— están detrás de ese único nodo. No hay
+separación entre un constructor que monta arenas y un operador que puede vaciar el ladder.
+</Callout>

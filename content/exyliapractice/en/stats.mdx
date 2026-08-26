@@ -1,0 +1,113 @@
+---
+title: "Statistics"
+description: "The three tiers of counters, what a match commits, the leaderboards and the admin commands that edit them."
+---
+
+## Three tiers
+
+| Tier | Table | Scope |
+|---|---|---|
+| **Season** | `practice_player_season_stats` | One row per player, per kit, per season |
+| **Lifetime** | `practice_player_lifetime_stats` | One row per player, per kit, across every season |
+| **Match** | `practice_match_history` | One row per player, per match |
+
+Every ladder, sidebar, placeholder and menu reads the **season** tier. The lifetime tier is the
+permanent record and survives every rotation.
+
+The **global** ladder is not a separate table — it is one more row in the same tables, stored under
+the kit id `global`. That is what lets a single query answer both "top on Sumo" and "top overall".
+
+## What a row holds
+
+| Group | Fields |
+|---|---|
+| Result | `wins`, `losses`, `draws`, `winRate` |
+| Combat | `kills`, `deaths`, `kdr`, `damageDealt`, `damageTaken` |
+| Accuracy | `hitsDealt`, `hitsReceived`, `totalSwings` |
+| Combo | `bestCombo`, `comboSum`, `comboSamples` |
+| Streaks | `currentStreak`, `bestStreak` |
+| Rating | `elo`, `peakElo`, `lowElo`, `rankedGamesPlayed` |
+| Time | `timePlayed`, `firstMatchAt`, `lastMatchAt` |
+
+`winRate` and `kdr` are stored, not computed on read, so a leaderboard can order by them in the
+database.
+
+## When they are written
+
+Kills and deaths are recorded **as they happen**, so a live sidebar and a kill streak stay accurate
+mid-match. Everything else — the result, damage dealt and taken, hits, swings, best combo and time
+played — is committed **once**, when the match ends, as a single delta per player.
+
+A match that is `CANCELLED`, or that never left the countdown, writes nothing at all.
+
+<Callout type="note" title="Damage taken is derived from what the others dealt">
+There is no separate damage-taken accumulator. Your damage taken is the sum of everybody else's damage
+dealt in that match, which in a 1v1 is exactly your opponent's output.
+</Callout>
+
+## Leaderboards
+
+`/stats`, `/lb` or `/leaderboard` opens the category list, then the kits, then a per-kit leaderboard
+that can be sorted by eleven different counters:
+
+`rank`, `kills`, `deaths`, `kdr`, `wins`, `losses`, `win rate`, `best streak`, `current streak`,
+`damage dealt`, `time played`.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `leaderboard.max-entries` | `50` | How many rows a leaderboard holds |
+
+Leaderboards are cached for **5 minutes** and ordered by the database against a season-scoped index. A
+board that has gone stale is served from the last copy while a fresh one loads in the background, so a
+menu never blocks on a query.
+
+`/stats <player>` opens somebody else's stats. If they are offline, their UUID is looked up by name.
+
+## Placeholders
+
+Every counter is available as a placeholder — see [the placeholder
+reference](/docs/exyliapractice/placeholders), including `%stats_top_<stat>_<position>%` for a
+leaderboard row.
+
+## Admin commands
+
+All of these need `exyliapractice.admin` and take `global` in place of a kit id to reach the overall
+ladder.
+
+| Command | What it does |
+|---|---|
+| `/epc stats get <player> <kit> <field>` | Read one counter |
+| `/epc stats set <player> <kit> <field> <value>` | Set it |
+| `/epc stats add <player> <kit> <field> <amount>` | Add to it |
+| `/epc stats remove <player> <kit> <field> <amount>` | Subtract from it |
+| `/epc stats summary <player> <kit>` | A formatted overview |
+
+The editable fields are:
+
+```
+kills  deaths  wins  losses  elo
+best-streak  current-streak  damage  time
+```
+
+`best-streak` and `current-streak` also accept `beststreak` and `currentstreak`. Every field is
+clamped at zero — `add` and `remove` cannot take a counter negative. `time` is in milliseconds.
+
+<Callout type="note" title="These edit the current season only">
+The lifetime tier is not touched by `stats set` or `stats add`, so a correction to a season row does
+not rewrite the permanent record.
+</Callout>
+
+## Bulk operations
+
+`/epc` → **Data Management**, all confirmed first and all irreversible:
+
+| Action | What it does |
+|---|---|
+| **Clear kit stats** | Deletes every current-season row for one kit |
+| **Clear all stats** | Deletes every current-season row |
+| **Reset kit ELO** | Sets every current-season rating on one kit back to `elo.starting-mmr` |
+| **Reset all ELO** | The same for every kit |
+| **Clear kit customizations** | Deletes every player's saved loadouts for one kit |
+| **Clear all customizations** | The same for every kit |
+| **Purge match history** | Deletes match rows |
+| **Export / Import** | A full database dump, through ExyliaLib's transfer module |

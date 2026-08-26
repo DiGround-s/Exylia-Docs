@@ -1,0 +1,128 @@
+---
+title: "Scoreboards"
+description: "Nineteen sidebars, how the right one is chosen, and the tokens each of them can use."
+---
+
+`scoreboards.yml` holds **nineteen** sidebars. Each has the same shape:
+
+```yaml
+lobby:
+  enabled: true
+  title:
+    - "{primary}&lPRACTICE"
+  lines:
+    - ""
+    - " {info}🌎 {letters}Online: {success}%server_online%"
+    - " {highlight}exylia.net"
+  update:
+    interval: 10
+    smart: true
+    cache: true
+```
+
+`title` is a list: several entries animate through them. `update.interval` is in **ticks**.
+
+## The nineteen
+
+| Key | Shown to |
+|---|---|
+| `lobby` | A player in the lobby with no party |
+| `party` | A player in the lobby who is in a party |
+| `queue` | A queued player |
+| `game` | A 1v1 with no points and no hit target |
+| `game-points` | A 1v1 with `points-to-win` |
+| `game-hits` | A 1v1 with `hits-to-win` |
+| `duel` | A multi-round duel |
+| `duel-points` | A multi-round duel with points |
+| `duel-hits` | A multi-round duel with a hit target |
+| `party-ffa` | A party free-for-all |
+| `party-team` | A party split or party duel |
+| `spec-game` | Spectating a plain 1v1 |
+| `spec-game-points` | Spectating a 1v1 with points |
+| `spec-game-hits` | Spectating a 1v1 with hits |
+| `spec-duel` | Spectating a duel |
+| `spec-duel-points` | Spectating a duel with points |
+| `spec-duel-hits` | Spectating a duel with hits |
+| `spec-party-ffa` | Spectating a party FFA |
+| `spec-party-team` | Spectating a party team match |
+
+The right one is picked automatically from the match mode, whether the kit has `points-to-win`, and
+whether it has `hits-to-win` — points win the tie when both are set.
+
+A player who has turned the scoreboard off in `/settings` sees none of them.
+
+## Tokens by sidebar
+
+Alongside these, every [placeholder](/docs/exyliapractice/placeholders) and every other plugin's
+placeholders resolve inside a sidebar line.
+
+### Lobby and party
+
+| Token | Answers |
+|---|---|
+| `%queue%` | Players queued server-wide |
+| `%fighting%` | Players in a match server-wide |
+| `%wins%`, `%kdr%`, `%win_rate%` | The reader's global counters |
+| `%mmr%`, `%rank%`, `%rank_division%`, `%rank_name%`, `%rank_lp%`, `%rank_lp_max%`, `%rank_icon%` | Their global rank |
+| `%members%`, `%max%`, `%leader%` | Party only |
+
+### Queue
+
+Everything from the lobby, plus:
+
+| Token | Answers |
+|---|---|
+| `%kit%` | The first kit queued for, with `+N` when there are more |
+| `%time%` | How long they have been waiting |
+
+The rank tokens here are the rating on **that first kit**, not the global one.
+
+### In a match
+
+| Token | Answers |
+|---|---|
+| `%kit%`, `%arena%` | Names |
+| `%time%` | Match duration |
+| `%my_points%`, `%their_points%`, `%points_to_win%` | Points |
+| `%hits%`, `%opp_hits%`, `%hits_to_win%` | Hits **received** by each side |
+| `%round%`, `%total_rounds%`, `%my_wins%`, `%their_wins%` | Duel rounds |
+| `%my_ping%`, `%opp_ping%` | Latency |
+| `%alive%`, `%total%` | FFA survivor count |
+| `%team_a_alive%`, `%team_b_alive%` | Team match survivor counts |
+| `%opponent%`, `%opp_mmr%`, `%opp_rank%`, `%opp_rank_name%`, `%opp_rank_lp%`, `%opp_rank_lp_max%`, `%opp_rank_icon%` | The opponent, 1v1 only |
+
+The reader's own rank tokens in a match are their rating **on the kit being played**.
+
+### Spectating
+
+Instead of *my* and *their*, spectator sidebars use `%player1_*%` and `%player2_*%`:
+`name`, `ping`, `points`, `hits`, `wins`, plus the full set of rank tokens for each.
+
+## The match action bar
+
+Separate from the sidebar, and configured under `game.match-actionbar` in `config.yml`:
+
+```
+%opponent_health% | %hits_dealt%↑%my_combo% %hits_received%↓%combo_received%
+| %damage_dealt%⚔ / %damage_received%⚔ | %accuracy% / %opponent_accuracy%🎯
+| %my_ping%ms / %opponent_ping%ms
+```
+
+## Titles and sounds
+
+The match's other visuals live in `config.yml` rather than here:
+
+| Key | When |
+|---|---|
+| `game.countdown-title` | Each second of the pre-match countdown, with `%time%` |
+| `game.fight-title` | The moment the match starts |
+| `game.you-won-title`, `game.you-lost-title`, `game.draw-title` | The result |
+| `duel.round-won-title`, `duel.round-lost-title`, `duel.round-draw-title` | Between rounds, with `%my_wins%` and `%their_wins%` |
+| `queue.match-found-title`, `queue.match-found-actionbar` | While the arena is being prepared |
+| `queue.in-queue-actionbar` | While queued, with `%kits%`, `%time%` and `%elo%` |
+| `queue.teaser-bossbar` | The rotating queue advertisement |
+| `pvp-regions.combat-tag-bossbar` | While combat-tagged in a PvP zone, with `%time%` |
+| `season.progress-bossbar` | During a season rotation, with `%phase%` and `%percent%` |
+
+Each of those blocks is a full effect definition — a title, an action bar, a boss bar, a sound, a
+particle and a firework — so any of them can carry more than the one thing its name suggests.

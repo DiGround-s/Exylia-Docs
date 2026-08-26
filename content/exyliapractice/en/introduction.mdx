@@ -1,0 +1,87 @@
+---
+title: "Introduction"
+description: "What ExyliaPracticeCore is: ranked matchmaking, duels, parties and self-regenerating arenas in one plugin."
+---
+
+ExyliaPracticeCore is a complete practice server. A player joins the lobby, picks a kit from the queue
+menu, gets matched against somebody near their rating, fights in an arena that was pasted for that
+match alone, and lands back in the lobby with their LP already updated.
+
+It is the largest plugin in the ecosystem: **235 classes, 17 database tables, 61 menu screens and 15
+commands**.
+
+## What it does
+
+<Cards>
+  <Card title="Ranked matchmaking" href="/docs/exyliapractice/queue">
+    A player queues for several kits at once. The search radius widens the longer they wait.
+  </Card>
+  <Card title="Duels" href="/docs/exyliapractice/duels">
+    Challenge a player directly, pick the kit, the arena and how many rounds.
+  </Card>
+  <Card title="Parties" href="/docs/exyliapractice/parties">
+    FFA, split teams, or one party queued against another.
+  </Card>
+  <Card title="Cloning arenas" href="/docs/exyliapractice/clones">
+    One built arena becomes up to ten simultaneous copies in a void world.
+  </Card>
+  <Card title="Nine ranks" href="/docs/exyliapractice/elo">
+    Ember through Legend, with divisions, LP, placements and a demotion shield.
+  </Card>
+  <Card title="Kit editor" href="/docs/exyliapractice/kit-editor">
+    Players rearrange the kit's own items into named, saved loadouts.
+  </Card>
+</Cards>
+
+## How a ranked match actually runs
+
+<Steps>
+  <Step title="Queue">
+    The player opens `/queue`, picks a category, then one or more kits. They stay in the lobby with an
+    action bar showing the kits, the elapsed time and the rating band being searched.
+  </Step>
+  <Step title="Match found">
+    Every second the plugin looks for two adjacent players in the queue whose ratings are within the
+    wider of their two search radii, and who are not blocked by the [anti-boost
+    checks](/docs/exyliapractice/elo#anti-boosting).
+  </Step>
+  <Step title="Arena">
+    A free instance of one compatible arena is taken. If every one is busy, a **clone** is pasted from
+    the arena's schematic into the clone world and used instead.
+  </Step>
+  <Step title="Countdown">
+    Both players are teleported to the two spawns, given the kit, put in adventure mode and counted
+    down — five seconds by default.
+  </Step>
+  <Step title="Fight">
+    The kit's rules become policies on the arena region: build, break, interact, PvP, item drop and
+    pickup, fall damage, disappearing blocks. An action bar shows health, hits, combo, damage,
+    accuracy and ping for both sides.
+  </Step>
+  <Step title="Result">
+    ELO is applied to both the kit ladder and the global ladder, a row is written to the match
+    history with both inventories, and the arena is regenerated from its schematic before the next
+    match uses it.
+  </Step>
+</Steps>
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21 or newer. Folia supported. |
+| Java | 21 |
+| Required | `ExyliaLib`, `FastAsyncWorldEdit` |
+| Optional | `PlaceholderAPI`, `ViaVersion`, `Worlds`, `Apollo`, `FeatherServerAPI`, `floodgate` |
+
+<Callout type="warning" title="FastAsyncWorldEdit is not optional">
+Arena cloning and arena regeneration are both schematic operations. Without FAWE the plugin still
+starts and says so once in the console, but an arena can never be enabled: two of its requirements
+are the schematics it cannot save.
+</Callout>
+
+## What it is not
+
+It does not handle FFA, events, the sandbox or cosmetics — those are separate plugins. What it does
+do is hand a player over cleanly when one of them takes them: the lobby reacts to the shared claim
+registry in ExyliaLib rather than being told, so a mode written next year needs no changes here.

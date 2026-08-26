@@ -1,0 +1,71 @@
+---
+title: "Match history"
+description: "Every match, both inventories, and the sixty-day window it lives in."
+---
+
+Every finished match writes one row **per player** to `practice_match_history`. The two rows share a
+`matchId`, which is what lets a player look at their opponent's side of the same fight.
+
+## What a row holds
+
+| Group | Fields |
+|---|---|
+| Identity | `matchId`, `season`, `playerUuid`, `opponentName`, `kitId`, `arenaId`, `matchMode` |
+| Outcome | `result` (WIN / LOSS / DRAW), `ranked`, `playedAt`, `durationMs` |
+| Rating | `eloBefore`, `eloChange`, `eloAfter`, and the same three for the global ladder |
+| Your side | `kills`, `deaths`, `damageDealt`, `hitsDealt`, `hitsReceived`, `totalSwings`, `bestCombo` |
+| Their side | The same seven, prefixed `opponent` |
+| Inventory | `inventoryData` — the player's inventory as it was when the match ended |
+
+A row is written for every non-cancelled match, ranked or not.
+
+## Viewing it
+
+| Command | What it does |
+|---|---|
+| `/history`, `/mh`, `/match-history` | Your own history |
+| `/history <player>` | Somebody else's |
+| `/history inv <matchId>` | The inventory you finished that match with |
+| `/history invop <matchId>` | Your opponent's |
+
+The menu opens on the category list, then the kits, then the matches — each row showing the result,
+the LP change, the opponent, the kit and how long it took. Clicking one opens the two inventory views.
+
+Five filters: **all**, **wins**, **losses**, **ranked**, **unranked**.
+
+<Callout type="note" title="The last 300 matches">
+A history query reads a player's 300 most recent matches, ordered by the database, and filters that
+window in memory. A kit you have not played in a long time can therefore look emptier than it is — the
+match is still in the table, it is just outside the window the menu reads.
+</Callout>
+
+Results are cached for two minutes per player, kit and filter.
+
+## Retention
+
+Match rows are deleted after **60 days**. The sweep starts five minutes after boot and runs hourly,
+deleting the oldest first, in batches, entirely inside the database with a pause between batches so a
+live match's inserts are not held up.
+
+<Callout type="note" title="Deleting a match costs nothing statistically">
+Every counter derived from a match — wins, damage, accuracy, combos, time played — was already
+committed to the season and lifetime rows when the match ended. The history row is the replay, not the
+source of truth.
+</Callout>
+
+The retention window is not a config key.
+
+## Purging
+
+`/epc` → **Data Management** → **Purge match history** deletes match rows outright, in larger batches
+than the background sweep, since nothing is competing with it. It is irreversible and asks for
+confirmation.
+
+## The inventory snapshot
+
+The inventory is captured when the match ends: 36 storage slots, 4 armour slots and the offhand,
+serialised into the row. That is what `/history inv` renders — the actual items, durability and
+enchantments included, as an unclickable menu.
+
+Because it is captured at the end, a player who died holding nothing shows nothing. The snapshot is
+what they had, not what the kit gave them.

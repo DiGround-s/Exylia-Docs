@@ -1,0 +1,87 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaPracticeCore: matchmaking clasificatorio, duelos, parties y arenas que se regeneran solas."
+---
+
+ExyliaPracticeCore es un servidor de practice completo. El jugador entra al lobby, elige un kit en el
+menú de cola, se empareja con alguien de rating parecido, pelea en una arena que se pegó solo para esa
+partida y vuelve al lobby con sus LP ya actualizados.
+
+Es el plugin más grande del ecosistema: **235 clases, 17 tablas, 61 menús y 15 comandos**.
+
+## Qué hace
+
+<Cards>
+  <Card title="Matchmaking clasificatorio" href="/docs/exyliapractice/cola">
+    El jugador se pone en cola para varios kits a la vez. El radio de búsqueda se abre con la espera.
+  </Card>
+  <Card title="Duelos" href="/docs/exyliapractice/duelos">
+    Retar a alguien directamente, eligiendo kit, arena y número de rondas.
+  </Card>
+  <Card title="Parties" href="/docs/exyliapractice/parties">
+    FFA, equipos divididos, o una party encolada contra otra.
+  </Card>
+  <Card title="Arenas clonadas" href="/docs/exyliapractice/clones">
+    Una arena construida se convierte en hasta diez copias simultáneas en un mundo vacío.
+  </Card>
+  <Card title="Nueve rangos" href="/docs/exyliapractice/elo">
+    De Ember a Legend, con divisiones, LP, colocación y escudo de descenso.
+  </Card>
+  <Card title="Editor de kits" href="/docs/exyliapractice/editor-de-kits">
+    El jugador reordena los objetos del propio kit en loadouts guardados con nombre.
+  </Card>
+</Cards>
+
+## Cómo transcurre una partida clasificatoria
+
+<Steps>
+  <Step title="Cola">
+    El jugador abre `/queue`, elige una categoría y luego uno o varios kits. Se queda en el lobby con
+    una action bar que muestra los kits, el tiempo transcurrido y la franja de rating que se busca.
+  </Step>
+  <Step title="Partida encontrada">
+    Cada segundo el plugin busca dos jugadores contiguos en la cola cuyos ratings entren en el mayor
+    de sus dos radios, y a los que no bloqueen las [comprobaciones
+    antiboost](/docs/exyliapractice/elo#antiboost).
+  </Step>
+  <Step title="Arena">
+    Se toma una instancia libre de una arena compatible. Si todas están ocupadas, se pega un **clon**
+    desde el esquemático de la arena al mundo de clones y se usa ese.
+  </Step>
+  <Step title="Cuenta atrás">
+    Ambos son teletransportados a los dos spawns, reciben el kit, pasan a modo aventura y se les
+    cuenta atrás: cinco segundos por defecto.
+  </Step>
+  <Step title="Pelea">
+    Las reglas del kit se convierten en políticas sobre la región de la arena: construir, romper,
+    interactuar, PvP, soltar y recoger objetos, daño por caída, bloques que desaparecen. Una action
+    bar muestra vida, golpes, combo, daño, precisión y ping de los dos lados.
+  </Step>
+  <Step title="Resultado">
+    El ELO se aplica al ladder del kit y al global, se escribe una fila en el historial con los dos
+    inventarios, y la arena se regenera desde su esquemático antes de que la use la siguiente
+    partida.
+  </Step>
+</Steps>
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. Compatible con Folia. |
+| Java | 21 |
+| Obligatorio | `ExyliaLib`, `FastAsyncWorldEdit` |
+| Opcional | `PlaceholderAPI`, `ViaVersion`, `Worlds`, `Apollo`, `FeatherServerAPI`, `floodgate` |
+
+<Callout type="warning" title="FastAsyncWorldEdit no es opcional">
+Clonar y regenerar arenas son dos operaciones de esquemático. Sin FAWE el plugin arranca igual y lo
+avisa una vez en consola, pero ninguna arena puede activarse: dos de sus requisitos son justamente
+los esquemáticos que no puede guardar.
+</Callout>
+
+## Qué no hace
+
+No gestiona FFA, eventos, el sandbox ni cosméticos: son plugins aparte. Lo que sí hace es ceder al
+jugador limpiamente cuando otro de ellos lo toma. El lobby reacciona al registro de claims compartido
+de ExyliaLib en lugar de esperar a que se lo digan, así que un modo escrito el año que viene no
+necesita ningún cambio aquí.

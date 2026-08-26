@@ -1,0 +1,90 @@
+---
+title: "Temporadas"
+description: "Rotar el ladder en dos escrituras, qué sobrevive, y el reinicio que viene después."
+---
+
+Una temporada es un periodo numerado con el que se sella cada fila de estadísticas. Rotar una cierra la
+actual y abre la siguiente; no se copia, sube ni borra nada, así que termina en milisegundos por muchos
+jugadores que tenga el servidor.
+
+## Los tres niveles de estadísticas
+
+| Nivel | Tabla | Lo reinicia una rotación |
+|---|---|---|
+| **Temporada** | `practice_player_season_stats` | En la práctica sí: la nueva temporada empieza sin filas |
+| **Histórico** | `practice_player_lifetime_stats` | Nunca |
+| **Historial de partidas** | `practice_match_history` | No; las filas llevan la temporada en que se jugaron |
+
+Una rotación no destruye nada. Las filas de la temporada anterior siguen en la tabla bajo su número, que
+es lo que permite que un selector de temporada muestre clasificaciones antiguas.
+
+## Rotar
+
+`/epc` → **Data Management** → **New Season**, y confirmar. No hay forma por comando.
+
+<Steps>
+  <Step title="Bloquear la cola">
+    El matchmaking se retiene durante las dos escrituras.
+  </Step>
+  <Step title="Cerrar y abrir">
+    La fila de la temporada activa se marca cerrada con una marca de tiempo de fin; el número siguiente
+    se escribe como nueva temporada activa; se actualiza el espejo del número en la fila de ajustes.
+  </Step>
+  <Step title="Pasar a todos">
+    Los jugadores conectados empiezan a escribir en la nueva temporada de inmediato, sin reconectarse.
+  </Step>
+  <Step title="Cancelar boosts">
+    Todos los [boosts de ELO](/docs/exyliapractice/elo#boosts) personales y globales se cancelan: un
+    boost pertenece a la temporada que lo concedió.
+  </Step>
+  <Step title="Avisar a la web">
+    En la medida de lo posible. Las temporadas se identifican por número, así que una notificación
+    tardía o reintentada converge al mismo resultado.
+  </Step>
+</Steps>
+
+## El reinicio
+
+| Ajuste | Defecto | Qué hace |
+|---|---|---|
+| `season.restart-after-rotation` | `true` | Reinicia el servidor al terminar la rotación |
+| `season.restart-delay-seconds` | `15` | La cuenta atrás con la que se avisa a los jugadores |
+
+Con esto activo, el plugin vacía la [bandeja de salida web](/docs/exyliapractice/web-api) hasta tres
+veces, avisa a todo el mundo, espera la cuenta atrás y llama a `Bukkit.spigot().restart()`, cayendo a un
+apagado normal si no está disponible.
+
+La cola **sigue bloqueada** durante la cuenta atrás a propósito: reabrirla dejaría que alguien empezara
+una partida que el reinicio va a interrumpir.
+
+<Callout type="note" title="Que el servidor vuelva es cosa de tu supervisor">
+`restart()` solo relanza el proceso si `restart-script` en `spigot.yml` apunta a un script que
+funcione. Si no, se apaga limpiamente y algo de fuera de Minecraft tiene que levantarlo, que además es
+el montaje correcto en un servidor en contenedor.
+</Callout>
+
+Con `restart-after-rotation` apagado, la cola se reabre en cuanto aterrizan las dos escrituras y se
+sigue jugando en la nueva temporada.
+
+## La barra de progreso
+
+`season.progress-bossbar` en `config.yml` es la barra que se muestra mientras corre una rotación, con
+`%phase%` y `%percent%`.
+
+## Reparación al arrancar
+
+El plugin resuelve la temporada activa en cada arranque y repara en silencio los dos estados que no
+deberían darse:
+
+- **Ninguna temporada**: una instalación nueva recibe la temporada 1.
+- **Varias marcadas como activas**: una rotación interrumpida a mitad de escritura. Gana el número más
+  alto y el resto se cierran, con un aviso nombrando cada una.
+- **Todas cerradas**: una rotación que murió entre cerrar y abrir. Se reabre la más nueva en vez de
+  inventar un número nuevo.
+
+## Qué no hace una rotación
+
+No limpia el historial de partidas, no toca los loadouts de kit, no reinicia arenas y no sube nada de
+forma síncrona. Si quieres que las estadísticas de la temporada anterior *desaparezcan* en vez de
+archivarse, eso es **Data Management** → **Clear all stats**, que es una acción distinta e
+irreversible.

@@ -1,0 +1,113 @@
+---
+title: "Parties"
+description: "Agruparse, los tres modos de party, y el permiso que decide cuánto puede crecer una party."
+---
+
+Una party es un grupo de jugadores que se mueve junto por el plugin. Existe solo en memoria: un
+reinicio disuelve todas las parties.
+
+## Comandos
+
+| Comando | Qué hace |
+|---|---|
+| `/party`, `/p` | Abre el hub de party |
+| `/party create` | Crea una, contigo como líder |
+| `/party invite <jugador>` | Invita a alguien |
+| `/party join <líder>` | Entrar, por el nombre del líder |
+| `/party decline <líder>` | Rechazar una invitación |
+| `/party leave` | Salir |
+| `/party disband` | Cerrar la party: solo el líder |
+| `/party kick <jugador>` | Expulsar a un miembro: solo el líder |
+| `/party transfer <jugador>` | Ceder el liderazgo: solo el líder |
+| `/party open` | Alternar abierta/cerrada: solo el líder |
+| `/party announce` | Anunciar la party al servidor: solo el líder |
+| `/party chat` | Alternar el chat de party para ti |
+| `/party game` | Abrir el menú de partida: solo el líder |
+| `/party cancelgame` | Cancelar la partida de party en curso |
+| `/party invitations` | Tus invitaciones pendientes |
+| `/party members` | La lista de miembros |
+| `/party hub` | El hub, igual que `/party` |
+
+## Invitaciones
+
+Una invitación vale **60 segundos** y se rechaza si el destinatario tiene las **invitaciones de party**
+apagadas en `/settings`, ya está en una party, o la party está llena.
+
+A una party **abierta** puede entrar cualquiera que sepa el nombre del líder, sin invitación. Cerrada
+es lo predeterminado.
+
+`/party announce` anuncia la party a todo el servidor. Necesita `exyliapractice.party.announce`, la
+party debe estar abierta, y está limitado por `party.announce-cooldown-seconds`: 60 por defecto.
+
+## Tamaño
+
+El máximo empieza en lo que permita el permiso del líder y puede subirse o bajarse desde el hub, entre
+`party.min-size` y el techo del propio líder.
+
+```
+exyliapractice.party.max_slots.<n>
+exyliapractice.party.max_slots.*
+```
+
+Gana el nodo numerado más alto que tenga el líder, limitado por `party.max-size`. El comodín da
+`party.max-size` directamente. Sin ningún nodo, el líder recibe `party.default-max-size`: 10 por
+defecto.
+
+| Ajuste | Defecto |
+|---|---|
+| `party.min-size` | `2` |
+| `party.default-max-size` | `10` |
+| `party.max-size` | `100` |
+
+<Callout type="note" title="El techo es el del líder, y no sigue a una cesión">
+El tamaño se comprueba contra quien sea líder en el momento de cambiarlo. Ceder el liderazgo a alguien
+con un techo menor no encoge una party ya grande; solo le impide subirlo más.
+</Callout>
+
+## Los tres modos de party
+
+`/party game` —solo el líder— ofrece los que permita el kit elegido:
+
+<Cards>
+  <Card title="FFA">
+    Todos contra todos, apareciendo en un anillo alrededor del **spawn de party FFA** de la arena,
+    dentro de `party.ffa-spawn-radius` bloques.
+  </Card>
+  <Card title="Split">
+    La party se baraja y se corta por la mitad en equipo A y equipo B. Una party impar deja al jugador
+    de más en el equipo B.
+  </Card>
+  <Card title="Party duel">
+    La party entera se encola contra otra party en el mismo kit. Las dos primeras parties que esperen
+    se emparejan.
+  </Card>
+</Cards>
+
+Todos los modos necesitan que **todos los miembros estén disponibles** —nadie encolado, en partida,
+editando un kit ni tomado por otro plugin— y al menos dos miembros conectados. Se reclaman todos
+juntos o ninguno.
+
+<Callout type="warning" title="El FFA de party no admite kits de puntos">
+Un kit con `points-to-win` mayor que 1 se rechaza para un FFA con un mensaje. Los puntos son por
+jugador y un FFA no tiene un bando contrario al que marcarle.
+</Callout>
+
+### Cola de duelo de parties
+
+`/party game` → **Party duel** mete a la party en una cola de parties por kit. Las dos primeras parties
+que esperen el mismo kit se emparejan al instante; hasta entonces la party espera y el líder puede
+salir con el mismo botón. El equipo A es una party y el B la otra, sean cuales sean sus tamaños.
+
+## Chat de party
+
+`/party chat` se activa por miembro, no por party. Con él encendido, todo lo que escribas va a la party
+en vez de al chat global.
+
+## Cuando alguien se va
+
+Salir, ser expulsado o desconectarse retira al miembro. Si se va el líder, el liderazgo pasa al primer
+miembro que quede. Si se va el último, la party se disuelve, lo que también la saca de la cola de duelo
+de parties.
+
+La pertenencia a una party es lo que el plugin lee para decidir si un jugador del lobby está
+`AVAILABLE` o `IN_PARTY`, así que cambia su hotbar y su sidebar de inmediato.

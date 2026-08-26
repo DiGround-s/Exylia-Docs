@@ -1,0 +1,96 @@
+---
+title: "Arenas"
+description: "Las dos regiones, los cuatro spawns, los radios de protección y qué hace que una arena se pueda activar."
+---
+
+Una arena es una fila en `practice_arenas`. Todo se edita desde `/epc` → **Manage Arenas**.
+
+## Las dos regiones
+
+Esta es la parte que más se confunde, así que conviene ser exacto.
+
+| Región | Para qué sirve |
+|---|---|
+| **Región jugable** | El área donde ocurre la partida. Salirse mata. Es lo que **regenera** entre partidas y lo que lleva las reglas del kit como políticas de región. |
+| **Región de copia** | Una caja mayor alrededor de la arena. Es de donde se pega un **clon**, y el origen contra el que se miden las coordenadas de cada clon. |
+
+La región de copia debe contener a la jugable. Paredes, suelo, decoración, la plataforma de
+espectadores: todo lo que tenga que existir para que una copia de esta arena se vea y se juegue bien.
+
+<Callout type="note" title="Por qué la jugable es más pequeña">
+Regenerar toda la región de copia entre cada partida reconstruiría paredes que nadie tocó. La región
+jugable es la parte que los jugadores pueden dañar, así que es la única que se restaura.
+</Callout>
+
+## Los cuatro spawns
+
+| Spawn | Obligatorio | Lo usa |
+|---|---|---|
+| **Spawn 1** | Sí | El primer lado de cada partida |
+| **Spawn 2** | Sí | El segundo lado |
+| **Spawn de espectador** | No | Dónde aterriza un espectador |
+| **Spawn de party FFA** | No | El centro de un FFA de party; los jugadores se reparten alrededor |
+
+En un 1v1 o un duelo de party, los jugadores alternan entre spawn 1 y spawn 2. En un FFA de party
+todos empiezan alrededor del spawn de FFA dentro de `party.ffa-spawn-radius` bloques: 7 por defecto.
+
+## Radios de protección
+
+| Ajuste | Efecto |
+|---|---|
+| **Radio de protección de spawn** | No se pueden poner ni romper bloques a esa distancia de cualquiera de los dos spawns |
+| **Radio de protección de regiones extra** | Lo mismo, alrededor del centro de cada región extra |
+
+Los dos valen `0` por defecto, es decir, sin protección. Solo importan en kits que permiten construir.
+
+## Esquemáticos
+
+Cada arena tiene dos archivos de esquemático, nombrados por su id:
+
+| Archivo | Se guarda desde | Se usa para |
+|---|---|---|
+| `practice_arena_<id>` | La región de copia | Pegar clones |
+| `practice_arena_<id>_playable` | La región jugable | Regenerar entre partidas |
+
+Ambos se guardan automáticamente en cuanto fijas la región correspondiente, y el botón **Schematic**
+vuelve a guardar los dos. Vuelve a guardarlos después de cualquier reconstrucción: una regeneración
+restaura el archivo, no los bloques que hay puestos.
+
+## Qué impide activar una arena
+
+El botón **Status** se niega y enumera lo que falta:
+
+- Spawn 1
+- Spawn 2
+- Playable Region
+- Copy Region
+- Copy Schematic (save from Copy Region)
+- Playable Schematic (save from Playable Region)
+
+<Callout type="warning" title="Esas dos entradas también son como se manifiesta la falta de FAWE">
+La comprobación pregunta al almacén de esquemáticos si el archivo existe. En un servidor sin
+FastAsyncWorldEdit la respuesta siempre es no, así que la arena nunca puede activarse y el motivo se
+lee como un esquemático que falta y no como un plugin que falta. La consola dijo el motivo real una
+vez, al arrancar.
+</Callout>
+
+## Instancias
+
+Una arena son una o varias **instancias**. La original —la construida, en tu mundo— es la instancia
+`<id>`. Cada clon es `<id>_clone_<n>`. Cada instancia está de forma independiente en `AVAILABLE`,
+`IN_USE`, `REGENERATING` o `DISABLED`, y tomarla es un compare-and-set, así que dos partidas nunca
+pueden caer en la misma arena.
+
+Cuando una partida pide arena recorre en orden la lista de compatibles de su kit y toma la primera
+instancia libre de cualquiera de ellas. Solo cuando todas las instancias de todas las arenas
+compatibles están ocupadas baraja la lista y [clona una](/docs/exyliapractice/clones).
+
+## Borrar una arena
+
+Borrarla elimina la fila, desregistra la región de cada clon y reinicia el contador de clones. No
+borra los archivos de esquemático ni toca la arena construida en tu mundo.
+
+<Callout type="note" title="Los kits conservan el id">
+Un kit cuya lista de compatibles siga nombrando la arena borrada la sigue nombrando. La entrada no
+corresponde a nada y se salta; límpiala desde la pantalla **Compatible arenas** del kit.
+</Callout>

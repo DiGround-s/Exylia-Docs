@@ -1,0 +1,102 @@
+---
+title: "First steps"
+description: "From an empty server to a playable ranked queue: one category, one kit, one arena."
+---
+
+Everything is built from the admin menu. `/epc` opens it; there are no setup commands to memorise.
+
+## 1. A category
+
+Kits are grouped into categories, and every player-facing screen — the queue, duels, parties, stats,
+history — opens on the category list first. You need at least one.
+
+`/epc` → **Manage Kits** → **Categories** → create. You are asked for an id in chat, then a display
+name.
+
+## 2. A kit
+
+**Manage Kits** → **All Kits** → create. The kit setup screen has ten buttons:
+
+| Button | What it sets |
+|---|---|
+| **Name** / **Icon** / **Description** | How it looks in menus |
+| **Status** | Enabled. A disabled kit is invisible everywhere. |
+| **Categories** | Which categories list it |
+| **Compatible arenas** | Which arenas it may be played in |
+| **Loadout** | The items. Opens your inventory — arrange it and close. |
+| **Kit rules** | [40+ toggles and numbers](/docs/exyliapractice/kit-rules) |
+| **Playability & ranked** | Party FFA, party split, party duel, duel, queue, ranked |
+| **Priority** | Sort order in menus |
+
+<Callout type="note" title="A kit with no loadout is not an error">
+It is a kit that hands the player nothing. Useful for a sumo or a boxing kit where the arena and the
+rules do all the work.
+</Callout>
+
+## 3. An arena
+
+**Manage Arenas** → create. You are asked for an id and a display name, then dropped into the arena
+setup screen.
+
+<Steps>
+  <Step title="Spawn 1 and Spawn 2">
+    Where the two sides start. Both are required.
+  </Step>
+  <Step title="Playable region">
+    A worldedit-style selection wizard. This is the area a match happens in — stepping outside it
+    kills you. Its schematic is saved as soon as you set it.
+  </Step>
+  <Step title="Copy region">
+    A second selection, larger than the playable one: it is what a **clone** is pasted from, so it
+    should include the walls, the floor and anything else the arena needs to look right. Its
+    schematic is saved as soon as you set it.
+  </Step>
+  <Step title="Schematic">
+    The button re-saves both files. Use it after you rebuild anything inside the regions — a
+    regeneration restores what was saved, not what is standing.
+  </Step>
+  <Step title="Enable it">
+    **Status**. The arena refuses to enable while anything is missing, and tells you which: Spawn 1,
+    Spawn 2, Playable Region, Copy Region, Copy Schematic, Playable Schematic.
+  </Step>
+</Steps>
+
+Optional on the same screen: **Spectator spawn**, **Party FFA spawn**, **Extra regions**, **Spawn
+protection radius**, **Extra region protection radius**, and a **Kits** shortcut that links kits from
+the arena's side instead of the kit's.
+
+## 4. Link them, enable them
+
+A kit is playable in an arena when the arena's id is in the kit's **compatible arenas** list. Set it
+from either side; it is one list, stored on the kit.
+
+Then enable both. A match needs an enabled kit and at least one enabled, fully configured arena in its
+compatible list.
+
+## 5. Try it
+
+Put yourself in the lobby and run `/queue`. Pick the category, pick the kit, and get a second player
+in — or, quicker, use `/duel <player>` which skips matchmaking entirely.
+
+<Callout type="warning" title="Two accounts on one IP will never match">
+The anti-boost check refuses to match two players from the same address, and it is on by default.
+When testing alone, either use two real connections or set `elo-security.same-ip-protection` to
+`false` while you work.
+</Callout>
+
+## Where to go next
+
+<Cards>
+  <Card title="Cloning arenas" href="/docs/exyliapractice/clones">
+    One arena, up to ten simultaneous matches.
+  </Card>
+  <Card title="Kit rules" href="/docs/exyliapractice/kit-rules">
+    Hits to win, points to win, revives, checkpoints, attributes, potion effects.
+  </Card>
+  <Card title="ELO and ranks" href="/docs/exyliapractice/elo">
+    The nine ranks, LP, placements, boosts and the demotion shield.
+  </Card>
+  <Card title="Configuration" href="/docs/exyliapractice/configuration">
+    Every key in `config.yml`.
+  </Card>
+</Cards>

@@ -1,0 +1,74 @@
+---
+title: "Editor de kits"
+description: "Cómo guardan los jugadores sus propios loadouts, cuántos tienen y cuál les entrega una partida."
+---
+
+El editor de kits permite al jugador reordenar los objetos del propio kit en un loadout guardado y con
+nombre. Nunca añade nada: son los mismos objetos en otro orden, que es justo de lo que se trata en un
+servidor de practice.
+
+## Cómo se usa
+
+`/kiteditor` (o `/ke`, o el objeto de la hotbar del lobby) abre la lista de categorías, luego los kits
+de esa categoría y luego los huecos de ese kit.
+
+Elegir un hueco teletransporta al jugador al **spawn del editor de kits**, lo pone en modo aventura, le
+entrega los objetos del hueco (o los del kit si es nuevo) y espera. Tres subcomandos cierran la sesión:
+
+| Comando | Qué hace |
+|---|---|
+| `/ke save` | Captura el inventario en el hueco y vuelve al lobby |
+| `/ke cancel` | Descarta los cambios y vuelve al lobby |
+| `/ke reset` | Devuelve los objetos por defecto del kit, sin salir |
+
+<Callout type="note" title="Fija antes el spawn del editor">
+`/epc` → **Data Management** → **Set Kit Editor Spawn**. Sin él, el jugador edita donde estuviera
+parado, lo que en un lobby lleno no es precisamente privado.
+</Callout>
+
+## Huecos
+
+Un hueco es una fila en `practice_player_kits`: un jugador, un kit, un índice, un nombre, un icono y 41
+posiciones de objeto. Los huecos se crean, renombran, cambian de icono y se borran desde la pantalla de
+huecos.
+
+Cuántos puede tener un jugador es un permiso:
+
+```
+exyliapractice.kits.max_slots.<n>
+```
+
+El plugin cuenta desde 100 hacia abajo y toma el primer nodo que el jugador tenga, así que
+`max_slots.5` encima de `max_slots.1` es una mejora y no un conflicto. **Sin ningún nodo el jugador
+sigue teniendo un hueco**: el editor lo puede usar todo el mundo por defecto, y el permiso solo vende
+más.
+
+## Qué hueco usa una partida
+
+Se decide al entregar el kit y depende de cuántos huecos tenga el jugador para ese kit:
+
+| Huecos guardados | Qué pasa |
+|---|---|
+| 0 | El loadout por defecto del kit |
+| 1 | Ese hueco, sin preguntar |
+| 2 o más | Se abre un **selector de hueco** y el jugador elige |
+
+Si la cuenta atrás termina antes de que elija, se usa el primer hueco. Nadie se queda con el inventario
+vacío por estar leyendo el menú.
+
+## Dónde no se puede usar
+
+El editor reclama al jugador, así que mientras edita no puede estar en cola, en partida, observando ni
+dentro de una zona PvP, y ningún otro plugin puede tomarlo tampoco. `/ke` se niega con un mensaje
+cuando el jugador no está libre.
+
+## Limpiar loadouts
+
+Desde `/epc` → **Data Management**:
+
+| Acción | Alcance |
+|---|---|
+| **Clear kit customizations** | Los huecos de todos los jugadores para un kit |
+| **Clear all customizations** | Los huecos de todos los jugadores para todos los kits |
+
+Las dos son irreversibles y las dos piden confirmación antes.

@@ -1,0 +1,92 @@
+---
+title: "Kits and categories"
+description: "What a kit carries, where it may be played, and how categories organise the menus."
+---
+
+A kit is a row in `practice_kits`: a loadout, a list of arenas it fits, a set of categories it appears
+under, six playability switches and a blob of [rules](/docs/exyliapractice/kit-rules).
+
+## Categories
+
+Categories are a row in `practice_kit_categories` and they exist for one reason: every player-facing
+kit screen opens on the category list first. Queue, duels, party games, stats, leaderboards, match
+history and the kit editor all page through categories before they show a kit.
+
+| Field | What it does |
+|---|---|
+| **Display name** | The label in menus |
+| **Icon** | The material shown |
+| **Description** | Lore under the name |
+| **Enabled** | A disabled category is hidden everywhere |
+| **Priority** | Sort order |
+
+A kit can be in several categories. Deleting a category rewrites every kit that named it, so no kit is
+left pointing at a filter that matches nothing.
+
+## The kit screen
+
+`/epc` → **Manage Kits** → **All Kits** → a kit.
+
+| Button | What it sets |
+|---|---|
+| **Name** | Display name |
+| **Icon** | The material shown in menus |
+| **Status** | Enabled. A disabled kit is skipped everywhere, including by a match that was already being set up. |
+| **Description** | Lore |
+| **Categories** | Toggle each category on or off |
+| **Compatible arenas** | Toggle each arena on or off |
+| **Loadout** | Opens your inventory. Arrange it, close it, done. |
+| **Kit rules** | [The rules screen](/docs/exyliapractice/kit-rules) |
+| **Playability & ranked** | The six switches below |
+| **Priority** | Sort order |
+
+## Playability
+
+Six independent switches decide where a kit may be used:
+
+| Switch | Effect when off |
+|---|---|
+| **Queue** | Not offered in `/queue` |
+| **Duel** | Not offered in `/duel` |
+| **Party FFA** | Not offered for a party free-for-all |
+| **Party split** | Not offered for split teams |
+| **Party duel** | Not offered when one party queues against another |
+| **Ranked** | Matches are played, ELO is not applied |
+
+<Callout type="note" title="Ranked is not the same as queue">
+A kit can be queueable and unranked — a fun kit that people want to matchmake without touching their
+rating. It can also be ranked and duel-only, which makes `/duel` the only way to gain LP with it.
+</Callout>
+
+## The loadout
+
+41 slots: 36 inventory, 4 armour, 1 offhand. Whatever you arrange is what every player is handed at
+the start of a match, before their own [kit editor slot](/docs/exyliapractice/kit-editor) rearranges
+it.
+
+<Callout type="warning" title="Leather armour and coloured blocks are recoloured per team">
+In a party split or a party duel, the kit is dyed on the way in: leather armour takes the team colour
+and any block whose material name starts with a Minecraft colour (`RED_WOOL`, `BLUE_CONCRETE`, …) is
+swapped for the team's version. Team A is red, team B is blue. In a 1v1 or an FFA nothing is
+recoloured.
+</Callout>
+
+## Compatible arenas
+
+A kit with no compatible arenas cannot start a match at all — players are told there are no arenas
+available. A kit with several picks a free instance from any of them, preferring one that is already
+pasted over cloning a new one.
+
+For a duel the player may name a preferred arena; it is moved to the front of the list and the rest is
+shuffled behind it, so a preferred arena that is busy still falls back rather than failing.
+
+## Priority
+
+Kits and categories are drawn in priority order. It is a plain integer with no special meaning beyond
+sorting — set the ones you want at the top of `/queue` higher.
+
+## Deleting a kit
+
+Deleting removes the row. Player loadouts saved against that kit id in `practice_player_kits` are not
+removed by the delete; clear them from **Data Management** → **Clear kit customizations** if you want
+them gone.

@@ -1,0 +1,95 @@
+---
+title: "Installation"
+description: "Dropping the jar in, what gets generated, and the order the files matter in."
+---
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21 or newer. Folia supported. |
+| Java | 21 |
+| Required | `ExyliaLib`, `FastAsyncWorldEdit` |
+| Optional | `PlaceholderAPI`, `ViaVersion`, `Worlds`, `Apollo`, `FeatherServerAPI`, `floodgate` |
+
+<Callout type="warning" title="FastAsyncWorldEdit is a hard dependency">
+It is listed under `depend`, not `softdepend` — the server refuses to load the plugin without it.
+Cloning an arena is a schematic paste and regenerating one is a schematic restore; neither has a
+fallback.
+</Callout>
+
+## Install
+
+<Steps>
+  <Step title="Drop in the dependencies">
+    `ExyliaLib` and `FastAsyncWorldEdit` in `plugins/`. ExyliaLib must be the same copy every Exylia
+    plugin sees — never shade it, never run two.
+  </Step>
+  <Step title="Drop in the jar">
+    `ExyliaPracticeCore` in `plugins/` and restart. The plugin ships through the Lukittu loader, so
+    the file you install is the loader jar and the licence key is asked for on first boot.
+  </Step>
+  <Step title="Let it generate">
+    First boot writes the files below and creates the clone world. Nothing is playable yet — there is
+    no arena and no kit.
+  </Step>
+  <Step title="Give yourself the admin node">
+    `exyliapractice.admin` is the only node an operator needs. `/epc` then opens the admin menu.
+  </Step>
+  <Step title="Set the lobby spawn">
+    `/epc` → **Data Management** → **Set Lobby**. Until this is set, `teleportToLobby` does nothing
+    and players stay wherever they log in.
+  </Step>
+</Steps>
+
+## What gets generated
+
+| Path | What it is |
+|---|---|
+| `config.yml` | Every setting: arenas, queue, ELO, party, duel, lobby, jumpads, web API. [Reference](/docs/exyliapractice/configuration) |
+| `messages.yml` | 26 sections of player-facing text |
+| `scoreboards.yml` | 19 sidebars. [Reference](/docs/exyliapractice/scoreboards) |
+| `ranks.yml` | The nine ranks, their divisions and their K-factors. [Reference](/docs/exyliapractice/elo) |
+| `items/lobby.yml` | The lobby hotbar |
+| `items/party.yml` | The hotbar while in a party |
+| `items/queue.yml` | The hotbar while queued |
+| `menus/admin/**` | 31 admin screens |
+| `menus/player/**` | 30 player screens |
+
+Every one of these is written **once** and never overwritten. What is on disk is what you edited.
+
+<Callout type="note" title="Editing menus is supported">
+No menu file is ever regenerated. Edit any of the 61 freely; the plugin only writes one that is not
+already there.
+
+Older installs have a banner at the top of the 31 admin menus claiming the opposite — that they are
+regenerated on every startup and edits will be lost. That was never true and the banner is gone from
+new copies, but a file already on disk keeps it, because the plugin does not overwrite what you have.
+Delete those five lines from your own copies.
+</Callout>
+
+## The clone world
+
+On first boot the plugin creates a world called `ExyliaPracticeCore_clones`: flat, void, no
+structures, no mob spawning, no weather, no daylight cycle, time frozen at 6000 and `randomTickSpeed`
+at 0. Arena clones are pasted into it side by side.
+
+<Callout type="note" title="On Folia the world comes from the Worlds plugin">
+Folia cannot create a world through `WorldCreator`, so the plugin asks
+[Worlds](https://repo.thenextlvl.net) instead, trying its 4.x API and then its 3.x one. Without it,
+the console says `clone world unavailable` and the main world is used as a fallback — which means
+clones get pasted into your lobby world. Install Worlds on Folia.
+</Callout>
+
+The world is **deleted on shutdown**, folder and all. It holds nothing worth keeping: every clone is
+re-pasted from the arena's schematic on demand.
+
+## Load order and what needs the database
+
+The plugin reads its arenas, kits, seasons and settings out of the database ExyliaLib is configured
+with. Configure that first — see the [ExyliaLib database docs](/docs/exylialib/database). The 17
+tables are created automatically; they are listed [here](/docs/exyliapractice/database).
+
+On the very first boot with an existing pre-season database, a one-shot migration copies every row of
+`practice_player_stats` into season 1 and into the lifetime tier. It runs in the background, is
+resumable, and only ever reads the legacy table.

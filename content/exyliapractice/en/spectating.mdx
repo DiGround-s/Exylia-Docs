@@ -1,0 +1,59 @@
+---
+title: "Spectating"
+description: "Watching a match from outside, being revived into spectator mode inside one, and the setting that blocks both."
+---
+
+There are two different things called spectating here, and they behave differently.
+
+## External spectators
+
+Somebody in the lobby who chooses to watch a match.
+
+| Command | What it does |
+|---|---|
+| `/spectate`, `/spec` | Open a list of the matches running right now |
+| `/spectate <player>` | Watch the match that player is in |
+
+The spectator is teleported to the arena's **spectator spawn**, put in Minecraft's spectator game
+mode, stripped of items and effects, and given the match sidebar. A second later a spectator menu
+opens with the players in the match.
+
+From that menu, or the hotbar:
+
+- **Teleport** to any living player in the match.
+- **Toggle spectators** — hide or show the other spectators, so a crowded match is not a wall of
+  floating names. The two states use the materials and names from `spectator.*` in `config.yml`.
+- **Leave** — back to the lobby.
+
+The match ending also returns every spectator to the lobby.
+
+<Callout type="note" title="An arena with no spectator spawn cannot be watched">
+The teleport is the first step, and it fails without a destination. Set **Spectator spawn** on any
+arena you want watchable.
+</Callout>
+
+### Who can be watched
+
+A match refuses spectators if **any** living player in it has **spectators** turned off in
+`/settings`. It is one player's veto over the whole match — not a per-player hide.
+
+Only matches that are `ACTIVE` or `STARTING` can be joined. A match that ends between the menu opening
+and the click sends the spectator straight back to the lobby.
+
+## Revive spectators
+
+The other kind: a player who was eliminated inside a match with `revive-time` above zero. They are put
+in spectator mode where they died, wait out the revive, and are teleported back to their spawn with
+the kit reapplied.
+
+They never leave the match, are never counted as external spectators, and cannot be teleported to by
+the spectate menu.
+
+Between rounds of a duel, the same thing happens for the round-end delay: the round's loser watches
+until the arena is regenerated.
+
+## Visibility
+
+Spectators are hidden from the players fighting, and can be hidden from each other with the toggle.
+The players in a match see only each other — the isolation is applied per match, so two clones of one
+arena running side by side never show each other's players.

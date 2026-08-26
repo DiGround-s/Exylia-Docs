@@ -1,0 +1,101 @@
+---
+title: "Web API"
+description: "The optional integration with practice-api.exylia.net: what is sent, how it survives an outage, and how a player links their profile."
+---
+
+The web integration is **off by default**. Turned on, it pushes match results, ranks and presence to
+`https://practice-api.exylia.net` so a player's profile can be viewed on the web.
+
+## Enabling it
+
+```yaml
+web-api:
+  enabled: true
+  key: "your-server-key"
+  sync-on-startup: true
+  player-count-interval-seconds: 300
+```
+
+Both `enabled: true` **and** a non-empty `key` are required. With either missing, nothing is created:
+no HTTP client, no outbox, no scheduled reports. The key is sent as an `X-Server-Key` header on every
+request.
+
+When it starts successfully the console says:
+
+```
+[WebApi] Connected to practice-api.exylia.net
+```
+
+## What is sent
+
+| Endpoint | When |
+|---|---|
+| `/api/ingest/matches` | A finished match, batched up to 25 at a time |
+| `/api/ingest/season/rotate` | A [season rotation](/docs/exyliapractice/seasons) |
+| `/api/ingest/sync/player-stats` | A stats sync |
+| `/api/ingest/sync/ranks` | Your `ranks.yml`, shortly after boot |
+| `/api/ingest/server-info` | Read at boot, to learn this server's public host name |
+| `/api/ingest/event/player-join` | A player joins, with their IP |
+| `/api/ingest/event/player-quit` | A player leaves |
+| `/api/ingest/event/player-count` | Online and max, on the configured interval |
+| `/api/ingest/link` | A `/linkpractice` code |
+
+<Callout type="note" title="Player IPs are sent on join">
+The join event carries the player's address, which the web side uses for its own session handling. If
+that is a problem for you, leave the integration off — there is no partial mode.
+</Callout>
+
+## The outbox
+
+Match results, season rotations and stat syncs are **not** put straight on the wire. They are written
+to `practice_web_outbox` first and only deleted once the web confirms them.
+
+That means a web outage, or the server crashing mid-delivery, delays a match rather than losing it.
+
+| Behaviour | Value |
+|---|---|
+| Batch size | 25 matches per request |
+| Rows examined per pass | 200 |
+| Flush interval | every 5 seconds |
+| Backoff ceiling | 5 minutes |
+| Attempts before a row is dropped | 12 |
+
+Delivery is **at least once**: a payload whose acknowledgement is lost is sent again. Every payload
+carries a stable idempotency key and the ingest endpoint discards duplicates, so nothing is
+double-counted.
+
+A row is only dropped after twelve failures, which is reached when the web keeps rejecting the payload
+outright — retrying a 4xx can never help.
+
+During a database outage the drain fails every five seconds; the console logs the first failure, then
+one a minute, then a single recovery notice, rather than filling with the same line.
+
+## Linking a profile
+
+A player gets a code on the website and runs:
+
+```
+/linkpractice <code>
+```
+
+The plugin posts it once — no retry, since a link code is short-lived — and reports success, an invalid
+or expired code, an already-linked account, or a network error.
+
+<Callout type="warning" title="The error messages depend on the API's language">
+The plugin decides which of those four messages to show by looking for Spanish words in the API's
+response body. If the web side ever answers in a different language, every failure reads as a generic
+network error instead of the real reason. The link itself still works correctly.
+</Callout>
+
+If the integration is off, `/linkpractice` says so and does nothing.
+
+## Season rotation and the web
+
+A rotation does **not** upload anything synchronously. It queues one small notification saying the
+boundary moved; seasons are keyed by number on the web side, so a late or repeated notification
+converges on the same result.
+
+With `season.restart-after-rotation` on, the plugin forces up to three outbox drains before the
+restart, so the closing season is delivered rather than waiting for the periodic drain to resume
+afterwards. Anything still undelivered is reported to the admin and retried after the reboot — the
+outbox is durable.

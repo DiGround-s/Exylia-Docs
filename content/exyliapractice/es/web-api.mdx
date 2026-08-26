@@ -1,0 +1,104 @@
+---
+title: "Web API"
+description: "La integración opcional con practice-api.exylia.net: qué se envía, cómo sobrevive a una caída y cómo vincula su perfil un jugador."
+---
+
+La integración web viene **apagada**. Encendida, envía resultados de partida, rangos y presencia a
+`https://practice-api.exylia.net` para que el perfil de un jugador pueda verse en la web.
+
+## Activarla
+
+```yaml
+web-api:
+  enabled: true
+  key: "tu-clave-de-servidor"
+  sync-on-startup: true
+  player-count-interval-seconds: 300
+```
+
+Hacen falta `enabled: true` **y** una `key` no vacía. Si falta cualquiera de las dos no se crea nada:
+ni cliente HTTP, ni bandeja de salida, ni informes programados. La clave se envía como cabecera
+`X-Server-Key` en cada petición.
+
+Cuando arranca bien, la consola dice:
+
+```
+[WebApi] Connected to practice-api.exylia.net
+```
+
+## Qué se envía
+
+| Endpoint | Cuándo |
+|---|---|
+| `/api/ingest/matches` | Una partida terminada, por lotes de hasta 25 |
+| `/api/ingest/season/rotate` | Una [rotación de temporada](/docs/exyliapractice/temporadas) |
+| `/api/ingest/sync/player-stats` | Una sincronización de estadísticas |
+| `/api/ingest/sync/ranks` | Tu `ranks.yml`, poco después de arrancar |
+| `/api/ingest/server-info` | Se lee al arrancar, para conocer el host público de este servidor |
+| `/api/ingest/event/player-join` | Un jugador entra, con su IP |
+| `/api/ingest/event/player-quit` | Un jugador sale |
+| `/api/ingest/event/player-count` | Conectados y máximo, en el intervalo configurado |
+| `/api/ingest/link` | Un código de `/linkpractice` |
+
+<Callout type="note" title="Las IP de los jugadores se envían al entrar">
+El evento de entrada lleva la dirección del jugador, que el lado web usa para su propia gestión de
+sesiones. Si eso es un problema, deja la integración apagada: no hay un modo parcial.
+</Callout>
+
+## La bandeja de salida
+
+Los resultados de partida, las rotaciones de temporada y las sincronizaciones de estadísticas **no**
+salen directamente por la red. Primero se escriben en `practice_web_outbox` y solo se borran cuando la
+web los confirma.
+
+Eso significa que una caída de la web, o que el servidor se muera a mitad de entrega, retrasa una
+partida en vez de perderla.
+
+| Comportamiento | Valor |
+|---|---|
+| Tamaño de lote | 25 partidas por petición |
+| Filas examinadas por pasada | 200 |
+| Intervalo de vaciado | cada 5 segundos |
+| Techo de espera | 5 minutos |
+| Intentos antes de descartar una fila | 12 |
+
+La entrega es **al menos una vez**: una carga cuyo acuse se pierde se vuelve a enviar. Cada carga lleva
+una clave de idempotencia estable y el endpoint de ingesta descarta duplicados, así que nada se cuenta
+dos veces.
+
+Una fila solo se descarta tras doce fallos, cosa que solo se alcanza si la web rechaza la carga de
+plano: reintentar un 4xx no puede ayudar nunca.
+
+Durante una caída de la base de datos el vaciado falla cada cinco segundos; la consola registra el
+primer fallo, luego uno por minuto, y luego un único aviso de recuperación, en vez de llenarse con la
+misma línea.
+
+## Vincular un perfil
+
+El jugador obtiene un código en la web y ejecuta:
+
+```
+/linkpractice <código>
+```
+
+El plugin lo envía una sola vez —sin reintentos, porque un código de vinculación dura poco— e informa
+de éxito, código inválido o caducado, cuenta ya vinculada, o error de red.
+
+<Callout type="warning" title="Los mensajes de error dependen del idioma de la API">
+El plugin decide cuál de esos cuatro mensajes mostrar buscando palabras en español en el cuerpo de la
+respuesta de la API. Si el lado web responde algún día en otro idioma, cualquier fallo se leerá como un
+error de red genérico en vez de como el motivo real. La vinculación en sí sigue funcionando bien.
+</Callout>
+
+Si la integración está apagada, `/linkpractice` lo dice y no hace nada.
+
+## La rotación de temporada y la web
+
+Una rotación **no** sube nada de forma síncrona. Encola una notificación pequeña diciendo que el límite
+se movió; en el lado web las temporadas se identifican por número, así que una notificación tardía o
+repetida converge al mismo resultado.
+
+Con `season.restart-after-rotation` activo, el plugin fuerza hasta tres vaciados de la bandeja antes
+del reinicio, para que la temporada que se cierra se entregue en vez de esperar a que el vaciado
+periódico se reanude después. Lo que quede sin entregar se informa al administrador y se reintenta tras
+el reinicio: la bandeja es duradera.

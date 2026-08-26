@@ -1,0 +1,142 @@
+---
+title: "Comandos"
+description: "Todos los comandos y subcomandos, con sus alias y el permiso que necesitan."
+---
+
+## Comandos de jugador
+
+Ninguno necesita permiso.
+
+| Comando | Alias | Qué hace |
+|---|---|---|
+| `/queue` | `/q` | Abre el menú de cola |
+| `/leavequeue` | `/lq` | Sale de todas las colas |
+| `/quickqueue` | `/qq`, `/quick-queue` | Se encola en un kit al azar en el que ya haya alguien esperando |
+| `/requeue` | `/rq` | Vuelve a los kits en los que estabas la última vez |
+| `/leave` | `/salir`, `/spawn` | Sale de donde estés y vuelve al lobby |
+| `/spectate` | `/spec` | La lista de partidas en curso |
+| `/spectate <jugador>` | `/spec <jugador>` | Ver la partida de ese jugador |
+| `/settings` | — | Tus ajustes personales |
+| `/stats` | `/lb`, `/leaderboard` | Tus estadísticas y las clasificaciones |
+| `/stats <jugador>` | | Las estadísticas de otro |
+| `/history` | `/mh`, `/match-history` | Tu historial de partidas |
+| `/history <jugador>` | | El de otro |
+| `/history inv <matchId>` | | Tu inventario de esa partida |
+| `/history invop <matchId>` | | El de tu rival |
+| `/kiteditor` | `/ke` | El editor de kits |
+| `/ke save` | | Guarda el loadout que estás editando |
+| `/ke cancel` | | Lo descarta |
+| `/ke reset` | | Restaura los objetos por defecto del kit |
+| `/linkpractice <código>` | — | Vincula tu cuenta con el perfil web |
+
+### Duelos
+
+| Comando | Alias | Qué hace |
+|---|---|---|
+| `/duel <jugador>` | `/d <jugador>` | Inicia el flujo de reto |
+| `/duel accept [jugador]` | | Acepta una solicitud |
+| `/duel deny [jugador]` | `/duel decline [jugador]` | La rechaza |
+| `/duel cancel` | | Retira la que enviaste |
+
+### Parties
+
+| Comando | Alias | Qué hace |
+|---|---|---|
+| `/party` | `/p` | El hub de party |
+| `/party hub` | | Lo mismo |
+| `/party create` | | Crea una party |
+| `/party disband` | | La cierra: líder |
+| `/party invite <jugador>` | | Invita a alguien: líder |
+| `/party join <líder>` | | Entra por el nombre del líder |
+| `/party decline <líder>` | | Rechaza una invitación |
+| `/party leave` | | Salir |
+| `/party kick <jugador>` | | Expulsa a un miembro: líder |
+| `/party transfer <jugador>` | | Cede el liderazgo: líder |
+| `/party open` | | Alterna abierta/cerrada: líder |
+| `/party announce` | | Anuncia: líder, necesita `exyliapractice.party.announce` |
+| `/party chat` | | Alterna el chat de party para ti |
+| `/party game` | | El menú de partida de party: líder |
+| `/party cancelgame` | | Cancela la partida de party en curso |
+| `/party invitations` | | Tus invitaciones pendientes |
+| `/party members` | | La lista de miembros |
+
+## Comandos de administración
+
+Todo lo de abajo necesita `exyliapractice.admin`.
+
+| Comando | Qué hace |
+|---|---|
+| `/exyliapracticecore`, `/epc` | Abre el menú de administración |
+| `/epc reload` | Recarga los configs, rangos, objetos de lobby y menús de este plugin |
+
+### Boosts de ELO
+
+| Comando | Qué hace |
+|---|---|
+| `/epc boost add <jugador> <multiplicador> <duración>` | Concede un boost personal |
+| `/epc boost remove <jugador>` | Lo cancela |
+| `/epc boost info <jugador>` | Lo muestra |
+| `/epc boost global add <multiplicador> <duración>` | Concede uno para todo el servidor |
+| `/epc boost global remove` | Lo cancela |
+| `/epc boost global info` | Lo muestra |
+
+Las duraciones son `1d`, `12h`, `30m`, `90s`, o combinaciones como `1d12h`. El multiplicador tiene que
+ser mayor que 1.
+
+### Estadísticas
+
+| Comando | Qué hace |
+|---|---|
+| `/epc stats get <jugador> <kit\|global> <campo>` | Lee un contador |
+| `/epc stats set <jugador> <kit\|global> <campo> <valor>` | Lo fija |
+| `/epc stats add <jugador> <kit\|global> <campo> <cantidad>` | Le suma |
+| `/epc stats remove <jugador> <kit\|global> <campo> <cantidad>` | Le resta |
+| `/epc stats summary <jugador> <kit\|global>` | Un resumen con formato |
+| `/epc kits clear <jugador> [kit\|all]` | Borra los loadouts guardados de ese jugador. Sin kit, los borra todos. |
+
+Campos: `kills`, `deaths`, `wins`, `losses`, `elo`, `best-streak`, `current-streak`, `damage`, `time`.
+
+### Transferencia de datos
+
+| Comando | Qué hace |
+|---|---|
+| `/epc export [archivo]` | Vuelca la base de datos. Sin nombre, un archivo con marca de tiempo en la carpeta de volcados. |
+| `/epc import <archivo>` | Vuelve a cargar un volcado |
+| `/epc migrate <archivo> [--skip-stats]` | Convierte un volcado v2 de ExyliaCommons al esquema de este plugin |
+
+`/epc reload` ejecuta cuatro pasos, y uno que falle se informa por su nombre mientras los demás siguen
+corriendo:
+
+| Paso | Vuelve a leer |
+|---|---|
+| `configs` | `config.yml`, `messages.yml`, `scoreboards.yml`, y el prefijo de los mensajes |
+| `ranks` | `ranks.yml` |
+| `lobby-items` | `items/lobby.yml`, `items/party.yml`, `items/queue.yml` |
+| `menus` | Los 61 archivos de menú |
+
+El paso `menus` corre también con `/exylialib reload`, porque un menú compilado guarda los objetos ya
+parseados y un cambio de paleta dejaría todas las pantallas con los colores viejos.
+
+<Callout type="note" title="Qué no vuelve a leer una recarga">
+Las arenas, los kits y las categorías viven en la base de datos, no en un archivo, y ya están en vivo.
+`duel.request-expiry-seconds` se fija en una caché al arrancar y necesita reinicio. Todo lo demás de
+`config.yml` se lee fresco en cada acceso, así que con la recarga basta.
+</Callout>
+
+## Lista blanca de comandos
+
+Mientras un jugador está **en partida**, **en cola** o **dentro de una zona PvP**, solo se permiten los
+comandos listados en `command-whitelist.commands`. Cualquier otro se cancela con un mensaje.
+
+La lista que viene de serie es:
+
+```
+msg  message  tell  w  whisper
+reply  r  respond
+leave  lq  leavequeue
+epc  exyliapracticecore  kitsave
+```
+
+Un comando encaja por su propio nombre o por su forma `plugin:comando`.
+`exyliapractice.bypass.command-whitelist` se salta la comprobación, y `command-whitelist.enabled:
+false` apaga todo el sistema.

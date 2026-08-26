@@ -1,0 +1,92 @@
+---
+title: "Duelos"
+description: "Retar a un jugador directamente, al mejor de N rondas, y qué hace un duelo que no hace una partida de cola."
+---
+
+Un duelo se salta el matchmaking entero: un jugador elige rival, kit, arena y número de rondas, y el
+otro acepta.
+
+## Enviar uno
+
+`/duel <jugador>` —o `/d`, o el botón **Duel** en la fila de un jugador dentro de un menú— abre una
+cadena corta de pantallas:
+
+<Steps>
+  <Step title="Categoría">
+    Las categorías de kits, como en todas partes.
+  </Step>
+  <Step title="Kit">
+    Solo se listan los kits con **duel** activado.
+  </Step>
+  <Step title="Rondas">
+    1, 3, 5 o **Custom**, que pregunta por chat cualquier valor de 1 a 20.
+  </Step>
+  <Step title="Arena">
+    Opcionalmente, una arena preferida de la lista de compatibles del kit. Se prueba primero; si está
+    ocupada se usa el resto de la lista, así que una arena preferida nunca provoca un fallo.
+  </Step>
+</Steps>
+
+Ambos jugadores reciben un mensaje con el kit y el número de rondas.
+
+## Responder a uno
+
+| Comando | Qué hace |
+|---|---|
+| `/duel accept [jugador]` | Acepta. Sin nombre, la primera solicitud pendiente. |
+| `/duel deny [jugador]`, `/duel decline [jugador]` | Rechaza. |
+| `/duel cancel` | Retira la solicitud que enviaste. |
+
+Las solicitudes caducan a los `duel.request-expiry-seconds` —30 por defecto— y al remitente se le avisa
+cuando la suya se agota.
+
+<Callout type="note" title="Una solicitud saliente a la vez">
+Un jugador solo puede tener una solicitud pendiente como remitente, pero puede recibir varias.
+`/duel accept` sin argumento toma la primera que encuentre, así que nombra al jugador cuando haya más
+de una esperando.
+</Callout>
+
+## Requisitos
+
+Un duelo se niega cuando:
+
+- Alguno de los dos no está libre: encolado, en partida, editando un kit, observando o tomado por otro
+  plugin.
+- El destinatario tiene las **solicitudes de duelo** apagadas en `/settings`.
+- El remitente ya tiene una solicitud pendiente.
+
+Los dos jugadores se reclaman en el mismo momento al aceptar. Si el segundo reclamo falla, el primero
+se libera y no empieza nada: nadie acaba en un duelo del que su rival ya se había ido.
+
+## Rondas
+
+Un duelo de más de una ronda es al **mejor de**. El primero que gane `rondas` rondas gana la partida.
+
+Entre rondas:
+
+- Los dos reciben un título de *ronda ganada* / *ronda perdida* con el marcador acumulado.
+- Tras `duel.round-end-delay-ticks` —80 por defecto, cuatro segundos— la arena se **regenera en el
+  sitio**, sin liberarse.
+- Se revive a todos, los puntos vuelven a cero, ambos son teletransportados a sus spawns, reciben el
+  kit de nuevo y corre otra vez la cuenta atrás normal.
+
+Una ronda que acaba en empate se reinicia sin dar victoria a nadie.
+
+<Callout type="note" title="Rondas y puntos se acumulan">
+Un kit con `points-to-win` en un duelo hace que cada ronda sea a su vez una carrera a ese total de
+puntos. El sidebar cambia solo al diseño de duelo con puntos, mostrando rondas y puntos a la vez.
+</Callout>
+
+## ELO
+
+Un duelo es clasificatorio si lo es el **kit**. No hay un interruptor aparte: un kit clasificatorio
+gana y pierde LP por `/duel` exactamente igual que por `/queue`.
+
+<Callout type="warning" title="Las comprobaciones antiboost no filtran los duelos">
+La protección de misma IP y el enfriamiento de rival reciente se consultan antes de emparejar una
+partida de **cola**, no antes de aceptar un duelo. Dos cuentas pueden duelarse entre sí repetidamente
+para conseguir LP. El duelo sí registra la pareja como enfrentada recientemente, lo que les impide
+encontrarse por la cola durante los siguientes `elo-security.opponent-cooldown-seconds`, pero nada
+impide los duelos en sí. Si eso importa en tu servidor, apaga **ranked** en los kits que ofrezcas para
+duelo, o **duel** en los clasificatorios.
+</Callout>

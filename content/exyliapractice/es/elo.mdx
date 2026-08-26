@@ -1,0 +1,143 @@
+---
+title: "ELO y rangos"
+description: "Nueve rangos, ladders por kit y global, colocación, escudo de descenso, boosts y comprobaciones antiboost."
+---
+
+Cada partida clasificatoria mueve dos ratings por jugador: su rating **en ese kit** y su rating
+**global**. Los dos son Elo corriente, los dos viven en `practice_player_season_stats`, y el global se
+guarda bajo el id de kit `global`.
+
+## Los nueve rangos
+
+`ranks.yml` viene con nueve, cada uno empezando en un MMR y con su propio factor K:
+
+| Rango | Empieza en | K | Divisiones |
+|---|---|---|---|
+| **Ember** | 0 | 50 | IV, III, II, I |
+| **Copper** | 400 | 50 | IV, III, II, I |
+| **Titanium** | 800 | 35 | IV, III, II, I |
+| **Solar** | 1200 | 35 | IV, III, II, I |
+| **Nova** | 1600 | 25 | IV, III, II, I |
+| **Prism** | 2000 | 25 | IV, III, II, I |
+| **Apex** | 2400 | 20 | — |
+| **Elite** | 2700 | 20 | — |
+| **Legend** | 3000 | 20 | — |
+
+Cada división mide 100 LP, así que Copper cubre de 400 a 799 como Copper IV, III, II, I. Los tres
+rangos de arriba no tienen divisiones: sus LP simplemente cuentan desde el suelo del rango.
+
+Los jugadores nuevos empiezan en `elo.starting-mmr`: 400, que es Copper IV.
+
+<Callout type="note" title="ranks.yml es tuyo para reescribirlo">
+El archivo se lee como YAML normal, no con un esquema fijo. Renombra los rangos, cambia cuántos hay,
+cambia el número de divisiones y su anchura en LP por rango, dale a cada uno su icono y su degradado.
+Un rango sin clave `divisions` simplemente no las tiene. `k-factor` vale 30 por defecto y
+`lp-per-division` vale 100 en la forma corta.
+</Callout>
+
+## La fórmula
+
+Elo estándar con unos cuantos ajustes de servidor de practice:
+
+```
+esperado = 1 / (1 + 10^((mmrRival - mmrJugador) / 400))
+delta    = redondeo(K × (resultado − esperado))
+```
+
+`K` es el factor K del rango en el que está el jugador: alto abajo, para que los nuevos encuentren su
+nivel rápido, y bajo arriba, para que el rating de un Legend sea estable.
+
+| Ajuste | Defecto | Qué hace |
+|---|---|---|
+| `elo.lp-max-per-game` | `25` | Tope duro del movimiento en cualquier dirección |
+| `elo.placement-game-count` | `10` | Partidas clasificatorias antes de salir de colocación |
+| `elo.placement-k-multiplier` | `2.0` | K se multiplica por esto durante la colocación |
+| `elo.flat-elo-enabled` | `false` | Sustituye toda la fórmula por dos números fijos |
+| `elo.flat-elo-win` | `25` | La victoria, con el modo plano activo |
+| `elo.flat-elo-loss` | `25` | La derrota, con el modo plano activo |
+
+### Colocación
+
+Las primeras `placement-game-count` partidas clasificatorias en un kit —y por separado en el ladder
+global— usan el doble de K y **se saltan tanto el tope como la reducción asimétrica**. Las partidas de
+colocación mueven el rating fuerte y rápido, que es justo de lo que se trata.
+
+### La reducción asimétrica
+
+Cuando **pierde el jugador de mayor rating** y la diferencia supera
+`elo.asymmetric-threshold-mmr` (200), la pérdida se reduce en
+`elo.asymmetric-reduction-per-100-mmr` (5) por cada 100 MMR de diferencia por encima del umbral, y el
+resultado se acota para que nunca cueste más de `elo.asymmetric-min-loss` (5).
+
+En la práctica: con los valores por defecto, un jugador que esté más de 200 MMR por encima de su rival
+pierde como mucho 5 LP, y con una diferencia de unos 700 la pérdida llega a cero. Existe para que un
+jugador de rating alto al que emparejan hacia abajo no pague por las decisiones del emparejador.
+
+La ganancia del vencedor no se toca: solo se reduce la pérdida.
+
+### El escudo de descenso
+
+Una derrota nunca puede bajar a un jugador **por debajo del suelo de la división en la que está**.
+Perder en Copper II con 40 LP te deja en Copper II con 0 LP, no en Copper III.
+
+El escudo solo actúa mientras estés por encima del suelo. Una vez estás justo en él, la siguiente
+derrota desciende con normalidad. No se aplica durante la colocación.
+
+Los ratings tampoco bajan nunca de 0.
+
+## Boosts
+
+Un administrador puede multiplicar las ganancias de LP de un jugador durante un rato.
+
+| Comando | Qué hace |
+|---|---|
+| `/epc boost add <jugador> <multiplicador> <duración>` | Un boost personal |
+| `/epc boost remove <jugador>` | Cancelarlo |
+| `/epc boost info <jugador>` | Multiplicador y tiempo restante |
+| `/epc boost global add <multiplicador> <duración>` | Para todos a la vez |
+| `/epc boost global remove` | Cancelarlo |
+| `/epc boost global info` | Multiplicador y tiempo restante |
+
+Las duraciones se escriben como `1d`, `12h`, `30m`, `90s`, o combinadas: `1d12h`. El multiplicador
+tiene que ser mayor que 1.
+
+El multiplicador efectivo de un jugador es el **mayor** entre su boost personal y el global: no se
+suman. Solo se aplica al **delta positivo de un ganador**; una derrota nunca se multiplica, y los LP
+de bonificación se informan aparte en el chat.
+
+Los boosts personales sobreviven a un reinicio. Los dos tipos se cancelan con una
+[rotación de temporada](/docs/exyliapractice/temporadas).
+
+## Antiboost
+
+Dos comprobaciones, ambas consultadas antes de que la cola empareje a nadie:
+
+| Ajuste | Defecto | Qué hace |
+|---|---|---|
+| `elo-security.enabled` | `true` | El interruptor maestro de las dos |
+| `elo-security.same-ip-protection` | `true` | Dos jugadores de la misma dirección nunca se emparejan |
+| `elo-security.opponent-cooldown` | `true` | La regla de rival reciente |
+| `elo-security.opponent-cooldown-seconds` | `300` | Cuánto deben esperar dos jugadores para volver a verse |
+
+<Callout type="warning" title="Los duelos no pasan por estos filtros">
+Las dos comprobaciones corren solo al emparejar. `/duel` se las salta por completo, así que dos cuentas
+pueden seguir farmeándose en un kit clasificatorio mediante retos directos. El duelo sí arranca el
+enfriamiento de rival reciente para la cola, pero nada bloquea el siguiente duelo.
+</Callout>
+
+<Callout type="note" title="La protección de misma IP complica probar en solitario">
+Dos clientes en una misma máquina nunca se emparejarán. Apaga `same-ip-protection` mientras montas el
+servidor.
+</Callout>
+
+## Ajustar ratings a mano
+
+```
+/epc stats set <jugador> <kit|global> elo <valor>
+/epc stats add <jugador> <kit|global> elo <cantidad>
+```
+
+Mira [estadísticas](/docs/exyliapractice/estadisticas#comandos-de-administración) para la lista
+completa de campos. `/epc` → **Data Management** ofrece además **Reset kit ELO** y **Reset all ELO**,
+que devuelven cada fila de la **temporada actual** a `elo.starting-mmr`. Las temporadas anteriores y el
+nivel histórico quedan intactos.

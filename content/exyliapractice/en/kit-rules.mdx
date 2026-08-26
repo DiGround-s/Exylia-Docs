@@ -1,0 +1,116 @@
+---
+title: "Kit rules"
+description: "Every toggle, number and attribute on a kit, with its default and what actually enforces it."
+---
+
+The rules are stored as JSON on the kit row and edited from `/epc` → **Manage Kits** → a kit → **Kit
+rules**. Most of them become policies on the arena's region for the length of the match; the rest are
+enforced by the plugin's own match listener.
+
+## Building
+
+| Rule | Default | What it does |
+|---|---|---|
+| `build` | off | Players may place blocks |
+| `block-break` | off | Players may break blocks |
+| `interact` | on | Players may interact with blocks |
+| `player-build-only` | off | Only blocks players placed may be broken |
+| `disappearing-blocks-delay` | `0` | Seconds before a placed block vanishes. `0` disables it. |
+| `re-give-blocks` | off | The block is handed back when it disappears |
+
+<Callout type="note" title="Adventure mode is derived, not configured">
+A player is put in adventure mode when `build`, `block-break` and `player-build-only` are all off,
+and in survival otherwise. There is no game-mode setting.
+</Callout>
+
+Block placing and breaking are also blocked inside the arena's [spawn protection and extra-region
+protection radii](/docs/exyliapractice/arenas#protection-radii), regardless of these rules.
+
+## Items
+
+| Rule | Default | What it does |
+|---|---|---|
+| `item-drop` | on | Players may drop items |
+| `item-pickup` | on | Players may pick items up |
+| `ender-pearl-cooldown` | `0` | Cooldown between pearls. `0` uses the server default. |
+| `golden-apple-cooldown` | `0` | Cooldown on both golden apple types, in seconds. `0` disables it. |
+
+<Callout type="note" title="Both cooldowns are in seconds">
+Unlike `hit-delay` just below, these two are seconds, not ticks — `1` is about the vanilla pearl.
+Older builds mislabelled the pearl one as `ticks` in the rules menu; the value it stored was always
+seconds, so an existing kit needs no change.
+</Callout>
+
+## Damage and health
+
+| Rule | Default | What it does |
+|---|---|---|
+| `pvp` | on | Players may damage each other |
+| `fall-damage` | on | Fall damage applies |
+| `disabled-damage` | off | All damage is off |
+| `health-regeneration` | on | Natural regeneration |
+| `food-decreasing` | on | Hunger drains |
+| `hit-delay` | `20` | The player's `maximumNoDamageTicks` — the invulnerability window after a hit, in ticks |
+
+`hit-delay` is genuinely in ticks. `20` is vanilla; lower it for combo kits.
+
+## Win conditions
+
+| Rule | Default | What it does |
+|---|---|---|
+| `hits-to-win` | `0` | A player who has *received* this many hits is eliminated. `0` disables it. |
+| `points-to-win` | `-1` | Points needed to win. `-1` disables it. |
+| `kills-give-points` | on | An elimination awards a point |
+| `revive-time` | `0` | Seconds an eliminated player spectates before respawning. `0` disables revives. |
+
+<Callout type="note" title="Hits-to-win counts hits taken, not dealt">
+The sidebar's `%hits%` is your own hits *received*, and `%opp_hits%` is your opponent's. A boxing kit
+is `hits-to-win: 100` and nothing else.
+</Callout>
+
+Points and revives together are what turn a 1v1 into a first-to-N: an elimination scores, the loser is
+revived after `revive-time` seconds, and the arena optionally regenerates between points.
+
+## Movement and objectives
+
+| Rule | Default | What it does |
+|---|---|---|
+| `iron-plate-checkpoints` | off | Heavy weighted pressure plates set a checkpoint. Dying or leaving the arena returns you there instead of eliminating you. |
+| `regenerate-after-point` | off | The arena is restored from its schematic between points |
+
+Checkpoints are per-plate and one-shot: standing on the same block again does not re-arm it, but a new
+plate does. They reset at the start of every round and every point.
+
+## Starting state
+
+| Rule | Default | What it does |
+|---|---|---|
+| `start-health` | `-1` | Health the player starts with. `-1` means full. |
+| `start-food` | `-1` | Food level. `-1` means 20. |
+| `start-saturation` | `-1` | Saturation. `-1` means 20. |
+
+## Attributes
+
+Set from **Kit attributes**. `-1` on any of them means "leave the vanilla value alone".
+
+| Attribute | Vanilla |
+|---|---|
+| `max-health` | 20 |
+| `attack-damage` | 1 |
+| `movement-speed` | 0.1 |
+| `knockback-resistance` | 0 |
+
+Attributes are applied as base values at the start of a match and again after every point reset.
+
+## Potion effects
+
+Set from **Potion effects**. Each entry is an effect name, an amplifier and a duration in seconds; a
+duration of `-1` lasts the whole match.
+
+Every existing effect on the player is stripped first, so what a kit grants is exactly what the player
+has.
+
+## Special conditions
+
+The last block on the rules screen. Eight triggers, three actions — see [its own
+page](/docs/exyliapractice/special-conditions).

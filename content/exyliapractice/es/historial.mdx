@@ -1,0 +1,71 @@
+---
+title: "Historial de partidas"
+description: "Cada partida, los dos inventarios, y la ventana de sesenta días en la que viven."
+---
+
+Cada partida terminada escribe una fila **por jugador** en `practice_match_history`. Las dos filas
+comparten un `matchId`, que es lo que permite a un jugador ver el lado de su rival de la misma pelea.
+
+## Qué guarda una fila
+
+| Grupo | Campos |
+|---|---|
+| Identidad | `matchId`, `season`, `playerUuid`, `opponentName`, `kitId`, `arenaId`, `matchMode` |
+| Resultado | `result` (WIN / LOSS / DRAW), `ranked`, `playedAt`, `durationMs` |
+| Rating | `eloBefore`, `eloChange`, `eloAfter`, y los mismos tres para el ladder global |
+| Tu lado | `kills`, `deaths`, `damageDealt`, `hitsDealt`, `hitsReceived`, `totalSwings`, `bestCombo` |
+| Su lado | Los mismos siete, con el prefijo `opponent` |
+| Inventario | `inventoryData`: el inventario del jugador tal como estaba al terminar |
+
+Se escribe una fila por cada partida no cancelada, sea clasificatoria o no.
+
+## Verlo
+
+| Comando | Qué hace |
+|---|---|
+| `/history`, `/mh`, `/match-history` | Tu propio historial |
+| `/history <jugador>` | El de otra persona |
+| `/history inv <matchId>` | El inventario con el que terminaste esa partida |
+| `/history invop <matchId>` | El de tu rival |
+
+El menú abre por la lista de categorías, luego los kits, luego las partidas, y cada fila muestra el
+resultado, el cambio de LP, el rival, el kit y cuánto duró. Pulsar una abre las dos vistas de
+inventario.
+
+Cinco filtros: **todas**, **victorias**, **derrotas**, **clasificatorias**, **no clasificatorias**.
+
+<Callout type="note" title="Las últimas 300 partidas">
+Una consulta de historial lee las 300 partidas más recientes del jugador, ordenadas por la base de
+datos, y filtra esa ventana en memoria. Por eso un kit que hace mucho que no juegas puede parecer más
+vacío de lo que está: la partida sigue en la tabla, solo que fuera de la ventana que lee el menú.
+</Callout>
+
+Los resultados se cachean dos minutos por jugador, kit y filtro.
+
+## Retención
+
+Las filas de partida se borran a los **60 días**. El barrido empieza cinco minutos después del arranque
+y corre cada hora, borrando primero las más antiguas, por lotes, enteramente dentro de la base de datos
+y con una pausa entre lotes para no retener las inserciones de las partidas en curso.
+
+<Callout type="note" title="Borrar una partida no cuesta nada estadísticamente">
+Todos los contadores derivados de una partida —victorias, daño, precisión, combos, tiempo jugado— ya se
+guardaron en las filas de temporada e histórico cuando terminó. La fila de historial es la repetición,
+no la fuente de verdad.
+</Callout>
+
+La ventana de retención no es una clave de configuración.
+
+## Purgar
+
+`/epc` → **Data Management** → **Purge match history** borra filas de partida directamente, en lotes
+mayores que el barrido de fondo, ya que nada compite con él. Es irreversible y pide confirmación.
+
+## La foto del inventario
+
+El inventario se captura al terminar la partida: 36 huecos de almacenamiento, 4 de armadura y la mano
+secundaria, serializados en la fila. Eso es lo que dibuja `/history inv`: los objetos reales, con
+durabilidad y encantamientos, en un menú no clicable.
+
+Como se captura al final, un jugador que murió sin nada no muestra nada. La foto es lo que llevaba, no
+lo que le dio el kit.

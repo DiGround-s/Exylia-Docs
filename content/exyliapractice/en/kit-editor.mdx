@@ -1,0 +1,73 @@
+---
+title: "Kit editor"
+description: "How players save their own loadouts, how many they get, and which one a match hands them."
+---
+
+The kit editor lets a player rearrange the kit's own items into a named, saved loadout. It never adds
+anything — it is the same items in a different order, which is the whole point on a practice server.
+
+## Using it
+
+`/kiteditor` (or `/ke`, or the lobby hotbar item) opens the category list, then the kits in it, then
+that kit's slots.
+
+Picking a slot teleports the player to the **kit editor spawn**, puts them in adventure mode, hands
+them the slot's items (or the kit's defaults for a new slot), and waits. Three subcommands finish the
+session:
+
+| Command | What it does |
+|---|---|
+| `/ke save` | Captures the inventory into the slot and returns to the lobby |
+| `/ke cancel` | Discards the changes and returns to the lobby |
+| `/ke reset` | Puts the kit's default items back, without leaving |
+
+<Callout type="note" title="Set the kit editor spawn first">
+`/epc` → **Data Management** → **Set Kit Editor Spawn**. Without it the player edits wherever they
+were standing, which on a busy lobby is not private.
+</Callout>
+
+## Slots
+
+A slot is a row in `practice_player_kits`: a player, a kit, an index, a name, an icon and 41 item
+slots. Slots are created, renamed, re-iconed and deleted from the slots screen.
+
+How many a player may have is a permission:
+
+```
+exyliapractice.kits.max_slots.<n>
+```
+
+The plugin counts down from 100 and takes the first node the player has, so `max_slots.5` on top of
+`max_slots.1` is an upgrade rather than a conflict. **With no node at all the player still gets one
+slot** — the editor is usable by everybody by default, and the permission only sells more.
+
+## Which slot a match uses
+
+This is decided when the kit is handed out, and it depends on how many slots the player has for that
+kit:
+
+| Slots saved | What happens |
+|---|---|
+| 0 | The kit's own default loadout |
+| 1 | That slot, silently |
+| 2 or more | A **slot picker** menu opens, and the player chooses |
+
+If the countdown ends before they have chosen, the first slot is used. Nobody is left with an empty
+inventory because they were reading the menu.
+
+## Where it cannot be used
+
+The editor claims the player, which means they cannot be queued, in a match, spectating or inside a
+PvP zone while editing — and no other plugin can take them either. `/ke` refuses with a message when
+the player is not free.
+
+## Clearing loadouts
+
+From `/epc` → **Data Management**:
+
+| Action | Scope |
+|---|---|
+| **Clear kit customizations** | Every player's slots for one kit |
+| **Clear all customizations** | Every player's slots for every kit |
+
+Both are irreversible and both ask for confirmation first.

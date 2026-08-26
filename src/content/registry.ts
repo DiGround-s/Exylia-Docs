@@ -281,6 +281,67 @@ const SHIELDS_NAV: NavGroup[] = [
   },
 ];
 
+const PRACTICE_NAV: NavGroup[] = [
+  {
+    label: { en: "Getting started", es: "Empezar" },
+    pages: [
+      page("introduction", "introduction", "introduccion"),
+      page("installation", "installation", "instalacion"),
+      page("first-steps", "first-steps", "primeros-pasos"),
+    ],
+  },
+  {
+    label: { en: "Arenas", es: "Arenas" },
+    pages: [
+      page("arenas", "arenas", "arenas"),
+      page("clones", "clones", "clones"),
+      page("extra-regions", "extra-regions", "regiones-extra"),
+    ],
+  },
+  {
+    label: { en: "Kits", es: "Kits" },
+    pages: [
+      page("kits", "kits", "kits"),
+      page("kit-rules", "kit-rules", "reglas-de-kit"),
+      page("special-conditions", "special-conditions", "condiciones-especiales"),
+      page("kit-editor", "kit-editor", "editor-de-kits"),
+    ],
+  },
+  {
+    label: { en: "Playing", es: "Jugar" },
+    pages: [
+      page("queue", "queue", "cola"),
+      page("duels", "duels", "duelos"),
+      page("parties", "parties", "parties"),
+      page("spectating", "spectating", "espectadores"),
+      page("lobby", "lobby", "lobby"),
+    ],
+  },
+  {
+    label: { en: "Competitive", es: "Competitivo" },
+    pages: [
+      page("elo", "elo", "elo"),
+      page("seasons", "seasons", "temporadas"),
+      page("stats", "stats", "estadisticas"),
+      page("match-history", "match-history", "historial"),
+    ],
+  },
+  {
+    label: { en: "Reference", es: "Referencia" },
+    pages: [
+      page("commands", "commands", "comandos"),
+      page("permissions", "permissions", "permisos"),
+      page("placeholders", "placeholders", "placeholders"),
+      page("scoreboards", "scoreboards", "scoreboards"),
+      page("configuration", "configuration", "configuracion"),
+      page("database", "database", "base-de-datos"),
+      page("web-api", "web-api", "web-api"),
+      page("api", "api", "api"),
+      page("faq", "faq", "faq"),
+    ],
+  },
+];
+
 export const plugins: Plugin[] = [
   {
     id: "exyliaffa",
@@ -312,21 +373,26 @@ export const plugins: Plugin[] = [
   {
     id: "exyliapractice",
     name: "ExyliaPracticeCore",
-    tagline: { en: "Competitive practice core", es: "Núcleo de Practice competitivo" },
+    tagline: { en: "A whole practice server", es: "Un servidor de practice entero" },
     summary: {
-      en: "Queues, ladders, dynamic arenas, parties, tournaments and ELO stats for practice servers.",
-      es: "Colas, ladders, arenas dinámicas, parties, torneos y estadísticas ELO para servidores de práctica.",
+      en: "Ranked matchmaking, duels, parties, a per-player kit editor, arenas that clone and regenerate themselves, nine ELO ranks and seasons — the largest plugin in the ecosystem.",
+      es: "Matchmaking clasificatorio, duelos, parties, editor de kits por jugador, arenas que se clonan y regeneran solas, nueve rangos de ELO y temporadas: el plugin más grande del ecosistema.",
     },
-    version: "—",
-    status: "soon",
+    version: "1.0.9",
+    status: "stable",
     category: { en: "Gamemode", es: "Modo de juego" },
     minecraft: "1.21+",
     tags: [
       { en: "Queue", es: "Colas" },
-      { en: "Ladders", es: "Ladders" },
       { en: "ELO", es: "ELO" },
+      { en: "Parties", es: "Parties" },
+      { en: "Folia", es: "Folia" },
     ],
-    nav: [],
+    nav: PRACTICE_NAV,
+    links: [
+      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
+      { label: "Discord", href: "https://discord.exylia.net" },
+    ],
   },
   {
     id: "exyliacapture",

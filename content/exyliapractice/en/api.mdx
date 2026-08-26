@@ -1,0 +1,167 @@
+---
+title: "Developer API"
+description: "PracticeAPI, the actions your menus can call, and how another plugin takes a player away from practice."
+---
+
+## PracticeAPI
+
+`net.exylia.exyliaPracticeCore.api.PracticeAPI` is a static facade over everything the plugin does.
+Compile against the plugin jar; do not shade it.
+
+### State
+
+```java
+PlayerState  getPlayerState(UUID uuid)
+boolean      isAvailable(Player player)
+boolean      isInGame(UUID uuid)
+boolean      isInQueue(UUID uuid)
+boolean      isSpectating(UUID uuid)
+boolean      requireAvailable(Player player)     // messages the player if not
+boolean      requireQueueJoinable(Player player)
+```
+
+The nine states are `AVAILABLE`, `IN_PARTY`, `IN_QUEUE`, `LOADING_MATCH`, `IN_GAME`, `SPECTATING`,
+`EDITING_KIT`, `IN_PVP_ZONE` and `EXTERNAL`.
+
+<Callout type="note" title="Nothing is stored">
+A player's state is derived on every call from the ExyliaLib claim registry and from party
+membership. There is no state map to fall out of step, and the answer is safe to ask for from any
+thread.
+</Callout>
+
+### Queue and matches
+
+```java
+boolean joinQueue(Player player, String kitId)
+boolean leaveQueue(Player player)
+boolean quickQueue(Player player)
+boolean requeue(Player player)
+boolean isInQueueForKit(UUID uuid, String kitId)
+
+Optional<Game> getGame(Player player)
+boolean        leave(Player player)     // forfeits, leaves a queue, exits a zone
+void           sendToLobby(Player player)
+```
+
+### Duels and parties
+
+```java
+boolean sendDuelRequest(Player sender, String targetName, String kitId, int rounds, String arenaId)
+void    acceptDuelRequest(Player player)
+void    declineDuelRequest(Player player)
+void    cancelDuelRequest(Player player)
+boolean canStartDuelWith(Player sender, Player target)
+
+Optional<Party> getParty(UUID uuid)
+boolean createParty(Player player)
+boolean inviteToParty(Player leader, Player target)
+boolean joinParty(Player player, String leaderName)
+boolean startPartyFfa(Player leader, String kitId)
+boolean startPartySplit(Player leader, String kitId)
+boolean queuePartyForDuel(Player leader, String kitId)
+```
+
+### Kits and arenas
+
+```java
+Optional<KitEntity>          getKit(String kitId)
+List<KitEntity>              getAllKits()
+List<KitEntity>              getCompatibleKits(String arenaId)
+Optional<KitCategoryEntity>  getKitCategory(String categoryId)
+void                         applyKit(Player player, KitEntity kit)
+List<PlayerKitEntity>        getPlayerKitSlots(Player player, String kitId)
+int                          getMaxKitSlots(Player player)
+
+Optional<ArenaEntity>                            getArena(String arenaId)
+List<ArenaEntity>                                getAllArenas()
+Optional<ArenaInstance>                          acquireInstance(String arenaId)
+CompletableFuture<Optional<ArenaAcquireResult>>  acquireOrClone(String arenaId)
+void                                             releaseInstance(ArenaInstance i, boolean regenerate)
+```
+
+`acquireOrClone` is how another gamemode can borrow a practice arena: take an instance, use it,
+release it. Releasing with `regenerate` restores the blocks from the schematic.
+
+### Statistics
+
+```java
+Optional<PlayerSeasonStatsEntity> getKitStats(UUID uuid, String kitId)
+Optional<PlayerSeasonStatsEntity> getGlobalStats(UUID uuid)
+int                               getMmr(UUID uuid, String kitId)
+RankInfo                          getRankInfo(UUID uuid, String kitId)
+
+CompletableFuture<List<PlayerSeasonStatsEntity>> getLeaderboard(String kitId, LeaderboardStatsType type)
+CompletableFuture<Optional<UUID>>                resolvePlayerUuid(String playerName)
+CompletableFuture<Boolean>                       setPlayerStat(UUID uuid, String kitId, String field, String value)
+CompletableFuture<Boolean>                       modifyPlayerStat(UUID uuid, String kitId, String field, double delta)
+```
+
+Pass `PlayerSeasonStatsEntity.GLOBAL_KEY` — the literal `"global"` — as the kit id for the overall
+ladder.
+
+### Managers
+
+For anything the facade does not cover, the managers themselves are reachable:
+`getArenaManager`, `getKitManager`, `getKitService`, `getGameManager`, `getGameService`,
+`getQueueManager`, `getLobbyManager`, `getStatsManager`, `getEloService`, `getRankRegistry`,
+`getPlayerSettingsManager`, `getGameStatsManager`.
+
+## Taking a player from practice
+
+Do not call into this plugin. Claim the player through ExyliaLib's session registry and the lobby
+reacts on its own:
+
+```java
+Optional<Claim> claim = Sessions.of(myPlugin).claim(player, "MY_MODE");
+if (claim.isEmpty()) return;   // somebody refused to let go
+```
+
+The moment the claim lands, this plugin hides the player's scoreboard, strips their lobby items and
+takes them out of the lobby's visibility set. Dropping the claim puts all of it back — but only if
+nobody else has taken them in the meantime, so handing a player from one mode straight to another does
+not flash a lobby kit in between.
+
+Asking for a player this plugin is holding forfeits their match, leaves their queue or exits their PvP
+zone first. A state with no way out refuses the claim.
+
+## Actions
+
+The plugin registers **213 actions** under the `practice:` namespace, usable from any ExyliaLib menu
+or item on the server:
+
+```yaml
+actions:
+  - "practice:join_queue %kit_id%"
+  - "left: practice:open_stats"
+```
+
+The player-facing ones are the useful set outside this plugin: `open_queue_categories`, `join_queue`,
+`leave_queue`, `open_stats`, `open_history`, `open_settings`, `open_kit_editor`,
+`open_spectate_games`, `open_party_hub`, `open_party_game_menu`, `leave_game`, `duel_send_request`.
+
+<Callout type="warning" title="Most admin actions are gated by navigation, not by permission">
+Only 49 of the 213 check `exyliapractice.admin` themselves — the entry points, such as `open_admin`,
+`open_data_management`, `open_admin_stats` and `reload`. The leaf actions behind them do not:
+`data_do_clear_all_stats`, `data_do_reset_all_elo`, `data_import`, `delete_arena`, `create_kit`,
+`set_lobby` and the rest run for whoever clicked them.
+
+In the shipped setup that is safe, because those ids only appear inside admin menus that can only be
+opened through a checked action. But the action namespace is server-wide: naming one of them in a
+lobby item, a player menu, or another plugin's menu would hand it to everybody. Never put a
+`practice:data_*`, `practice:delete_*`, `practice:create_*` or `practice:set_*` id in a player-facing
+file.
+</Callout>
+
+## Events
+
+The plugin fires no custom Bukkit events. What another plugin listens to instead is ExyliaLib's
+session registry:
+
+```java
+Sessions.watch(myPlugin,
+    claim -> { /* somebody was taken */ },
+    claim -> { /* somebody was released */ });
+```
+
+That is the same mechanism this plugin's own lobby uses, and it reports every mode on the server, not
+just practice.

@@ -1,0 +1,98 @@
+---
+title: "Base de datos"
+description: "Las diecisiete tablas, qué guarda cada una y cómo se relacionan los dos niveles de estadísticas."
+---
+
+El plugin guarda todo a través del módulo de base de datos de ExyliaLib, así que qué motor hay detrás
+—MySQL, SQLite, H2, MongoDB— se configura una vez en ExyliaLib y no aquí. Las tablas se crean y migran
+solas.
+
+## Las diecisiete tablas
+
+| Tabla | Guarda |
+|---|---|
+| `practice_arenas` | Una arena: spawns, regiones, radios de protección, regiones extra |
+| `practice_kits` | Un kit: loadout, categorías, arenas compatibles, banderas de jugabilidad, reglas en JSON |
+| `practice_kit_categories` | Una categoría |
+| `practice_player_kits` | Un hueco de loadout guardado de un jugador para un kit |
+| `practice_player_season_stats` | Los contadores de un jugador para un kit en una temporada |
+| `practice_player_lifetime_stats` | Lo mismo, de todas las temporadas |
+| `practice_player_stats` | La tabla anterior a las temporadas. La lee la migración una vez y no se escribe más. |
+| `practice_match_history` | El lado de un jugador en una partida terminada, con inventario |
+| `practice_game_log` | Una fila por partida jugada: kit, arena, modo, número de jugadores, si se canceló |
+| `practice_seasons` | Una temporada: número, nombre, inicio, fin, si está activa |
+| `practice_settings` | Una sola fila: spawn de lobby, spawn del editor de kits, boost global, temporada actual |
+| `practice_player_settings` | Los `/settings` de un jugador |
+| `practice_elo_boosts` | El boost de LP activo de un jugador |
+| `practice_pvp_regions` | Una zona PvP |
+| `practice_portal_regions` | Un portal |
+| `practice_jumpads` | Un jump pad y todas sus posiciones |
+| `practice_web_outbox` | Cargas esperando a llegar a la web API |
+
+## Los dos niveles de estadísticas
+
+`practice_player_season_stats` y `practice_player_lifetime_stats` tienen las mismas columnas. La
+diferencia es qué se reinicia:
+
+| | Temporada | Histórico |
+|---|---|---|
+| Lo reinicia una rotación | En la práctica: la nueva temporada empieza vacía | Nunca |
+| Lo leen las clasificaciones | Sí | No |
+| Lo leen sidebars y placeholders | Sí | No |
+| Clave | `<temporada>:<kit>` desnormalizado en `seasonKit` | `<jugador>:<kit>` |
+
+Los dos se escriben en el mismo commit al terminar una partida, así que nunca pueden discrepar.
+
+El ladder **global** se guarda en ambos bajo el id de kit `global`, que es lo que permite que una sola
+consulta responda tanto una clasificación por kit como una general.
+
+<Callout type="note" title="Por qué winRate y kdr son columnas">
+Se guardan en vez de calcularse al leer para que la base de datos pueda ordenar una clasificación por
+ellos contra un índice. Editar `wins` a mano con `/epc stats set` los recalcula.
+</Callout>
+
+## Índices que importan
+
+| Tabla | Indexada por |
+|---|---|
+| `practice_player_season_stats` | `season`, `playerUuid`, `playerName` |
+| `practice_player_lifetime_stats` | `playerUuid`, `playerName` |
+| `practice_match_history` | `matchId`, `season` |
+| `practice_game_log` | `kitId`, `arenaId`, `cancelled` |
+| `practice_player_kits` | `playerUuid`, `kitId` |
+| `practice_web_outbox` | `kind`, `nextAttemptAt` |
+| `practice_seasons` | `active` |
+
+Las clasificaciones ordenan y limitan **dentro de la base de datos** contra el índice de temporada; el
+historial de partidas hace lo mismo contra el índice de fecha de juego. Nada carga una tabla entera en
+memoria.
+
+## Migrar desde ExyliaCommons
+
+Existen dos migraciones distintas:
+
+**Automática, en el primer arranque.** Si `practice_player_stats` tiene filas, cada una se atribuye a
+la temporada 1 y se copia a los niveles de temporada e histórico. Corre en segundo plano sin bloquear
+el arranque, es reanudable si el servidor muere a mitad y solo lee la tabla antigua, así que puede
+repetirse sin riesgo.
+
+**Manual, sobre un volcado.** `/epc migrate <archivo> [--skip-stats]` convierte un volcado exportado de
+una base de datos v2 de ExyliaCommons al esquema de este plugin. `--skip-stats` convierte arenas, kits
+y ajustes sin tocar las estadísticas de jugador.
+
+## Exportar e importar
+
+| Comando | Qué hace |
+|---|---|
+| `/epc export [archivo]` | Escribe un volcado. Sin nombre, un archivo con marca de tiempo en la carpeta de volcados. |
+| `/epc import <archivo>` | Vuelve a cargar uno |
+
+Los dos pasan por el módulo de transferencia de ExyliaLib, así que un volcado hecho en SQLite puede
+importarse en MySQL.
+
+<Callout type="warning" title="Reinicia después de importar">
+Una importación carga filas directamente en las tablas en vivo y no invalida nada de lo que el servidor
+ya tenga en memoria: arenas, kits, categorías, estadísticas cargadas. Haz primero una exportación,
+importa sin nadie conectado y reinicia el servidor antes de dejar entrar a nadie. Si no, las copias
+viejas en memoria se reescriben encima de las filas importadas.
+</Callout>

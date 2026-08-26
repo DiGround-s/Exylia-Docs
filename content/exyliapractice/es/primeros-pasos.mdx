@@ -1,0 +1,101 @@
+---
+title: "Primeros pasos"
+description: "De un servidor vacío a una cola clasificatoria jugable: una categoría, un kit, una arena."
+---
+
+Todo se construye desde el menú de administración. `/epc` lo abre; no hay comandos de configuración
+que memorizar.
+
+## 1. Una categoría
+
+Los kits se agrupan en categorías, y todas las pantallas del jugador —cola, duelos, parties,
+estadísticas, historial— abren primero por la lista de categorías. Necesitas al menos una.
+
+`/epc` → **Manage Kits** → **Categories** → crear. Se te pide un id por chat y luego un nombre visible.
+
+## 2. Un kit
+
+**Manage Kits** → **All Kits** → crear. La pantalla del kit tiene diez botones:
+
+| Botón | Qué define |
+|---|---|
+| **Name** / **Icon** / **Description** | Cómo se ve en los menús |
+| **Status** | Activado. Un kit desactivado no aparece en ninguna parte. |
+| **Categories** | En qué categorías se lista |
+| **Compatible arenas** | En qué arenas puede jugarse |
+| **Loadout** | Los objetos. Abre tu inventario: colócalos y cierra. |
+| **Kit rules** | [Más de 40 interruptores y valores](/docs/exyliapractice/reglas-de-kit) |
+| **Playability & ranked** | Party FFA, party split, party duel, duelo, cola, clasificatorio |
+| **Priority** | Orden en los menús |
+
+<Callout type="note" title="Un kit sin loadout no es un error">
+Es un kit que no da nada. Útil para sumo o boxeo, donde la arena y las reglas hacen todo el trabajo.
+</Callout>
+
+## 3. Una arena
+
+**Manage Arenas** → crear. Se te pide un id y un nombre visible, y luego entras en la pantalla de
+configuración de la arena.
+
+<Steps>
+  <Step title="Spawn 1 y Spawn 2">
+    Dónde empieza cada lado. Los dos son obligatorios.
+  </Step>
+  <Step title="Región jugable">
+    Un asistente de selección estilo worldedit. Es el área donde ocurre la partida: salirse de ella te
+    mata. Su esquemático se guarda en cuanto la fijas.
+  </Step>
+  <Step title="Región de copia">
+    Una segunda selección, mayor que la jugable: es de donde se pega un **clon**, así que debe incluir
+    paredes, suelo y cualquier otra cosa que la arena necesite para verse bien. Su esquemático se
+    guarda en cuanto la fijas.
+  </Step>
+  <Step title="Esquemático">
+    El botón vuelve a guardar los dos archivos. Úsalo después de reconstruir algo dentro de las
+    regiones: una regeneración restaura lo que se guardó, no lo que está puesto.
+  </Step>
+  <Step title="Actívala">
+    **Status**. La arena se niega a activarse mientras le falte algo, y te dice qué: Spawn 1, Spawn 2,
+    Playable Region, Copy Region, Copy Schematic, Playable Schematic.
+  </Step>
+</Steps>
+
+Opcionales en la misma pantalla: **spawn de espectadores**, **spawn de party FFA**, **regiones
+extra**, **radio de protección de spawn**, **radio de protección de regiones extra**, y un acceso
+directo a **Kits** para enlazar kits desde el lado de la arena en vez del del kit.
+
+## 4. Enlázalos y actívalos
+
+Un kit se puede jugar en una arena cuando el id de la arena está en la lista de **compatible arenas**
+del kit. Puedes tocarlo desde cualquiera de los dos lados: es una sola lista, guardada en el kit.
+
+Luego activa ambos. Una partida necesita un kit activado y al menos una arena activada y completamente
+configurada en su lista de compatibles.
+
+## 5. Pruébalo
+
+Ponte en el lobby y ejecuta `/queue`. Elige la categoría, elige el kit y mete a un segundo jugador; o,
+más rápido, usa `/duel <jugador>`, que se salta el matchmaking entero.
+
+<Callout type="warning" title="Dos cuentas en una misma IP no se emparejarán nunca">
+La comprobación antiboost se niega a emparejar a dos jugadores de la misma dirección, y viene activada.
+Si pruebas solo, o usas dos conexiones reales o pones `elo-security.same-ip-protection` en `false`
+mientras trabajas.
+</Callout>
+
+## Por dónde seguir
+
+<Cards>
+  <Card title="Clonar arenas" href="/docs/exyliapractice/clones">
+    Una arena, hasta diez partidas simultáneas.
+  </Card>
+  <Card title="Reglas de kit" href="/docs/exyliapractice/reglas-de-kit">
+    Golpes para ganar, puntos, reapariciones, checkpoints, atributos, pociones.
+  </Card>
+  <Card title="ELO y rangos" href="/docs/exyliapractice/elo">
+    Los nueve rangos, LP, colocación, boosts y escudo de descenso.
+  </Card>
+  <Card title="Configuración" href="/docs/exyliapractice/configuracion">
+    Todas las claves de `config.yml`.
+  </Card>
+</Cards>

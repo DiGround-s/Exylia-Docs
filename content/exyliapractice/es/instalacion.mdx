@@ -1,0 +1,96 @@
+---
+title: "Instalación"
+description: "Poner el jar, qué se genera y en qué orden importan los archivos."
+---
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. Compatible con Folia. |
+| Java | 21 |
+| Obligatorio | `ExyliaLib`, `FastAsyncWorldEdit` |
+| Opcional | `PlaceholderAPI`, `ViaVersion`, `Worlds`, `Apollo`, `FeatherServerAPI`, `floodgate` |
+
+<Callout type="warning" title="FastAsyncWorldEdit es dependencia dura">
+Está en `depend`, no en `softdepend`: el servidor se niega a cargar el plugin sin él. Clonar una
+arena es pegar un esquemático y regenerarla es restaurarlo; ninguna de las dos tiene alternativa.
+</Callout>
+
+## Instalar
+
+<Steps>
+  <Step title="Pon las dependencias">
+    `ExyliaLib` y `FastAsyncWorldEdit` en `plugins/`. ExyliaLib tiene que ser la misma copia que ven
+    todos los plugins de Exylia: nunca la incluyas dentro de otro jar ni tengas dos.
+  </Step>
+  <Step title="Pon el jar">
+    `ExyliaPracticeCore` en `plugins/` y reinicia. El plugin se distribuye con el loader de Lukittu,
+    así que el archivo que instalas es el loader y la licencia se pide en el primer arranque.
+  </Step>
+  <Step title="Deja que genere">
+    El primer arranque escribe los archivos de abajo y crea el mundo de clones. Todavía no se puede
+    jugar: no hay ninguna arena ni ningún kit.
+  </Step>
+  <Step title="Date el permiso de admin">
+    `exyliapractice.admin` es el único nodo que necesita un operador. `/epc` abre entonces el menú de
+    administración.
+  </Step>
+  <Step title="Fija el spawn del lobby">
+    `/epc` → **Data Management** → **Set Lobby**. Hasta que se fije, `teleportToLobby` no hace nada y
+    los jugadores se quedan donde entren.
+  </Step>
+</Steps>
+
+## Qué se genera
+
+| Ruta | Qué es |
+|---|---|
+| `config.yml` | Todos los ajustes: arenas, cola, ELO, party, duelos, lobby, jumpads, web API. [Referencia](/docs/exyliapractice/configuracion) |
+| `messages.yml` | 26 secciones de texto visible para el jugador |
+| `scoreboards.yml` | 19 sidebars. [Referencia](/docs/exyliapractice/scoreboards) |
+| `ranks.yml` | Los nueve rangos, sus divisiones y sus factores K. [Referencia](/docs/exyliapractice/elo) |
+| `items/lobby.yml` | La hotbar del lobby |
+| `items/party.yml` | La hotbar estando en party |
+| `items/queue.yml` | La hotbar estando en cola |
+| `menus/admin/**` | 31 pantallas de administración |
+| `menus/player/**` | 30 pantallas de jugador |
+
+Todos se escriben **una vez** y nunca se sobrescriben. Lo que hay en disco es lo que tú editaste.
+
+<Callout type="note" title="Editar los menús está soportado">
+Ningún archivo de menú se regenera nunca. Edita cualquiera de los 61 con confianza; el plugin solo
+escribe el que no esté ya.
+
+Las instalaciones antiguas tienen un aviso en la cabecera de los 31 menús de admin que dice lo
+contrario: que se regeneran en cada arranque y que los cambios se pierden. Nunca fue cierto y ya no
+está en las copias que se distribuyen, pero un archivo que ya esté en disco lo conserva, precisamente
+porque el plugin no sobrescribe lo que tú tienes. Borra esas cinco líneas de tus copias.
+</Callout>
+
+## El mundo de clones
+
+En el primer arranque se crea un mundo llamado `ExyliaPracticeCore_clones`: plano, vacío, sin
+estructuras, sin spawn de mobs, sin clima, sin ciclo día/noche, hora congelada en 6000 y
+`randomTickSpeed` a 0. Los clones de arena se pegan ahí uno al lado del otro.
+
+<Callout type="note" title="En Folia el mundo lo crea el plugin Worlds">
+Folia no puede crear un mundo con `WorldCreator`, así que el plugin se lo pide a
+[Worlds](https://repo.thenextlvl.net), probando primero su API 4.x y luego la 3.x. Sin él, la consola
+dice `clone world unavailable` y se usa el mundo principal como respaldo, lo que significa que los
+clones se pegan en tu mundo del lobby. En Folia, instala Worlds.
+</Callout>
+
+El mundo **se borra al apagar**, carpeta incluida. No guarda nada aprovechable: cada clon se vuelve a
+pegar desde el esquemático de la arena cuando hace falta.
+
+## Orden de carga y base de datos
+
+El plugin lee sus arenas, kits, temporadas y ajustes de la base de datos que tenga configurada
+ExyliaLib. Configúrala primero: mira la [documentación de base de datos de
+ExyliaLib](/docs/exylialib/base-de-datos). Las 17 tablas se crean solas; están listadas
+[aquí](/docs/exyliapractice/base-de-datos).
+
+En el primer arranque sobre una base de datos anterior a las temporadas, una migración de una sola vez
+copia cada fila de `practice_player_stats` a la temporada 1 y al nivel histórico. Corre en segundo
+plano, es reanudable y solo lee la tabla antigua.

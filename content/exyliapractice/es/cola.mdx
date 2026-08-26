@@ -1,0 +1,101 @@
+---
+title: "Cola y matchmaking"
+description: "Cómo se encola un jugador para varios kits a la vez, y exactamente cómo se emparejan dos de ellos."
+---
+
+## Encolarse
+
+`/queue` (o `/q`, o el objeto de la hotbar del lobby) abre la lista de categorías y luego los kits de
+esa categoría. Pulsar un kit entra en su cola; volver a pulsarlo sale de esa cola.
+
+Un jugador puede estar en **muchas colas de kit a la vez**. Se queda en el lobby, libre de moverse, con
+una action bar que muestra los kits, el tiempo transcurrido y la franja de rating que se busca:
+
+```
+In queue - Sumo, NoDebuff, Boxing +2 - ⌚ 01:23 | Copper II ~ Titanium IV | /leavequeue
+```
+
+Más de tres kits se colapsan a `primero, segundo, tercero +N`.
+
+| Comando | Qué hace |
+|---|---|
+| `/queue`, `/q` | Abre el menú de cola |
+| `/quickqueue`, `/qq` | Entra en un kit al azar que ya tenga a alguien esperando; si no hay nadie, cualquier kit activado |
+| `/requeue`, `/rq` | Vuelve a entrar en todos los kits en los que estabas cuando empezó tu última partida |
+| `/leavequeue`, `/lq` | Sale de todas las colas |
+
+## Cómo se encuentra una partida
+
+La cola corre una vez por segundo. Para cada kit con dos o más jugadores esperando:
+
+<Steps>
+  <Step title="Ordenar por rating">
+    Todos los que esperan ese kit se ordenan por su MMR en él.
+  </Step>
+  <Step title="Recorrer parejas contiguas">
+    Solo se consideran vecinos en esa lista ordenada: los ratings más cercanos posibles primero.
+  </Step>
+  <Step title="Comprobar el radio">
+    La pareja encaja si su diferencia de rating cabe en el **mayor** de sus dos radios de búsqueda.
+  </Step>
+  <Step title="Comprobar el antiboost">
+    La misma IP, o haberse enfrentado hace demasiado poco, rechaza la pareja. Ver
+    [ELO](/docs/exyliapractice/elo#antiboost).
+  </Step>
+  <Step title="Tomarlos">
+    La pareja se saca de **todas** las colas en las que estaba, se reclama a los dos y empieza la
+    partida. Antes se guarda una foto de su lista de colas para que `/requeue` pueda reconstruirla.
+  </Step>
+</Steps>
+
+### El radio de búsqueda
+
+Empieza en `elo.matchmaking-base-radius` y se abre `elo.matchmaking-expand-rate` cada
+`elo.matchmaking-expand-interval-seconds`, hasta `elo.matchmaking-max-radius`.
+
+| Ajuste | Defecto | Significado |
+|---|---|---|
+| `matchmaking-base-radius` | `150` | MMR a cada lado, en el momento de encolarse |
+| `matchmaking-expand-rate` | `50` | Se suma por intervalo |
+| `matchmaking-expand-interval-seconds` | `15` | Cada cuánto se abre |
+| `matchmaking-max-radius` | `600` | El techo |
+| `matchmaking-ignore-elo` | `false` | Si está en true, cualquier pareja encaja y la action bar pone *cualquier rango* |
+
+Con los valores por defecto un jugador empieza buscando ±150 y llega al techo de ±600 a los 2 min 15 s.
+
+<Callout type="note" title="La franja que se muestra es la del primer kit en el que te encolaste">
+La action bar dibuja una sola franja de rating, tomada del kit al que entraste primero. Un jugador
+encolado en un kit donde es Copper y en otro donde es Nova ve la franja de Copper; el matchmaking sigue
+usando el rating correcto de cada kit en cada cola.
+</Callout>
+
+## Requisitos para entrar
+
+`/queue` se niega cuando se cumple alguna de estas:
+
+- El jugador no está libre: en partida, editando un kit, observando o reclamado por otro plugin.
+- Sus estadísticas todavía no han terminado de cargar de la base de datos.
+- La cola está bloqueada, cosa que pasa durante una [rotación de temporada](/docs/exyliapractice/temporadas).
+- No hay spawn de lobby fijado.
+- El kit está desactivado, o tiene **queue** apagado.
+
+## La barra de reclamo
+
+Cuando alguien espera, el resto del lobby ve una boss bar que lo nombra junto a los kits en los que
+espera, con el icono de rango de cada uno. Va rotando entre los jugadores encolados de uno en uno.
+
+| Ajuste | Defecto | Significado |
+|---|---|---|
+| `queue.teaser-enabled` | `true` | Apaga todo el sistema |
+| `queue.teaser-rotation-seconds` | `5` | Cuánto se destaca a cada jugador |
+| `queue.teaser-max-kits-shown` | `3` | Kits listados antes de colapsar a `+N` con el rango global |
+
+La barra solo se muestra a jugadores que podrían actuar sobre ella: disponibles, encolados, editando un
+kit o en una zona PvP. A nadie en partida se le ofrece una cola a la que no puede entrar.
+
+## La espera entre encontrar y pelear
+
+Cuando aparece una pareja, ambos reciben un título de **match found** y una action bar de carga. Si hubo
+que clonar una arena, ahí es donde ocurre el pegado. Si **ya había una arena libre**, el plugin espera
+igualmente `queue.no-clone-extra-delay` ticks —40 por defecto, dos segundos— para que una partida
+encontrada al instante no parezca un fallo de teletransporte.

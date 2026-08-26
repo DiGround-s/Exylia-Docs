@@ -1,0 +1,136 @@
+---
+title: "FAQ"
+description: "Lo que falla primero, y sus respuestas."
+---
+
+## Montaje
+
+### `/queue` dice que no hay arenas disponibles
+
+La lista de **compatible arenas** del kit está vacía, o todas las arenas de esa lista están
+desactivadas o incompletas. Abre el kit, revisa la lista, y luego abre cada arena y mira **Status**:
+enumera lo que falta.
+
+### Una arena se niega a activarse y dice que falta un esquemático
+
+O no has pulsado **Schematic** todavía, o FastAsyncWorldEdit no está instalado. La comprobación
+pregunta al almacén de esquemáticos si el archivo existe, y un servidor sin FAWE siempre responde que
+no. El motivo real se registró una vez al arrancar.
+
+### Nadie se teletransporta al lobby
+
+El spawn del lobby no está fijado. `/epc` → **Data Management** → **Set Lobby**.
+
+### El editor de kits deja a los jugadores donde estaban
+
+El spawn del editor de kits no está fijado. Mismo menú, **Set Kit Editor Spawn**.
+
+### Mis dos cuentas de prueba nunca se emparejan
+
+Protección de misma IP. Pon `elo-security.same-ip-protection` en `false` mientras pruebas, o usa
+`/duel`, que no la comprueba.
+
+## En funcionamiento
+
+### He editado un config y no ha cambiado nada
+
+Ejecuta `/epc reload`. Vuelve a leer los tres archivos de configuración, `ranks.yml`, los tres de
+`items/` y todos los menús. Dos cosas que no puede recoger: las arenas y los kits, que viven en la base
+de datos y ya están en vivo, y `duel.request-expiry-seconds`, que se fija en una caché al arrancar y
+necesita reinicio.
+
+Si falla un paso, la recarga lo nombra y ejecuta el resto igualmente: lee lo que imprimió en vez de
+reiniciar a ciegas.
+
+### Los menús de admin dicen que se regeneran en cada arranque
+
+Solo en instalaciones de una versión anterior. Ese aviso nunca fue cierto —el plugin salta cualquier
+archivo de menú que ya exista— y se ha quitado de las copias que se distribuyen. La tuya lo conserva
+justamente porque nada sobrescribe tus archivos. Borra esas cinco líneas y edita con normalidad.
+
+### Las perlas tienen un enfriamiento enorme
+
+`ender-pearl-cooldown` va en **segundos**, así que `16` son dieciséis segundos. `1` es lo más parecido
+a vainilla. Las versiones anteriores lo etiquetaban como `ticks` en el menú de reglas, que es de donde
+venía la confusión; el valor guardado siempre fueron segundos.
+
+### El mundo de clones se creó en mi mundo del lobby
+
+Estás en Folia sin el plugin Worlds. Folia no puede crear un mundo con Bukkit, así que el plugin cae al
+mundo principal, lo que significa que los clones de arena se pegan ahí. Instala
+[Worlds](https://repo.thenextlvl.net) y reinicia.
+
+### Los clones se están comiendo el servidor
+
+Baja `arena.max-clones-per-arena`. Cada clon es un pegado permanente en el mundo de clones que se queda
+cargado durante toda la vida del servidor, y diez copias de una arena grande son muchos chunks. Los
+clones solo se hacen cuando todas las instancias existentes están ocupadas, así que un límite más bajo
+significa que las partidas hacen cola.
+
+## Jugabilidad
+
+### Los bloques no se restauran entre partidas
+
+La regeneración solo corre cuando el kit permite `build` o `block-break`: si no, no hay nada que
+restaurar. Si el kit sí permite construir y los bloques siguen ahí, vuelve a guardar los esquemáticos
+de la arena: una regeneración restaura el archivo, no lo que está puesto.
+
+### Los puntos de un jugador se han ido a negativo
+
+Una condición especial `LOSS_POINT` resta sin suelo. No le cuesta nada más allá de la pantalla —solo se
+resuelve un ganador desde un marcador positivo— pero acompaña `LOSS_POINT` de algo que termine la ronda
+si quieres que sea decisivo.
+
+### Nadie puede observar una partida
+
+Uno de sus jugadores tiene **spectators** apagado en `/settings`. Es el veto de un solo jugador sobre
+toda la partida. Si nadie lo tiene apagado, comprueba que la arena tenga **spawn de espectador**: sin él
+el teletransporte falla y no se puede empezar a observar.
+
+### Hits-to-win parece al revés
+
+Cuenta golpes **recibidos**, no dados. `hits-to-win: 100` elimina al jugador cuando ha encajado cien
+golpes. Es la regla estándar de boxeo.
+
+### Un jugador tiene más huecos de loadout de los que le di
+
+`exyliapractice.kits.max_slots.<n>` cuenta hacia abajo hasta el nodo más alto que el jugador tenga, y
+todo el mundo recibe **un** hueco sin ningún nodo. Busca un comodín o un grupo heredado.
+
+## Estadísticas y ELO
+
+### Una rotación de temporada ha borrado las estadísticas de todos
+
+No lo ha hecho. Las filas antiguas siguen en `practice_player_season_stats` bajo el número de la
+temporada anterior, y el nivel histórico no se tocó. Lo que se reinicia es lo que leen las
+clasificaciones.
+
+### Un jugador de rating alto casi no pierde LP
+
+Es la reducción asimétrica. En cuanto la diferencia de rating supera
+`elo.asymmetric-threshold-mmr`, la pérdida del jugador de arriba encoge, y con unos 700 de diferencia
+llega a cero. Se apaga poniendo `asymmetric-threshold-mmr` muy alto.
+
+### `/epc stats set` no ha cambiado la clasificación
+
+Las clasificaciones se cachean cinco minutos. Espera, o reinicia.
+
+### Dos jugadores se están farmeando con duelos
+
+Las comprobaciones antiboost solo corren al emparejar. Apaga **ranked** en los kits que ofrezcas para
+duelo, o **duel** en los clasificatorios.
+
+## Integración
+
+### `/linkpractice` siempre dice error de red
+
+Comprueba `web-api.enabled` y que `key` no esté en blanco: hacen falta las dos. Si la integración está
+encendida y aun así falla con todos los códigos, ten en cuenta que el plugin clasifica la respuesta de
+la API buscando palabras en español; una API que conteste en otro idioma degrada cualquier fallo a un
+error de red genérico.
+
+### Las partidas no llegan a la web
+
+Están encoladas en `practice_web_outbox` y se reintentan cada cinco segundos con espera creciente.
+Busca avisos `[WebApi]` en la consola. No se pierde nada mientras la web esté caída; una fila solo se
+descarta tras doce rechazos de plano.

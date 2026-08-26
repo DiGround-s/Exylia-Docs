@@ -1,0 +1,128 @@
+---
+title: "Scoreboards"
+description: "Diecinueve sidebars, cómo se elige el correcto, y los tokens que puede usar cada uno."
+---
+
+`scoreboards.yml` contiene **diecinueve** sidebars. Todos tienen la misma forma:
+
+```yaml
+lobby:
+  enabled: true
+  title:
+    - "{primary}&lPRACTICE"
+  lines:
+    - ""
+    - " {info}🌎 {letters}Online: {success}%server_online%"
+    - " {highlight}exylia.net"
+  update:
+    interval: 10
+    smart: true
+    cache: true
+```
+
+`title` es una lista: varias entradas se animan una tras otra. `update.interval` va en **ticks**.
+
+## Los diecinueve
+
+| Clave | Se muestra a |
+|---|---|
+| `lobby` | Un jugador en el lobby sin party |
+| `party` | Un jugador en el lobby que está en una party |
+| `queue` | Un jugador en cola |
+| `game` | Un 1v1 sin puntos ni objetivo de golpes |
+| `game-points` | Un 1v1 con `points-to-win` |
+| `game-hits` | Un 1v1 con `hits-to-win` |
+| `duel` | Un duelo de varias rondas |
+| `duel-points` | Un duelo de varias rondas con puntos |
+| `duel-hits` | Un duelo de varias rondas con objetivo de golpes |
+| `party-ffa` | Un todos contra todos de party |
+| `party-team` | Un party split o un party duel |
+| `spec-game` | Observando un 1v1 normal |
+| `spec-game-points` | Observando un 1v1 con puntos |
+| `spec-game-hits` | Observando un 1v1 con golpes |
+| `spec-duel` | Observando un duelo |
+| `spec-duel-points` | Observando un duelo con puntos |
+| `spec-duel-hits` | Observando un duelo con golpes |
+| `spec-party-ffa` | Observando un FFA de party |
+| `spec-party-team` | Observando una partida de equipos de party |
+
+El correcto se elige solo a partir del modo de partida, de si el kit tiene `points-to-win` y de si
+tiene `hits-to-win`; los puntos ganan el desempate cuando están los dos.
+
+Un jugador que haya apagado el scoreboard en `/settings` no ve ninguno.
+
+## Tokens por sidebar
+
+Además de estos, cualquier [placeholder](/docs/exyliapractice/placeholders) y los de cualquier otro
+plugin se resuelven dentro de una línea de sidebar.
+
+### Lobby y party
+
+| Token | Responde |
+|---|---|
+| `%queue%` | Jugadores en cola en todo el servidor |
+| `%fighting%` | Jugadores en partida en todo el servidor |
+| `%wins%`, `%kdr%`, `%win_rate%` | Los contadores globales del lector |
+| `%mmr%`, `%rank%`, `%rank_division%`, `%rank_name%`, `%rank_lp%`, `%rank_lp_max%`, `%rank_icon%` | Su rango global |
+| `%members%`, `%max%`, `%leader%` | Solo en party |
+
+### Cola
+
+Todo lo del lobby, más:
+
+| Token | Responde |
+|---|---|
+| `%kit%` | El primer kit en cola, con `+N` cuando hay más |
+| `%time%` | Cuánto lleva esperando |
+
+Aquí los tokens de rango son el rating de **ese primer kit**, no el global.
+
+### En partida
+
+| Token | Responde |
+|---|---|
+| `%kit%`, `%arena%` | Nombres |
+| `%time%` | Duración de la partida |
+| `%my_points%`, `%their_points%`, `%points_to_win%` | Puntos |
+| `%hits%`, `%opp_hits%`, `%hits_to_win%` | Golpes **recibidos** por cada lado |
+| `%round%`, `%total_rounds%`, `%my_wins%`, `%their_wins%` | Rondas de duelo |
+| `%my_ping%`, `%opp_ping%` | Latencia |
+| `%alive%`, `%total%` | Supervivientes en FFA |
+| `%team_a_alive%`, `%team_b_alive%` | Supervivientes por equipo |
+| `%opponent%`, `%opp_mmr%`, `%opp_rank%`, `%opp_rank_name%`, `%opp_rank_lp%`, `%opp_rank_lp_max%`, `%opp_rank_icon%` | El rival, solo en 1v1 |
+
+Los tokens de rango del propio lector en partida son su rating **del kit que se está jugando**.
+
+### Observando
+
+En vez de *my* y *their*, los sidebars de espectador usan `%player1_*%` y `%player2_*%`:
+`name`, `ping`, `points`, `hits`, `wins`, más el juego completo de tokens de rango de cada uno.
+
+## La action bar de partida
+
+Aparte del sidebar, y configurada en `game.match-actionbar` dentro de `config.yml`:
+
+```
+%opponent_health% | %hits_dealt%↑%my_combo% %hits_received%↓%combo_received%
+| %damage_dealt%⚔ / %damage_received%⚔ | %accuracy% / %opponent_accuracy%🎯
+| %my_ping%ms / %opponent_ping%ms
+```
+
+## Títulos y sonidos
+
+Los demás recursos visuales de la partida viven en `config.yml`, no aquí:
+
+| Clave | Cuándo |
+|---|---|
+| `game.countdown-title` | Cada segundo de la cuenta atrás previa, con `%time%` |
+| `game.fight-title` | El momento en que empieza la partida |
+| `game.you-won-title`, `game.you-lost-title`, `game.draw-title` | El resultado |
+| `duel.round-won-title`, `duel.round-lost-title`, `duel.round-draw-title` | Entre rondas, con `%my_wins%` y `%their_wins%` |
+| `queue.match-found-title`, `queue.match-found-actionbar` | Mientras se prepara la arena |
+| `queue.in-queue-actionbar` | Estando en cola, con `%kits%`, `%time%` y `%elo%` |
+| `queue.teaser-bossbar` | El anuncio rotatorio de cola |
+| `pvp-regions.combat-tag-bossbar` | Con marca de combate en una zona PvP, con `%time%` |
+| `season.progress-bossbar` | Durante una rotación de temporada, con `%phase%` y `%percent%` |
+
+Cada uno de esos bloques es una definición de efecto completa —título, action bar, boss bar, sonido,
+partícula y fuego artificial— así que cualquiera puede llevar más de lo que sugiere su nombre.

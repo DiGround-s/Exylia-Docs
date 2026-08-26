@@ -1,0 +1,207 @@
+---
+title: "Configuración"
+description: "Todas las claves de config.yml, con su valor por defecto y qué cambian."
+---
+
+`config.yml` es la versión 2 y lleva dieciocho secciones. Todas se generan en el primer arranque con
+los valores de abajo.
+
+Todos los valores de aquí se leen frescos en cada acceso, así que `/epc reload` basta para aplicar una
+edición, con la única excepción anotada en `duel` más abajo.
+
+## `arena`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `max-clones-per-arena` | `10` | Tope duro de copias simultáneas de una arena |
+| `clone-spacing` | `1500` | Bloques de espacio vacío entre clones |
+| `clone-paste-y` | `64` | La Y a la que se pega la región de copia de un clon |
+
+## `pvp-regions`
+
+| Clave | Qué hace |
+|---|---|
+| `combat-tag-bossbar` | La boss bar con marca de combate en una zona PvP. `%time%` son los segundos restantes. |
+
+## `season`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `progress-bossbar` | | La barra que se muestra durante una rotación, con `%phase%` y `%percent%` |
+| `restart-after-rotation` | `true` | Reiniciar el servidor al terminar una rotación |
+| `restart-delay-seconds` | `15` | La cuenta atrás antes de ese reinicio |
+
+## `game`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `countdown-seconds` | `5` | Duración de la cuenta atrás previa |
+| `countdown-title` | | Se muestra cada segundo, con `%time%` |
+| `fight-title` | | Se muestra al empezar la partida |
+| `you-won-title` / `you-lost-title` / `draw-title` | | Los tres resultados |
+| `match-actionbar` | | La lectura de combate en vivo |
+| `barrier-blocks-pearl` | `true` | Una perla que golpea un bloque barrera se detiene |
+| `countdown-tick-sound` | `BLOCK_NOTE_BLOCK_HAT\|1.0\|1.0` | |
+| `countdown-fight-sound` | `ENTITY_ENDER_DRAGON_GROWL\|0.5\|1.3` | |
+| `you-won-sound` | `UI_TOAST_CHALLENGE_COMPLETE\|1.0\|1.0` | |
+| `you-lost-sound` | `ENTITY_VILLAGER_DEATH\|1.0\|1.0` | |
+| `draw-sound` | `BLOCK_NOTE_BLOCK_PLING\|1.0\|0.5` | |
+
+## `queue`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `in-queue-actionbar` | | La barra que ve un jugador en cola: `%kits%`, `%time%`, `%elo%` |
+| `match-found-title` | | Se muestra al emparejar |
+| `match-found-actionbar` | | Se muestra mientras se prepara la arena, con `%spinner%` |
+| `no-clone-extra-delay` | `40` | Ticks añadidos cuando no hizo falta clonar, para que una partida instantánea no desconcierte |
+| `teaser-enabled` | `true` | El anuncio rotatorio de cola |
+| `teaser-rotation-seconds` | `5` | Cuánto se destaca a cada jugador en cola |
+| `teaser-max-kits-shown` | `3` | Kits listados antes de colapsar a `+N` |
+| `teaser-bossbar` | | Su aspecto, con `%player%` y `%kits%` |
+
+## `party`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `min-size` | `2` | Lo más bajo a lo que un líder puede poner el máximo |
+| `default-max-size` | `10` | El máximo para un líder sin nodo `max_slots` |
+| `max-size` | `100` | El techo absoluto, diga lo que diga el permiso |
+| `ffa-spawn-radius` | `7` | A qué distancia del spawn de FFA se reparten los jugadores |
+| `announce-cooldown-seconds` | `60` | Límite de frecuencia de `/party announce` |
+
+## `duel`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `request-expiry-seconds` | `30` | Cuánto sigue abierto un reto |
+| `round-end-delay-ticks` | `80` | La pausa entre rondas |
+| `round-won-title` / `round-lost-title` / `round-draw-title` | | Con `%my_wins%` y `%their_wins%` |
+
+<Callout type="note" title="request-expiry-seconds se lee una sola vez">
+La caducidad se fija en una caché al activarse el plugin. Es la única clave de este archivo que un
+`/epc reload` no puede recoger: cambiarla necesita reinicio.
+</Callout>
+
+## `leaderboard`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `max-entries` | `50` | Filas que guarda una clasificación. También el corte que `%stats_rank_position%` informa como `#51+`. |
+
+## `elo`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `starting-mmr` | `400` | Dónde empieza un jugador nuevo |
+| `matchmaking-base-radius` | `150` | Franja de búsqueda inicial |
+| `matchmaking-expand-rate` | `50` | Se suma por intervalo |
+| `matchmaking-expand-interval-seconds` | `15` | Cada cuánto se abre |
+| `matchmaking-max-radius` | `600` | Lo máximo que se abre |
+| `matchmaking-ignore-elo` | `false` | Emparejar a cualquiera con cualquiera |
+| `lp-max-per-game` | `25` | Tope del movimiento por partida |
+| `asymmetric-threshold-mmr` | `200` | Diferencia de rating a partir de la cual se reduce la pérdida |
+| `asymmetric-reduction-per-100-mmr` | `5` | LP que se devuelven por cada 100 MMR de diferencia |
+| `asymmetric-min-loss` | `5` | Cota de la pérdida reducida |
+| `placement-game-count` | `10` | Partidas clasificatorias antes de acabar la colocación |
+| `placement-k-multiplier` | `2.0` | Multiplicador de K durante la colocación |
+| `flat-elo-enabled` | `false` | Sustituir la fórmula por dos números fijos |
+| `flat-elo-win` | `25` | |
+| `flat-elo-loss` | `25` | |
+
+## `elo-security`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | El interruptor maestro |
+| `same-ip-protection` | `true` | Nunca emparejar a dos jugadores de una misma dirección |
+| `opponent-cooldown` | `true` | Nunca reemparejar a dos jugadores demasiado pronto |
+| `opponent-cooldown-seconds` | `300` | Cuánto es demasiado pronto |
+
+## `spectator`
+
+| Clave | Defecto |
+|---|---|
+| `toggle-hiding-material` | `GRAY_DYE` |
+| `toggle-hiding-name` | `{error}Spectators Hidden` |
+| `toggle-visible-material` | `LIME_DYE` |
+| `toggle-visible-name` | `{success}Spectators Visible` |
+
+## `join-quit`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `join-enabled` | `true` | Anunciar el mensaje de entrada del propio plugin |
+| `quit-enabled` | `true` | Lo mismo al salir |
+
+Los mensajes vainilla de entrada y salida se suprimen en cualquier caso.
+
+## `ui`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `status-enabled-material` | `LIME_DYE` | El icono de «activado» en todos los menús de interruptores |
+| `status-disabled-material` | `GRAY_DYE` | El de «desactivado» |
+
+## `jumpad`
+
+| Clave | Defecto |
+|---|---|
+| `launch-cooldown-ms` | `500` |
+| `only-lobby-area` | `true` |
+| `launch-sound` | `ENTITY_SLIME_JUMP\|1.0\|1.2` |
+
+## `lobby-visibility`
+
+Los valores por defecto para un jugador que nunca ha abierto `/settings`.
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `show-vip-default` | `true` | Ver a los jugadores con `exyliapractice.lobby.vip` |
+| `show-party-default` | `true` | Ver a tu propia party |
+| `show-others-default` | `false` | Ver a todos los demás |
+
+## `lobby`
+
+| Clave | Defecto |
+|---|---|
+| `double-jump-enabled` | `true` |
+| `double-jump-vertical-power` | `0.9` |
+| `double-jump-forward-power` | `0.6` |
+| `double-jump-cooldown-ms` | `500` |
+| `double-jump-sound` | `ENTITY_ENDER_DRAGON_FLAP\|0.6\|1.8` |
+| `effects` | `[SPEED\|2]` |
+
+## `command-whitelist`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | Restringe comandos en partida, en cola y en zona PvP |
+| `commands` | ver abajo | La lista permitida |
+
+```yaml
+commands: [msg, message, tell, w, whisper, reply, r, respond,
+           leave, lq, leavequeue, epc, exyliapracticecore, kitsave, leave]
+```
+
+## `web-api`
+
+| Clave | Defecto | Qué hace |
+|---|---|---|
+| `enabled` | `false` | Activa toda la integración |
+| `key` | `""` | Tu clave de servidor. En blanco la mantiene apagada aunque `enabled` esté en true. |
+| `sync-on-startup` | `true` | Sube rangos y kits poco después de arrancar |
+| `player-count-interval-seconds` | `300` | Cada cuánto se informa del número de conectados |
+
+Mira [la página de la web API](/docs/exyliapractice/web-api).
+
+## Migración desde ExyliaCommons
+
+Un `config.yml` sin `config-version` se trata como versión 1 —el diseño de ExyliaCommons— y se migra en
+el sitio. Cada bloque de título, action bar y boss bar se mueve a la sección anidada que espera la
+librería, las duraciones de título pasan de ticks a segundos, y el token obsoleto `%time_decimal%` se
+reescribe a `%time%`.
+
+Las seis secciones que ExyliaCommons registraba en este mismo archivo —`debug`, `formatters`, `text`,
+`tasks`, `chat-input`, `discord`— eran ajustes de la propia librería y se eliminan en la primera carga,
+informándose cada una una vez como `UNKNOWN_KEY`. Ahora viven en los archivos de ExyliaLib.

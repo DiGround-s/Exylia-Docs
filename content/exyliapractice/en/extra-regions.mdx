@@ -1,0 +1,62 @@
+---
+title: "Extra regions"
+description: "Optional boxes inside an arena that become a target, a home, or both — the basis of capture-style kits."
+---
+
+An arena can carry any number of **extra regions**: boxes selected the same way the playable region
+is, stored on the arena, cloned along with it. On their own they do nothing. They become meaningful
+once a kit assigns them a role.
+
+## Target and home
+
+At the start of every match, each player gets their own view of the arena's extra regions, worked out
+from where they spawn:
+
+| Role | How it is chosen | Requires |
+|---|---|---|
+| **Target** | The extra region **farthest** from that player's spawn | At least one extra region |
+| **Home** | The extra region **nearest** that player's spawn | At least two |
+
+With exactly one extra region, everybody shares it as their target and nobody has a home. With two,
+the players spawning at opposite ends get mirrored roles automatically — one player's target is the
+other player's home.
+
+## What each role does
+
+**Home** is a wall. Walking into your own home region teleports you straight back to your spawn. It
+exists so a player cannot camp their own objective.
+
+**Target** fires the `ENTER_FAR_AWAY_EXTRA_REGION` [special condition](/docs/exyliapractice/special-conditions).
+Whatever that condition is set to on the kit — add a point, lose a point, die — happens when the
+player steps into the far region.
+
+<Callout type="note" title="This is how a capture kit is built">
+Two extra regions, one at each end of the arena. Set `ENTER_FAR_AWAY_EXTRA_REGION` → `ADD_POINT` and
+`points-to-win` to 3. Reaching the enemy's end scores; your own end bounces you back to spawn. No
+extra plugin, no flags, no scripting.
+</Callout>
+
+## Setting them up
+
+`/epc` → **Manage Arenas** → an arena → **Extra Regions**. Adding one opens the selection wizard; the
+list screen removes them. They are stored with generated ids of the form
+`practice_arena_<id>_extra_<n>` and no name of their own.
+
+## Protecting them
+
+The arena's **extra region protection radius** stops blocks being placed or broken within that many
+blocks of every extra region's centre — the counterpart of spawn protection, for kits that allow
+building.
+
+## In clones
+
+Extra regions are offset and re-registered with every clone, under
+`practice_arena_<id>_clone_<n>_extra_<i>`. Roles are recomputed per match from each player's actual
+spawn in that instance, so a clone behaves identically to the original.
+
+<Callout type="warning" title="Order matters when you remove one">
+Ids carry the index they were added at. Removing a region from the middle of the list does not
+renumber the ones after it, and a region added later reuses an index that the removed one had. That
+is harmless for gameplay — roles are computed from distance, never from the id — but it means an id
+is not a stable name to build anything else on.
+</Callout>

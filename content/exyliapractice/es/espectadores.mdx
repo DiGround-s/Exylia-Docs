@@ -1,0 +1,60 @@
+---
+title: "Espectadores"
+description: "Ver una partida desde fuera, revivir en modo espectador dentro de una, y el ajuste que bloquea ambas cosas."
+---
+
+Aquí hay dos cosas distintas que se llaman «observar», y se comportan diferente.
+
+## Espectadores externos
+
+Alguien del lobby que decide ver una partida.
+
+| Comando | Qué hace |
+|---|---|
+| `/spectate`, `/spec` | Abre una lista de las partidas en curso |
+| `/spectate <jugador>` | Ver la partida en la que está ese jugador |
+
+Al espectador se le teletransporta al **spawn de espectador** de la arena, se le pone en el modo
+espectador de Minecraft, se le quitan objetos y efectos y se le da el sidebar de la partida. Un segundo
+después se abre un menú de espectador con los jugadores de la partida.
+
+Desde ese menú, o desde la hotbar:
+
+- **Teletransportarse** a cualquier jugador vivo de la partida.
+- **Alternar espectadores**: ocultar o mostrar a los demás espectadores, para que una partida
+  concurrida no sea un muro de nombres flotantes. Los dos estados usan los materiales y nombres de
+  `spectator.*` en `config.yml`.
+- **Salir**: de vuelta al lobby.
+
+El final de la partida también devuelve a todos los espectadores al lobby.
+
+<Callout type="note" title="Una arena sin spawn de espectador no se puede ver">
+El teletransporte es el primer paso, y falla sin destino. Fija **Spectator spawn** en cualquier arena
+que quieras que se pueda observar.
+</Callout>
+
+### A quién se puede ver
+
+Una partida rechaza espectadores si **cualquiera** de sus jugadores vivos tiene **spectators** apagado
+en `/settings`. Es el veto de un jugador sobre toda la partida, no un ocultarse individual.
+
+Solo se puede entrar en partidas en `ACTIVE` o `STARTING`. Una partida que termine entre que se abre el
+menú y se hace clic devuelve al espectador directamente al lobby.
+
+## Espectadores por reaparición
+
+El otro tipo: un jugador eliminado dentro de una partida con `revive-time` mayor que cero. Se le pone
+en modo espectador donde murió, espera la reaparición y se le teletransporta a su spawn con el kit
+aplicado de nuevo.
+
+Nunca sale de la partida, nunca cuenta como espectador externo y el menú de espectadores no puede
+teletransportarse a él.
+
+Entre rondas de un duelo pasa lo mismo durante el retardo de fin de ronda: el perdedor de la ronda
+observa hasta que la arena se regenera.
+
+## Visibilidad
+
+Los espectadores están ocultos para quienes pelean, y pueden ocultarse entre ellos con el interruptor.
+Los jugadores de una partida se ven solo entre sí: el aislamiento se aplica por partida, así que dos
+clones de una arena corriendo a la vez nunca se muestran los jugadores del otro.

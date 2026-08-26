@@ -1,0 +1,100 @@
+---
+title: "Clones y regeneración"
+description: "Cómo una arena construida se convierte en diez partidas simultáneas, y qué pasa con los bloques entre una y otra."
+---
+
+Un servidor de practice corre más partidas a la vez de las arenas que tiene construidas. La respuesta
+de este plugin es pegar copias de una arena en un mundo vacío y tratar cada una como una arena aparte.
+
+## Cuándo se hace un clon
+
+Solo bajo demanda, y solo como último recurso:
+
+<Steps>
+  <Step title="Probar todas las arenas compatibles">
+    La partida recorre en orden la lista de arenas compatibles del kit y toma la primera instancia
+    libre que encuentre: original o clon.
+  </Step>
+  <Step title="Barajar y clonar">
+    Si no hay nada libre, la lista se baraja y se clona la primera arena completamente configurada.
+    El barajado es lo que evita que un servidor lleno clone diez veces la misma arena.
+  </Step>
+  <Step title="Rendirse">
+    Si no se puede clonar ninguna —límite de clones alcanzado, sin esquemático, mundo de clones no
+    listo— se avisa a los jugadores de que no hay arenas disponibles y vuelven al lobby.
+  </Step>
+</Steps>
+
+## Dónde van
+
+Los clones se colocan a lo largo del eje X en el mundo de clones, a la altura de
+`arena.clone-paste-y` (64 por defecto). Cada uno se desplaza respecto al anterior el ancho de la
+región de copia más `arena.clone-spacing` (1500 bloques por defecto): suficiente para que una perla,
+un knockback o una flecha perdida de una partida no lleguen a otra.
+
+| Ajuste | Defecto | Qué hace |
+|---|---|---|
+| `arena.max-clones-per-arena` | `10` | El tope duro por arena. Cuenta los clones ya creados y vivos. |
+| `arena.clone-spacing` | `1500` | Bloques de espacio vacío entre un clon y el siguiente |
+| `arena.clone-paste-y` | `64` | La Y a la que se pega la esquina de la región de copia |
+
+<Callout type="note" title="Los clones no se destruyen nunca">
+Un clon se queda pegado durante toda la vida del servidor y se reutiliza para la siguiente partida que
+lo necesite. Lo que se reinicia entre partidas son los bloques, no el pegado. Diez clones de una arena
+significan diez copias en el mundo de clones hasta el reinicio, y el mundo entero se borra al apagar de
+todas formas.
+</Callout>
+
+## Qué se reubica
+
+Pegar los bloques es la mitad fácil. Todo lo que la arena sabe de sí misma tiene que moverse con ella:
+
+- **Spawn 1, spawn 2, spawn de espectador, spawn de party FFA**: desplazados desde la esquina mínima
+  de la región de copia, conservando su orientación exacta.
+- **La región jugable**: desplazada y registrada de nuevo con el id
+  `practice_arena_<id>_clone_<n>_playable`.
+- **Cada región extra**: desplazada y registrada como
+  `practice_arena_<id>_clone_<n>_extra_<i>`.
+
+## Regeneración
+
+Cuando termina una partida, la instancia se libera. Lo que pasa con los bloques depende del kit:
+
+| Reglas del kit | Qué ocurre |
+|---|---|
+| `build` o `block-break` activados | La región jugable se restaura desde `practice_arena_<id>_playable` y luego se descargan los chunks |
+| Ninguno de los dos | Ningún trabajo de bloques: solo limpieza de entidades y descarga de chunks |
+
+Los objetos tirados, las flechas, la TNT y cualquier otra entidad que no sea un jugador dentro de la
+región jugable se eliminan en ambos casos.
+
+<Callout type="note" title="La regeneración no mueve a los jugadores que estén dentro">
+Se le indica explícitamente que no reubique a jugadores atrapados. Quien siga ahí pertenece a la
+partida que acaba de terminar, y esa partida decide dónde acaba, cosa que hace un tick después
+mandándolo al lobby.
+</Callout>
+
+### Regeneración a mitad de partida
+
+Un kit con **regenerate after point** restaura la arena *sin* liberarla, entre un punto y el siguiente.
+La instancia pasa de `IN_USE` a `REGENERATING` y vuelve a `IN_USE`, y la cuenta atrás del reinicio de
+punto empieza cuando los bloques ya están de vuelta.
+
+## Precargar clones
+
+`/epc` → **Manage Arenas** → una arena → **Clones** muestra cada instancia y ofrece crear más a la
+fuerza. Úsalo antes de un evento para que las diez primeras partidas no paguen cada una su pegado.
+
+Esa misma pantalla te teletransporta a cualquier instancia, que es la única forma de ver un clon.
+
+## Cuando la clonación está apagada
+
+Si el módulo de esquemáticos se declara no soportado —sin FastAsyncWorldEdit— la consola lo dice una
+vez al arrancar:
+
+```
+Arena regeneration is off: <motivo>
+```
+
+A partir de ahí cada arena tiene exactamente una instancia, las partidas hacen cola una detrás de otra
+y los bloques no se restauran nunca.

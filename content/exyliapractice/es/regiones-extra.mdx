@@ -1,0 +1,63 @@
+---
+title: "Regiones extra"
+description: "Cajas opcionales dentro de una arena que se convierten en objetivo, en base, o en ambas: la base de los kits tipo captura."
+---
+
+Una arena puede llevar cualquier número de **regiones extra**: cajas seleccionadas igual que la región
+jugable, guardadas en la arena y clonadas con ella. Por sí solas no hacen nada. Cobran sentido cuando
+un kit les asigna un papel.
+
+## Objetivo y base
+
+Al empezar cada partida, cada jugador recibe su propia lectura de las regiones extra de la arena,
+calculada desde dónde aparece:
+
+| Papel | Cómo se elige | Requiere |
+|---|---|---|
+| **Objetivo** | La región extra **más lejana** al spawn de ese jugador | Al menos una región extra |
+| **Base** | La región extra **más cercana** a su spawn | Al menos dos |
+
+Con exactamente una región extra, todos la comparten como objetivo y nadie tiene base. Con dos, los
+jugadores que aparecen en extremos opuestos reciben papeles espejo automáticamente: el objetivo de uno
+es la base del otro.
+
+## Qué hace cada papel
+
+**Base** es un muro. Entrar en tu propia región base te teletransporta de vuelta a tu spawn. Existe
+para que un jugador no pueda campear su propio objetivo.
+
+**Objetivo** dispara la condición especial `ENTER_FAR_AWAY_EXTRA_REGION`
+([condiciones especiales](/docs/exyliapractice/condiciones-especiales)). Lo que esa condición tenga
+configurado en el kit —sumar punto, restar punto, morir— ocurre cuando el jugador pisa la región
+lejana.
+
+<Callout type="note" title="Así se construye un kit de captura">
+Dos regiones extra, una en cada extremo de la arena. Pon `ENTER_FAR_AWAY_EXTRA_REGION` → `ADD_POINT` y
+`points-to-win` a 3. Llegar al extremo enemigo puntúa; tu propio extremo te devuelve al spawn. Sin
+plugin extra, sin banderas, sin scripts.
+</Callout>
+
+## Configurarlas
+
+`/epc` → **Manage Arenas** → una arena → **Extra Regions**. Añadir una abre el asistente de selección;
+la pantalla de lista las elimina. Se guardan con ids generados con la forma
+`practice_arena_<id>_extra_<n>` y sin nombre propio.
+
+## Protegerlas
+
+El **radio de protección de regiones extra** de la arena impide poner o romper bloques a esa distancia
+del centro de cada región extra: el equivalente a la protección de spawn, para kits que permiten
+construir.
+
+## En los clones
+
+Las regiones extra se desplazan y se registran de nuevo con cada clon, como
+`practice_arena_<id>_clone_<n>_extra_<i>`. Los papeles se recalculan en cada partida desde el spawn
+real de cada jugador en esa instancia, así que un clon se comporta igual que el original.
+
+<Callout type="warning" title="El orden importa al quitar una">
+Los ids llevan el índice con el que se añadieron. Quitar una región de en medio no renumera las
+siguientes, y una región añadida después reutiliza un índice que tuvo la eliminada. Para el juego es
+inofensivo —los papeles se calculan por distancia, nunca por el id— pero significa que un id no es un
+nombre estable sobre el que construir otra cosa.
+</Callout>

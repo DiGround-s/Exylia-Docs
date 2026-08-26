@@ -1,0 +1,101 @@
+---
+title: "Queue and matchmaking"
+description: "How a player queues for several kits at once, and exactly how two of them get paired."
+---
+
+## Queueing
+
+`/queue` (or `/q`, or the lobby hotbar item) opens the category list, then the kits in it. Clicking a
+kit joins its queue; clicking it again leaves that one queue.
+
+A player can be in **many kit queues at once**. They stay in the lobby, free to walk around, with an
+action bar showing the kits, the elapsed time and the rating band being searched:
+
+```
+In queue - Sumo, NoDebuff, Boxing +2 - ⌚ 01:23 | Copper II ~ Titanium IV | /leavequeue
+```
+
+More than three kits collapse to `first, second, third +N`.
+
+| Command | What it does |
+|---|---|
+| `/queue`, `/q` | Open the queue menu |
+| `/quickqueue`, `/qq` | Join a random kit that already has somebody waiting; if nobody is waiting, any enabled kit |
+| `/requeue`, `/rq` | Rejoin every kit you were queued for when your last match started |
+| `/leavequeue`, `/lq` | Leave every queue |
+
+## How a match is found
+
+The queue ticks once a second. For each kit with two or more players waiting:
+
+<Steps>
+  <Step title="Sort by rating">
+    Everybody waiting for that kit is sorted by their MMR on it.
+  </Step>
+  <Step title="Walk adjacent pairs">
+    Only neighbours in that sorted list are considered — the closest possible ratings first.
+  </Step>
+  <Step title="Check the radius">
+    The pair matches if their rating difference is within the **wider** of their two search radii.
+  </Step>
+  <Step title="Check anti-boosting">
+    Same IP, or having played each other too recently, refuses the pair. See
+    [ELO](/docs/exyliapractice/elo#anti-boosting).
+  </Step>
+  <Step title="Take them">
+    The pair is removed from **every** queue they were in, both are claimed, and the match starts.
+    Their queue list is snapshotted first so `/requeue` can rebuild it.
+  </Step>
+</Steps>
+
+### The search radius
+
+It starts at `elo.matchmaking-base-radius` and widens by `elo.matchmaking-expand-rate` every
+`elo.matchmaking-expand-interval-seconds`, up to `elo.matchmaking-max-radius`.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `matchmaking-base-radius` | `150` | MMR either side, at the moment of queueing |
+| `matchmaking-expand-rate` | `50` | Added per interval |
+| `matchmaking-expand-interval-seconds` | `15` | How often it widens |
+| `matchmaking-max-radius` | `600` | The ceiling |
+| `matchmaking-ignore-elo` | `false` | When true, any two players match and the action bar reads *any rank* |
+
+With the defaults a player starts searching ±150 and reaches the ±600 ceiling after 2m15s.
+
+<Callout type="note" title="The band shown is the first kit you queued for">
+The action bar renders one rating band, taken from the kit you joined first. A player queued for a kit
+they are Copper on and another they are Nova on sees the Copper band; the matchmaking itself still
+uses the correct per-kit rating for each queue.
+</Callout>
+
+## Requirements to join
+
+`/queue` refuses when any of these is true:
+
+- The player is not free — in a match, editing a kit, spectating, or claimed by another plugin.
+- Their stats have not finished loading from the database.
+- The queue is locked, which happens during a [season rotation](/docs/exyliapractice/seasons).
+- No lobby spawn is set.
+- The kit is disabled, or has **queue** turned off.
+
+## The teaser bar
+
+When somebody is waiting, everyone else in the lobby sees a boss bar naming them and the kits they are
+waiting on, with each kit's rank icon. It rotates through the queued players one at a time.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `queue.teaser-enabled` | `true` | Turns the whole thing off |
+| `queue.teaser-rotation-seconds` | `5` | How long each player is featured |
+| `queue.teaser-max-kits-shown` | `3` | Kits listed before it collapses to `+N` with the global rank |
+
+The bar is only shown to players who could actually act on it: available, queued, editing a kit, or in
+a PvP zone. Nobody in a match is offered a queue they cannot join.
+
+## The wait between finding and fighting
+
+Once a pair is found both players get a **match found** title and a loading action bar. If an arena
+had to be cloned, that is where the paste happens. If a **free arena already existed**, the plugin
+still waits `queue.no-clone-extra-delay` ticks — 40 by default, two seconds — so that a match found
+instantly does not feel like a teleport glitch.

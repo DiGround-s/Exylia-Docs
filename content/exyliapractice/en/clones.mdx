@@ -1,0 +1,99 @@
+---
+title: "Clones and regeneration"
+description: "How one built arena becomes ten simultaneous matches, and what happens to the blocks between them."
+---
+
+A practice server runs more matches at once than it has arenas built. This plugin's answer is to paste
+copies of an arena into a void world and treat each one as a separate arena.
+
+## When a clone is made
+
+Only on demand, and only as a last resort:
+
+<Steps>
+  <Step title="Try every compatible arena">
+    The match walks the kit's compatible-arena list in order and takes the first free instance it
+    finds — original or clone.
+  </Step>
+  <Step title="Shuffle and clone">
+    If nothing is free, the list is shuffled and the first fully-configured arena in it is cloned.
+    The shuffle is what keeps a busy server from cloning the same arena ten times.
+  </Step>
+  <Step title="Give up">
+    If no arena can be cloned — clone limit hit, no schematic, clone world not ready — the players
+    are told there are no arenas available and put back in the lobby.
+  </Step>
+</Steps>
+
+## Where they go
+
+Clones are laid out along the X axis in the clone world, at the Y from
+`arena.clone-paste-y` (64 by default). Each one is offset from the last by the copy region's width
+plus `arena.clone-spacing` (1500 blocks by default) — far enough apart that an ender pearl, a knockback
+or a stray arrow from one match cannot reach another.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `arena.max-clones-per-arena` | `10` | The hard ceiling per arena. Includes clones already made and still alive. |
+| `arena.clone-spacing` | `1500` | Blocks of empty space between one clone and the next |
+| `arena.clone-paste-y` | `64` | The Y the copy region's corner is pasted at |
+
+<Callout type="note" title="Clones are never destroyed">
+A clone stays pasted for the life of the server and is reused for the next match that needs it. What
+resets between matches is the blocks, not the paste. Ten clones of one arena means the clone world
+holds ten copies until restart — and the whole world is deleted on shutdown anyway.
+</Callout>
+
+## What gets relocated
+
+Pasting the blocks is the easy half. Everything the arena knows about itself has to move with it:
+
+- **Spawn 1, spawn 2, spectator spawn, party FFA spawn** — offset from the copy region's minimum
+  corner, keeping their exact facing.
+- **The playable region** — offset and re-registered under the id
+  `practice_arena_<id>_clone_<n>_playable`.
+- **Every extra region** — offset and re-registered as
+  `practice_arena_<id>_clone_<n>_extra_<i>`.
+
+## Regeneration
+
+When a match ends, the arena instance is released. What happens to the blocks depends on the kit:
+
+| Kit rules | What happens |
+|---|---|
+| `build` or `block-break` enabled | The playable region is restored from `practice_arena_<id>_playable`, then the chunks are unloaded |
+| Neither enabled | No block work at all — just entity cleanup and a chunk unload |
+
+Dropped items, arrows, TNT and every other non-player entity inside the playable region are removed
+either way.
+
+<Callout type="note" title="Players inside are not moved by the regeneration">
+The regeneration is told explicitly not to relocate trapped players. Whoever is still in there
+belongs to the match that just ended, and that match decides where they go — which it does a tick
+later, by sending them to the lobby.
+</Callout>
+
+### Mid-match regeneration
+
+A kit with **regenerate after point** restores the arena *without* freeing it, between one point and
+the next. The instance goes `IN_USE` → `REGENERATING` → `IN_USE`, and the point-reset countdown
+starts once the blocks are back.
+
+## Preloading clones
+
+`/epc` → **Manage Arenas** → an arena → **Clones** shows every instance and offers to force-create
+more. Use it before an event so the first ten matches do not each pay for a paste.
+
+The same screen teleports you to any instance, which is the only way to look at a clone.
+
+## When cloning is off
+
+If the schematic module reports itself unsupported — no FastAsyncWorldEdit — the console says so once
+at startup:
+
+```
+Arena regeneration is off: <reason>
+```
+
+From then on, every arena has exactly one instance, matches queue behind each other, and blocks are
+never restored.
