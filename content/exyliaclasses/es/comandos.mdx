@@ -1,0 +1,53 @@
+---
+title: "Comandos"
+description: "Un comando, tres nombres, y exactamente qué cubre la recarga."
+---
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/classes reload` | `exyliaclasses.admin.reload` | Vuelve a leer la configuración y todos los archivos de clase. |
+
+`/eclasses` y `/exyliaclasses` son alias de `/classes`.
+
+<Callout type="note" title="No hay nada que escriban los jugadores">
+En las clases se entra vistiendo armadura y se usan con clic derecho sobre objetos. Ningún comando abre
+un menú, da una clase ni muestra una lista — no hay menú ni comando de jugador alguno.
+</Callout>
+
+## Qué cubre la recarga
+
+`/classes reload` ejecuta cinco pasos en orden:
+
+<Steps>
+  <Step title="Archivos de configuración">
+    `config.yml` y `messages.yml` se releen de disco.
+  </Step>
+  <Step title="El prefijo de los mensajes">
+    Se vuelve a aplicar desde `messages.yml`, para que `%prefix%` en el texto de otros plugins de Exylia
+    coincida.
+  </Step>
+  <Step title="El flag de debug">
+    Se recoge de `config.yml` sin reiniciar.
+  </Step>
+  <Step title="Las definiciones de clase">
+    Se vuelve a cargar cada `.yml` de `classes/`. Aparecen los archivos nuevos, desaparecen los
+    borrados, y las seis por defecto que falten se vuelven a escribir.
+  </Step>
+  <Step title="Los jugadores conectados">
+    A todos los conectados se les quita la clase y se les vuelve a asignar contra las nuevas
+    definiciones. A quien su armadura le siga encajando se le vuelve a lanzar el warmup de esa clase.
+  </Step>
+</Steps>
+
+Cada paso informa de su éxito o fallo por separado, así que un archivo de clase roto se identifica solo
+en vez de tumbar la recarga entera.
+
+<Callout type="warning" title="Recargar interrumpe a todo el mundo">
+El paso cinco quita la clase antes de volver a asignarla, lo que limpia energía, marcas y cooldowns de
+habilidades de cada jugador conectado, y arranca un warmup nuevo para quien la armadura le siga
+encajando. Recarga entre peleas, no durante una.
+</Callout>
+
+No recarga ExyliaLib — para eso está `/exylialib reload`.

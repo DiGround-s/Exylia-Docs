@@ -1,0 +1,138 @@
+---
+title: "Primeros pasos"
+description: "Escribir una séptima clase desde un archivo vacío, pieza a pieza."
+---
+
+Las seis que vienen son ejemplos, no una lista cerrada. Esta página construye una séptima desde cero
+para presentar cada pieza donde se usa.
+
+## 1. El archivo
+
+Crea `plugins/ExyliaClasses/classes/Medic.yml`. El nombre del archivo es el id: esta clase es `medic`.
+
+```yaml title="classes/Medic.yml"
+display-name: "<#63ff8a><bold>MEDIC</bold>"
+permission: "NONE"
+
+equipment:
+  helmet: DIAMOND_HELMET
+  chestplate: DIAMOND_CHESTPLATE
+  leggings: DIAMOND_LEGGINGS
+  boots: DIAMOND_BOOTS
+```
+
+`/classes reload`, ponte un set completo de diamante, y tras el warmup por defecto de cinco segundos
+el jugador es Medic. `permission: "NONE"` significa que puede usarla cualquiera.
+
+<Callout type="warning" title="Dos clases no deben compartir armadura">
+Al jugador se le compara contra cada clase hasta que una encaja, y el orden de esa comprobación no
+está definido. Si dos clases piden diamante completo, cuál te toca es una moneda al aire.
+</Callout>
+
+## 2. Pasivas
+
+Efectos mantenidos mientras la armadura esté puesta. La notación es `NOMBRE|NIVEL`, y el nivel se
+escribe como lo lee un jugador — `REGENERATION|2` es Regeneración II.
+
+```yaml
+passive-effects:
+  - REGENERATION|1
+  - SPEED|1
+```
+
+## 3. Un warmup con feedback
+
+Sin bloque `warmup` la clase sigue tardando cinco segundos; con uno tienes sonidos y partículas en
+cada uno de los tres momentos.
+
+```yaml
+warmup:
+  time: 4
+  sound:
+    enabled: true
+    type: "BLOCK_NOTE_BLOCK_PLING|1|1"
+  particle:
+    enabled: true
+    type: "HEART|10|0.5|0.5|0.5|0.1"
+  sound-completed:
+    enabled: true
+    type: "ENTITY_PLAYER_LEVELUP|1|1"
+```
+
+## 4. Energía
+
+Opcional. Añádela y las habilidades pueden costar algo; déjala fuera y solo las limita el cooldown.
+
+```yaml
+energy:
+  enabled: true
+  name: "Mana"
+  symbol: "❤"
+  color: "<#63ff8a>"
+  max: 100
+  regen-per-tick: 0.1
+```
+
+`0.1` por tick son 2 por segundo, así que la barra completa tarda cincuenta segundos. La barra en sí
+se dibuja desde `config.yml`, no desde aquí.
+
+## 5. Una habilidad
+
+Se lanza con clic derecho sobre el objeto. El objeto se consume, así que la habilidad es también un
+suministro que el jugador tiene que llevar encima.
+
+```yaml
+abilities:
+  GOLDEN_APPLE:
+    display-name: "<#63ff8a><bold>FIELD HEAL"
+    type: TO_CLAN
+    radius: 15
+    effects:
+      - REGENERATION|3|6
+      - ABSORPTION|1|20
+    cooldown: 20
+    energy-cost: 40
+    particles:
+      enabled: true
+      type: "HEART|30|1|1|1|0.5"
+    sound:
+      enabled: true
+      type: "ENTITY_PLAYER_LEVELUP|1|1.4"
+```
+
+`REGENERATION|3|6` es Regeneración III durante seis segundos. `TO_CLAN` alcanza al lanzador más cada
+miembro del clan conectado dentro de quince bloques y en el mismo mundo.
+
+## 6. Un efecto al sostener
+
+La misma idea sin coste: mientras el objeto esté en la mano principal, los efectos se mantienen.
+
+```yaml
+hold-effects:
+  GOLDEN_APPLE:
+    type: TO_CLAN
+    radius: 15
+    effects:
+      - REGENERATION|1|5
+```
+
+Dale al efecto una duración cómodamente mayor que el refresco de medio segundo — cinco segundos es lo
+que usa el Bard — para que no parpadee.
+
+## 7. Recarga y comprueba
+
+```text
+/classes reload
+```
+
+La recarga vuelve a leerlo todo y reevalúa a cada jugador conectado, así que quien ya llevara diamante
+se convierte en Medic sin reconectar.
+
+<Cards>
+  <Card title="Archivos de clase" href="/docs/exyliaclasses/clases">
+    Todas las claves del archivo, y la notación usada arriba.
+  </Card>
+  <Card title="Habilidades" href="/docs/exyliaclasses/habilidades">
+    Objetivos, cooldowns y efectos al sostener al completo.
+  </Card>
+</Cards>

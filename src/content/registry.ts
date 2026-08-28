@@ -325,6 +325,38 @@ const CLANS_NAV: NavGroup[] = [
   },
 ];
 
+const CLASSES_NAV: NavGroup[] = [
+  {
+    label: { en: "Getting started", es: "Empezar" },
+    pages: [
+      page("introduction", "introduction", "introduccion"),
+      page("installation", "installation", "instalacion"),
+      page("first-steps", "first-steps", "primeros-pasos"),
+    ],
+  },
+  {
+    label: { en: "Configuring", es: "Configurar" },
+    pages: [
+      page("classes", "classes", "clases"),
+      page("abilities", "abilities", "habilidades"),
+      page("passives", "passives", "pasivas"),
+      page("weapons", "weapons", "armas"),
+      page("energy", "energy", "energia"),
+    ],
+  },
+  {
+    label: { en: "Reference", es: "Referencia" },
+    pages: [
+      page("commands", "commands", "comandos"),
+      page("permissions", "permissions", "permisos"),
+      page("placeholders", "placeholders", "placeholders"),
+      page("configuration", "configuration", "configuracion"),
+      page("api", "api", "api"),
+      page("faq", "faq", "faq"),
+    ],
+  },
+];
+
 const PRACTICE_NAV: NavGroup[] = [
   {
     label: { en: "Getting started", es: "Empezar" },
@@ -601,6 +633,30 @@ export const plugins: Plugin[] = [
     nav: CLANS_NAV,
     links: [
       { label: "SpigotMC", href: "https://link.exylia.net/@services" },
+      { label: "Discord", href: "https://discord.exylia.net" },
+    ],
+  },
+  {
+    id: "exyliaclasses",
+    name: "ExyliaClasses",
+    tagline: { en: "HCF classes worn, not chosen", es: "Clases HCF que se visten, no se eligen" },
+    summary: {
+      en: "Six editable classes entered by wearing an armour set: passive effects, conditional passives, right-click abilities, hold effects, an energy resource, and arrow marks or backstabs \u2014 all of it written in YAML files you can add to.",
+      es: "Seis clases editables en las que se entra vistiendo una armadura: efectos pasivos, pasivas condicionales, habilidades de clic derecho, efectos al sostener, un recurso de energ\u00eda y marcas de flecha o apu\u00f1alamientos, todo escrito en archivos YAML a los que puedes a\u00f1adir m\u00e1s.",
+    },
+    version: "1.0.0",
+    status: "stable",
+    category: { en: "Gamemode", es: "Modo de juego" },
+    minecraft: "1.21+",
+    tags: [
+      { en: "Classes", es: "Clases" },
+      { en: "HCF", es: "HCF" },
+      { en: "Abilities", es: "Habilidades" },
+      { en: "Folia", es: "Folia" },
+    ],
+    nav: CLASSES_NAV,
+    links: [
+      { label: "BuiltByBit", href: "https://link.exylia.net/@services" },
       { label: "Discord", href: "https://discord.exylia.net" },
     ],
   },

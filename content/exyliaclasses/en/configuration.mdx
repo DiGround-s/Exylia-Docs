@@ -1,0 +1,117 @@
+---
+title: "Configuration"
+description: "config.yml and messages.yml in full, with every placeholder each message accepts."
+---
+
+## config.yml
+
+```yaml title="config.yml"
+debug: false
+
+energy-bar:
+  enabled: true
+  text: "%energy_color%%symbol% %energy% / %max%"
+  colour: "YELLOW"
+  overlay: "NOTCHED_20"
+
+mark-bar:
+  enabled: true
+  text: "%mark_color%%mark_icon% +%extra_damage%% {muted}(%time%)"
+  colour: "RED"
+  overlay: "PROGRESS"
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `debug` | `false` | Prints integration status and load detail to the console. |
+| `energy-bar` | see above | The energy boss bar. |
+| `mark-bar` | see above | The mark boss bar. |
+
+Both bars take the same four keys, and the values available inside each `text` are listed in
+[Energy](/docs/exyliaclasses/energy).
+
+## messages.yml
+
+Every message accepts Exylia palette tokens (`{primary}`, `{success}`, `{error}`, `{muted}`,
+`{highlight}`, `{warning}`), colour tags, legacy `&` codes and placeholders. A message prefixed with
+`[sound:NAME|VOLUME|PITCH]` plays that sound as it is sent.
+
+```yaml title="messages.yml"
+prefix: "{primary}&lEXYLIA CLASSES &8•&r"
+no-permission: "[sound:ENTITY_VILLAGER_NO|1.0|1.0]{primary}&lEXYLIA CLASSES &8•&r {error}You don't have permission to use the class {highlight}%class%{error}."
+
+warmup:
+  timer: "..."
+  ready: "..."
+  canceled: "..."
+
+class-section:
+  removed: "..."
+
+abilities:
+  cooldown: "..."
+  used: "..."
+  clan: "..."
+  enemy: "..."
+  no-energy: "..."
+
+weapons:
+  mark:
+    applied: "..."
+    received: "..."
+    expired: "..."
+    same-class: "..."
+  backstab:
+    success: "..."
+    victim: "..."
+    no-cooldown: "..."
+    cant-dead: "..."
+
+command:
+  reload: "..."
+  no-permission: "..."
+```
+
+### Every message and its own placeholders
+
+| Message | Sent to | Accepts |
+|---|---|---|
+| `prefix` | — | The value of `%prefix%` for this plugin's text. |
+| `no-permission` | The player, on wearing a gated class's armour | `%class%` |
+| `warmup.timer` | The player, once a second during the warmup | `%class%`, `%time%` |
+| `warmup.ready` | The player, when the class activates | `%class%` |
+| `warmup.canceled` | The player, when the warmup is interrupted | — |
+| `class-section.removed` | The player, when the class ends | `%class%` |
+| `abilities.cooldown` | The caster | `%ability%`, `%time%` |
+| `abilities.used` | The caster, on success | `%ability%` |
+| `abilities.clan` | Each clan target other than the caster | `%player%`, `%ability%` |
+| `abilities.enemy` | Each enemy target | `%player%`, `%ability%` |
+| `abilities.no-energy` | The caster | `%needed%`, `%current%` |
+| `weapons.mark.applied` | The shooter | `%target%`, `%damage%` |
+| `weapons.mark.received` | The marked player | `%attacker%`, `%damage%` |
+| `weapons.mark.expired` | The marked player, when the bar empties | — |
+| `weapons.mark.same-class` | The shooter | — |
+| `weapons.backstab.success` | The attacker | — |
+| `weapons.backstab.victim` | The target | `%attacker%` |
+| `weapons.backstab.no-cooldown` | The attacker | `%current%`, `%needed%` — both percentages |
+| `weapons.backstab.cant-dead` | The attacker | — |
+| `command.reload` | Whoever ran the command | — |
+| `command.no-permission` | Whoever ran the command | — |
+
+Any [placeholder](/docs/exyliaclasses/placeholders) works in any of them as well, resolved for whoever
+receives the message.
+
+<Callout type="note" title="%class% and %ability% carry their own colours">
+They are inserted as formatted text, not as literals, so the `<#c8c8c8><bold>ARCHER</bold>` written in
+the class file renders as colour rather than printing the tags.
+</Callout>
+
+<Callout type="tip" title="The sound prefix is part of the message">
+`[sound:ENTITY_VILLAGER_NO|1.0|1.0]` at the front of a line plays that sound and is stripped from what
+the player reads. Remove it and the message goes out silently.
+</Callout>
+
+## What the files do not control
+
+Classes themselves are not in `config.yml`. Armour, abilities, weapons, passives and energy all live
+in the [class files](/docs/exyliaclasses/classes).

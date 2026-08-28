@@ -1,0 +1,53 @@
+---
+title: "Permisos"
+description: "El único nodo que registra el plugin, y los nodos por clase que te inventas tú."
+---
+
+## El nodo propio del plugin
+
+| Permiso | Da acceso a |
+|---|---|
+| `exyliaclasses.admin.reload` | `/classes reload`. |
+
+Esa es la lista fija entera. No hay nodo para entrar en una clase en general, ni para usar una
+habilidad, ni para un arma.
+
+## Nodos por clase
+
+Una clase se limita a sí misma con la clave `permission` de su propio archivo, y el nodo es lo que tú
+escribas ahí:
+
+```yaml title="classes/Rogue.yml"
+permission: "exyliaclasses.class.rogue"
+```
+
+| Valor | Significado |
+|---|---|
+| `"NONE"` | Cualquiera puede usar la clase. Es lo que traen los seis archivos. |
+| Vacío, o la clave ausente | Lo mismo que `NONE`. |
+| Cualquier otra cosa | Un nodo de permiso que el jugador tiene que tener. |
+
+Un jugador que lleve la armadura sin el nodo recibe el mensaje `no-permission` y ningún warmup.
+Simplemente no está en ninguna clase — no se prueba otra clase en su lugar.
+
+### Vender clases
+
+Nada registra estos nodos, así que elige un esquema y mantente en él:
+
+```text
+/lp group default permission set exyliaclasses.class.archer true
+/lp group default permission set exyliaclasses.class.miner true
+/lp group vip permission set exyliaclasses.class.bard true
+/lp group vip permission set exyliaclasses.class.rogue true
+/lp group mvp permission set exyliaclasses.class.sorcerer true
+```
+
+<Callout type="tip" title="Los comodines funcionan porque el esquema lo eliges tú">
+`exyliaclasses.class.*` solo cubre todo si cada archivo de clase usa ese prefijo. El plugin no lo
+impone — un archivo que diga `permission: "ranks.premium"` se comprueba exactamente así.
+</Callout>
+
+<Callout type="warning" title="Una clase bloqueada sigue siendo una armadura muerta">
+Un jugador sin el nodo no puede entrar en la clase, y tampoco en ninguna otra con esa armadura. Si dos
+clases pudieran compartir un set, dale otro a la gratuita.
+</Callout>

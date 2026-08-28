@@ -1,0 +1,98 @@
+---
+title: "Energía"
+description: "El recurso opcional que gastan las habilidades, a qué velocidad vuelve, y las dos barras."
+---
+
+La energía es por clase y opcional. Sin ella, a las habilidades solo las limita el cooldown.
+
+```yaml
+energy:
+  enabled: true
+  name: "Energy"
+  symbol: "⚡"
+  color: "<#ffd82b>"
+  max: 100
+  regen-per-tick: 0.08
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `false` | Ausente o `false` significa que la clase no tiene energía en absoluto. |
+| `name` | `Energy` | Se lee del archivo, pero hoy el plugin no lo imprime en ninguna parte. |
+| `symbol` | `⚡` | Se escribe en la barra como `%symbol%`, y en `%classes_energy_symbol%`. |
+| `color` | `#ffffff` | Se escribe en la barra como `%energy_color%`. Cualquier etiqueta de color que acepte el módulo de texto. |
+| `max` | `100` | El tope. |
+| `regen-per-tick` | `0.1` | Se suma cada tick, así que multiplica por 20 para tenerlo por segundo. |
+
+## Cómo se comporta
+
+La energía empieza en **cero** cuando la clase se activa — quien se cambia a Bard no puede lanzar de
+inmediato. A partir de ahí sube `regen-per-tick` cada tick hasta llegar a `max`.
+
+| `regen-per-tick` | Por segundo | De cero a 100 |
+|---|---|---|
+| `0.05` | 1 | 100 s |
+| `0.08` | 1,6 | 62,5 s |
+| `0.1` | 2 | 50 s |
+| `0.25` | 5 | 20 s |
+
+El `energy-cost` de una habilidad se comprueba antes de que corran sus efectos. Si no llega, se avisa
+al jugador, el cooldown no arranca y el objeto no se consume.
+
+<Callout type="note" title="Una habilidad con coste en una clase sin energía">
+La clase no tiene energía, así que la energía del jugador es cero, así que cualquier `energy-cost`
+mayor que cero no se puede pagar nunca. O le das a la clase un bloque `energy`, o dejas el coste en
+`0`.
+</Callout>
+
+La energía se pone a cero y su barra se retira cuando la clase termina, al morir y al salir.
+
+## Las barras
+
+Las dos barras viven en `config.yml`, no en el archivo de clase — son la presentación que el plugin
+hace de la energía y de las marcas, compartida por todas las clases.
+
+```yaml title="config.yml"
+energy-bar:
+  enabled: true
+  text: "%energy_color%%symbol% %energy% / %max%"
+  colour: "YELLOW"
+  overlay: "NOTCHED_20"
+
+mark-bar:
+  enabled: true
+  text: "%mark_color%%mark_icon% +%extra_damage%% {muted}(%time%)"
+  colour: "RED"
+  overlay: "PROGRESS"
+```
+
+| Clave | Qué hace |
+|---|---|
+| `enabled` | `false` oculta esa barra. El sistema sigue funcionando; solo desaparece la barra. |
+| `text` | El título. Funcionan tokens de paleta, etiquetas de color y placeholders. |
+| `colour` | `PINK`, `BLUE`, `RED`, `GREEN`, `YELLOW`, `PURPLE` o `WHITE`. |
+| `overlay` | `PROGRESS`, `NOTCHED_6`, `NOTCHED_10`, `NOTCHED_12` o `NOTCHED_20`. |
+
+### Valores disponibles en cada barra
+
+Se le pasan a la propia barra, y no son lo mismo que los
+[placeholders](/docs/exyliaclasses/placeholders) del plugin — solo funcionan dentro de esos dos `text`.
+
+| En `energy-bar.text` | Valor |
+|---|---|
+| `%energy_color%` | El `energy.color` de la clase. |
+| `%symbol%` | El `energy.symbol` de la clase. |
+| `%energy%` | Energía actual, con un decimal. |
+| `%max%` | El tope, entero. |
+
+| En `mark-bar.text` | Valor |
+|---|---|
+| `%mark_color%` | El `color` del nivel de marca actual. |
+| `%mark_icon%` | Su `icon`. |
+| `%extra_damage%` | Su `extra-damage`, entero. |
+| `%time%` | Segundos que quedan de marca, contados por la barra. |
+
+El relleno de la barra de energía es la energía entre `max`. El de la barra de marca es la cuenta atrás
+sobre `mark-duration`, y llegar al final es lo que hace caducar las marcas — apagar la barra de marca
+con `enabled: false` deja a las marcas sin nada que las caduque hasta que el jugador muera, salga o
+deje la clase.

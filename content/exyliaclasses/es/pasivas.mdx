@@ -1,0 +1,74 @@
+---
+title: "Pasivas"
+description: "Efectos mantenidos mientras se lleve la clase, y efectos mantenidos solo mientras se cumple una condición."
+---
+
+## Efectos pasivos
+
+Una lista plana de líneas de efecto, aplicada cuando la clase se activa y retirada cuando se quita.
+
+```yaml
+passive-effects:
+  - SPEED|3
+  - DAMAGE_RESISTANCE|2
+```
+
+Se aplican siempre como **infinitos**, diga lo que diga la duración de la línea, y se retiran por
+nombre — así que terminar una clase nunca limpia efectos que el jugador tuviera de otra parte.
+
+Se vuelven a aplicar cuando a un jugador lo salva un tótem de la inmortalidad, que si no se los
+quitaría.
+
+<Callout type="warning" title="Los efectos se retiran por nombre, no por origen">
+La `INVISIBILITY|1` permanente de un Rogue y una poción de invisibilidad que se haya bebido son el
+mismo efecto. Salir de la clase lo retira, poción incluida.
+</Callout>
+
+## Pasivas especiales
+
+Efectos mantenidos solo mientras se cumple una condición. Se comprueban **una vez por segundo** para
+cada jugador en una clase que las declare: los efectos entran en el momento en que la condición pasa a
+ser cierta y salen en el momento en que deja de serlo.
+
+```yaml
+special-passives:
+  - type: "BELOW_Y"
+    condition: "40"
+    effects:
+      - INVISIBILITY|1
+```
+
+| Clave | Qué es |
+|---|---|
+| `type` | El tipo de condición. `BELOW_Y` es el único. |
+| `condition` | El valor que lee el tipo. Para `BELOW_Y`, una coordenada Y. |
+| `effects` | Líneas de efecto, aplicadas como infinitas mientras se cumpla. |
+
+| Tipo | Cierto cuando |
+|---|---|
+| `BELOW_Y` | La Y del jugador es estrictamente menor que `condition`. Un `condition` que no sea un número es siempre falso. |
+
+Un `type` desconocido se registra en consola y la entrada se descarta.
+
+La lista admite más de una entrada, y cada una se sigue por separado:
+
+```yaml
+special-passives:
+  - type: "BELOW_Y"
+    condition: "40"
+    effects:
+      - INVISIBILITY|1
+  - type: "BELOW_Y"
+    condition: "0"
+    effects:
+      - FIRE_RESISTANCE|1
+      - NIGHT_VISION|1
+```
+
+El Miner viene con la primera de esas dos — invisible por debajo de Y 40. La segunda es la misma idea
+una capa más abajo.
+
+<Callout type="note" title="Se van con la clase">
+Todo lo que haya dado una pasiva especial se retira cuando se quita la clase, junto con las pasivas
+normales — incluso si el jugador muere o se desconecta mientras la condición es cierta.
+</Callout>

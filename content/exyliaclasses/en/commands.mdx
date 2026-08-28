@@ -1,0 +1,52 @@
+---
+title: "Commands"
+description: "One command, three names, and exactly what reloading covers."
+---
+
+## Commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/classes reload` | `exyliaclasses.admin.reload` | Re-reads the configuration and every class file. |
+
+`/eclasses` and `/exyliaclasses` are aliases of `/classes`.
+
+<Callout type="note" title="There is nothing for players to type">
+Classes are entered by wearing armour and used by right-clicking items. No command opens a menu,
+grants a class or shows a list — there is no menu and no player-facing command at all.
+</Callout>
+
+## What reload covers
+
+`/classes reload` runs five steps in order:
+
+<Steps>
+  <Step title="Configuration files">
+    `config.yml` and `messages.yml` are re-read from disk.
+  </Step>
+  <Step title="The message prefix">
+    Re-applied from `messages.yml`, so `%prefix%` in other Exylia plugins' text matches.
+  </Step>
+  <Step title="The debug flag">
+    Picked up from `config.yml` without a restart.
+  </Step>
+  <Step title="Class definitions">
+    Every `.yml` in `classes/` is loaded again. New files appear, deleted files disappear, and any of
+    the six defaults that went missing are written back.
+  </Step>
+  <Step title="Online players">
+    Everyone online has their class removed and is then matched against the new definitions. A player
+    whose armour still fits a class starts that class's warmup again.
+  </Step>
+</Steps>
+
+Each step reports success or failure separately, so a broken class file names itself instead of
+failing the whole reload.
+
+<Callout type="warning" title="Reloading interrupts everyone">
+Step five removes the class before re-matching, which clears energy, marks and ability cooldowns for
+every player online, and starts a fresh warmup for anyone whose armour still fits. Reload between
+fights, not during one.
+</Callout>
+
+It does not reload ExyliaLib — `/exylialib reload` is what does that.

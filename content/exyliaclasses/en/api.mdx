@@ -1,0 +1,92 @@
+---
+title: "API"
+description: "Reading a player's class, energy and marks from another plugin."
+badge: "dev"
+---
+
+`ClassesAPI` is reached through the plugin instance:
+
+```java
+ClassesAPI api = ExyliaClasses.getInstance().getClassesAPI();
+```
+
+## Reading a player
+
+```java
+boolean inClass = api.isInClass(player);
+
+Optional<ClassDefinition> current = api.getCurrentClass(player);
+String name = current.map(ClassDefinition::getDisplayName).orElse("None");
+
+double energy = api.getPlayerEnergy(player);   // 0 when untracked
+int marks     = api.getPlayerMarks(player);    // 0 when unmarked
+```
+
+`getCurrentClass` is empty both for a player with no state and for one whose state exists but holds no
+class, so a caller never has to distinguish those.
+
+## Reading the roster
+
+```java
+Collection<ClassDefinition> all = api.getAllClasses();
+Optional<ClassDefinition> rogue = api.getClass("rogue");
+```
+
+Ids are file names lowercased, so `classes/Rogue.yml` is `"rogue"`.
+
+## Reading state directly
+
+```java
+Optional<PlayerState> state = api.getPlayerState(player);
+```
+
+`PlayerState` carries the current class, the energy value, the mark count and the mark weapon. It is
+live state, not a snapshot.
+
+## Changing a player
+
+```java
+api.removeFromClass(player);
+```
+
+The only mutation the API offers. It removes the passives, the special passives, the energy bar, the
+marks and every ability cooldown the class declared, and tells the player.
+
+<Callout type="warning" title="Removing does not stop them re-entering">
+The armour is still on, so the next armour change — or the next reload — puts them straight back into
+a warmup for the same class. To keep somebody out, take the armour off or revoke the class's
+permission.
+</Callout>
+
+## What a ClassDefinition holds
+
+| Accessor | Type |
+|---|---|
+| `getId()` | `String` |
+| `getDisplayName()` | `String` |
+| `getPermission()` | `String` — `"NONE"` when the class is free |
+| `hasPermission()` | `boolean` — false for `NONE`, blank or missing |
+| `getEquipment()` | `Map<EquipmentSlot, Material>` |
+| `getPassiveEffects()` | `List<String>` — the raw effect lines |
+| `getSpecialPassives()` | `List<SpecialPassive>` |
+| `getWarmup()` | `Warmup` |
+| `getEnergy()` | `Energy`, or `null` when the class has none |
+| `getAbilities()` | `Map<Material, Ability>` |
+| `getHoldEffects()` | `Map<Material, HoldEffect>` |
+| `getWeapons()` | `Map<Material, Weapon>` — each a `MarkWeapon` or a `BackstabWeapon` |
+
+## Declaring the dependency
+
+```yaml title="plugin.yml"
+softdepend:
+  - ExyliaClasses
+```
+
+There are no events to listen to, and nothing is persisted — a player's class exists only while they
+are online.
+
+<Callout type="note" title="Threads">
+Everything here reads in-memory state and is safe to call from any thread. Acting on the result — 
+applying effects, changing a player — belongs on the thread that owns that player, which on Folia is
+what ExyliaLib's `Tasks.runAtEntity` is for.
+</Callout>

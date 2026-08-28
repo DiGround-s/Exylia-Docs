@@ -1,0 +1,69 @@
+---
+title: "Installation"
+description: "Dependencies, the files it writes on first start, and what to do after."
+---
+
+## Installing
+
+<Steps>
+  <Step title="Drop in the jars">
+    `ExyliaClasses.jar`, plus `ExyliaLib` and `packetevents`, into `plugins/`. PlaceholderAPI is
+    optional and only needed if you want the placeholders outside Exylia plugins.
+  </Step>
+  <Step title="Start the server">
+    It writes `config.yml`, `messages.yml` and the six class files under `classes/`.
+  </Step>
+  <Step title="Put the armour on">
+    Nothing else is needed. A full leather set makes a player an Archer after a five-second warmup.
+  </Step>
+  <Step title="Edit or add classes">
+    Every class is a file. Change one, add one, delete one, then `/classes reload`.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="packetevents is a hard dependency">
+It is declared as `depend`, so the server refuses to enable this plugin without it. ExyliaLib is a
+`softdepend` for load ordering, but the plugin is built on it and will not work without it either.
+</Callout>
+
+## Requirements
+
+| Requirement | Notes |
+|---|---|
+| Minecraft 1.21+ | Built against the 1.20 API, tested on 1.21. |
+| Java 21 | The jar is compiled for 21. |
+| Paper, or Folia | It uses Paper's armour-change event, so Spigot alone is not enough. Folia is supported. |
+| ExyliaLib | Configuration, text, effects, tasks, placeholders and the clan bridge. |
+| packetevents | Required. |
+| PlaceholderAPI | Optional. Only for exposing the placeholders to other plugins. |
+
+## Files
+
+| File | Contents |
+|---|---|
+| `config.yml` | The debug flag and the two boss bars. |
+| `messages.yml` | Every message the plugin sends. |
+| `classes/Archer.yml` | The Archer, and the mark weapon. |
+| `classes/Bard.yml` | The Bard, energy and the clan buffs. |
+| `classes/Miner.yml` | The Miner and its below-Y passive. |
+| `classes/Rogue.yml` | The Rogue and the backstab weapon. |
+| `classes/Sorcerer.yml` | The Sorcerer and the enemy debuffs. |
+| `classes/Tank.yml` | The Tank. |
+
+There is no database. Nothing about a player is written to disk.
+
+<Callout type="note" title="The six defaults are only written when missing">
+On every start the plugin checks for those six file names and writes back any that are absent. Delete
+`Bard.yml` and it comes back on the next start; rename it and you get a new file next to your copy.
+</Callout>
+
+## Loading
+
+Every `.yml` file inside `classes/` is loaded, whatever it is called. The **file name, lowercased**,
+is the class id — `Archer.yml` is the class `archer`. A file that fails to parse is logged and
+skipped; the rest still load.
+
+## Updating
+
+Replace the jar and restart. `/classes reload` re-reads `config.yml`, `messages.yml` and every class
+file, and re-checks every online player's armour against the new definitions.

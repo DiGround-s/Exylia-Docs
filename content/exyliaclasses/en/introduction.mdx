@@ -1,0 +1,61 @@
+---
+title: "Introduction"
+description: "What ExyliaClasses is: HCF-style classes a player enters by wearing an armour set, with passives, abilities, hold effects and weapons."
+---
+
+ExyliaClasses is an HCF-style class system. There is no menu and no command for players: a class is
+entered by **wearing the armour set it asks for**, and left by taking a piece off.
+
+Six classes ship as editable files. Every one of them is a YAML file in `plugins/ExyliaClasses/classes/`,
+and a seventh class is a seventh file — nothing in the plugin is hardcoded to the six.
+
+## The six that ship
+
+| Class | Armour | What it does |
+|---|---|---|
+| **Archer** | Leather | Speed III and Resistance II. Arrows stack **marks** on whoever they hit, up to four levels. |
+| **Bard** | Gold | Energy-driven support. Seven items buff the whole clan inside 20 blocks, and holding one applies a weaker version continuously. |
+| **Miner** | Iron | Haste, Saturation and Night Vision, plus Invisibility whenever they are below Y 40. |
+| **Rogue** | Chainmail | Permanent Invisibility, and a golden sword that **backstabs** for flat damage and breaks. |
+| **Sorcerer** | Gold helmet and boots, chainmail body | Energy-driven offence. Eight items throw a debuff at every enemy inside 25 blocks. |
+| **Tank** | Turtle helmet, netherite body | Resistance III at the cost of Slowness III, Weakness II and Mining Fatigue II. |
+
+## What a class is made of
+
+A class file declares any combination of six things, and none of them are required:
+
+| Piece | What it is |
+|---|---|
+| **Equipment** | The armour that puts a player in the class. This is the only trigger there is. |
+| **Passive effects** | Potion effects held for as long as the class is worn. |
+| **Special passives** | Potion effects held only while a condition is true — being below a Y level. |
+| **Abilities** | Right-click an item to fire effects at yourself, your clan or everyone nearby. The item is consumed. |
+| **Hold effects** | Effects applied continuously while a certain item is in the main hand. |
+| **Weapons** | A mark weapon or a backstab weapon, each with its own rules. |
+| **Energy** | An optional resource abilities spend, regenerating every tick and shown in a boss bar. |
+
+<Callout type="note" title="Clans are optional but change the targeting">
+`TO_CLAN` and `TO_ENEMY` abilities ask ExyliaLib which players are on your side. With no clan plugin
+installed, a clan ability reaches only the caster and an enemy ability reaches everyone in range. See
+[Abilities](/docs/exyliaclasses/abilities).
+</Callout>
+
+## What it does not have
+
+No menus, no database, no per-player storage. A player's class lives in memory and is dropped on
+death and on quit. The only command is `/classes reload`.
+
+<Cards>
+  <Card title="Installation" href="/docs/exyliaclasses/installation">
+    The jars it needs and the files it writes.
+  </Card>
+  <Card title="First steps" href="/docs/exyliaclasses/first-steps">
+    Building a seventh class from an empty file.
+  </Card>
+  <Card title="Class files" href="/docs/exyliaclasses/classes">
+    Every key, and the notation the effect lines use.
+  </Card>
+  <Card title="Weapons" href="/docs/exyliaclasses/weapons">
+    Marks and backstabs, and exactly what each one does.
+  </Card>
+</Cards>

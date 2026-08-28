@@ -1,0 +1,179 @@
+---
+title: "Armas"
+description: "El arma de marca y el arma de apuñalamiento: qué dispara cada una, qué hace, y qué no hace."
+---
+
+Una clase declara armas por material, cada una con su `type`:
+
+```yaml
+weapons:
+  ARROW:
+    type: MARK
+    # ...
+```
+
+| Tipo | Disparador |
+|---|---|
+| `MARK` | Impactar a un jugador con una flecha de ese tipo de objeto. |
+| `BACKSTAB` | Golpear a un jugador por la espalda sosteniendo ese objeto. |
+
+<Callout type="warning" title="Una de cada por clase">
+Solo se usan la primera arma `MARK` y la primera `BACKSTAB` de una clase, y "primera" no tiene orden.
+Declara como mucho una de cada tipo por clase.
+</Callout>
+
+## Marca
+
+```yaml
+weapons:
+  ARROW:
+    type: MARK
+    mark-duration: 10
+    give-glow: true
+    mark-same-class: false
+    marks:
+      1:
+        extra-damage: 7
+        color: "<#9e9e9e>"
+        icon: "◆"
+        remove-invisibility: true
+        attacked-effects: []
+        attacker-effects: []
+      2:
+        extra-damage: 14
+        color: "<#55ff55>"
+        icon: "◆◆"
+        remove-invisibility: true
+        attacked-effects: []
+        attacker-effects: []
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `mark-duration` | `10` | Segundos que cuenta atrás la barra de marca. Al vaciarse se limpian las marcas. |
+| `give-glow` | `false` | Hace brillar al jugador marcado. |
+| `mark-same-class` | `false` | Si se puede marcar a un jugador de la propia clase del tirador. |
+| `marks.<n>` | ninguno | Un nivel por cada número de marcas acumuladas. |
+
+### Un nivel de marca
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `extra-damage` | `0` | El número que se escribe en los mensajes, la barra y los placeholders. |
+| `color` | `&f` | El color del icono, en `%classes_mark_color%` y `%classes_mark_display%`. |
+| `icon` | `◆` | El icono, en `%classes_mark_icon%`. Las clases que vienen lo repiten una vez por nivel. |
+| `remove-invisibility` | `false` | Quita la Invisibilidad al objetivo al aplicarle el brillo. Solo hace algo con `give-glow: true`. |
+| `attacked-effects` | ninguno | Líneas de efecto aplicadas al objetivo. |
+| `attacker-effects` | ninguno | Líneas de efecto aplicadas al tirador. |
+
+### Cómo funciona marcar
+
+<Steps>
+  <Step title="Cae una flecha">
+    El proyectil tiene que ser una flecha disparada por un jugador, el tirador tiene que estar en una
+    clase con arma de marca, y el tipo de objeto de la propia flecha tiene que ser igual al material del
+    arma. Dispararse a uno mismo no hace nada.
+  </Step>
+  <Step title="Comprobación de misma clase">
+    Con `mark-same-class: false`, un objetivo que ya esté en la clase del tirador se rechaza y se avisa
+    al tirador. Un objetivo en otra clase, o en ninguna, vale.
+  </Step>
+  <Step title="El contador sube uno">
+    Los niveles se buscan por el nuevo número, con tope en el nivel más alto definido — un quinto
+    impacto en un arma de cuatro niveles se queda en el nivel 4.
+  </Step>
+  <Step title="El nivel se aplica">
+    Sus efectos van a ambos lados, el brillo entra si está configurado, y a los dos jugadores se les
+    dice lo que diga el `extra-damage` del nivel.
+  </Step>
+  <Step title="La barra cuenta atrás">
+    Al llegar a cero las marcas vuelven a cero, el brillo se quita, y al objetivo se le dice que las
+    marcas han caducado.
+  </Step>
+</Steps>
+
+<Callout type="danger" title="extra-damage es un número, no daño">
+El sistema de marcas no modifica el daño. `extra-damage` es lo que se escribe en los mensajes de marca,
+en la barra de marca y en `%classes_mark_extra_damage%` — el bonus en sí se espera que salga de tu
+propio montaje leyendo esos placeholders. Las marcas tampoco cambian el daño de la flecha.
+</Callout>
+
+<Callout type="note" title="Las marcas son del objetivo, no de una pareja de jugadores">
+Un jugador lleva un contador de marcas y un arma de marca a la vez. La flecha de un segundo arquero
+suma al mismo contador y se queda con el arma, en vez de empezar uno aparte.
+</Callout>
+
+Las marcas se limpian cuando el objetivo muere, sale, o deja su propia clase.
+
+## Apuñalamiento
+
+```yaml
+weapons:
+  GOLDEN_SWORD:
+    type: BACKSTAB
+    extra-damage: 8
+    can-dead: false
+    attack-cooldown-need: 0.6
+    break-item: true
+    attacked-effects:
+      - SLOW|1|3
+    attacker-effects:
+      - SLOW|3|3
+      - WEAKNESS|3|3
+    attacked-particles:
+      enabled: true
+      type: "SMALL_FLAME|100|1.5|1.5|1.5|3"
+    attacked-sound:
+      enabled: true
+      type: "BLOCK_BEACON_POWER_SELECT|1|1"
+    attacker-particles:
+      enabled: true
+      type: "SMALL_FLAME|100|1.5|1.5|1.5|3"
+    attacker-sound:
+      enabled: true
+      type: "BLOCK_BEACON_POWER_SELECT|1|1"
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `extra-damage` | `50` | Puntos de vida quitados directamente al objetivo. `8` son cuatro corazones. |
+| `can-dead` | `false` | Si un apuñalamiento puede ser el golpe mortal. |
+| `attack-cooldown-need` | `0.9` | Cuánto tiene que estar cargado el golpe, de `0` a `1`. `0.6` es el 60%. |
+| `break-item` | `false` | Destruye el arma tras un apuñalamiento con éxito. |
+| `attacked-effects` / `attacker-effects` | ninguno | Líneas de efecto para cada lado. |
+| `attacked-particles` / `attacker-particles` | apagado | Se muestran a cada lado. |
+| `attacked-sound` / `attacker-sound` | apagado | Suenan para cada lado. |
+
+### Cómo entra un apuñalamiento
+
+<Steps>
+  <Step title="El arma tiene que estar en la mano principal">
+    Y el atacante tiene que estar en una clase que la declare. Los dos tienen que ser jugadores — los
+    mobs se ignoran.
+  </Step>
+  <Step title="El golpe tiene que estar cargado">
+    Por debajo de `attack-cooldown-need` se le dicen al atacante el porcentaje actual y el requerido, y
+    el golpe sigue como un ataque normal.
+  </Step>
+  <Step title="El atacante tiene que estar detrás">
+    Medido contra hacia dónde mira el objetivo: aproximadamente el arco trasero de 145°. Fuera de ahí,
+    ataque normal.
+  </Step>
+  <Step title="El daño se sustituye, no se suma">
+    El daño vanilla del golpe se pone a cero y `extra-damage` se resta directamente de la vida del
+    objetivo.
+  </Step>
+</Steps>
+
+<Callout type="danger" title="El daño del apuñalamiento ignora la armadura">
+Restar vida directamente salta armadura, Protección, Resistencia y corazones de absorción.
+`extra-damage: 8` son cuatro corazones enteros contra un jugador desnudo y cuatro corazones enteros
+contra uno de netherita. Déjalo bajo.
+</Callout>
+
+<Callout type="warning" title="can-dead: false salta el apuñalamiento, no el golpe">
+Cuando la resta llegaría a cero de vida, se avisa al atacante y el apuñalamiento se abandona. El golpe
+en sí se deja tal cual, así que el daño normal de la espada entra igual — y puede matar. Lo que
+`can-dead: false` impide es que el `extra-damage` plano sea el golpe mortal, no que el objetivo muera
+en ese golpe.
+</Callout>

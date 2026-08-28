@@ -1,0 +1,53 @@
+---
+title: "Permissions"
+description: "The one node the plugin registers, and the per-class nodes you invent yourself."
+---
+
+## The plugin's own node
+
+| Permission | Grants |
+|---|---|
+| `exyliaclasses.admin.reload` | `/classes reload`. |
+
+That is the entire fixed list. There is no node for entering a class in general, none for using an
+ability, and none for a weapon.
+
+## Per-class nodes
+
+A class gates itself with the `permission` key in its own file, and the node is whatever you write
+there:
+
+```yaml title="classes/Rogue.yml"
+permission: "exyliaclasses.class.rogue"
+```
+
+| Value | Meaning |
+|---|---|
+| `"NONE"` | Anyone may use the class. The default in all six shipped files. |
+| Blank, or the key missing | The same as `NONE`. |
+| Anything else | A permission node the player must hold. |
+
+A player who wears the armour without the node gets the `no-permission` message and no warmup. They
+are simply not in a class — no other class is tried in its place.
+
+### Selling classes
+
+Nothing registers these nodes, so pick a scheme and stay in it:
+
+```text
+/lp group default permission set exyliaclasses.class.archer true
+/lp group default permission set exyliaclasses.class.miner true
+/lp group vip permission set exyliaclasses.class.bard true
+/lp group vip permission set exyliaclasses.class.rogue true
+/lp group mvp permission set exyliaclasses.class.sorcerer true
+```
+
+<Callout type="tip" title="Wildcards work because you chose the shape">
+`exyliaclasses.class.*` only covers everything if every class file uses that prefix. The plugin does
+not enforce it — a file that says `permission: "ranks.premium"` is checked exactly as written.
+</Callout>
+
+<Callout type="warning" title="A gated class is still a dead armour set">
+A player without the node cannot enter the class and cannot enter any other class in that armour
+either. If two classes could plausibly share a set, give the free one a different one.
+</Callout>

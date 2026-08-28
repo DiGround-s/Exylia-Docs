@@ -1,0 +1,69 @@
+---
+title: "Placeholders"
+description: "Los catorce placeholders que registra el plugin, en su forma de PlaceholderAPI y en la forma corta que usan los plugins de Exylia."
+---
+
+Todos los placeholders de abajo están escritos enteros, y al hacer clic en uno se copia.
+
+Se registran a través de ExyliaLib, lo que significa que cada uno tiene dos escrituras:
+
+| Dónde | Forma |
+|---|---|
+| PlaceholderAPI — scoreboards, tab, plugins de chat | `%exyliaclasses_classes_class%` |
+| Dentro del texto de cualquier plugin de Exylia | `%classes_class%` |
+
+La forma larga es el identificador de PlaceholderAPI del plugin seguido del nombre propio del
+placeholder. Úsala en todo lo que no sea un plugin de Exylia.
+
+## La clase del jugador
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliaclasses_classes_class%` | El `display-name` de la clase, con sus colores. `Ninguna` si el jugador no está en ninguna. |
+| `%exyliaclasses_classes_class_id%` | El id de la clase — el nombre del archivo en minúsculas. `none` si no está en ninguna. |
+| `%exyliaclasses_classes_in_class%` | `true` o `false`. |
+
+## Energía
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliaclasses_classes_energy%` | Energía actual, con un decimal. `0` para un jugador que el plugin nunca ha seguido. |
+| `%exyliaclasses_classes_max_energy%` | El `energy.max` de la clase, entero. `0` si la clase no tiene energía. |
+| `%exyliaclasses_classes_energy_symbol%` | El `energy.symbol` de la clase. Vacío si la clase no tiene energía. |
+
+## Marcas
+
+Describen las marcas **sobre quien mira** — lo que le han acumulado a él, no lo que él le ha acumulado
+a otro.
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliaclasses_classes_marked%` | `true` o `false`. |
+| `%exyliaclasses_classes_marks%` | El contador de marcas en bruto, de `0` en adelante. |
+| `%exyliaclasses_classes_mark_level%` | El mismo número, pero solo mientras esté marcado de verdad. `0` si no. |
+| `%exyliaclasses_classes_mark_color%` | El `color` del nivel actual. Vacío si no está marcado. |
+| `%exyliaclasses_classes_mark_icon%` | El `icon` del nivel actual. Vacío si no está marcado. |
+| `%exyliaclasses_classes_mark_display%` | El color y el icono juntos. Vacío si no está marcado. |
+| `%exyliaclasses_classes_mark_display_space%` | Lo mismo, con un espacio al final. Vacío si no está marcado. |
+| `%exyliaclasses_classes_mark_extra_damage%` | El `extra-damage` del nivel actual, entero. `0` si no está marcado. |
+
+<Callout type="tip" title="mark_display_space es para los nombres">
+Se resuelve a absolutamente nada cuando el jugador no está marcado, así que un prefijo escrito
+`%exyliaclasses_classes_mark_display_space%%player_name%` gana y pierde el icono sin dejar un espacio
+suelto.
+</Callout>
+
+## En un scoreboard
+
+```yaml
+lines:
+  - " {muted}❙ {letters}Clase: {highlight}%exyliaclasses_classes_class%"
+  - " {muted}❙ {letters}Energía: {highlight}%exyliaclasses_classes_energy%{muted}/%exyliaclasses_classes_max_energy%"
+```
+
+<Callout type="warning" title="La respuesta sin clase es una palabra fija">
+`%exyliaclasses_classes_class%` responde `Ninguna` cuando el jugador no está en ninguna clase, y esa
+cadena está fijada en el plugin. Es una respuesta real, así que la sintaxis `%nombre|alternativa%` no
+la sustituye — esconde la línea detrás de `%exyliaclasses_classes_in_class%` en vez de intentar
+cambiar la palabra.
+</Callout>
