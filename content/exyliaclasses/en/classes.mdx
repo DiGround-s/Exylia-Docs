@@ -1,0 +1,203 @@
+---
+title: "Class files"
+description: "Every key a class file accepts, how a player is matched to a class, and the notation the effect, sound and particle lines use."
+---
+
+One class is one `.yml` file in `plugins/ExyliaClasses/classes/`. The file name, lowercased, is the
+class id.
+
+## The whole file
+
+```yaml title="classes/Archer.yml"
+display-name: "<#c8c8c8><bold>ARCHER</bold>"
+permission: "NONE"
+
+equipment:
+  helmet: LEATHER_HELMET
+  chestplate: LEATHER_CHESTPLATE
+  leggings: LEATHER_LEGGINGS
+  boots: LEATHER_BOOTS
+
+passive-effects:
+  - SPEED|3
+  - DAMAGE_RESISTANCE|2
+
+special-passives: []
+
+warmup:
+  time: 5
+
+energy:
+  enabled: false
+
+abilities: {}
+hold-effects: {}
+weapons: {}
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `display-name` | the id | The name in every message and in `%classes_class%`. Colour tags and palette tokens work. |
+| `permission` | `NONE` | The node a player needs. `NONE`, blank or missing means anyone. |
+| `equipment` | none | The armour that puts a player in the class. |
+| `passive-effects` | none | Effects held while the class is worn. See [Passives](/docs/exyliaclasses/passives). |
+| `special-passives` | none | Effects held while a condition holds. See [Passives](/docs/exyliaclasses/passives). |
+| `warmup` | `5` seconds | The delay before the class activates. |
+| `energy` | off | The resource abilities spend. See [Energy](/docs/exyliaclasses/energy). |
+| `abilities` | none | Right-click items. See [Abilities](/docs/exyliaclasses/abilities). |
+| `hold-effects` | none | Effects while an item is held. See [Abilities](/docs/exyliaclasses/abilities). |
+| `weapons` | none | A mark or backstab weapon. See [Weapons](/docs/exyliaclasses/weapons). |
+
+## Equipment
+
+Only four slots exist, and only the ones you write are checked:
+
+```yaml
+equipment:
+  helmet: TURTLE_HELMET
+  chestplate: NETHERITE_CHESTPLATE
+  leggings: NETHERITE_LEGGINGS
+  boots: NETHERITE_BOOTS
+```
+
+| Slot key | Armour piece |
+|---|---|
+| `helmet` | Head |
+| `chestplate` | Chest |
+| `leggings` | Legs |
+| `boots` | Feet |
+
+An unknown material is logged and that slot is ignored, which quietly makes the class easier to
+enter — check the console after editing.
+
+<Callout type="note" title="Only the material is compared">
+Enchantments, names, trims, durability and custom data are all irrelevant. A Protection IV netherite
+chestplate and a fresh one are the same chestplate to this plugin.
+</Callout>
+
+### How a player gets matched
+
+The armour is re-checked when a player joins (two ticks after the join, so other plugins have given
+them their gear), when they respawn, whenever an armour piece changes, and for everyone online when
+the plugin starts or reloads.
+
+<Steps>
+  <Step title="Already in a class?">
+    If the armour still fits that class, nothing happens. If it does not, the class is removed and the
+    player is matched again from scratch — so swapping a full leather set for a full gold one goes
+    straight from Archer to a Bard warmup.
+  </Step>
+  <Step title="In a warmup?">
+    If the armour no longer fits the class being waited on, the warmup is cancelled and the player is
+    matched again.
+  </Step>
+  <Step title="Otherwise">
+    The first class whose equipment fits wins, and its warmup starts.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="Give each class a unique armour set">
+"The first class that fits" is the first in an unordered map, not the first alphabetically or by file
+name. Two classes asking for the same armour is a coin flip that can land differently after a reload.
+</Callout>
+
+A class is dropped entirely on **death** and on **quit**, along with the energy bar, any marks and every
+ability cooldown.
+
+## Permission
+
+```yaml
+permission: "exyliaclasses.class.rogue"
+```
+
+Anything other than `NONE`, blank or missing is treated as a real node. A player wearing the armour
+without it gets the `no-permission` message and no warmup — the armour simply does nothing. The node
+is yours to invent; nothing in the plugin registers a list of them.
+
+## Warmup
+
+```yaml
+warmup:
+  time: 5
+  sound:
+    enabled: true
+    type: "BLOCK_AMETHYST_BLOCK_PLACE|1|1"
+  particle:
+    enabled: true
+    type: "BUBBLE_POP|100|1.5|1.5|1.5|3"
+  sound-completed:
+    enabled: true
+    type: "BLOCK_PISTON_EXTEND|1|1"
+  particle-completed:
+    enabled: true
+    type: "REVERSE_PORTAL|100|1.5|1.5|1.5|3"
+  sound-cancel:
+    enabled: true
+    type: "BLOCK_ANVIL_PLACE|1|1"
+  particle-cancel:
+    enabled: true
+    type: "DRIP_LAVA|100|1.5|1.5|1.5|3"
+```
+
+| Key | Default | When it fires |
+|---|---|---|
+| `time` | `5` | Seconds. The countdown message is sent once a second. |
+| `sound` / `particle` | off | Every second of the countdown. |
+| `sound-completed` / `particle-completed` | off | The moment the class activates. |
+| `sound-cancel` / `particle-cancel` | off | When the warmup is cancelled by an armour change. |
+
+Each of those six blocks needs `enabled: true` to do anything; `enabled: false` or a missing block is
+silence.
+
+Players on a client that supports it also see a cooldown timer for the warmup, drawn with the class's
+chestplate as its icon, or a compass when the class asks for no chestplate.
+
+<Callout type="note" title="The countdown is sent before it ticks down">
+The first message goes out one second after the armour goes on and reads `time`, and the class
+activates one second after the message that reads `1`. A `time: 5` warmup therefore lands six seconds
+in, and the client-side cooldown timer — which is set to exactly `time` — empties a second early.
+</Callout>
+
+## Notation
+
+Three compact notations run through every class file. All three split on `|`, so a namespaced key
+such as `minecraft:flame` is safe.
+
+### Effects — `NAME|LEVEL|SECONDS`
+
+```yaml
+- SPEED|3          # Speed III, 10 seconds — the default duration
+- REGENERATION|2|5 # Regeneration II, 5 seconds
+- INVISIBILITY|1|infinite
+```
+
+The level is what a player reads: `SPEED|2` is Speed II. Omit the level for I. Omit the duration for
+ten seconds. `infinite` or `-1` means it does not expire on its own.
+
+`passive-effects` and `special-passives` are applied as infinite regardless of what their lines say,
+because the plugin takes them back itself when the class comes off.
+
+A malformed line is skipped rather than failing the file.
+
+### Sounds — `NAME|VOLUME|PITCH`
+
+```yaml
+type: "ENTITY_PLAYER_LEVELUP|1|1.5"
+```
+
+Both numbers are optional and default to `1`.
+
+### Particles — `NAME|COUNT|DX|DY|DZ|SPEED`
+
+```yaml
+type: "CRIT|60|0.6|0.6|0.6|1"
+type: "FLAME|20|0.5"          # NAME|COUNT|SPREAD
+```
+
+The six-field form gives a spread per axis. The shorter `NAME|COUNT|SPREAD|SPEED` form is accepted
+too.
+
+## Colours in display names
+
+`display-name`, ability names and mark colours all go through ExyliaLib's text module, so
+`<#c8c8c8>`, `<bold>`, legacy `&` codes and palette tokens such as `{primary}` all work.

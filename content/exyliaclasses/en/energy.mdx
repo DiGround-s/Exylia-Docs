@@ -1,0 +1,97 @@
+---
+title: "Energy"
+description: "The optional resource abilities spend, how fast it comes back, and the two boss bars."
+---
+
+Energy is per class and optional. Without it, abilities are limited by cooldown alone.
+
+```yaml
+energy:
+  enabled: true
+  name: "Energy"
+  symbol: "⚡"
+  color: "<#ffd82b>"
+  max: 100
+  regen-per-tick: 0.08
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `enabled` | `false` | Missing or `false` means the class has no energy at all. |
+| `name` | `Energy` | Read from the file, but not printed anywhere by the plugin today. |
+| `symbol` | `⚡` | Written into the bar as `%symbol%`, and into `%classes_energy_symbol%`. |
+| `color` | `#ffffff` | Written into the bar as `%energy_color%`. Any colour tag the text module accepts. |
+| `max` | `100` | The cap. |
+| `regen-per-tick` | `0.1` | Added every tick, so multiply by 20 for per second. |
+
+## How it behaves
+
+Energy starts at **zero** when the class activates — a player who swaps into a Bard cannot immediately
+cast. It then fills at `regen-per-tick` every tick until it reaches `max`.
+
+| `regen-per-tick` | Per second | Zero to 100 |
+|---|---|---|
+| `0.05` | 1 | 100 s |
+| `0.08` | 1.6 | 62.5 s |
+| `0.1` | 2 | 50 s |
+| `0.25` | 5 | 20 s |
+
+An ability's `energy-cost` is checked before its effects run. Not enough and the player is told, the
+cooldown does not start, and the item is not consumed.
+
+<Callout type="note" title="An ability with a cost on a class with no energy">
+The class has no energy, so the player's energy is zero, so any `energy-cost` above zero can never be
+paid. Either give the class an `energy` block or leave the cost at `0`.
+</Callout>
+
+Energy is reset to zero and its bar removed when the class ends, on death and on quit.
+
+## The bars
+
+Both boss bars live in `config.yml`, not in the class file — they are the plugin's presentation of
+energy and marks, shared by every class.
+
+```yaml title="config.yml"
+energy-bar:
+  enabled: true
+  text: "%energy_color%%symbol% %energy% / %max%"
+  colour: "YELLOW"
+  overlay: "NOTCHED_20"
+
+mark-bar:
+  enabled: true
+  text: "%mark_color%%mark_icon% +%extra_damage%% {muted}(%time%)"
+  colour: "RED"
+  overlay: "PROGRESS"
+```
+
+| Key | What it does |
+|---|---|
+| `enabled` | `false` hides that bar. The system still works; only the bar is gone. |
+| `text` | The title. Palette tokens, colour tags and placeholders all work. |
+| `colour` | `PINK`, `BLUE`, `RED`, `GREEN`, `YELLOW`, `PURPLE` or `WHITE`. |
+| `overlay` | `PROGRESS`, `NOTCHED_6`, `NOTCHED_10`, `NOTCHED_12` or `NOTCHED_20`. |
+
+### Values available in each bar
+
+These are supplied to the bar itself, and are not the same thing as the plugin's
+[placeholders](/docs/exyliaclasses/placeholders) — they only work inside these two `text` values.
+
+| In `energy-bar.text` | Value |
+|---|---|
+| `%energy_color%` | The class's `energy.color`. |
+| `%symbol%` | The class's `energy.symbol`. |
+| `%energy%` | Current energy, one decimal. |
+| `%max%` | The cap, whole. |
+
+| In `mark-bar.text` | Value |
+|---|---|
+| `%mark_color%` | The current mark level's `color`. |
+| `%mark_icon%` | Its `icon`. |
+| `%extra_damage%` | Its `extra-damage`, whole. |
+| `%time%` | Seconds left on the mark, counted down by the bar. |
+
+The energy bar's fill is energy over `max`. The mark bar's fill is the countdown over
+`mark-duration`, and reaching the end is what expires the marks — turning the mark bar off with
+`enabled: false` leaves marks with nothing to expire them until the player dies, quits or leaves the
+class.

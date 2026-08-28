@@ -1,0 +1,102 @@
+---
+title: "Preguntas frecuentes"
+description: "Las preguntas que más salen."
+---
+
+## Nadie entra en ninguna clase
+
+Comprueba tres cosas, en orden: que el set de armadura coincide **exactamente** con el archivo de clase
+en cada ranura que declare, que el jugador tiene el `permission` de la clase si no es `NONE`, y que la
+consola no tiene ningún aviso de "Invalid material" de ese archivo. Un material mal escrito se cae de
+los requisitos sin ruido, y eso cambia lo que la clase pide.
+
+## Dos clases se pelean por la misma armadura
+
+Dales sets distintos. Al jugador se le compara contra las clases sin un orden definido, así que dos
+clases que pidan diamante completo darán una u otra de forma impredecible, y distinto tras una recarga.
+
+## El warmup tarda un segundo más de lo que puse
+
+Es lo esperado. El primer mensaje de cuenta atrás sale al segundo y la clase se activa un segundo
+después del mensaje que dice `1`, así que `time: 5` cae a los seis segundos.
+
+## Un jugador ha perdido la clase sin motivo
+
+Morir y desconectarse terminan la clase de golpe. También cualquier cambio de armadura que rompa el set
+— incluida una pieza que se parte por durabilidad, u otro plugin que le cambie el equipo.
+
+## Los objetos de habilidad desaparecen
+
+Se consumen. Un objeto por uso con éxito, a propósito: la habilidad es un suministro que el jugador
+lleva encima. Un uso fallido — en cooldown, sin energía — no consume nada.
+
+## Una habilidad no hace absolutamente nada
+
+Si es `type: TO_ALLY`, ese es el motivo: ese tipo se resuelve sin objetivos, mientras sigue gastando
+energía, arrancando el cooldown y consumiendo el objeto. Usa `TO_CLAN`.
+
+## Las habilidades de clan solo alcanzan al lanzador
+
+No hay plugin de clanes instalado, o el lanzador no está en ninguno. ExyliaLib detecta FactionsUUID,
+HuskTowns, ZelTeams, RunithClans, UltimateClans, Kingdoms, SimpleClans y ExyliaClans; sin ninguno de
+ellos, todo el mundo está sin clan.
+
+## Las habilidades de enemigos le dan a mi propio equipo
+
+La misma causa vista desde el otro lado. Sin plugin de clanes nadie comparte clan, así que `TO_ENEMY`
+significa todos los que estén en el radio. En un servidor sin clanes, deja los radios de enemigos
+pequeños o construye las clases con `SELF`.
+
+## Las marcas no suman daño
+
+No se supone que lo hagan en este plugin. El `extra-damage` de un nivel de marca es un **número para
+mostrar** — va a los mensajes de marca, a la barra de marca y a
+`%exyliaclasses_classes_mark_extra_damage%`. Se espera que el bonus salga de lo que lea esos valores.
+El `extra-damage` del apuñalamiento es otra cosa: ese sí es daño real.
+
+## Las marcas no caducan nunca
+
+La barra de marca es lo que las hace caducar. Con `mark-bar.enabled: false` en `config.yml` no hay nada
+contando atrás, así que las marcas duran hasta que el jugador muera, salga o deje su clase.
+
+## El apuñalamiento mata de un golpe a gente con netherita completa
+
+`extra-damage` se resta directamente de la vida, así que armadura, Protección, Resistencia y absorción
+no hacen nada contra él. El Rogue que viene usa `8` — cuatro corazones — y rompe la espada. Empieza por
+ahí.
+
+## can-dead: false no evitó la muerte
+
+Solo evita que el bonus del apuñalamiento sea el golpe mortal. El golpe normal de espada entra igual, y
+ese sí puede matar.
+
+## La energía se queda en cero
+
+O la clase no tiene bloque `energy` — y entonces una habilidad con `energy-cost` no se puede usar
+nunca — o el jugador acaba de entrar en la clase. La energía empieza en cero y sube desde ahí.
+
+## El nombre de la clase sale como "Ninguna"
+
+Es la respuesta fija que da `%exyliaclasses_classes_class%` cuando el jugador no está en ninguna clase.
+No se puede configurar; esconde la línea detrás de `%exyliaclasses_classes_in_class%`.
+
+## Los placeholders no se resuelven en ningún sitio
+
+Fuera de los plugins de Exylia hacen falta PlaceholderAPI y la forma larga,
+`%exyliaclasses_classes_class%`. La corta, `%classes_class%`, solo funciona dentro del texto de los
+propios plugins de Exylia.
+
+## ¿Puedo añadir una clase sin reiniciar?
+
+Sí. Deja el archivo en `classes/` y ejecuta `/classes reload`. Todos los conectados se reevalúan, así
+que hazlo entre peleas — la recarga limpia energía, marcas y cooldowns de cada jugador.
+
+## ¿Se guarda algo en disco?
+
+No. No hay base de datos ni archivo de datos de jugador. La clase, su energía y sus marcas viven en
+memoria mientras el jugador esté conectado.
+
+## ¿Funciona en Folia?
+
+Sí. Está declarado como `folia-supported` y programa todo lo que toca a un jugador en el hilo de ese
+jugador.

@@ -1,0 +1,205 @@
+---
+title: "Archivos de clase"
+description: "Todas las claves que acepta un archivo de clase, cómo se asigna una clase a un jugador y la notación de las líneas de efectos, sonidos y partículas."
+---
+
+Una clase es un archivo `.yml` en `plugins/ExyliaClasses/classes/`. El nombre del archivo en
+minúsculas es el id de la clase.
+
+## El archivo entero
+
+```yaml title="classes/Archer.yml"
+display-name: "<#c8c8c8><bold>ARCHER</bold>"
+permission: "NONE"
+
+equipment:
+  helmet: LEATHER_HELMET
+  chestplate: LEATHER_CHESTPLATE
+  leggings: LEATHER_LEGGINGS
+  boots: LEATHER_BOOTS
+
+passive-effects:
+  - SPEED|3
+  - DAMAGE_RESISTANCE|2
+
+special-passives: []
+
+warmup:
+  time: 5
+
+energy:
+  enabled: false
+
+abilities: {}
+hold-effects: {}
+weapons: {}
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `display-name` | el id | El nombre en cada mensaje y en `%classes_class%`. Funcionan etiquetas de color y tokens de paleta. |
+| `permission` | `NONE` | El nodo que necesita el jugador. `NONE`, vacío o ausente significa que puede cualquiera. |
+| `equipment` | ninguno | La armadura que mete al jugador en la clase. |
+| `passive-effects` | ninguno | Efectos mientras se lleve la clase. Ver [Pasivas](/docs/exyliaclasses/pasivas). |
+| `special-passives` | ninguno | Efectos mientras se cumpla una condición. Ver [Pasivas](/docs/exyliaclasses/pasivas). |
+| `warmup` | `5` segundos | El retardo antes de que la clase se active. |
+| `energy` | apagada | El recurso que gastan las habilidades. Ver [Energía](/docs/exyliaclasses/energia). |
+| `abilities` | ninguna | Objetos de clic derecho. Ver [Habilidades](/docs/exyliaclasses/habilidades). |
+| `hold-effects` | ninguno | Efectos mientras se sostiene un objeto. Ver [Habilidades](/docs/exyliaclasses/habilidades). |
+| `weapons` | ninguna | Un arma de marca o de apuñalamiento. Ver [Armas](/docs/exyliaclasses/armas). |
+
+## Equipamiento
+
+Solo existen cuatro ranuras, y solo se comprueban las que escribas:
+
+```yaml
+equipment:
+  helmet: TURTLE_HELMET
+  chestplate: NETHERITE_CHESTPLATE
+  leggings: NETHERITE_LEGGINGS
+  boots: NETHERITE_BOOTS
+```
+
+| Clave de ranura | Pieza |
+|---|---|
+| `helmet` | Cabeza |
+| `chestplate` | Pecho |
+| `leggings` | Piernas |
+| `boots` | Pies |
+
+Un material desconocido se registra en consola y esa ranura se ignora, lo que hace la clase más fácil
+de conseguir sin avisar — revisa la consola después de editar.
+
+<Callout type="note" title="Solo se compara el material">
+Encantamientos, nombres, trims, durabilidad y datos personalizados dan igual. Una pechera de netherita
+con Protección IV y una recién hecha son la misma pechera para este plugin.
+</Callout>
+
+### Cómo se asigna la clase
+
+La armadura se vuelve a comprobar cuando el jugador entra (dos ticks después de entrar, para que otros
+plugins ya le hayan dado su equipo), cuando reaparece, cada vez que cambia una pieza de armadura, y
+para todos los conectados cuando el plugin arranca o se recarga.
+
+<Steps>
+  <Step title="¿Ya está en una clase?">
+    Si la armadura sigue encajando con esa clase, no pasa nada. Si no, se le quita la clase y se le
+    vuelve a asignar desde cero — así que cambiar un set completo de cuero por uno de oro pasa
+    directamente de Archer al warmup de Bard.
+  </Step>
+  <Step title="¿Está en un warmup?">
+    Si la armadura ya no encaja con la clase que estaba esperando, el warmup se cancela y se le vuelve
+    a asignar.
+  </Step>
+  <Step title="Si no">
+    Gana la primera clase cuyo equipamiento encaje, y empieza su warmup.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="Dale a cada clase un set único">
+"La primera clase que encaje" es la primera de un mapa sin orden, no la primera alfabéticamente ni por
+nombre de archivo. Dos clases que pidan la misma armadura son una moneda al aire que puede caer
+distinto tras una recarga.
+</Callout>
+
+La clase se pierde entera al **morir** y al **salir**, junto con la barra de energía, las marcas y
+todos los cooldowns de habilidades.
+
+## Permiso
+
+```yaml
+permission: "exyliaclasses.class.rogue"
+```
+
+Cualquier cosa que no sea `NONE`, vacío o ausente se trata como un nodo real. Un jugador que lleve la
+armadura sin él recibe el mensaje `no-permission` y ningún warmup — la armadura simplemente no hace
+nada. El nodo te lo inventas tú; el plugin no registra ninguna lista.
+
+## Warmup
+
+```yaml
+warmup:
+  time: 5
+  sound:
+    enabled: true
+    type: "BLOCK_AMETHYST_BLOCK_PLACE|1|1"
+  particle:
+    enabled: true
+    type: "BUBBLE_POP|100|1.5|1.5|1.5|3"
+  sound-completed:
+    enabled: true
+    type: "BLOCK_PISTON_EXTEND|1|1"
+  particle-completed:
+    enabled: true
+    type: "REVERSE_PORTAL|100|1.5|1.5|1.5|3"
+  sound-cancel:
+    enabled: true
+    type: "BLOCK_ANVIL_PLACE|1|1"
+  particle-cancel:
+    enabled: true
+    type: "DRIP_LAVA|100|1.5|1.5|1.5|3"
+```
+
+| Clave | Por defecto | Cuándo suena |
+|---|---|---|
+| `time` | `5` | Segundos. El mensaje de cuenta atrás se envía una vez por segundo. |
+| `sound` / `particle` | apagado | Cada segundo de la cuenta atrás. |
+| `sound-completed` / `particle-completed` | apagado | En el momento en que la clase se activa. |
+| `sound-cancel` / `particle-cancel` | apagado | Cuando el warmup se cancela por un cambio de armadura. |
+
+Cada uno de esos seis bloques necesita `enabled: true` para hacer algo; `enabled: false` o un bloque
+ausente es silencio.
+
+Los jugadores con un cliente que lo soporte ven además un temporizador de cooldown del warmup, dibujado
+con la pechera de la clase como icono, o una brújula si la clase no pide pechera.
+
+<Callout type="note" title="La cuenta atrás se envía antes de bajar">
+El primer mensaje sale un segundo después de ponerse la armadura y dice `time`, y la clase se activa un
+segundo después del mensaje que dice `1`. Un warmup de `time: 5` cae por tanto a los seis segundos, y
+el temporizador del cliente — puesto a exactamente `time` — se vacía un segundo antes.
+</Callout>
+
+## Notación
+
+Tres notaciones compactas recorren todos los archivos de clase. Las tres separan por `|`, así que una
+clave con espacio de nombres como `minecraft:flame` es segura.
+
+### Efectos — `NOMBRE|NIVEL|SEGUNDOS`
+
+```yaml
+- SPEED|3          # Velocidad III, 10 segundos — la duración por defecto
+- REGENERATION|2|5 # Regeneración II, 5 segundos
+- INVISIBILITY|1|infinite
+```
+
+El nivel es el que lee un jugador: `SPEED|2` es Velocidad II. Omite el nivel para I. Omite la duración
+para diez segundos. `infinite` o `-1` significa que no caduca por su cuenta.
+
+`passive-effects` y `special-passives` se aplican como infinitos digan lo que digan sus líneas, porque
+el plugin los retira él mismo cuando la clase se quita.
+
+Una línea mal escrita se salta en vez de romper el archivo.
+
+### Sonidos — `NOMBRE|VOLUMEN|TONO`
+
+```yaml
+type: "ENTITY_PLAYER_LEVELUP|1|1.5"
+```
+
+Ambos números son opcionales y valen `1` por defecto.
+
+### Partículas — `NOMBRE|CANTIDAD|DX|DY|DZ|VELOCIDAD`
+
+```yaml
+type: "CRIT|60|0.6|0.6|0.6|1"
+type: "FLAME|20|0.5"          # NOMBRE|CANTIDAD|DISPERSIÓN
+```
+
+La forma de seis campos da dispersión por eje. También se acepta la forma corta
+`NOMBRE|CANTIDAD|DISPERSIÓN|VELOCIDAD`.
+
+## Colores en los nombres
+
+`display-name`, los nombres de habilidades y los colores de marca pasan por el módulo de texto de
+ExyliaLib, así que funcionan `<#c8c8c8>`, `<bold>`, los códigos `&` clásicos y los tokens de paleta
+como `{primary}`.

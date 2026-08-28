@@ -1,0 +1,69 @@
+---
+title: "Placeholders"
+description: "The fourteen placeholders the plugin registers, in both the PlaceholderAPI form and the short form Exylia plugins use."
+---
+
+Every placeholder below is written in full, and clicking one copies it.
+
+They are registered through ExyliaLib, which means each one has two spellings:
+
+| Where | Form |
+|---|---|
+| PlaceholderAPI — scoreboards, tab, chat plugins | `%exyliaclasses_classes_class%` |
+| Inside any Exylia plugin's own text | `%classes_class%` |
+
+The long form is the plugin's PlaceholderAPI identifier followed by the placeholder's own name. Use it
+everywhere outside Exylia plugins.
+
+## The player's class
+
+| Placeholder | Description |
+|---|---|
+| `%exyliaclasses_classes_class%` | The class's `display-name`, with its colours. `Ninguna` when the player is in no class. |
+| `%exyliaclasses_classes_class_id%` | The class id — the file name lowercased. `none` when in no class. |
+| `%exyliaclasses_classes_in_class%` | `true` or `false`. |
+
+## Energy
+
+| Placeholder | Description |
+|---|---|
+| `%exyliaclasses_classes_energy%` | Current energy, one decimal. `0` for a player the plugin has never tracked. |
+| `%exyliaclasses_classes_max_energy%` | The class's `energy.max`, whole. `0` when the class has no energy. |
+| `%exyliaclasses_classes_energy_symbol%` | The class's `energy.symbol`. Empty when the class has no energy. |
+
+## Marks
+
+These describe marks **on the viewer** — what has been stacked on them, not what they have stacked on
+someone else.
+
+| Placeholder | Description |
+|---|---|
+| `%exyliaclasses_classes_marked%` | `true` or `false`. |
+| `%exyliaclasses_classes_marks%` | The raw mark count, `0` upward. |
+| `%exyliaclasses_classes_mark_level%` | The same number, but only while actually marked. `0` otherwise. |
+| `%exyliaclasses_classes_mark_color%` | The current level's `color`. Empty when not marked. |
+| `%exyliaclasses_classes_mark_icon%` | The current level's `icon`. Empty when not marked. |
+| `%exyliaclasses_classes_mark_display%` | The colour and the icon together. Empty when not marked. |
+| `%exyliaclasses_classes_mark_display_space%` | The same, with a trailing space. Empty when not marked. |
+| `%exyliaclasses_classes_mark_extra_damage%` | The current level's `extra-damage`, whole. `0` when not marked. |
+
+<Callout type="tip" title="mark_display_space is for name tags">
+It resolves to nothing at all when the player is unmarked, so a prefix written
+`%exyliaclasses_classes_mark_display_space%%player_name%` gains and loses the icon without leaving a
+stray space behind.
+</Callout>
+
+## In a scoreboard
+
+```yaml
+lines:
+  - " {muted}❙ {letters}Class: {highlight}%exyliaclasses_classes_class%"
+  - " {muted}❙ {letters}Energy: {highlight}%exyliaclasses_classes_energy%{muted}/%exyliaclasses_classes_max_energy%"
+```
+
+<Callout type="warning" title="The no-class answer is the Spanish word">
+`%exyliaclasses_classes_class%` answers `Ninguna` when the player is in no class, and that string is
+fixed in the plugin. It is a real answer, so the `%name|fallback%` syntax will not replace it — on an
+English server, hide the line behind `%exyliaclasses_classes_in_class%` instead of trying to override
+the word.
+</Callout>

@@ -1,0 +1,72 @@
+---
+title: "Instalación"
+description: "Dependencias, los archivos que escribe al arrancar y qué hacer después."
+---
+
+## Instalar
+
+<Steps>
+  <Step title="Suelta los jars">
+    `ExyliaClasses.jar`, más `ExyliaLib` y `packetevents`, en `plugins/`. PlaceholderAPI es opcional y
+    solo hace falta si quieres los placeholders fuera de los plugins de Exylia.
+  </Step>
+  <Step title="Arranca el servidor">
+    Escribe `config.yml`, `messages.yml` y los seis archivos de clase dentro de `classes/`.
+  </Step>
+  <Step title="Ponte la armadura">
+    No hace falta nada más. Un set completo de cuero convierte al jugador en Archer tras un warmup de
+    cinco segundos.
+  </Step>
+  <Step title="Edita o añade clases">
+    Cada clase es un archivo. Cambia uno, añade uno, borra uno, y luego `/classes reload`.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="packetevents es dependencia dura">
+Está declarado como `depend`, así que el servidor no habilita el plugin sin él. ExyliaLib es
+`softdepend` por orden de carga, pero el plugin está construido sobre él y tampoco funciona sin él.
+</Callout>
+
+## Requisitos
+
+| Requisito | Notas |
+|---|---|
+| Minecraft 1.21+ | Compilado contra la API de 1.20, probado en 1.21. |
+| Java 21 | El jar está compilado para 21. |
+| Paper, o Folia | Usa el evento de cambio de armadura de Paper, así que Spigot a secas no basta. Folia está soportado. |
+| ExyliaLib | Configuración, texto, efectos, tareas, placeholders y el puente de clanes. |
+| packetevents | Obligatorio. |
+| PlaceholderAPI | Opcional. Solo para exponer los placeholders a otros plugins. |
+
+## Archivos
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | El flag de debug y las dos barras. |
+| `messages.yml` | Todos los mensajes que envía el plugin. |
+| `classes/Archer.yml` | El Archer, y el arma de marca. |
+| `classes/Bard.yml` | El Bard, la energía y los buffs de clan. |
+| `classes/Miner.yml` | El Miner y su pasiva por debajo de cierta Y. |
+| `classes/Rogue.yml` | El Rogue y el arma de apuñalamiento. |
+| `classes/Sorcerer.yml` | El Sorcerer y los debuffs a enemigos. |
+| `classes/Tank.yml` | El Tank. |
+
+No hay base de datos. No se escribe nada de ningún jugador en disco.
+
+<Callout type="note" title="Las seis por defecto solo se escriben si faltan">
+En cada arranque el plugin comprueba esos seis nombres de archivo y vuelve a escribir los que no
+estén. Borra `Bard.yml` y vuelve en el siguiente arranque; renómbralo y tendrás un archivo nuevo junto
+a tu copia.
+</Callout>
+
+## Carga
+
+Se carga cada archivo `.yml` dentro de `classes/`, se llame como se llame. El **nombre del archivo en
+minúsculas** es el id de la clase — `Archer.yml` es la clase `archer`. Un archivo que no se puede
+leer se registra en consola y se salta; el resto se cargan igual.
+
+## Actualizar
+
+Reemplaza el jar y reinicia. `/classes reload` vuelve a leer `config.yml`, `messages.yml` y cada
+archivo de clase, y revisa de nuevo la armadura de todos los jugadores conectados contra las nuevas
+definiciones.

@@ -1,0 +1,102 @@
+---
+title: "Frequently asked questions"
+description: "The questions that come up most."
+---
+
+## Nobody enters a class
+
+Check three things, in order: the armour set matches the class file **exactly** in every slot it
+declares, the player holds the class's `permission` if it is not `NONE`, and the console has no
+"Invalid material" warning from that file. A misspelled material is dropped silently from the
+requirements, which changes what the class asks for.
+
+## Two classes fight over the same armour
+
+Give them different sets. A player is matched against the classes in no defined order, so two classes
+that ask for full diamond will hand out one or the other unpredictably, and differently after a
+reload.
+
+## The warmup takes a second longer than I wrote
+
+That is expected. The first countdown message is sent one second in and the class activates one
+second after the message that reads `1`, so `time: 5` lands at six seconds.
+
+## A player lost their class for no reason
+
+Death and disconnect both end a class outright. So does any armour change that breaks the set — 
+including a piece breaking from durability, or another plugin swapping their gear.
+
+## Ability items keep disappearing
+
+They are consumed. One item per successful use, by design: the ability is a supply the player carries.
+A failed use — on cooldown, not enough energy — does not consume anything.
+
+## An ability does nothing at all
+
+If it is `type: TO_ALLY`, that is why: that type resolves to no targets, while still spending energy,
+starting the cooldown and consuming the item. Use `TO_CLAN`.
+
+## Clan abilities only reach the caster
+
+No clan plugin is installed, or the caster is in no clan. ExyliaLib detects FactionsUUID, HuskTowns,
+ZelTeams, RunithClans, UltimateClans, Kingdoms, SimpleClans and ExyliaClans; with none of them, every
+player is clanless.
+
+## Enemy abilities are hitting my own team
+
+The same cause seen from the other side. Without a clan plugin nobody shares a clan, so `TO_ENEMY`
+means everyone in radius. On a server with no clans, keep enemy radii small or build classes out of
+`SELF`.
+
+## Marks are not adding damage
+
+They are not supposed to, in this plugin. `extra-damage` on a mark level is a **number to display** —
+it goes into the mark messages, the mark boss bar and `%exyliaclasses_classes_mark_extra_damage%`. The
+damage bonus is expected to come from whatever reads those. Backstab `extra-damage` is different: that
+one is real damage.
+
+## Marks never expire
+
+The mark boss bar is what times them out. With `mark-bar.enabled: false` in `config.yml` there is
+nothing counting down, so marks last until the player dies, quits or leaves their class.
+
+## The backstab one-shots people in full netherite
+
+`extra-damage` is taken directly off health, so armour, Protection, Resistance and absorption do
+nothing against it. The shipped Rogue uses `8` — four hearts — and breaks the sword. Start there.
+
+## can-dead: false did not stop the kill
+
+It only stops the backstab bonus from being the killing blow. The ordinary sword swing still lands
+normally, and that can kill.
+
+## Energy is stuck at zero
+
+Either the class has no `energy` block — in which case an ability with an `energy-cost` can never be
+used — or the player just entered the class. Energy starts at zero and fills from there.
+
+## The class name shows as "Ninguna"
+
+That is the fixed answer `%exyliaclasses_classes_class%` gives when the player is in no class. It
+cannot be configured; hide the line behind `%exyliaclasses_classes_in_class%` instead.
+
+## Placeholders resolve nowhere
+
+Outside Exylia plugins they need PlaceholderAPI and the long form,
+`%exyliaclasses_classes_class%`. The short `%classes_class%` only works inside Exylia plugins' own
+text.
+
+## Can I add a class without restarting?
+
+Yes. Drop the file in `classes/` and run `/classes reload`. Everyone online is re-matched, so do it
+between fights — the reload clears energy, marks and cooldowns for every player.
+
+## Is anything saved to disk?
+
+No. There is no database and no player data file. A class, its energy and its marks live in memory
+for as long as the player is online.
+
+## Does it work on Folia?
+
+Yes. It is declared `folia-supported` and schedules everything that touches a player on that player's
+own thread.

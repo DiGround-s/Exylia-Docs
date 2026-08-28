@@ -1,0 +1,92 @@
+---
+title: "API"
+description: "Leer la clase, la energía y las marcas de un jugador desde otro plugin."
+badge: "dev"
+---
+
+A `ClassesAPI` se llega a través de la instancia del plugin:
+
+```java
+ClassesAPI api = ExyliaClasses.getInstance().getClassesAPI();
+```
+
+## Leer un jugador
+
+```java
+boolean inClass = api.isInClass(player);
+
+Optional<ClassDefinition> current = api.getCurrentClass(player);
+String name = current.map(ClassDefinition::getDisplayName).orElse("None");
+
+double energy = api.getPlayerEnergy(player);   // 0 si no se le sigue
+int marks     = api.getPlayerMarks(player);    // 0 si no está marcado
+```
+
+`getCurrentClass` viene vacío tanto para un jugador sin estado como para uno cuyo estado existe pero no
+tiene clase, así que quien llama nunca tiene que distinguir esos dos casos.
+
+## Leer el listado
+
+```java
+Collection<ClassDefinition> all = api.getAllClasses();
+Optional<ClassDefinition> rogue = api.getClass("rogue");
+```
+
+Los ids son los nombres de archivo en minúsculas, así que `classes/Rogue.yml` es `"rogue"`.
+
+## Leer el estado directamente
+
+```java
+Optional<PlayerState> state = api.getPlayerState(player);
+```
+
+`PlayerState` lleva la clase actual, el valor de energía, el contador de marcas y el arma de marca. Es
+estado vivo, no una foto fija.
+
+## Cambiar un jugador
+
+```java
+api.removeFromClass(player);
+```
+
+La única mutación que ofrece la API. Retira las pasivas, las pasivas especiales, la barra de energía,
+las marcas y todos los cooldowns de habilidades que declarase la clase, y avisa al jugador.
+
+<Callout type="warning" title="Quitarla no impide que vuelva a entrar">
+La armadura sigue puesta, así que el siguiente cambio de armadura — o la siguiente recarga — lo mete
+directamente en un warmup de la misma clase. Para dejarlo fuera, quítale la armadura o revócale el
+permiso de la clase.
+</Callout>
+
+## Qué lleva un ClassDefinition
+
+| Método | Tipo |
+|---|---|
+| `getId()` | `String` |
+| `getDisplayName()` | `String` |
+| `getPermission()` | `String` — `"NONE"` cuando la clase es libre |
+| `hasPermission()` | `boolean` — falso para `NONE`, vacío o ausente |
+| `getEquipment()` | `Map<EquipmentSlot, Material>` |
+| `getPassiveEffects()` | `List<String>` — las líneas de efecto en bruto |
+| `getSpecialPassives()` | `List<SpecialPassive>` |
+| `getWarmup()` | `Warmup` |
+| `getEnergy()` | `Energy`, o `null` si la clase no tiene |
+| `getAbilities()` | `Map<Material, Ability>` |
+| `getHoldEffects()` | `Map<Material, HoldEffect>` |
+| `getWeapons()` | `Map<Material, Weapon>` — cada una un `MarkWeapon` o un `BackstabWeapon` |
+
+## Declarar la dependencia
+
+```yaml title="plugin.yml"
+softdepend:
+  - ExyliaClasses
+```
+
+No hay eventos a los que escuchar, y no se persiste nada — la clase de un jugador existe solo mientras
+está conectado.
+
+<Callout type="note" title="Hilos">
+Todo esto lee estado en memoria y se puede llamar desde cualquier hilo. Actuar sobre el resultado —
+aplicar efectos, cambiar a un jugador — va en el hilo que posee a ese jugador, que en Folia es para lo
+que está `Tasks.runAtEntity` de ExyliaLib.
+</Callout>

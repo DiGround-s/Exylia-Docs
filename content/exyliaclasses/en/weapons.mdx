@@ -1,0 +1,179 @@
+---
+title: "Weapons"
+description: "The mark weapon and the backstab weapon: what triggers each one, what it does, and what it does not do."
+---
+
+A class declares weapons keyed by material, each with a `type`:
+
+```yaml
+weapons:
+  ARROW:
+    type: MARK
+    # ...
+```
+
+| Type | Trigger |
+|---|---|
+| `MARK` | Hitting a player with an arrow of that item type. |
+| `BACKSTAB` | Hitting a player from behind while holding that item. |
+
+<Callout type="warning" title="One of each per class">
+Only the first `MARK` weapon and the first `BACKSTAB` weapon in a class are ever used, and "first" is
+unordered. Declare at most one of each type per class.
+</Callout>
+
+## Mark
+
+```yaml
+weapons:
+  ARROW:
+    type: MARK
+    mark-duration: 10
+    give-glow: true
+    mark-same-class: false
+    marks:
+      1:
+        extra-damage: 7
+        color: "<#9e9e9e>"
+        icon: "◆"
+        remove-invisibility: true
+        attacked-effects: []
+        attacker-effects: []
+      2:
+        extra-damage: 14
+        color: "<#55ff55>"
+        icon: "◆◆"
+        remove-invisibility: true
+        attacked-effects: []
+        attacker-effects: []
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `mark-duration` | `10` | Seconds the mark boss bar counts down for. When it empties the marks are cleared. |
+| `give-glow` | `false` | Makes the marked player glow. |
+| `mark-same-class` | `false` | Whether a player of the shooter's own class can be marked. |
+| `marks.<n>` | none | One level per number of marks stacked. |
+
+### A mark level
+
+| Key | Default | What it does |
+|---|---|---|
+| `extra-damage` | `0` | The number written into messages, the boss bar and the placeholders. |
+| `color` | `&f` | The colour of the icon, in `%classes_mark_color%` and `%classes_mark_display%`. |
+| `icon` | `◆` | The icon, in `%classes_mark_icon%`. The shipped classes repeat it once per level. |
+| `remove-invisibility` | `false` | Strips Invisibility from the target when the glow is applied. Only does anything with `give-glow: true`. |
+| `attacked-effects` | none | Effect lines applied to the target. |
+| `attacker-effects` | none | Effect lines applied to the shooter. |
+
+### How marking works
+
+<Steps>
+  <Step title="An arrow lands">
+    The projectile must be an arrow shot by a player, the shooter must be in a class with a mark
+    weapon, and the arrow's own item type must equal the weapon's material. Shooting yourself does
+    nothing.
+  </Step>
+  <Step title="Same-class check">
+    With `mark-same-class: false`, a target already in the shooter's class is refused and the shooter
+    is told. A target in another class, or in none, is fine.
+  </Step>
+  <Step title="The stack goes up by one">
+    Levels are looked up by the new count, capped at the highest level defined — a fifth hit on a
+    four-level weapon stays at level 4.
+  </Step>
+  <Step title="The level fires">
+    Its effects are applied to both sides, the glow goes on if configured, and both players are told
+    what the level's `extra-damage` says.
+  </Step>
+  <Step title="The bar counts down">
+    When it reaches zero the marks reset to zero, the glow comes off, and the target is told the marks
+    expired.
+  </Step>
+</Steps>
+
+<Callout type="danger" title="extra-damage is a number, not damage">
+The mark system does not modify damage. `extra-damage` is what gets written into the mark messages,
+the mark boss bar and `%classes_mark_extra_damage%` — the bonus itself is expected to come from your
+own setup reading those placeholders. Marks also do not change the arrow's own damage.
+</Callout>
+
+<Callout type="note" title="Marks belong to the target, not to a pair of players">
+A player carries one mark count and one mark weapon at a time. A second archer's arrow adds to the
+same stack and takes over the weapon, rather than starting a separate one.
+</Callout>
+
+Marks are cleared when the target dies, quits, or leaves their own class.
+
+## Backstab
+
+```yaml
+weapons:
+  GOLDEN_SWORD:
+    type: BACKSTAB
+    extra-damage: 8
+    can-dead: false
+    attack-cooldown-need: 0.6
+    break-item: true
+    attacked-effects:
+      - SLOW|1|3
+    attacker-effects:
+      - SLOW|3|3
+      - WEAKNESS|3|3
+    attacked-particles:
+      enabled: true
+      type: "SMALL_FLAME|100|1.5|1.5|1.5|3"
+    attacked-sound:
+      enabled: true
+      type: "BLOCK_BEACON_POWER_SELECT|1|1"
+    attacker-particles:
+      enabled: true
+      type: "SMALL_FLAME|100|1.5|1.5|1.5|3"
+    attacker-sound:
+      enabled: true
+      type: "BLOCK_BEACON_POWER_SELECT|1|1"
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `extra-damage` | `50` | Health points taken off the target directly. `8` is four hearts. |
+| `can-dead` | `false` | Whether a backstab may be the killing blow. |
+| `attack-cooldown-need` | `0.9` | How charged the attack must be, from `0` to `1`. `0.6` is 60%. |
+| `break-item` | `false` | Destroys the weapon on a successful backstab. |
+| `attacked-effects` / `attacker-effects` | none | Effect lines for each side. |
+| `attacked-particles` / `attacker-particles` | off | Shown to each side. |
+| `attacked-sound` / `attacker-sound` | off | Played to each side. |
+
+### How a backstab lands
+
+<Steps>
+  <Step title="The weapon must be in the main hand">
+    And the attacker must be in a class that declares it. Both players must be players — mobs are
+    ignored.
+  </Step>
+  <Step title="The swing must be charged">
+    Below `attack-cooldown-need` the attacker is told the current and required percentages and the
+    hit continues as an ordinary attack.
+  </Step>
+  <Step title="The attacker must be behind">
+    Measured against the target's facing: roughly the rear 145° arc. In front of that, an ordinary
+    attack.
+  </Step>
+  <Step title="Damage is replaced, not added">
+    The vanilla damage of the swing is set to zero and `extra-damage` is taken straight off the
+    target's health.
+  </Step>
+</Steps>
+
+<Callout type="danger" title="Backstab damage ignores armour">
+Setting health directly bypasses armour, Protection, Resistance and absorption hearts. `extra-damage:
+8` is four full hearts against a naked player and four full hearts against a netherite one. Tune it
+low.
+</Callout>
+
+<Callout type="warning" title="can-dead: false skips the backstab, not the swing">
+When the subtraction would reach zero health, the attacker is told and the backstab is abandoned. The
+swing itself is left alone, so the ordinary sword damage still lands — and can still kill. What
+`can-dead: false` prevents is the flat `extra-damage` being the killing blow, not the target dying to
+that hit.
+</Callout>
