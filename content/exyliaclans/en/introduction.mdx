@@ -1,0 +1,99 @@
+---
+title: "Introduction"
+description: "What ExyliaClans is: player-written ranks, rectangular land claims, deaths till raidable, and a recruitment board that works in both directions."
+---
+
+ExyliaClans is a clan plugin for a server where clans fight each other. A player types `/clan create`,
+gets a clan with three ranks and a bank, buys a rectangle of land with the bank's money, and from then
+on their territory is only as safe as their **DTR** — the pool that drains every time a member dies and,
+once it goes negative, opens the claim to everybody.
+
+It is **twelve modules, thirty-seven menu screens, thirteen database tables and four commands**, and
+every one of the modules can be switched off in `config.yml` without touching the rest.
+
+## What it does
+
+<Cards>
+  <Card title="Ranks the clan writes itself" href="/docs/exyliaclans/roles">
+    Every clan creates its own ranks, names them, weights them and ticks the 24 permissions one by one.
+  </Card>
+  <Card title="Land claims" href="/docs/exyliaclans/claims">
+    One rectangle per clan, selected with a tool, paid for from the bank, enforced by WorldGuard or by
+    the plugin itself.
+  </Card>
+  <Card title="Deaths till raidable" href="/docs/exyliaclans/dtr">
+    A clan that dies enough loses the protection on its own claim until the pool regenerates.
+  </Card>
+  <Card title="Levels" href="/docs/exyliaclans/levels">
+    Kills earn EXP, deaths and raids cost it, and each level raises the member, ally and rival caps.
+  </Card>
+  <Card title="Allies and rivals" href="/docs/exyliaclans/relations">
+    Alliances are mutual and requested; rivalries are one-sided, and killing one is worth double EXP.
+  </Card>
+  <Card title="Recruitment, both ways" href="/docs/exyliaclans/recruitment">
+    Players advertise themselves with `/lfc`; clans advertise for members with `/lfp` and read the
+    applications in a menu.
+  </Card>
+  <Card title="War tools" href="/docs/exyliaclans/war-tools">
+    Focus an enemy, camp a rival's base, drop a rally, or call every member to your feet.
+  </Card>
+  <Card title="Chat and mail" href="/docs/exyliaclans/chat-and-mail">
+    Clan chat, ally chat, two one-character shortcuts, and a persistent clan mailbox.
+  </Card>
+</Cards>
+
+## How a clan actually goes
+
+<Steps>
+  <Step title="Created">
+    `/clan create <name>` costs nothing and makes the clan with the three ranks written in
+    `default-roles`. The founder gets the heaviest one and is the leader; the leader passes every
+    permission check without owning a rank that grants it.
+  </Step>
+  <Step title="Funded">
+    Members `/clan deposit` into the bank out of their own balance. The bank is the only thing land is
+    ever bought with, so a clan with no economy plugin has no claims either.
+  </Step>
+  <Step title="Claimed">
+    `/clan claim` hands out a golden hoe. Left click sets one corner, right click the other, shift +
+    click in the air pays and confirms. The price is `base-price` plus `price-per-block` per block of
+    the rectangle.
+  </Step>
+  <Step title="Settled">
+    `/clan sethome` only works standing inside the clan's own claim. The home becomes a client waypoint
+    for every member, and for allies too.
+  </Step>
+  <Step title="Fought">
+    Every member death costs the clan `death-loss` DTR and freezes regeneration for ten minutes. A rival
+    kill is worth double EXP. `/clan focus <player>` paints one enemy red and glowing for the whole clan.
+  </Step>
+  <Step title="Raided">
+    Below zero DTR the clan is **raidable**: the claim stops protecting anything, explosions work inside
+    it, and the clan loses 50 EXP. It stays that way until the pool regenerates past zero.
+  </Step>
+</Steps>
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21 or newer. Folia-supported. |
+| Java | 21 |
+| Required | `ExyliaLib`, `packetevents` |
+| Optional | `PlaceholderAPI`, `WorldGuard`, `TAB`, an economy plugin, `Worlds`, `Apollo`, `FeatherServerAPI` |
+
+<Callout type="warning" title="`packetevents` is a hard dependency">
+It is declared under `depend`, not `softdepend`: without it the server will not enable the plugin at
+all. Four things are built on it — the friend/enemy colouring, the focus glow, the claim selection tool
+and the `/clan map` pillars.
+</Callout>
+
+## What it does not do
+
+There are no scheduled wars, no war declarations with a start time, and no clan-versus-clan tournament
+bracket. What there is is a raid window that a clan opens by dying, which is what DTR is.
+
+It also does not own the friend/enemy question for the rest of the server. It **answers** it: the plugin
+registers a clan bridge with ExyliaLib, so an ExyliaFFA arena's friendly fire, an ExyliaCapture team
+check and an ExyliaPracticeCore party check all agree with the clan a player is actually in, without
+any of them being configured to.

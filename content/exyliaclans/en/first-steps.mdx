@@ -1,0 +1,123 @@
+---
+title: "First steps"
+description: "From an empty server to a clan that owns land: the permission set, the first clan, the bank and the first claim."
+---
+
+## Grant the commands first
+
+No player command works without its node. The shortest working setup is a wildcard on the `commands`
+branch:
+
+```yaml
+default:
+  - exyliaclans.commands.*
+
+admin:
+  - exyliaclans.admin
+  - exyliaclans.admin.*
+```
+
+If you would rather grant them one by one, [Permissions](/docs/exyliaclans/permissions) lists all
+thirty-four.
+
+<Callout type="warning" title="`exyliaclans.claim.bypass` is not in that branch">
+It is a separate node and it is not covered by `exyliaclans.commands.*`. Give it to staff only: it
+ignores every claim protection check on the server.
+</Callout>
+
+## Make a clan
+
+```
+/clan create Vanguard
+```
+
+The name is checked against three settings: `clan-name-min-length` (3), `clan-name-max-length` (16) and
+`clan-name-regex` (`^[a-zA-Z0-9_]+$` — letters, digits and underscores). Names are unique, compared
+case-insensitively.
+
+The clan is created with the three ranks in `default-roles` — **Leader** (weight 100), **Officer**
+(weight 50) and **Member** (weight 1, the default one new members get). The founder is given the
+heaviest rank and is recorded as the leader.
+
+<Callout type="note" title="Being the leader is not the same as holding a rank">
+The leader passes every clan-permission check outright, whatever their rank says, and outranks
+everybody for the weight comparison. That is why a leader cannot simply `/clan leave` — they have to
+`/clan transferleader` or `/clan disband` first.
+</Callout>
+
+## Fund the bank
+
+```
+/clan deposit 5000
+```
+
+The money comes out of the depositing player's own balance and needs the `DEPOSIT_BANK` rank permission.
+The bank is what pays for land, so this comes before the claim.
+
+## Claim the land
+
+```
+/clan claim
+```
+
+You are handed a **golden hoe**. While you hold it:
+
+| Input | What it does |
+|---|---|
+| Left click a block | Set corner 1 |
+| Right click a block | Set corner 2 |
+| Shift + click in the air | Pay and confirm |
+| `/clan claim` again | Cancel the session |
+
+Glass towers with a diamond block on top mark the corners as you set them, and only you can see them.
+The price is shown before you confirm: `base-price` (500) plus `price-per-block` (1.0) for every block
+of `X × Z`. A 20 × 20 rectangle is 400 blocks, so 500 + 400 = **900**.
+
+The rectangle is refused if it is smaller than `min-area` (25), larger than `max-area` (10 000),
+overlaps another clan's claim, comes within `min-separation` (5) blocks of one, overlaps a WorldGuard
+region, or costs more than the bank holds.
+
+<Callout type="tip" title="One rectangle per clan">
+A clan owns exactly one claim. To change its shape, use `/clan reclaim`, which lets you redraw it
+**inside** the existing bounds. To move it, `/clan unclaim` and claim again — and note that unclaiming
+also clears the clan home.
+</Callout>
+
+## Set the home
+
+```
+/clan sethome
+```
+
+While the claims module is on, this only works standing inside your own claim. The home then shows up as
+a client-side waypoint for every member — and for allies, as long as the alliance lasts.
+
+`/clan home` teleports there after a five-second warmup that is cancelled by moving or by taking damage.
+
+## Fill the ranks
+
+Open `/clan` and go to **Roles**. From there a clan with `MANAGE_ROLES` can create ranks, rename them,
+set their weight, choose which one is the default, and tick permissions one at a time.
+
+Weight is the whole hierarchy: a member can only kick, ban, promote or demote somebody whose weight is
+strictly **below** their own, and can only set a rank's weight below their own.
+
+## Recruit
+
+Two menus, in opposite directions:
+
+- `/lfp` — your clan posts what it is looking for, and reads the applications it receives.
+- `/lfc` — a player with no clan posts what they play, and clans browse the list and invite them.
+
+See [Recruitment](/docs/exyliaclans/recruitment).
+
+## What to tune before opening
+
+| Setting | Why |
+|---|---|
+| `claims.protection-mode` | Ships as `WORLDGUARD`. Wrong for a server without WorldGuard. |
+| `claims.base-price` / `price-per-block` | Land price against your economy, not against the defaults. |
+| `dtr.death-loss` / `regen-*` | How long a raid window stays open. |
+| `settings.max-members` | 30 by default, before level bonuses. |
+| `relational-placeholders.label-*` | The shipped labels are `MIEMBRO` and `NADA`. |
+| `settings.chat.quick-*-prefixes` | `.` and `@` swallow the start of a normal chat line. |

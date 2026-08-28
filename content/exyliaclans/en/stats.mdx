@@ -1,0 +1,110 @@
+---
+title: "Stats, leaderboards and logs"
+description: "What is counted, where it is stored, the seven rankings, and the per-clan audit trail."
+---
+
+## Two levels of counting
+
+| Table | Scope | Holds |
+|---|---|---|
+| `clan_stats` | One row per clan | kills, deaths, playtime in seconds |
+| `player_stats` | One row per **player per clan** | kills, deaths, playtime, and the last name seen |
+
+`player_stats` is keyed `playerUuid:clanId` on purpose: leaving a clan and joining another starts a fresh
+row rather than carrying a record earned somewhere else. The old row stays behind — a player who rejoins
+their previous clan picks up where they left off.
+
+Playtime is accumulated per session and flushed when the player quits, when they leave the clan, and when
+they are removed from it.
+
+<Callout type="note" title="A clan that has never died reports its kill count as its KDR">
+Rather than infinity. A leaderboard has to sort it and a menu has to print it, so `kills ÷ 0` becomes
+`kills`. The same rule applies to a player's KDR.
+</Callout>
+
+## Rival kills
+
+`rivals.kill-stat-multiplier` multiplies the **clan's** recorded kill for a kill against a rival. It is
+rounded, so `2.0` records two and `1.5` records one. The per-player row always records exactly one.
+
+Leaving it at `1.0` — the default — keeps the clan total and the sum of its members in step.
+
+## The leaderboard
+
+```
+/clan top
+```
+
+Seven rankings, switched from inside the menu:
+
+| Key | Ranks by |
+|---|---|
+| `online` | Members online right now |
+| `members` | Total members |
+| `kills` | Clan kills |
+| `deaths` | Clan deaths |
+| `kdr` | Clan KDR |
+| `playtime` | Total clan playtime |
+| `balance` | Bank balance |
+
+Each ranking is built on demand and cached for **30 seconds**, so a scoreboard asking for the top ten
+four times a second does not rebuild it. A clan with no `clan_stats` row does not appear.
+
+The same keys are what the placeholders take:
+
+```
+%exyliaclans_clan_leaderboard_rank_kills%
+%exyliaclans_clan_leaderboard_top_1_online%
+%exyliaclans_clan_leaderboard_top_value_1_online%
+```
+
+## The online roster
+
+For a clan scoreboard, `clan_online_member_<n>` and `clan_online_ally_<n>` give up to thirty slots each,
+sorted by rank weight — heaviest first — and then alphabetically. Every slot can also be asked for a
+field:
+
+```
+%exyliaclans_clan_online_member_1%          the name
+%exyliaclans_clan_online_member_1_role%     their rank
+%exyliaclans_clan_online_member_1_kdr%      their KDR in this clan
+%exyliaclans_clan_online_ally_1_clan%       which allied clan they are from
+```
+
+The roster is rebuilt at most once a second, which is what makes thirty slots on a scoreboard cheap.
+
+## The audit trail
+
+```yaml
+logs:
+  max-entries-per-clan: 200
+```
+
+Every clan keeps its own log. It is written for **43 kinds of event**: creation, disband, rename; members
+joining, leaving, being kicked, banned, unbanned, promoted, demoted, assigned a rank; leadership
+transfers; ranks created, deleted, renamed, re-weighted, re-permissioned, made default; bank deposits and
+withdrawals; alliance requests sent, accepted, declined, allies removed; rivals added and removed; claims
+created, reclaimed and removed; homes set and removed; friendly fire and open toggled; invitations sent
+and cancelled; clan mail sent; every LFP posting event and accepted application; and regroup calls.
+
+Entries past `max-entries-per-clan` are pruned oldest-first after each write. Set it high and the table
+grows; set it to `0` and nothing is pruned.
+
+Reading it:
+
+- `/clan` → **Logs**, for a member with `VIEW_LOGS`.
+- `/clanadmin logs <clan> [amount]`, defaulting to 20, for staff.
+
+Each line is rendered from the `logs.*` block in `messages.yml`, which has a phrase per action plus two
+templates — one for entries with a target, one for entries without.
+
+With `modules.logs: false` nothing is written at all, the menu refuses, and `/clanadmin logs` says so.
+
+## Admin edits
+
+```
+/clanadmin playerstat <player> <KILLS|DEATHS|PLAYTIME> <SET|ADD|REMOVE> <value>
+/clanadmin clanstat <clan> <KILLS|DEATHS|PLAYTIME> <SET|ADD|REMOVE> <value>
+```
+
+`PLAYTIME` is in seconds. Values are floored at zero. Both need `exyliaclans.admin.stats`.

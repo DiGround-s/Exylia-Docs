@@ -1,0 +1,133 @@
+---
+title: "Comandos"
+description: "Todos los comandos y subcomandos, con sus alias, su nodo de permiso, su permiso de rango y el módulo que necesitan."
+---
+
+Cuatro comandos. Cada subcomando comprueba un **permiso de servidor** (un nodo de LuckPerms) y, cuando
+actúa sobre el clan, un **permiso de rango** (el del propio clan). Los dos tienen que pasar.
+
+## /clan
+
+**Alias:** `/clans`, `/c`, `/f`, `/faction`, `/team`
+
+| Comando | Nodo | Permiso de rango | Módulo |
+|---|---|---|---|
+| `/clan` | `…commands.clan` | — | — |
+| `/clan create <nombre>` | `…commands.create` | — | — |
+| `/clan disband` | `…commands.disband` | solo líder | — |
+| `/clan invite <jugador>` | `…commands.invite` | `INVITE` | — |
+| `/clan join <clan>` | `…commands.join` | — | — |
+| `/clan leave` | `…commands.leave` | — | — |
+| `/clan kick <jugador>` | `…commands.kick` | `KICK` | — |
+| `/clan ban <jugador>` | `…commands.ban` | `BAN` | — |
+| `/clan unban <jugador>` | `…commands.unban` | `BAN` | — |
+| `/clan promote <jugador>` | `…commands.promote` | `PROMOTE` | — |
+| `/clan demote <jugador>` | `…commands.demote` | `DEMOTE` | — |
+| `/clan transferleader <jugador>` | `…commands.transferleader` | solo líder | — |
+| `/clan deposit <cantidad>` | `…commands.deposit` | `DEPOSIT_BANK` | `bank` |
+| `/clan withdraw <cantidad>` | `…commands.withdraw` | `WITHDRAW_BANK` | `bank` |
+| `/clan ally add <clan>` | `…commands.ally` | `SEND_ALLIANCE_REQUEST` | `allies` |
+| `/clan ally accept <clan>` | `…commands.ally` | `ACCEPT_ALLIANCE` | `allies` |
+| `/clan ally decline <clan>` | `…commands.ally` | `ACCEPT_ALLIANCE` | `allies` |
+| `/clan ally remove <clan>` | `…commands.ally` | `REMOVE_ALLY` | `allies` |
+| `/clan rival add <clan>` | `…commands.rival` | `MANAGE_RIVALS` | `rivals` |
+| `/clan rival remove <clan>` | `…commands.rival` | `MANAGE_RIVALS` | `rivals` |
+| `/clan claim` | `…commands.claim` | `CLAIM_LAND` | `claims` |
+| `/clan reclaim` | `…commands.reclaim` | `CLAIM_LAND` | `claims` |
+| `/clan unclaim` | `…commands.unclaim` | `UNCLAIM_LAND` | `claims` |
+| `/clan map` | `…commands.map` | — | `claims` |
+| `/clan sethome` | `…commands.sethome` | `SET_HOME` | `clan-home` |
+| `/clan home` | `…commands.home` | — | `clan-home` |
+| `/clan chat` | `…commands.chat` | — | — |
+| `/clan chat <mensaje>` | `…commands.chat` | — | — |
+| `/clan ff` | `…commands.ff` | `TOGGLE_FRIENDLY_FIRE` | — |
+| `/clan open` | `…commands.open` | `TOGGLE_OPEN` | — |
+| `/clan info` | `…commands.info` | — | — |
+| `/clan info <clan>` | `…commands.info` | — | — |
+| `/clan focus <jugador>` | `…commands.focus` | — | — |
+| `/clan camp <clan>` | `…commands.camp` | — | — |
+| `/clan rally` | `…commands.rally` | — | — |
+| `/clan regroup` | `…commands.regroup` | `REGROUP` | `regroup` |
+| `/clan regroup join` | `…commands.regroup` | — | `regroup` |
+| `/clan top` | `…commands.top` | — | — |
+| `/clan mail` | `…commands.mail` | — | `mail` |
+| `/clan mail send <miembro> <mensaje>` | `…commands.mail` | — | `mail` |
+| `/clan mail sendclan <mensaje>` | `…commands.mail` | `SEND_CLAN_MAIL` | `mail` |
+
+Todos los nodos de arriba llevan el prefijo `exyliaclans.` — `…commands.create` es
+`exyliaclans.commands.create`.
+
+<Callout type="note" title="Varios de estos abren un menú en vez de actuar">
+`/clan` abre el menú principal — uno distinto según estés o no en un clan. `/clan disband` y `/clan leave`
+abren una confirmación. `/clan promote` y `/clan demote` abren el mismo menú de **asignar rango**, así que
+las dos palabras son una comodidad más que dos operaciones. `/clan info` y `/clan top` abren la pantalla
+de información y la de ranking.
+</Callout>
+
+El autocompletado es contextual: `/clan invite` sugiere jugadores a los que puedes invitar de verdad,
+`/clan ally accept` sugiere solo clanes con una petición pendiente contigo, y `/clan unban` sugiere solo
+jugadores que tu clan ha baneado.
+
+## /clanadmin
+
+**Alias:** `/cadmin` · **Nodo base:** `exyliaclans.admin`
+
+El nodo base se comprueba en el comando en sí, y cada subcomando comprueba el suyo encima. Un miembro del
+staff necesita **los dos**.
+
+| Comando | Nodo |
+|---|---|
+| `/clanadmin forcekick <jugador>` | `…admin.forcekick` |
+| `/clanadmin forcejoin <jugador> <clan>` | `…admin.forcejoin` |
+| `/clanadmin forceleader <jugador> <clan>` | `…admin.forceleader` |
+| `/clanadmin disband <clan>` | `…admin.disband` |
+| `/clanadmin rename <clan> <nuevoNombre>` | `…admin.rename` |
+| `/clanadmin setbalance <clan> <SET\|ADD\|REMOVE> <cantidad>` | `…admin.setbalance` |
+| `/clanadmin setdtr <clan> <SET\|ADD\|REMOVE> <valor>` | `…admin.setdtr` |
+| `/clanadmin setexp <clan> <SET\|ADD\|REMOVE> <valor>` | `…admin.setexp` |
+| `/clanadmin setlevel <clan> <nivel>` | `…admin.setlevel` |
+| `/clanadmin playerstat <jugador> <KILLS\|DEATHS\|PLAYTIME> <SET\|ADD\|REMOVE> <valor>` | `…admin.stats` |
+| `/clanadmin clanstat <clan> <KILLS\|DEATHS\|PLAYTIME> <SET\|ADD\|REMOVE> <valor>` | `…admin.stats` |
+| `/clanadmin addally <clanA> <clanB>` | `…admin.addally` |
+| `/clanadmin removeally <clanA> <clanB>` | `…admin.removeally` |
+| `/clanadmin addrival <clanA> <clanB>` | `…admin.addrival` |
+| `/clanadmin removerival <clanA> <clanB>` | `…admin.removerival` |
+| `/clanadmin ban <jugador> <clan>` | `…admin.ban` |
+| `/clanadmin unban <jugador> <clan>` | `…admin.unban` |
+| `/clanadmin info <clan>` | `…admin.info` |
+| `/clanadmin logs <clan> [cantidad]` | `…admin.logs` |
+| `/clanadmin reload` | `…admin.reload` |
+
+`/clanadmin` funciona desde consola además de en el juego, salvo donde necesita un jugador conectado:
+`forcejoin` lo dice explícitamente.
+
+| Detalle | Comportamiento |
+|---|---|
+| `setbalance` | Con suelo en cero. |
+| `setdtr` | Limitado entre `min-dtr` y el máximo actual del clan. |
+| `setlevel` | Pone la EXP en el `required-exp` de ese nivel. Necesita el módulo `levels`. |
+| `playerstat` / `clanstat` | `PLAYTIME` va en segundos. Con suelo en cero. |
+| `logs` | 20 entradas por defecto. Necesita el módulo `logs`. |
+| `forcekick` | Disuelve el clan si el jugador expulsado era su último miembro. |
+
+Todos estos se saltan los permisos de rango y las comprobaciones de estado de DTR que sí frenan a las
+versiones de jugador.
+
+## /lfc
+
+**Alias:** `/lookingforclan` · **Nodo:** `exyliaclans.commands.lfc` · **Módulo:** `lfc`
+
+Abre el navegador de looking for clan. Ver [Reclutamiento](/docs/exyliaclans/reclutamiento).
+
+## /lfp
+
+**Alias:** `/lookingforplayer` · **Nodo:** `exyliaclans.commands.lfp` · **Módulo:** `lfp`
+
+Abre el navegador de looking for players. Publicar y responder solicitudes necesita el permiso de rango
+`MANAGE_LFP`.
+
+## Reload
+
+`/clanadmin reload` vuelve a leer `config.yml`, `messages.yml`, `lfc.yml` y `lfp.yml`, reconstruye la
+tabla de niveles y recompila todos los menús. `/exylialib reload` también recompila los menús, así que un
+cambio de paleta hecho desde la librería les llega.

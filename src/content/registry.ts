@@ -281,6 +281,50 @@ const SHIELDS_NAV: NavGroup[] = [
   },
 ];
 
+const CLANS_NAV: NavGroup[] = [
+  {
+    label: { en: "Getting started", es: "Empezar" },
+    pages: [
+      page("introduction", "introduction", "introduccion"),
+      page("installation", "installation", "instalacion"),
+      page("first-steps", "first-steps", "primeros-pasos"),
+    ],
+  },
+  {
+    label: { en: "Configuring", es: "Configurar" },
+    pages: [
+      page("modules", "modules", "modulos"),
+      page("roles", "roles", "roles"),
+      page("claims", "claims", "terrenos"),
+      page("levels", "levels", "niveles"),
+    ],
+  },
+  {
+    label: { en: "Systems", es: "Sistemas" },
+    pages: [
+      page("dtr", "dtr", "dtr"),
+      page("relations", "relations", "relaciones"),
+      page("war-tools", "war-tools", "herramientas-de-guerra"),
+      page("recruitment", "recruitment", "reclutamiento"),
+      page("chat-and-mail", "chat-and-mail", "chat-y-correo"),
+      page("stats", "stats", "estadisticas"),
+    ],
+  },
+  {
+    label: { en: "Reference", es: "Referencia" },
+    pages: [
+      page("commands", "commands", "comandos"),
+      page("permissions", "permissions", "permisos"),
+      page("placeholders", "placeholders", "placeholders"),
+      page("configuration", "configuration", "configuracion"),
+      page("menus", "menus", "menus"),
+      page("database", "database", "base-de-datos"),
+      page("api", "api", "api"),
+      page("faq", "faq", "faq"),
+    ],
+  },
+];
+
 const PRACTICE_NAV: NavGroup[] = [
   {
     label: { en: "Getting started", es: "Empezar" },
@@ -539,21 +583,26 @@ export const plugins: Plugin[] = [
   {
     id: "exyliaclans",
     name: "ExyliaClans",
-    tagline: { en: "Clans, wars and territory", es: "Clanes, guerras y territorios" },
+    tagline: { en: "Clans, territory and raiding", es: "Clanes, territorio y raideo" },
     summary: {
-      en: "Clan system with roles, bank, alliances, scheduled wars and a persistent ranking.",
-      es: "Sistema de clanes con roles, banco, alianzas, guerras programadas y ranking persistente.",
+      en: "Per-clan ranks written by the players themselves, a bank, rectangular land claims, deaths till raidable, levels, alliances and rivalries, a recruitment board in both directions, and a clan mailbox.",
+      es: "Rangos que cada clan escribe por su cuenta, banco, terrenos rectangulares, deaths till raidable, niveles, alianzas y rivalidades, un tabl\u00f3n de reclutamiento en los dos sentidos y un buz\u00f3n de clan.",
     },
-    version: "—",
-    status: "soon",
+    version: "1.0.1",
+    status: "stable",
     category: { en: "Social", es: "Social" },
     minecraft: "1.21+",
     tags: [
       { en: "Clans", es: "Clanes" },
-      { en: "Wars", es: "Guerras" },
-      { en: "Ranking", es: "Ranking" },
+      { en: "Claims", es: "Terrenos" },
+      { en: "DTR", es: "DTR" },
+      { en: "Folia", es: "Folia" },
     ],
-    nav: [],
+    nav: CLANS_NAV,
+    links: [
+      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
+      { label: "Discord", href: "https://discord.exylia.net" },
+    ],
   },
   {
     id: "exyliaevents",

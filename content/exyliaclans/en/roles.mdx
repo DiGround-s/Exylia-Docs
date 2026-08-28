@@ -1,0 +1,141 @@
+---
+title: "Roles and rank permissions"
+description: "The 24 in-clan permissions, how weight decides who may act on whom, and the default-roles block new clans are built from."
+---
+
+Ranks belong to the clan, not to the server. `default-roles` in `config.yml` only decides what a clan
+looks like **on the day it is created**; after that the clan edits its own ranks in the roles menu, and
+nothing in the config file reaches back into it.
+
+## default-roles
+
+```yaml
+default-roles:
+  leader:
+    name: Leader
+    weight: 100
+    permissions:
+      - INVITE
+      - KICK
+      - BAN
+      - PROMOTE
+      - DEMOTE
+      - MANAGE_ROLES
+      - SEND_ALLIANCE_REQUEST
+      - ACCEPT_ALLIANCE
+      - REMOVE_ALLY
+      - MANAGE_RIVALS
+      - SET_HOME
+      - REGROUP
+      - DEPOSIT_BANK
+      - WITHDRAW_BANK
+      - TOGGLE_FRIENDLY_FIRE
+      - TOGGLE_OPEN
+      - CLAIM_LAND
+      - UNCLAIM_LAND
+      - BUILD
+      - OPEN_DOORS
+      - OPEN_CONTAINERS
+      - SEND_CLAN_MAIL
+      - MANAGE_LFP
+      - VIEW_LOGS
+    is-default: false
+  officer:
+    name: Officer
+    weight: 50
+    permissions: [INVITE, KICK, BAN, PROMOTE, DEMOTE, SEND_ALLIANCE_REQUEST, ACCEPT_ALLIANCE, REMOVE_ALLY, MANAGE_RIVALS, SET_HOME, REGROUP, DEPOSIT_BANK, WITHDRAW_BANK, SEND_CLAN_MAIL, MANAGE_LFP, VIEW_LOGS]
+    is-default: false
+  member:
+    name: Member
+    weight: 1
+    permissions: []
+    is-default: true
+```
+
+The map keys (`leader`, `officer`, `member`) are yours; add, rename or delete entries freely. Nothing
+inside this block is ever pruned, and an entry you delete stays deleted.
+
+| Key | What it does |
+|---|---|
+| `name` | What players see. |
+| `weight` | Higher outranks lower. |
+| `permissions` | A list of the names below. Anything not listed is refused. An unknown name is dropped. |
+| `is-default` | Whether a new member is given this rank. Exactly one entry should be `true`. |
+
+<Callout type="danger" title="An empty `default-roles` breaks clan creation">
+`/clan create` refuses and logs `Cannot create a clan: default-roles is empty in config.yml.` rather than
+making a clan whose founder has no rank. Nothing is written back into the file — the block is yours.
+</Callout>
+
+The founder is given the **heaviest** rank in the block, not the one named `leader`. If you rewrite the
+block, whichever rank you weight highest is the one the founder gets.
+
+## The 24 permissions
+
+| Permission | Grants |
+|---|---|
+| `INVITE` | `/clan invite`, cancelling an invite |
+| `KICK` | `/clan kick` |
+| `BAN` | `/clan ban`, `/clan unban` |
+| `PROMOTE` | Assigning a rank above the member's current one |
+| `DEMOTE` | Assigning a rank below it |
+| `MANAGE_ROLES` | Creating, renaming, deleting ranks, setting weights, setting the default rank, ticking permissions |
+| `SEND_ALLIANCE_REQUEST` | `/clan ally add` |
+| `ACCEPT_ALLIANCE` | `/clan ally accept`, `/clan ally decline` |
+| `REMOVE_ALLY` | `/clan ally remove` |
+| `MANAGE_RIVALS` | `/clan rival add`, `/clan rival remove` |
+| `SET_HOME` | `/clan sethome` |
+| `REGROUP` | `/clan regroup` |
+| `DEPOSIT_BANK` | `/clan deposit` |
+| `WITHDRAW_BANK` | `/clan withdraw` |
+| `TOGGLE_FRIENDLY_FIRE` | `/clan ff` |
+| `TOGGLE_OPEN` | `/clan open` |
+| `CLAIM_LAND` | `/clan claim`, `/clan reclaim` |
+| `UNCLAIM_LAND` | `/clan unclaim` |
+| `BUILD` | Placing and breaking blocks, buckets and item frames inside the clan's own claim |
+| `OPEN_DOORS` | Doors, trapdoors and fence gates inside the claim |
+| `OPEN_CONTAINERS` | Chests and every other container inside the claim |
+| `SEND_CLAN_MAIL` | Sending mail to the whole clan |
+| `MANAGE_LFP` | Posting, editing, renewing and cancelling the clan's `/lfp` posting, and answering applications |
+| `VIEW_LOGS` | The logs menu |
+
+<Callout type="warning" title="`MANAGE_RIVALS` and `REGROUP` are not in the roles menu">
+The menu ships with toggles for twenty-two of the twenty-four. Those two can be granted from
+`default-roles` — so new clans get them — but an existing clan cannot tick them itself. Add them to
+`menus/role_manage.yml` with a `exyliaclans:toggle_role_perm %role_id% MANAGE_RIVALS` action if you want
+them clickable.
+</Callout>
+
+<Callout type="note" title="`BUILD`, `OPEN_DOORS` and `OPEN_CONTAINERS` only apply under BUILTIN">
+Under `protection-mode: WORLDGUARD` the region is what enforces the claim, and every member is a region
+member. Those three permissions are read by the plugin's own listener, which stands down when WorldGuard
+is in charge. See [Claims](/docs/exyliaclans/claims#protection-mode).
+</Callout>
+
+## The leader
+
+The leader is a column on the clan, not a rank. They pass every permission check outright, whatever
+their rank grants, and they count as heavier than everybody for the weight comparison.
+
+Consequences worth knowing:
+
+- A leader cannot `/clan leave`. They must `/clan transferleader` or `/clan disband`.
+- Disbanding is refused unless the clan's DTR state is `NORMAL`.
+- Removing every permission from the leader's rank changes nothing for whoever holds the leadership.
+
+## Weight
+
+Weight is checked in one place and answers one question: *may this member act on that member?* The
+answer is yes when the actor's weight is **strictly greater** than the target's.
+
+- Kick, ban, promote and demote all go through it.
+- Assigning a rank is refused if the rank's weight is not below the actor's own.
+- `/clan promote` and `/clan demote` both open the same **assign rank** menu; the two words are a
+  convenience, not two different operations.
+- A rank's weight must be unique within the clan, and below the weight of whoever is setting it.
+- The heaviest rank cannot be deleted, and neither can the last remaining one.
+
+<Callout type="tip" title="Leave gaps">
+Weights of 100 / 50 / 1 leave room to insert a rank between two existing ones without renumbering the
+clan. Consecutive weights do not.
+</Callout>

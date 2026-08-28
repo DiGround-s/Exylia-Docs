@@ -1,0 +1,123 @@
+---
+title: "Niveles"
+description: "EXP por bajas, rachas y multiplicador por rival, la tabla de diez niveles y los topes que sube cada uno."
+---
+
+El nivel de un clan no se guarda. Se deriva de su EXP cada vez que se lee: el nivel más alto cuyo
+`required-exp` haya alcanzado el clan, con tope en `max-level`.
+
+## Ganar y perder
+
+```yaml
+levels:
+  max-level: 10
+  exp-actions:
+    kill:
+      enabled: true
+      exp: 10
+    death:
+      enabled: true
+      exp-loss: 5
+    raided:
+      enabled: true
+      exp-loss: 50
+```
+
+| Evento | Efecto |
+|---|---|
+| Un miembro mata a alguien | `+10` EXP al clan del asesino, antes de bonus |
+| Un miembro muere | `-5` EXP a su clan, y su racha se reinicia |
+| El clan queda raidable | `-50` EXP, una vez, al cruzar |
+
+La EXP nunca baja de cero. Un clan que ya está en `max-level` con la EXP necesaria deja de ganar, así que
+el excedente no se acumula contra un tope que subas más adelante.
+
+## Rachas de bajas
+
+```yaml
+levels:
+  kill-streak-bonuses:
+    "3": 5
+    "5": 10
+    "10": 25
+```
+
+La racha se cuenta por jugador y se reinicia al morir, al desconectar o al recargar el módulo de niveles.
+El bonus que se aplica es el **umbral más alto igual o por debajo** de la racha actual, sumado a la EXP
+base — así que con racha 7 una baja vale 10 + 10 = 20, y con 12 vale 10 + 25 = 35.
+
+Las claves son tuyas: añade los umbrales que quieras, en cualquier orden. Una clave que no sea un número
+cuesta esa entrada y nada más.
+
+## Bajas contra rivales
+
+Si la víctima estaba en un clan que el clan del asesino ha declarado rival, toda la EXP de la baja — base
+más bonus de racha — se multiplica por `rivals.kill-exp-multiplier`, que viene a `2.0`.
+
+```
+(10 base + 10 racha) × 2.0 = 40 EXP
+```
+
+La relación se mira en un solo sentido: basta con que el clan del asesino haya declarado al de la víctima,
+haya o no declaración de vuelta. Con el módulo `rivals` apagado, o el multiplicador a `1.0`, no se hace
+ninguna consulta.
+
+## La tabla de niveles
+
+```yaml
+levels:
+  level-definitions:
+    "1":  { required-exp: 0,     max-members-bonus: 0,  max-alliances-bonus: 0, max-rivals-bonus: 0 }
+    "2":  { required-exp: 500,   max-members-bonus: 5,  max-alliances-bonus: 1, max-rivals-bonus: 1 }
+    "3":  { required-exp: 1500,  max-members-bonus: 10, max-alliances-bonus: 1, max-rivals-bonus: 2 }
+    "4":  { required-exp: 3500,  max-members-bonus: 15, max-alliances-bonus: 2, max-rivals-bonus: 2 }
+    "5":  { required-exp: 7000,  max-members-bonus: 20, max-alliances-bonus: 2, max-rivals-bonus: 3 }
+    "6":  { required-exp: 12000, max-members-bonus: 25, max-alliances-bonus: 3, max-rivals-bonus: 4 }
+    "7":  { required-exp: 20000, max-members-bonus: 30, max-alliances-bonus: 3, max-rivals-bonus: 5 }
+    "8":  { required-exp: 32000, max-members-bonus: 35, max-alliances-bonus: 4, max-rivals-bonus: 6 }
+    "9":  { required-exp: 50000, max-members-bonus: 40, max-alliances-bonus: 4, max-rivals-bonus: 7 }
+    "10": { required-exp: 75000, max-members-bonus: 50, max-alliances-bonus: 5, max-rivals-bonus: 10 }
+```
+
+`required-exp` es un **total**, no un escalón: un clan es nivel 5 cuando tiene 7 000 EXP acumulada, no
+cuando ha ganado 7 000 desde el nivel 4.
+
+Los bonus se suman a los topes base de `settings`, y no se acumulan entre niveles — un clan de nivel 10
+recibe exactamente la fila del nivel 10:
+
+| Tope | Base | En nivel 10 |
+|---|---|---|
+| Miembros | `max-members`, 30 | 30 + 50 = **80** |
+| Alianzas | `max-alliances`, 5 | 5 + 5 = **10** |
+| Rivales | `max-rivals`, 10 | 10 + 10 = **20** |
+
+Las claves son tuyas. Añade un nivel once y sube `max-level` a 11, o borra filas para acortar la escalera.
+Una clave que no sea un número se salta.
+
+<Callout type="warning" title="Perder EXP puede perder un nivel">
+Las muertes y los raideos quitan EXP, y el nivel se recalcula sobre el total nuevo. A un clan que baja de
+un umbral se le avisa, y sus topes encogen con él — lo que **no** expulsa a los miembros que ahora le
+sobran. Simplemente no puede reclutar hasta volver a subir.
+</Callout>
+
+## Cómo se ve una subida
+
+Cruzar un umbral envía `level.level-up` a todos los miembros conectados; bajar de uno envía
+`level.level-down`. `/clan` → **Nivel de clan** muestra toda la escalera con el nivel actual marcado, la
+barra de progreso y los bonus de cada fila, con el estilo del bloque `level.*` de `messages.yml`.
+
+## Admin
+
+```
+/clanadmin setexp <clan> <SET|ADD|REMOVE> <cantidad>
+/clanadmin setlevel <clan> <nivel>
+```
+
+`setlevel` es un atajo para poner la EXP en el `required-exp` de ese nivel. Los dos informan de módulo
+desactivado cuando `modules.levels` está en `false`.
+
+## Apagar los niveles
+
+Con `modules.levels: false` nada gana ni pierde EXP, el menú de niveles no abre, y todos los topes son el
+valor base de `settings`. La EXP existente se queda en la tabla `clans` y vuelve intacta al reactivar el
+módulo.

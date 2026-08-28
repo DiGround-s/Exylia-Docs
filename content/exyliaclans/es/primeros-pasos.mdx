@@ -1,0 +1,122 @@
+---
+title: "Primeros pasos"
+description: "De un servidor vacío a un clan con terreno: los permisos, el primer clan, el banco y el primer claim."
+---
+
+## Primero, los comandos
+
+Ningún comando de jugador funciona sin su nodo. Lo más corto que funciona es un comodín sobre la rama
+`commands`:
+
+```yaml
+default:
+  - exyliaclans.commands.*
+
+admin:
+  - exyliaclans.admin
+  - exyliaclans.admin.*
+```
+
+Si prefieres darlos uno a uno, [Permisos](/docs/exyliaclans/permisos) lista los treinta y cuatro.
+
+<Callout type="warning" title="`exyliaclans.claim.bypass` no está en esa rama">
+Es un nodo aparte y `exyliaclans.commands.*` no lo incluye. Dáselo solo al staff: ignora todas las
+comprobaciones de protección de terreno del servidor.
+</Callout>
+
+## Crear un clan
+
+```
+/clan create Vanguard
+```
+
+El nombre se comprueba contra tres ajustes: `clan-name-min-length` (3), `clan-name-max-length` (16) y
+`clan-name-regex` (`^[a-zA-Z0-9_]+$` — letras, dígitos y guiones bajos). Los nombres son únicos y se
+comparan sin distinguir mayúsculas.
+
+El clan se crea con los tres rangos de `default-roles`: **Leader** (peso 100), **Officer** (peso 50) y
+**Member** (peso 1, el que recibe un miembro nuevo). El fundador recibe el rango más pesado y queda
+registrado como líder.
+
+<Callout type="note" title="Ser líder no es lo mismo que tener un rango">
+El líder pasa cualquier comprobación de permiso de clan, diga lo que diga su rango, y supera a todos en la
+comparación de pesos. Por eso un líder no puede hacer `/clan leave` sin más: tiene que
+`/clan transferleader` o `/clan disband` antes.
+</Callout>
+
+## Llenar el banco
+
+```
+/clan deposit 5000
+```
+
+El dinero sale del saldo del jugador que deposita y hace falta el permiso de rango `DEPOSIT_BANK`. El
+banco es lo que paga el terreno, así que esto va antes del claim.
+
+## Reclamar el terreno
+
+```
+/clan claim
+```
+
+Te entregan una **azada de oro**. Mientras la tienes:
+
+| Acción | Qué hace |
+|---|---|
+| Clic izquierdo a un bloque | Esquina 1 |
+| Clic derecho a un bloque | Esquina 2 |
+| Shift + clic al aire | Paga y confirma |
+| `/clan claim` otra vez | Cancela la sesión |
+
+Torres de cristal rematadas con un bloque de diamante marcan las esquinas conforme las pones, y solo las
+ves tú. El precio se muestra antes de confirmar: `base-price` (500) más `price-per-block` (1.0) por cada
+bloque de `X × Z`. Un rectángulo de 20 × 20 son 400 bloques, así que 500 + 400 = **900**.
+
+El rectángulo se rechaza si es menor que `min-area` (25), mayor que `max-area` (10 000), se solapa con el
+terreno de otro clan, queda a menos de `min-separation` (5) bloques de uno, se solapa con una región de
+WorldGuard, o cuesta más de lo que hay en el banco.
+
+<Callout type="tip" title="Un rectángulo por clan">
+Un clan tiene exactamente un terreno. Para cambiar su forma, `/clan reclaim` permite redibujarlo **dentro**
+de los límites actuales. Para moverlo, `/clan unclaim` y volver a reclamar — y ojo, quitar el terreno
+también borra el home del clan.
+</Callout>
+
+## Poner el home
+
+```
+/clan sethome
+```
+
+Con el módulo de terrenos activo, esto solo funciona estando dentro del terreno propio. El home aparece
+entonces como waypoint de cliente para cada miembro, y para los aliados mientras dure la alianza.
+
+`/clan home` teletransporta tras un warmup de cinco segundos que se cancela al moverse o al recibir daño.
+
+## Montar los rangos
+
+Abre `/clan` y ve a **Rangos**. Desde ahí, un clan con `MANAGE_ROLES` puede crear rangos, renombrarlos,
+ponerles peso, elegir cuál es el rango por defecto y marcar permisos de uno en uno.
+
+El peso es toda la jerarquía: un miembro solo puede expulsar, banear, ascender o descender a alguien cuyo
+peso esté estrictamente **por debajo** del suyo, y solo puede poner a un rango un peso menor que el suyo.
+
+## Reclutar
+
+Dos menús, en sentidos opuestos:
+
+- `/lfp` — tu clan publica lo que busca y lee las solicitudes que recibe.
+- `/lfc` — un jugador sin clan publica a qué juega, y los clanes miran la lista y le invitan.
+
+Ver [Reclutamiento](/docs/exyliaclans/reclutamiento).
+
+## Qué ajustar antes de abrir
+
+| Ajuste | Por qué |
+|---|---|
+| `claims.protection-mode` | Viene como `WORLDGUARD`. Mal para un servidor sin WorldGuard. |
+| `claims.base-price` / `price-per-block` | El precio del terreno contra tu economía, no contra los valores por defecto. |
+| `dtr.death-loss` / `regen-*` | Cuánto tiempo queda abierta una ventana de raideo. |
+| `settings.max-members` | 30 por defecto, antes de los bonus de nivel. |
+| `relational-placeholders.label-*` | Las etiquetas que vienen son `MIEMBRO` y `NADA`. |
+| `settings.chat.quick-*-prefixes` | `.` y `@` se comen el principio de una línea normal de chat. |

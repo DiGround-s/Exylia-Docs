@@ -1,0 +1,72 @@
+---
+title: "Módulos"
+description: "Los doce interruptores de config.yml, qué apaga cada uno y qué queda detrás cuando está apagado."
+---
+
+Cada mitad del plugin está detrás de un booleano en `modules`. Los doce vienen a `true`.
+
+```yaml
+modules:
+  claims: true
+  dtr: true
+  clan-home: true
+  bank: true
+  allies: true
+  levels: true
+  lfc: true
+  lfp: true
+  rivals: true
+  regroup: true
+  logs: true
+  mail: true
+```
+
+Un módulo apagado hace tres cosas: su manager no se construye, sus comandos responden con
+`errors.module-disabled`, y los botones de menú que lo abren rechazan el clic con la misma línea.
+
+## Qué cubre cada uno
+
+| Módulo | Apaga |
+|---|---|
+| `claims` | `/clan claim`, `/clan unclaim`, `/clan reclaim`, `/clan map`, la herramienta, los pilares de esquina, el listener de protección y las regiones de WorldGuard. |
+| `dtr` | Toda la reserva deaths till raidable: la tarea de regeneración, el congelado, el aviso de muerte y el estado raidable. |
+| `clan-home` | `/clan home`, `/clan sethome` y los waypoints del home. |
+| `bank` | `/clan deposit`, `/clan withdraw` y el menú del banco. |
+| `allies` | `/clan ally` en sus cuatro formas y el menú de aliados. |
+| `levels` | EXP, subidas de nivel, bonus por racha y el menú de niveles — incluidos los topes de miembros, aliados y rivales que da cada nivel. |
+| `lfc` | `/lfc`, sus menús y su tarea de caducidad. |
+| `lfp` | `/lfp`, sus menús, las solicitudes y su tarea de caducidad. |
+| `rivals` | `/clan rival` y el menú de rivales, más los multiplicadores de EXP y de estadística por rival. |
+| `regroup` | `/clan regroup` y `/clan regroup join`. |
+| `logs` | Escribir el registro de auditoría, el menú de logs y `/clanadmin logs`. |
+| `mail` | `/clan mail`, el buzón, el aviso de no leídos al entrar y la purga por caducidad. |
+
+## Qué se hacen los interruptores entre ellos
+
+<Callout type="warning" title="Apagar `claims` mueve el home del clan">
+`/clan sethome` se niega si no estás dentro de tu terreno — pero solo mientras el módulo de terrenos está
+activo. Con `claims` apagado, el home se puede poner **en cualquier sitio**, que es otro juego distinto.
+</Callout>
+
+<Callout type="warning" title="Apagar `dtr` hace los terrenos permanentes">
+Un terreno solo deja de proteger cuando su clan queda raidable, que es un estado de DTR. Sin DTR no hay
+estado raidable, así que nada abre nunca un terreno: el territorio es permanente hasta que se quite a
+mano. `/clan unclaim` y `/clan disband` también dejan de exigir que el DTR esté al máximo.
+</Callout>
+
+<Callout type="note" title="Apagar `levels` congela los topes en los valores base">
+`max-members`, `max-alliances` y `max-rivals` son los números de `settings`, sin bonus. `/clanadmin
+setlevel` y `/clanadmin setexp` informan de que el módulo está desactivado.
+</Callout>
+
+Apagar `bank` no vacía los saldos existentes ni hace desaparecer el terreno ya reclamado — pero sin forma
+de financiar el banco, no se puede pagar ningún claim nuevo.
+
+Apagar `rivals` deja intactas las filas de rivalidad en `clan_relations`; simplemente dejan de leerse.
+Volver a encenderlo las recupera.
+
+## Los módulos y el par de reclutamiento
+
+`lfc` y `lfp` son independientes. Solo con `lfp` tienes un tablón de ofertas donde publican los clanes;
+solo con `lfc`, una lista de agentes libres que los clanes miran e invitan. El permiso de rango
+`MANAGE_LFP` solo importa con `lfp` activo.

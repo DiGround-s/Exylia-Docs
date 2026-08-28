@@ -1,0 +1,128 @@
+---
+title: "FAQ"
+description: "Las dudas que provocan de verdad los valores por defecto."
+---
+
+## Nadie puede usar ningún comando
+
+No hay nada dado por defecto. Dale `exyliaclans.commands.*` al grupo por defecto — ver
+[Permisos](/docs/exyliaclans/permisos).
+
+## Los terrenos no protegen nada
+
+`claims.protection-mode` viene como `WORLDGUARD`. Si WorldGuard no está instalado no se crea región y el
+listener propio se aparta igual, así que el terreno se dibuja y se paga pero no protege nada. Ponlo en
+`BUILTIN`, o instala WorldGuard.
+
+Lo siguiente que hay que mirar es que el clan dueño no sea raidable: el terreno de un clan raidable está
+abierto a propósito.
+
+## Un miembro no puede romper bloques en nuestro propio terreno
+
+En `BUILTIN` eso es el permiso de rango `BUILD`, que el rango **Member** que viene no tiene. Márcalo en
+`/clan` → **Rangos**, o añádelo a `default-roles` para los clanes que se creen a partir de ahora.
+
+## `/clan sethome` dice que tengo que estar dentro del terreno
+
+Y es así, mientras el módulo de terrenos esté activo. Reclama primero y pon el home dentro. Con
+`modules.claims: false` el home se puede poner en cualquier sitio.
+
+## Quitamos el terreno y perdimos el home
+
+Es a propósito: el home vive dentro del terreno, así que quitarlo se lo lleva. Las dos cosas quedan en el
+log.
+
+## `/clan deposit` dice que la economía no está disponible
+
+No hay ningún plugin de economía que ExyliaLib pueda leer. Instala uno — el banco es lo que paga el
+terreno, así que sin él tampoco se puede comprar ningún claim.
+
+## Un clan no puede disolverse ni quitar terreno
+
+Las dos se niegan si el estado de DTR no es `NORMAL`. Un clan que acaba de perder un miembro está
+`FROZEN` diez minutos. `/clanadmin disband` se lo salta.
+
+## Nos hemos quedado raidables
+
+El DTR regenera `regen-amount` (0.1) cada `regen-interval-seconds` (45 s) — pero solo mientras el clan
+**no** está congelado, y cada muerte reinicia los diez minutos de congelado. Un clan al que están
+farmeando no sale nunca del congelado. Baja `frozen-duration-seconds`, sube `regen-amount`, o añade el
+mundo a `no-loss-worlds` si las muertes ahí no deberían contar.
+
+## Las muertes en el lobby nos cuestan DTR
+
+Añade el mundo a `dtr.no-loss-worlds`. El lobby, el mundo de eventos y cualquier mundo de practice van
+ahí.
+
+## Escribir `.` en el chat lo manda a mi clan
+
+`settings.chat.quick-clan-prefixes` es `["."]` y `quick-ally-prefixes` es `["@"]`. Cámbialos por algo con
+lo que nadie empiece una frase — `c:` y `a:` — o vacía las listas para desactivar los atajos.
+
+## Los jugadores ven `MIEMBRO` y `NADA` en el TAB
+
+Dos de las cuatro etiquetas relacionales que vienen están en español y dos en inglés. Edita
+`relational-placeholders.label-member` y `label-none` en `config.yml`.
+
+## Las invitaciones nunca caducan
+
+No caducan. `invite-expire-seconds` solo lo lee la caché de peticiones de alianza; un `/clan invite` es
+una fila de `clan_invites` que se mantiene hasta que se acepta, se rechaza, se cancela o el jugador entra
+en un clan.
+
+## Nuestra petición de alianza desapareció
+
+Las peticiones de alianza viven en memoria con caducidad de 60 segundos, y un reinicio se lleva las
+pendientes. Al clan que la envió se le avisa cuando caduca.
+
+## Somos aliados y seguimos pegándonos
+
+Los dos clanes tienen que tener el friendly fire **activado** para que los aliados estén protegidos; con
+uno no basta. Comprueba también que el mundo no esté en `settings.forced-ff-worlds`, que ignora el ajuste
+de cada clan.
+
+## Falta el permiso de rivales o de regroup en el menú de rangos
+
+`MANAGE_RIVALS` y `REGROUP` no tienen interruptor en `menus/role_manage.yml`. Dalos desde
+`default-roles`, o añade un botón con `exyliaclans:toggle_role_perm %role_id% MANAGE_RIVALS` — ver
+[Rangos](/docs/exyliaclans/roles).
+
+## Nuestro clan ha perdido un nivel
+
+Las muertes cuestan 5 EXP y quedar raidable cuesta 50, y el nivel se recalcula sobre el total. A nadie se
+le expulsa por eso; el clan simplemente no puede reclutar por encima del tope menor hasta volver a subir.
+
+## El ranking de bajas es más alto que la suma de las bajas de los miembros
+
+`rivals.kill-stat-multiplier` infla la baja registrada del clan en una baja contra un rival; la fila por
+jugador registra siempre una. Ponlo en `1.0` para que los dos números cuadren.
+
+## Un hueco del scoreboard sale en blanco
+
+Un hueco de la lista de conectados sin nadie no devuelve nada. Usa la sintaxis de respaldo —
+`%exyliaclans_clan_online_member_5|%` — o mira la consola: un placeholder que nadie responde se avisa una
+vez por nombre.
+
+## `/clan map` no muestra nada
+
+No hay nada reclamado dentro de `claims.map-radius` (200 bloques). El comando lo dice y nombra el radio.
+El mapa además se apaga solo a los dos minutos.
+
+## Los cambios en un menú no se ven
+
+`/clanadmin reload` recompila todos los menús. Si el archivo sigue sin leerse, la consola nombra la parte
+que no entendió — el resto de la pantalla se abre sin ella.
+
+## Cambié default-roles y los clanes existentes siguen igual
+
+Y seguirán. `default-roles` describe un clan el día que se crea; después sus rangos son filas de
+`clan_roles` que edita el propio clan.
+
+## ¿Funciona en Folia?
+
+Sí — `folia-supported: true`, y la programación de tareas pasa por el scheduler de ExyliaLib, que conoce
+Folia.
+
+## ¿Puedo usarlo sin packetevents?
+
+No. Es dependencia dura, y el servidor no activará el plugin sin él.

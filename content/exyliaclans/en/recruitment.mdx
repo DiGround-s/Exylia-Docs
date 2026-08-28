@@ -1,0 +1,133 @@
+---
+title: "Recruitment"
+description: "/lfc and /lfp: a free-agent board and a job board, both built from questions you write."
+---
+
+Two boards, pointing in opposite directions, built from the same three question types.
+
+| Command | Who posts | Who reads |
+|---|---|---|
+| `/lfc` | A player with no clan, advertising what they play | Clans, browsing and inviting |
+| `/lfp` | A clan, advertising what it is looking for | Players, browsing and applying |
+
+Both are modules and can run independently. Their question sets live in `lfc.yml` and `lfp.yml`.
+
+## Question types
+
+A category is one question. There are three kinds:
+
+| `type` | What the player does | Uses |
+|---|---|---|
+| `TOGGLE` | Ticks it on or off | `answers` and `selections` are ignored |
+| `SINGLE_SELECT` | Picks one answer | `answers` |
+| `MULTI_ANSWER` | Picks answers, then a tier for each | `answers` and `selections` |
+
+```yaml
+categories:
+  pvp:
+    display-name: "&cPvP"
+    icon: DIAMOND_SWORD
+    type: MULTI_ANSWER
+    answers:
+      PotPvP:     { name: PotPvP,     icon: SPLASH_POTION }
+      CrystalPvP: { name: CrystalPvP, icon: END_CRYSTAL }
+      MacePvP:    { name: MacePvP,    icon: MACE }
+    selections:
+      HT1: { name: HT1, color: "&4", icon: NETHERITE_SWORD }
+      LT1: { name: LT1, color: "&a", icon: NETHERITE_INGOT }
+      HT2: { name: HT2, color: "&c", icon: DIAMOND_SWORD }
+  farmer:
+    display-name: "&aFarmer"
+    icon: DIAMOND_HOE
+    type: TOGGLE
+  role:
+    display-name: "&eMain role"
+    icon: SHIELD
+    type: SINGLE_SELECT
+    answers:
+      Attacker: { name: Attacker, icon: IRON_SWORD }
+      Support:  { name: Support,  icon: SHIELD }
+```
+
+The category ids, the answer ids and the tier ids are all yours. Nothing inside `categories` is pruned,
+and an entry you delete stays deleted. `icon` takes a material name or a head reference.
+
+`MULTI_ANSWER` is what turns a flat list into a profile that says something: a player does not just tick
+*PotPvP*, they tick it at *HT2*. Both files ship with the same ten-tier ladder as an example.
+
+## Looking for clan
+
+```yaml
+settings:
+  cooldown-seconds: 300
+  expiry-days: 7
+  broadcast-on-post: true
+  expiry-check-interval-minutes: 10
+```
+
+`/lfc` opens the browser. A player with no profile builds one from the categories, submits, and appears
+in the list. A player who already has one sees it at the top and can edit, renew or cancel it.
+
+| Rule | Detail |
+|---|---|
+| Only players without a clan may post | `lfc.error-in-clan` |
+| One profile per player | The player's UUID is the row id |
+| Cooldown | `cooldown-seconds` between posting and renewing, 300 s |
+| Expiry | `expiry-days` after the last post or renewal, 7 days |
+| Expiry sweep | Every `expiry-check-interval-minutes`, 10 min |
+| Broadcast | `broadcast-on-post` announces posts and renewals server-wide |
+
+A profile is removed automatically the moment its owner joins a clan, and the player is told.
+
+A clan browsing the list invites straight from the profile — the button is a normal clan invite, so it
+still needs `INVITE`.
+
+## Looking for players
+
+```yaml
+settings:
+  cooldown-seconds: 300
+  expiry-days: 7
+  broadcast-on-post: true
+  expiry-check-interval-minutes: 10
+  description-max-length: 200
+  application-message-max-length: 200
+  application-cooldown-seconds: 120
+  max-applications-per-player: 3
+```
+
+`/lfp` opens the browser. A clan member with `MANAGE_LFP` can post, edit, renew or cancel the clan's
+posting, and read its applications; anybody else sees the board and applies.
+
+A posting carries the categories **and** a free-text description, capped at `description-max-length`.
+
+### Applying
+
+A player picks a posting, writes a message capped at `application-message-max-length`, and submits.
+
+| Rule | Setting |
+|---|---|
+| Pending applications at once, across every clan | `max-applications-per-player`, 3 |
+| Wait before applying to the same clan again after a rejection or withdrawal | `application-cooldown-seconds`, 120 s |
+| One application per player per clan | the row id is `playerUuid:clanId` |
+
+Applications are `PENDING`, `ACCEPTED` or `REJECTED`. The applicant is notified either way, and can
+withdraw a pending one from **My applications**.
+
+Accepting joins the player to the clan there and then, so all the ordinary join rules still apply — the
+clan being full, the player being banned from it, or the player having joined somewhere else in the
+meantime. Every one of a player's applications is cleared when they join a clan by any route.
+
+An accepted application is written to the clan log, along with the posting being created, edited,
+renewed or cancelled.
+
+## The seven menus each
+
+Both boards ship with the same shape: a browser, a create/edit screen, a mode picker, an option picker
+and a tier picker; `/lfp` adds the applications list, the application detail screen and *my
+applications*. They are ordinary menu files — see [Menus](/docs/exyliaclans/menus).
+
+<Callout type="tip" title="Start with fewer questions">
+Every category is another click between a player and a posted profile. Three or four questions that
+actually sort players — a mode, a tier, a role — beat ten that everybody ticks the same way.
+</Callout>

@@ -1,0 +1,133 @@
+---
+title: "Permissions"
+description: "The 34 command nodes, the bypass, the 20 admin nodes, and how they differ from the clan's own rank permissions."
+---
+
+Two different systems answer two different questions, and both have to say yes.
+
+| System | Question | Where it lives |
+|---|---|---|
+| Server permissions | *May this player run this command at all?* | LuckPerms, the nodes below |
+| Rank permissions | *May this member do this inside their clan?* | The clan's own ranks — see [Roles](/docs/exyliaclans/roles) |
+
+Granting `exyliaclans.commands.kick` does not let anybody kick anybody: it lets them run the command,
+which then checks their rank for `KICK`.
+
+## Command nodes
+
+Nothing is granted by default.
+
+| Node | Grants |
+|---|---|
+| `exyliaclans.commands.clan` | `/clan` — the main menu |
+| `exyliaclans.commands.create` | `/clan create` |
+| `exyliaclans.commands.disband` | `/clan disband` |
+| `exyliaclans.commands.invite` | `/clan invite` |
+| `exyliaclans.commands.join` | `/clan join` |
+| `exyliaclans.commands.leave` | `/clan leave` |
+| `exyliaclans.commands.kick` | `/clan kick` |
+| `exyliaclans.commands.ban` | `/clan ban` |
+| `exyliaclans.commands.unban` | `/clan unban` |
+| `exyliaclans.commands.promote` | `/clan promote` |
+| `exyliaclans.commands.demote` | `/clan demote` |
+| `exyliaclans.commands.transferleader` | `/clan transferleader` |
+| `exyliaclans.commands.deposit` | `/clan deposit` |
+| `exyliaclans.commands.withdraw` | `/clan withdraw` |
+| `exyliaclans.commands.ally` | All four `/clan ally` forms |
+| `exyliaclans.commands.rival` | Both `/clan rival` forms |
+| `exyliaclans.commands.claim` | `/clan claim` |
+| `exyliaclans.commands.reclaim` | `/clan reclaim` |
+| `exyliaclans.commands.unclaim` | `/clan unclaim` |
+| `exyliaclans.commands.map` | `/clan map` |
+| `exyliaclans.commands.sethome` | `/clan sethome` |
+| `exyliaclans.commands.home` | `/clan home` |
+| `exyliaclans.commands.chat` | `/clan chat`, both forms |
+| `exyliaclans.commands.ff` | `/clan ff` |
+| `exyliaclans.commands.open` | `/clan open` |
+| `exyliaclans.commands.info` | `/clan info`, both forms |
+| `exyliaclans.commands.focus` | `/clan focus` |
+| `exyliaclans.commands.camp` | `/clan camp` |
+| `exyliaclans.commands.rally` | `/clan rally` |
+| `exyliaclans.commands.regroup` | `/clan regroup`, `/clan regroup join` |
+| `exyliaclans.commands.top` | `/clan top` |
+| `exyliaclans.commands.mail` | All three `/clan mail` forms |
+| `exyliaclans.commands.lfc` | `/lfc` |
+| `exyliaclans.commands.lfp` | `/lfp` |
+
+## The bypass
+
+| Node | Grants |
+|---|---|
+| `exyliaclans.claim.bypass` | Ignore every claim protection check under `BUILTIN`: build, break, doors, containers, buckets and item frames, in anybody's claim |
+
+<Callout type="danger" title="Give this to staff only, and know what it does not cover">
+It is deliberately outside the `commands` branch, so `exyliaclans.commands.*` does not include it. It
+also does not stop WorldGuard: under `protection-mode: WORLDGUARD` the region is what refuses the build,
+and a WorldGuard bypass is what gets past it.
+</Callout>
+
+## Admin nodes
+
+`exyliaclans.admin` is checked on `/clanadmin` itself. Every subcommand checks its own node **on top of**
+it, so a staff member needs the base node plus whichever subcommands you want them to have.
+
+| Node | Grants |
+|---|---|
+| `exyliaclans.admin` | `/clanadmin` at all — required alongside every node below |
+| `exyliaclans.admin.forcekick` | Remove any player from their clan |
+| `exyliaclans.admin.forcejoin` | Put an online player into any clan |
+| `exyliaclans.admin.forceleader` | Make a player the leader of a clan |
+| `exyliaclans.admin.disband` | Disband any clan, whatever its DTR |
+| `exyliaclans.admin.rename` | Rename any clan |
+| `exyliaclans.admin.setbalance` | Set, add to or take from any clan's bank |
+| `exyliaclans.admin.setdtr` | Set any clan's DTR |
+| `exyliaclans.admin.setexp` | Set any clan's EXP |
+| `exyliaclans.admin.setlevel` | Set any clan's level |
+| `exyliaclans.admin.stats` | `playerstat` and `clanstat` |
+| `exyliaclans.admin.addally` | Force an alliance between two clans |
+| `exyliaclans.admin.removeally` | Break one |
+| `exyliaclans.admin.addrival` | Force a rivalry |
+| `exyliaclans.admin.removerival` | Remove one |
+| `exyliaclans.admin.ban` | Ban a player from a named clan |
+| `exyliaclans.admin.unban` | Unban them |
+| `exyliaclans.admin.info` | Full clan info, including balance and DTR |
+| `exyliaclans.admin.logs` | Any clan's audit trail |
+| `exyliaclans.admin.reload` | Reload the four config files and the menus |
+
+## A suggested setup
+
+```yaml
+default:
+  - exyliaclans.commands.*
+
+helper:
+  - exyliaclans.admin
+  - exyliaclans.admin.info
+  - exyliaclans.admin.logs
+
+moderator:
+  - exyliaclans.admin
+  - exyliaclans.admin.info
+  - exyliaclans.admin.logs
+  - exyliaclans.admin.forcekick
+  - exyliaclans.admin.ban
+  - exyliaclans.admin.unban
+  - exyliaclans.admin.rename
+  - exyliaclans.claim.bypass
+
+admin:
+  - exyliaclans.admin
+  - exyliaclans.admin.*
+  - exyliaclans.claim.bypass
+```
+
+<Callout type="tip" title="Split the economy nodes from the moderation ones">
+`setbalance`, `setexp` and `setlevel` hand out progression, and `stats` rewrites the leaderboard. They
+belong with whoever is trusted with the economy, which is not always whoever handles reports.
+</Callout>
+
+## No permission is needed for
+
+Being in a clan, reading clan chat, receiving mail, being invited, appearing on the leaderboard, being
+coloured as a friend or an enemy, and every rank permission the clan grants you. Those are all decided
+inside the clan, not by the server's permission plugin.

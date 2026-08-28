@@ -1,0 +1,205 @@
+---
+title: "Configuración"
+description: "config.yml clave por clave, más qué contienen messages.yml, lfc.yml y lfp.yml."
+---
+
+Cuatro archivos, todos generados desde records tipados en el primer arranque, comentarios incluidos. Una
+clave que el lector no reconoce se poda, así que una línea suelta desaparece en el siguiente arranque en
+vez de ignorarse en silencio. Cinco bloques están exentos porque sus claves son tuyas: `default-roles`,
+`levels.level-definitions`, `levels.kill-streak-bonuses` y el bloque `categories` de cada archivo de
+reclutamiento.
+
+## settings
+
+```yaml
+settings:
+  max-members: 30
+  max-alliances: 5
+  max-rivals: 10
+  invite-expire-seconds: 60
+  home-warmup-seconds: 5
+  home-cancel-on-move: true
+  home-cancel-on-damage: true
+  home-warmup-tick-sound: "UI_BUTTON_CLICK|0.6|1.3"
+  regroup-warmup-seconds: 5
+  regroup-cancel-on-move: true
+  regroup-cancel-on-damage: true
+  regroup-warmup-tick-sound: "UI_BUTTON_CLICK|0.6|1.3"
+  regroup-cooldown-seconds: 60
+  regroup-expire-seconds: 60
+  clan-name-min-length: 3
+  clan-name-max-length: 16
+  clan-name-regex: "^[a-zA-Z0-9_]+$"
+  visibility-mode: UNIFIED
+  forced-ff-worlds: []
+  chat:
+    quick-clan-prefixes: ["."]
+    quick-ally-prefixes: ["@"]
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `max-members` | 30 | Tope base de miembros, antes de los bonus de nivel |
+| `max-alliances` | 5 | Tope base de alianzas |
+| `max-rivals` | 10 | Tope base de rivales |
+| `invite-expire-seconds` | 60 | Cuánto dura pendiente una **petición de alianza** |
+| `home-warmup-seconds` | 5 | Cuenta atrás en `/clan home`. `0` es instantáneo |
+| `home-cancel-on-move` | `true` | Moverse cancela el warmup |
+| `home-cancel-on-damage` | `true` | El daño lo cancela |
+| `home-warmup-tick-sound` | ver arriba | `NOMBRE\|VOLUMEN\|TONO` por segundo. Vacío para silencio |
+| `regroup-*` | igual | Los mismos cuatro para `/clan regroup join` |
+| `regroup-cooldown-seconds` | 60 | Por clan, entre llamadas. `0` lo desactiva |
+| `regroup-expire-seconds` | 60 | Cuánto sigue disponible un punto de regroup. `0` no caduca |
+| `clan-name-min-length` | 3 | Nombre de clan más corto |
+| `clan-name-max-length` | 16 | El más largo |
+| `clan-name-regex` | `^[a-zA-Z0-9_]+$` | Patrón que debe cumplir un nombre |
+| `visibility-mode` | `UNIFIED` | `CLAN_ONLY`, `ALLY_ONLY`, `CLAN_AND_ALLY_MIXED` o `UNIFIED` |
+| `forced-ff-worlds` | `[]` | Mundos donde el friendly fire está siempre activo |
+| `chat.quick-clan-prefixes` | `["."]` | Prefijos que envían una línea al chat de clan |
+| `chat.quick-ally-prefixes` | `["@"]` | Prefijos que envían una línea al clan y a los aliados |
+
+<Callout type="warning" title="`invite-expire-seconds` no caduca las invitaciones de clan">
+Solo lo lee la caché de peticiones de alianza. Un `/clan invite` es una fila de `clan_invites` sin
+caducidad: se mantiene hasta que se acepta, se rechaza, se cancela o el jugador entra en un clan. Nada las
+poda, así que un clan que invita a mucha gente acumula filas.
+</Callout>
+
+## modules
+
+Doce booleanos, todos a `true`. Ver [Módulos](/docs/exyliaclans/modulos).
+
+## logs
+
+```yaml
+logs:
+  max-entries-per-clan: 200
+```
+
+## mail
+
+```yaml
+mail:
+  expiry-days: 14
+  expiry-check-interval-minutes: 30
+  max-message-length: 256
+  max-mails-per-clan: 100
+```
+
+## rivals
+
+```yaml
+rivals:
+  kill-exp-multiplier: 2.0
+  kill-stat-multiplier: 1.0
+  notify-target-on-declare: true
+```
+
+## claims
+
+```yaml
+claims:
+  base-price: 500.0
+  price-per-block: 1.0
+  min-area: 25
+  max-area: 10000
+  pillar-duration-seconds: 10
+  min-separation: 5
+  map-radius: 200
+  reclaim-enabled: true
+  reclaim-fee: 0.0
+  protection-mode: WORLDGUARD
+```
+
+Ver [Terrenos](/docs/exyliaclans/terrenos).
+
+## dtr
+
+```yaml
+dtr:
+  no-loss-worlds: []
+  death-loss: 0.9
+  members-per-point: 3
+  frozen-duration-seconds: 600
+  regen-amount: 0.1
+  regen-interval-seconds: 45
+  min-dtr: -1.0
+  color-normal: "&a"
+  color-regenerating: "&e"
+  color-frozen: "&b"
+  color-raidable: "&c"
+```
+
+Ver [DTR](/docs/exyliaclans/dtr).
+
+## levels
+
+`max-level`, `exp-actions`, `level-definitions` y `kill-streak-bonuses`. Ver
+[Niveles](/docs/exyliaclans/niveles).
+
+## relational-placeholders
+
+Las cuatro etiquetas y los cuatro colores con los que se dibuja a un jugador para otro. Ver
+[Placeholders](/docs/exyliaclans/placeholders#relacionales).
+
+## bossbars
+
+`focus`, `camp` y `rally`, cada uno con `enabled` y un `config` de `text`, `color` y `style`; los dos
+marcadores aceptan además `max-distance` y `duration-seconds`. Ver
+[Herramientas de guerra](/docs/exyliaclans/herramientas-de-guerra).
+
+## home-effects y regroup-effects
+
+Dos bloques idénticos, uno por teletransporte:
+
+```yaml
+home-effects:
+  warmup-actionbar:
+    text: "{primary}⏳ Clan Home {muted}| {primary}Teleportando en {highlight}%time%"
+  warmup-title:
+    title: "{highlight}%time%"
+    subtitle: "{muted}¡No te muevas!"
+    fade-in: 0
+    stay: 10
+    fade-out: 0
+  teleport-title:
+    title: "{primary}&lCLAN HOME"
+    subtitle: "{muted}¡Bienvenido de vuelta!"
+    fade-in: 10
+    stay: 50
+    fade-out: 15
+```
+
+`%time%` son los segundos que faltan. Los tiempos van en ticks: veinte por segundo. Los textos de
+`home-effects` vienen en español; los de `regroup-effects`, en inglés.
+
+## default-roles
+
+Los rangos con los que nace un clan. Ver [Rangos](/docs/exyliaclans/roles).
+
+## messages.yml
+
+Once secciones: `prefix`, `clan`, `claim`, `errors`, `level`, `dtr`, `placeholders`, `logs`, `lfc`, `lfp`,
+`mail`, `admin`.
+
+Tres cosas que conviene saber:
+
+- **Los colores son tokens de paleta.** `{primary}`, `{error}`, `{highlight}`, `{success}`, `{warning}`,
+  `{muted}`, `{info}`, `{letters}` — así que recolorear el servidor nunca pasa por editar este archivo.
+- **Una línea puede empezar con una etiqueta de efecto.** `[sound:ENTITY_VILLAGER_NO|1.0|1.0]` reproduce
+  un sonido y no llega nunca a la pantalla. Casi todas las líneas que vienen llevan una.
+- **`%prefix%` se sustituye desde la clave `prefix`**, y funcionan las etiquetas de clic y hover de
+  MiniMessage: la línea de invitación que viene es un botón *Aceptar* clicable.
+
+La sección `placeholders` es un saco de palabras cortas que los menús sustituyen — *Sí*, *No*,
+*Activado*, *Conectado*, los caracteres de la barra de progreso — para que treinta y siete archivos de
+menú no escriban cada uno los suyos.
+
+## lfc.yml y lfp.yml
+
+`settings` más un bloque `categories` que escribes tú. Ver
+[Reclutamiento](/docs/exyliaclans/reclutamiento).
+
+## Recargar
+
+`/clanadmin reload` vuelve a leer los cuatro archivos, reconstruye la tabla de niveles y recompila los
+menús. Los cambios en `default-roles` solo llegan a los clanes creados después.

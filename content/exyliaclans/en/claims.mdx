@@ -1,0 +1,163 @@
+---
+title: "Claims"
+description: "One rectangle per clan: the selection tool, the price, the two protection modes, reclaiming and the map."
+---
+
+A clan owns at most one claim: a rectangle in one world, stored as `minX`, `minZ`, `maxX`, `maxZ` and the
+height it was made at. There is no vertical bound — a claim owns its columns from bedrock to sky.
+
+## The selection tool
+
+`/clan claim` gives the player a **golden hoe** and starts a session. It needs the `CLAIM_LAND` rank
+permission.
+
+| Input | What it does |
+|---|---|
+| Left click a block | Corner 1 |
+| Right click a block | Corner 2 |
+| Shift + click in the air | Pay and confirm |
+| `/clan claim` again | Cancel |
+
+Glass towers topped with a diamond block mark each corner, drawn only for the player selecting. They are
+packet-level: no block is ever placed in the world.
+
+The tool cannot be dropped, cannot be stored (opening any inventory is blocked while a session is
+running), does not drop on death, and is stripped from the inventory on join, so a stale one can never
+follow a player around.
+
+## Price
+
+```
+price = base-price + (X × Z) × price-per-block
+```
+
+With the defaults — 500 and 1.0 — a 20 × 20 rectangle costs 500 + 400 = **900**. The money comes out of
+the **clan bank**, never out of the player's own balance.
+
+## What gets a claim refused
+
+| Refusal | Setting |
+|---|---|
+| The clan already has a claim | — |
+| The two corners are in different worlds | — |
+| Area below the minimum | `min-area`, default 25 |
+| Area above the maximum | `max-area`, default 10 000 |
+| Overlaps a WorldGuard region | needs WorldGuard installed |
+| Overlaps another clan's claim | — |
+| Within N blocks of another clan's claim | `min-separation`, default 5; `0` disables |
+| The bank cannot pay | — |
+
+## Protection mode
+
+```yaml
+claims:
+  protection-mode: WORLDGUARD
+```
+
+| Mode | Who enforces it |
+|---|---|
+| `BUILTIN` | This plugin. It listens for block break, block place, right-click on doors and containers, bucket fill and empty, and item-frame breaking, and checks the claim on every one. |
+| `WORLDGUARD` | A WorldGuard region named `clan_<clanId without dashes>`, created and resized with the claim. Every member is a region member; the leader is the owner. |
+
+<Callout type="danger" title="`WORLDGUARD` without WorldGuard means no protection">
+It is the shipped default. If WorldGuard is absent, no region is created and the built-in listener
+stands down anyway — claims are drawn and paid for but protect nothing. Set `BUILTIN` before anybody
+claims.
+</Callout>
+
+Under `BUILTIN`, who may do what inside a claim is decided by three rank permissions — `BUILD`,
+`OPEN_DOORS` and `OPEN_CONTAINERS` — and by clan membership: a player from another clan is refused
+outright, whatever their own rank grants. `exyliaclans.claim.bypass` skips all of it.
+
+<Callout type="note" title="Explosions are protected in both modes">
+The explosion handlers do not check `protection-mode`. Any block of a claim whose owner is **not**
+raidable is removed from the blast list, under either mode. That is what makes going raidable mean
+something.
+</Callout>
+
+## Raidable claims
+
+When the owning clan's DTR drops below zero, its claim stops protecting anything:
+
+- Under `BUILTIN`, every build, door and container check returns true for everybody.
+- Under `WORLDGUARD`, the region's `BUILD` flag is set to `ALLOW`.
+- Explosions are no longer filtered out.
+
+When the DTR regenerates back above zero, the flag is cleared and protection returns. See
+[DTR](/docs/exyliaclans/dtr).
+
+## Reclaim
+
+```
+/clan reclaim
+```
+
+Redraws the rectangle **inside** the existing one. The tool is the same, with the current bounds shown as
+orange glass towers topped with a gold block; a selection that leaves those bounds is refused.
+
+| Rule | Detail |
+|---|---|
+| Enabled by | `reclaim-enabled`, default `true` |
+| Costs | `reclaim-fee`, default `0.0`, plus any increase in area price |
+| Refused while | the clan is raidable |
+| Refused if | the new area is below `min-area`, or the selection leaves the old bounds |
+
+Because the new rectangle has to fit inside the old one, its area price is never higher — so in practice
+the cost of a reclaim is exactly `reclaim-fee`. Reclaiming shrinks a claim; it never moves or grows one.
+
+## Unclaim
+
+```
+/clan unclaim
+```
+
+Needs `UNCLAIM_LAND`, and is refused unless the DTR state is `NORMAL` — a clan cannot dodge a raid by
+dropping its own land mid-fight.
+
+<Callout type="warning" title="Unclaiming clears the clan home">
+The home has to be inside the claim, so removing the claim removes the home with it, and both are
+written to the log. Setting it again means claiming again first.
+</Callout>
+
+## The map
+
+```
+/clan map
+```
+
+Draws every claim within `map-radius` (200 blocks) as coloured pillars, visible only to that player:
+
+| Colour | Meaning |
+|---|---|
+| Green glass, emerald block | Your own claim |
+| Blue glass, lapis block | An ally's |
+| Red glass, redstone block | Anybody else's |
+
+It refreshes every five seconds and switches itself off after two minutes, or when the player runs the
+command again, changes world or logs out. With no claim inside the radius, nothing is drawn and the
+player is told the radius that was searched.
+
+## Entering and leaving
+
+Crossing a claim border sends a message naming the clan that owns it, on the way in and on the way out.
+A blocked action prints its own line, rate-limited to one every 1.5 seconds per player so a held-down
+left click does not fill the chat.
+
+## Settings
+
+```yaml
+claims:
+  base-price: 500.0
+  price-per-block: 1.0
+  min-area: 25
+  max-area: 10000
+  pillar-duration-seconds: 10
+  min-separation: 5
+  map-radius: 200
+  reclaim-enabled: true
+  reclaim-fee: 0.0
+  protection-mode: WORLDGUARD
+```
+
+`pillar-duration-seconds` is how long the corner towers stay up for everybody nearby after a claim is
+made, which is separate from the selection preview.

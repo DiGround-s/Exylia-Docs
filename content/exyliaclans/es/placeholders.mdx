@@ -1,0 +1,165 @@
+---
+title: "Placeholders"
+description: "Todos los %placeholder% que registra el plugin, incluidos los huecos de la lista de conectados, los rankings y los tres relacionales."
+---
+
+El identificador es `exyliaclans`, así que cualquier nombre de abajo se puede escribir como
+`%exyliaclans_<nombre>%`.
+
+<Callout type="note" title="PlaceholderAPI es opcional">
+Dentro de la configuración de otro plugin de Exylia el nombre corto se resuelve solo — `%clan_name%` —
+porque el registro es de ExyliaLib y PlaceholderAPI es un puente encima. Fuera del ecosistema, escribe el
+`%exyliaclans_clan_name%` completo, que pregunta a este plugin y a nadie más.
+</Callout>
+
+## El clan del espectador
+
+| Placeholder | Devuelve |
+|---|---|
+| `clan_name` | El nombre del clan, o `None` |
+| `clan_id` | Su id, o vacío |
+| `clan_members` | Miembros totales |
+| `clan_online` | Miembros conectados |
+| `clan_max_members` | El tope, con el bonus de nivel incluido |
+| `clan_balance` | El banco, formateado |
+| `clan_role` | El nombre del rango del espectador |
+| `clan_is_leader` | `true` / `false` |
+| `clan_ff` | Friendly fire, `true` / `false` |
+| `clan_allies` | Número de clanes aliados |
+| `clan_kills` | Bajas del clan |
+| `clan_deaths` | Muertes del clan |
+| `clan_kdr` | KDR del clan, dos decimales |
+| `clan_playtime` | Tiempo jugado total, formateado |
+| `clan_level` | Nivel del clan, `0` sin clan |
+| `clan_exp` | EXP actual |
+| `clan_exp_next` | EXP que falta para el siguiente nivel |
+| `clan_mail_unread` | Correo sin leer de este espectador |
+| `has_clan` | `true` / `false` |
+
+### Sumando la alianza
+
+| Placeholder | Devuelve |
+|---|---|
+| `clan_allies_total_members` | Miembros sumados de todos los clanes aliados |
+| `clan_allies_total_online` | De esos, cuántos están conectados |
+| `clan_allies_total_max_members` | Sus topes sumados |
+
+## DTR
+
+| Placeholder | Devuelve |
+|---|---|
+| `clan_dtr` | DTR actual, dos decimales |
+| `clan_dtr_max` | El máximo, dos decimales |
+| `clan_dtr_state` | `NORMAL`, `FROZEN`, `REGENERATING` o `RAIDABLE` |
+| `clan_dtr_color` | El color configurado para ese estado |
+| `clan_raidable` | `true` / `false` |
+
+```
+%exyliaclans_clan_dtr_color%%exyliaclans_clan_dtr%/%exyliaclans_clan_dtr_max%
+```
+
+## La lista de conectados
+
+Hasta **treinta** huecos en cada una, ordenados por peso de rango — el más pesado primero — y luego
+alfabéticamente. Un hueco sin nadie no devuelve nada, así que merece la pena usar la sintaxis de
+respaldo.
+
+```
+%exyliaclans_clan_online_member_<n>%
+%exyliaclans_clan_online_member_<n>_<campo>%
+%exyliaclans_clan_online_ally_<n>%
+%exyliaclans_clan_online_ally_<n>_<campo>%
+```
+
+| `<campo>` | Devuelve |
+|---|---|
+| *(omitido)* | El nombre del jugador |
+| `role` | El nombre de su rango |
+| `kills` | Sus bajas en ese clan |
+| `deaths` | Sus muertes en ese clan |
+| `kdr` | Su KDR, dos decimales |
+| `clan` | De qué clan es — solo tiene sentido con `ally` |
+
+```
+%exyliaclans_clan_online_member_3_kdr%
+%exyliaclans_clan_online_ally_1_clan%
+```
+
+La lista se reconstruye como mucho una vez por segundo, así que treinta líneas de scoreboard pidiendo
+cuatro veces por segundo cuestan una reconstrucción.
+
+## Rankings
+
+Claves válidas: `online`, `members`, `kills`, `deaths`, `kdr`, `playtime`, `balance`. Lo que no esté
+clasificado devuelve `-`.
+
+| Placeholder | Devuelve |
+|---|---|
+| `clan_leaderboard_rank_<stat>` | En qué puesto está el clan del espectador, desde `1` |
+| `clan_leaderboard_top_<n>_<stat>` | El nombre del clan en la posición `<n>` |
+| `clan_leaderboard_top_value_<n>_<stat>` | Su valor ahí, formateado |
+
+```
+%exyliaclans_clan_leaderboard_rank_kills%
+%exyliaclans_clan_leaderboard_top_1_balance%
+%exyliaclans_clan_leaderboard_top_value_1_balance%
+```
+
+Cada ranking se cachea 30 segundos.
+
+## Relacionales
+
+Estos toman un espectador **y** un objetivo, así que su sitio son los nametags, el orden de TAB y
+cualquier punto donde se dibuja a un jugador para otro. Por PlaceholderAPI se escriben
+`%rel_exyliaclans_…%`.
+
+| Placeholder | Devuelve |
+|---|---|
+| `player_type` | La etiqueta de la relación |
+| `player_color` | El color de esa relación |
+| `player_priority` | `5` líder propio, `4` del clan, `3` líder aliado, `2` aliado, `1` rival, `0` desconocido |
+
+`player_priority` está hecho para ordenar una lista: cuanto más alto, más arriba.
+
+```yaml
+relational-placeholders:
+  label-member: MIEMBRO
+  label-ally: ALLY
+  label-enemy: ENEMY
+  label-none: NADA
+  color-member: "&a"
+  color-ally: "&b"
+  color-enemy: "&c"
+  color-none: "&7"
+```
+
+<Callout type="warning" title="Dos etiquetas vienen en español y dos en inglés">
+`label-member` viene como `MIEMBRO` y `label-none` como `NADA`, mientras que las otras dos están en
+inglés. Corra en el idioma que corra tu servidor, este bloque hay que editarlo el primer día.
+</Callout>
+
+## Global
+
+| Placeholder | Devuelve |
+|---|---|
+| `total_clans` | Clanes en el servidor |
+
+## Formatos y respaldos
+
+Todos los placeholders de aquí pasan por el registro de ExyliaLib, así que vale la sintaxis compartida:
+
+```
+%exyliaclans_clan_balance:comma%      1,250,000
+%exyliaclans_clan_kills:compact%      12.4k
+%exyliaclans_clan_ff:yesno%           Yes
+%exyliaclans_clan_name|Sin clan%      respaldo cuando no hay valor
+```
+
+Formatos disponibles: `comma`, `compact` / `short`, `percent`, `upper`, `lower`, `yesno`, `time`,
+`fixed1`, `fixed2`.
+
+<Callout type="tip" title="Un placeholder que nadie responde se queda en pantalla">
+Es a propósito: una errata sale como `%exyliaclans_clan_nmae%` en vez de como un hueco en blanco, y se
+avisa una vez por consola con el nombre que no se pudo resolver. Si una línea del scoreboard sale vacía,
+mira la consola antes que el nombre.
+</Callout>
