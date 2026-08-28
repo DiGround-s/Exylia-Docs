@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { PreBoundary } from "./InlineCode";
 import { dict } from "@/content/dictionary";
 import type { Lang } from "@/content/registry";
 
@@ -36,7 +37,7 @@ export function CodeBlock({
   return (
     <div className="group/code relative">
       <pre ref={ref} {...props}>
-        {children}
+        <PreBoundary value={true}>{children}</PreBoundary>
       </pre>
 
       <button

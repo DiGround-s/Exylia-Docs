@@ -3,10 +3,9 @@ title: "Placeholders"
 description: "Los siete placeholders de PlaceholderAPI, y qué responden cuando no hay nada elegido."
 ---
 
-Identificador: **`exyliakilleffect`**. PlaceholderAPI es opcional — sin él el plugin funciona y
-simplemente no se exponen.
+Todos los placeholders están escritos enteros, y al hacer clic en uno se copia.
 
-| Placeholder | Devuelve |
+| Placeholder | Descripción |
 |---|---|
 | `%exyliakilleffect_effect%` | El id del efecto elegido. |
 | `%exyliakilleffect_effect_name%` | Su nombre visible, con sus colores. |
@@ -18,11 +17,11 @@ simplemente no se exponen.
 
 ## Sin nada elegido
 
-| Placeholder | Responde |
+| Placeholder | Descripción |
 |---|---|
-| `has_effect` | `false` |
-| `effect_description` | Vacío |
-| `effect_material` | Un material de reserva |
+| `%exyliakilleffect_has_effect%` | `false` |
+| `%exyliakilleffect_effect_description%` | Vacío |
+| `%exyliakilleffect_effect_material%` | Un material de reserva |
 | Todo lo demás | Lo que diga `placeholders.none` en `config.yml` — `None` por defecto |
 
 Eso es lo que los hace seguros de meter en un scoreboard sin alternativa propia:

@@ -3,8 +3,7 @@ title: "Placeholders"
 description: "Todos los placeholders de PlaceholderAPI y la forma exacta que necesita cada uno."
 ---
 
-Identificador de la expansión: **`exyliacapture`**. Registrar los placeholders registra la expansión,
-así que no hay que descargar nada desde eCloud.
+Todos los placeholders están escritos enteros, y al hacer clic en uno se copia.
 
 <Callout type="warning" title="El contador global lleva `capture_` dos veces">
 Es la única escritura aquí fácil de adivinar mal, y se explica justo debajo.
@@ -32,27 +31,27 @@ Cada evento configurado registra su id como familia propia de placeholders, así
 `koth1` responde a `%exyliacapture_koth1_status%`. Las familias se vuelven a registrar con
 `/captureadmin reload`, y así un evento recién creado se puede leer sin reiniciar.
 
-| Stat | Devuelve |
+| Placeholder | Descripción |
 |---|---|
-| `display_name` | El nombre que leen los jugadores |
-| `id` | El id de la configuración |
-| `type` | El identificador de tipo, como `koth` o `payload` |
-| `color` | El color hexadecimal configurado |
-| `max_duration` | La duración, o `∞` si es ilimitada |
-| `status` | `RUNNING`, `SCHEDULED` o `INACTIVE` |
-| `time_remaining` | Tiempo restante del evento activo |
-| `time_until_start` | Tiempo hasta el próximo inicio programado |
-| `target_points` | Puntos necesarios para ganar |
-| `points_per_second` | Puntos por segundo, solo en KOTH Points |
-| `clan_mode` | `true` o `false` |
-| `leader` | El jugador o clan que va líder |
-| `leader_pts` | Los puntos del líder |
-| `top1_name`, `top2_name`, `top3_name` | Los nombres del podio en vivo |
-| `top1_pts`, `top2_pts`, `top3_pts` | Los puntos del podio en vivo |
-| `capturer` | Quién está capturando ahora mismo |
-| `capturer_clan` | El clan de ese capturador |
-| `cap_time_remaining` | Tiempo que falta para completar la captura actual |
-| `zone_x`, `zone_y`, `zone_z` | Coordenadas del centro de la zona |
+| `%exyliacapture_<id>_display_name%` | El nombre que leen los jugadores |
+| `%exyliacapture_<id>_id%` | El id de la configuración |
+| `%exyliacapture_<id>_type%` | El identificador de tipo, como `koth` o `payload` |
+| `%exyliacapture_<id>_color%` | El color hexadecimal configurado |
+| `%exyliacapture_<id>_max_duration%` | La duración, o `∞` si es ilimitada |
+| `%exyliacapture_<id>_status%` | `RUNNING`, `SCHEDULED` o `INACTIVE` |
+| `%exyliacapture_<id>_time_remaining%` | Tiempo restante del evento activo |
+| `%exyliacapture_<id>_time_until_start%` | Tiempo hasta el próximo inicio programado |
+| `%exyliacapture_<id>_target_points%` | Puntos necesarios para ganar |
+| `%exyliacapture_<id>_points_per_second%` | Puntos por segundo, solo en KOTH Points |
+| `%exyliacapture_<id>_clan_mode%` | `true` o `false` |
+| `%exyliacapture_<id>_leader%` | El jugador o clan que va líder |
+| `%exyliacapture_<id>_leader_pts%` | Los puntos del líder |
+| `%exyliacapture_<id>_top1_name%` | El primer nombre del podio en vivo — `top2_name` y `top3_name` siguen igual |
+| `%exyliacapture_<id>_top1_pts%` | Sus puntos — `top2_pts` y `top3_pts` siguen igual |
+| `%exyliacapture_<id>_capturer%` | Quién está capturando ahora mismo |
+| `%exyliacapture_<id>_capturer_clan%` | El clan de ese capturador |
+| `%exyliacapture_<id>_cap_time_remaining%` | Tiempo que falta para completar la captura actual |
+| `%exyliacapture_<id>_zone_x%` | La X del centro de la zona — `zone_y` y `zone_z` siguen igual |
 
 Lo que no tiene valor devuelve una raya larga, no una cadena vacía.
 

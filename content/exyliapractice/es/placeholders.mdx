@@ -1,57 +1,49 @@
 ---
 title: "Placeholders"
-description: "Todos los placeholders que responde el plugin, en su forma simple y en la de PlaceholderAPI."
+description: "Todos los placeholders que responde el plugin, escritos enteros."
 ---
 
-Los placeholders se registran a través de ExyliaLib, lo que significa que cada uno tiene dos formas:
-
-| Forma | Dónde funciona |
-|---|---|
-| `%stats_kills%` | Dentro de los menús, mensajes y sidebars del propio plugin |
-| `%exyliapracticecore_stats_kills%` | Donde llegue PlaceholderAPI: chat, tab, hologramas, otros plugins |
-
-Los nombres de abajo son la forma simple; añade el prefijo `exyliapracticecore_` para la de
-PlaceholderAPI.
+Todos los placeholders están escritos enteros, y al hacer clic en uno se copia.
 
 ## Estadísticas del lector
 
 Todos leen la fila **global** del lector en la temporada actual.
 
-| Placeholder | Responde |
+| Placeholder | Descripción |
 |---|---|
-| `%stats_kills%` | Bajas |
-| `%stats_deaths%` | Muertes |
-| `%stats_kdr%` | Ratio bajas/muertes, un decimal |
-| `%stats_wins%` | Victorias |
-| `%stats_losses%` | Derrotas |
-| `%stats_win_rate%` | Porcentaje de victorias |
-| `%stats_games%` | Victorias más derrotas |
-| `%stats_current_streak%` | Racha actual de victorias |
-| `%stats_best_streak%` | Mejor racha |
-| `%stats_damage%` | Daño hecho, un decimal |
-| `%stats_time%` | Tiempo jugado, con formato |
+| `%exyliapracticecore_stats_kills%` | Bajas |
+| `%exyliapracticecore_stats_deaths%` | Muertes |
+| `%exyliapracticecore_stats_kdr%` | Ratio bajas/muertes, un decimal |
+| `%exyliapracticecore_stats_wins%` | Victorias |
+| `%exyliapracticecore_stats_losses%` | Derrotas |
+| `%exyliapracticecore_stats_win_rate%` | Porcentaje de victorias |
+| `%exyliapracticecore_stats_games%` | Victorias más derrotas |
+| `%exyliapracticecore_stats_current_streak%` | Racha actual de victorias |
+| `%exyliapracticecore_stats_best_streak%` | Mejor racha |
+| `%exyliapracticecore_stats_damage%` | Daño hecho, un decimal |
+| `%exyliapracticecore_stats_time%` | Tiempo jugado, con formato |
 
 ## Rango
 
-| Placeholder | Responde |
+| Placeholder | Descripción |
 |---|---|
-| `%stats_elo%` | MMR en bruto |
-| `%stats_rank%` | El nombre del rango con su división: `Copper II` |
-| `%stats_rank_icon%` | El icono de la división, más el nombre de la división |
-| `%stats_rank_full%` | `Copper II — 40/100 LP`. Sin divisiones, `Legend — 240 LP` |
-| `%stats_lp%` | LP dentro de la división actual |
-| `%stats_lp_max%` | Anchura de la división en LP. `0` para un rango sin divisiones. |
-| `%stats_rank_position%` | El puesto del lector en el ladder global de rating, como `#4` |
+| `%exyliapracticecore_stats_elo%` | MMR en bruto |
+| `%exyliapracticecore_stats_rank%` | El nombre del rango con su división: `Copper II` |
+| `%exyliapracticecore_stats_rank_icon%` | El icono de la división, más el nombre de la división |
+| `%exyliapracticecore_stats_rank_full%` | `Copper II — 40/100 LP`. Sin divisiones, `Legend — 240 LP` |
+| `%exyliapracticecore_stats_lp%` | LP dentro de la división actual |
+| `%exyliapracticecore_stats_lp_max%` | Anchura de la división en LP. `0` para un rango sin divisiones. |
+| `%exyliapracticecore_stats_rank_position%` | El puesto del lector en el ladder global de rating, como `#4` |
 
-`%stats_rank_position%` lee la caché de clasificación y nunca espera a la base de datos. Responde `-`
+`%exyliapracticecore_stats_rank_position%` lee la caché de clasificación y nunca espera a la base de datos. Responde `-`
 mientras la tabla carga, y `#51+` —uno más que `leaderboard.max-entries`— para quien esté fuera de
 ella.
 
 ## Clasificaciones
 
 ```
-%stats_top_<stat>_<posición>%
-%stats_top_<stat>_<posición>_value%
+%exyliapracticecore_stats_top_<stat>_<posición>%
+%exyliapracticecore_stats_top_<stat>_<posición>_value%
 ```
 
 El primero da el nombre del jugador en esa posición y el segundo el contador en sí, con formato. Las
@@ -67,10 +59,10 @@ best_streak  current_streak  damage  time  rank
 Ejemplos:
 
 ```
-%stats_top_kills_1%              → el nombre del que más ha matado
-%stats_top_kills_1_value%        → su número de bajas
-%stats_top_win_rate_3_value%     → el porcentaje de victorias del tercero
-%stats_top_rank_1_value%         → el rango y los LP del primero
+%exyliapracticecore_stats_top_kills_1%              → el nombre del que más ha matado
+%exyliapracticecore_stats_top_kills_1_value%        → su número de bajas
+%exyliapracticecore_stats_top_win_rate_3_value%     → el porcentaje de victorias del tercero
+%exyliapracticecore_stats_top_rank_1_value%         → el rango y los LP del primero
 ```
 
 Leen la clasificación **global**. Una tabla que todavía no se ha cargado responde `-` y se calienta por
@@ -78,19 +70,19 @@ detrás, así que un holograma se rellena en su segundo dibujado en vez de bloqu
 
 ## Partida
 
-| Placeholder | Responde |
+| Placeholder | Descripción |
 |---|---|
-| `%game_team_color%` | El bando del lector: `&c` para el equipo A, `&9` para el B, vacío en otro caso |
-| `%game_opponent_color%` | El color del otro bando |
+| `%exyliapracticecore_game_team_color%` | El bando del lector: `&c` para el equipo A, `&9` para el B, vacío en otro caso |
+| `%exyliapracticecore_game_opponent_color%` | El color del otro bando |
 
 Los dos responden vacío cuando el lector no está en partida.
 
 ## Contadores del servidor
 
-| Placeholder | Responde |
+| Placeholder | Descripción |
 |---|---|
-| `%total_game_players%` | Cuántos jugadores hay en partida ahora mismo |
-| `%total_queue_players%` | Cuántos están en cola |
+| `%exyliapracticecore_total_game_players%` | Cuántos jugadores hay en partida ahora mismo |
+| `%exyliapracticecore_total_queue_players%` | Cuántos están en cola |
 
 ## Placeholders de otros plugins
 

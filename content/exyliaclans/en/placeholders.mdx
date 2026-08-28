@@ -3,55 +3,49 @@ title: "Placeholders"
 description: "Every %placeholder% the plugin registers, including the roster slots, the leaderboards and the relational three."
 ---
 
-The identifier is `exyliaclans`, so every name below can be written as `%exyliaclans_<name>%`.
-
-<Callout type="note" title="PlaceholderAPI is optional">
-Inside another Exylia plugin's config the bare name resolves on its own — `%clan_name%` — because
-ExyliaLib owns the registry and PlaceholderAPI is a bridge on top of it. Outside the ecosystem, write the
-full `%exyliaclans_clan_name%`, which asks this plugin and nobody else.
-</Callout>
+Every placeholder below is written in full, and clicking one copies it.
 
 ## The viewer's clan
 
-| Placeholder | Returns |
+| Placeholder | Description |
 |---|---|
-| `clan_name` | The clan's name, or `None` |
-| `clan_id` | Its id, or empty |
-| `clan_members` | Total members |
-| `clan_online` | Members online |
-| `clan_max_members` | The cap, level bonus included |
-| `clan_balance` | The bank, formatted |
-| `clan_role` | The viewer's rank name |
-| `clan_is_leader` | `true` / `false` |
-| `clan_ff` | Friendly fire, `true` / `false` |
-| `clan_allies` | Number of allied clans |
-| `clan_kills` | Clan kills |
-| `clan_deaths` | Clan deaths |
-| `clan_kdr` | Clan KDR, two decimals |
-| `clan_playtime` | Total clan playtime, formatted |
-| `clan_level` | Clan level, `0` with no clan |
-| `clan_exp` | Current EXP |
-| `clan_exp_next` | EXP needed for the next level |
-| `clan_mail_unread` | Unread mail for this viewer |
-| `has_clan` | `true` / `false` |
+| `%exyliaclans_clan_name%` | The clan's name, or `None` |
+| `%exyliaclans_clan_id%` | Its id, or empty |
+| `%exyliaclans_clan_members%` | Total members |
+| `%exyliaclans_clan_online%` | Members online |
+| `%exyliaclans_clan_max_members%` | The cap, level bonus included |
+| `%exyliaclans_clan_balance%` | The bank, formatted |
+| `%exyliaclans_clan_role%` | The viewer's rank name |
+| `%exyliaclans_clan_is_leader%` | `true` / `false` |
+| `%exyliaclans_clan_ff%` | Friendly fire, `true` / `false` |
+| `%exyliaclans_clan_allies%` | Number of allied clans |
+| `%exyliaclans_clan_kills%` | Clan kills |
+| `%exyliaclans_clan_deaths%` | Clan deaths |
+| `%exyliaclans_clan_kdr%` | Clan KDR, two decimals |
+| `%exyliaclans_clan_playtime%` | Total clan playtime, formatted |
+| `%exyliaclans_clan_level%` | Clan level, `0` with no clan |
+| `%exyliaclans_clan_exp%` | Current EXP |
+| `%exyliaclans_clan_exp_next%` | EXP needed for the next level |
+| `%exyliaclans_clan_mail_unread%` | Unread mail for this viewer |
+| `%exyliaclans_has_clan%` | `true` / `false` |
 
 ### Across the alliance
 
-| Placeholder | Returns |
+| Placeholder | Description |
 |---|---|
-| `clan_allies_total_members` | Members summed over every allied clan |
-| `clan_allies_total_online` | Of those, how many are online |
-| `clan_allies_total_max_members` | Their caps summed |
+| `%exyliaclans_clan_allies_total_members%` | Members summed over every allied clan |
+| `%exyliaclans_clan_allies_total_online%` | Of those, how many are online |
+| `%exyliaclans_clan_allies_total_max_members%` | Their caps summed |
 
 ## DTR
 
-| Placeholder | Returns |
+| Placeholder | Description |
 |---|---|
-| `clan_dtr` | Current DTR, two decimals |
-| `clan_dtr_max` | The maximum, two decimals |
-| `clan_dtr_state` | `NORMAL`, `FROZEN`, `REGENERATING` or `RAIDABLE` |
-| `clan_dtr_color` | The colour configured for that state |
-| `clan_raidable` | `true` / `false` |
+| `%exyliaclans_clan_dtr%` | Current DTR, two decimals |
+| `%exyliaclans_clan_dtr_max%` | The maximum, two decimals |
+| `%exyliaclans_clan_dtr_state%` | `NORMAL`, `FROZEN`, `REGENERATING` or `RAIDABLE` |
+| `%exyliaclans_clan_dtr_color%` | The colour configured for that state |
+| `%exyliaclans_clan_raidable%` | `true` / `false` |
 
 ```
 %exyliaclans_clan_dtr_color%%exyliaclans_clan_dtr%/%exyliaclans_clan_dtr_max%
@@ -60,23 +54,22 @@ full `%exyliaclans_clan_name%`, which asks this plugin and nobody else.
 ## The online roster
 
 Up to **thirty** slots each, sorted by rank weight — heaviest first — then alphabetically. A slot with
-nobody in it resolves to nothing, so the fallback syntax is worth using.
+nobody in it resolves to nothing, so the fallback syntax is worth using. Replace `<n>` with the slot
+number, from `1` to `30`.
 
-```
-%exyliaclans_clan_online_member_<n>%
-%exyliaclans_clan_online_member_<n>_<field>%
-%exyliaclans_clan_online_ally_<n>%
-%exyliaclans_clan_online_ally_<n>_<field>%
-```
-
-| `<field>` | Returns |
+| Placeholder | Description |
 |---|---|
-| *(omitted)* | The player's name |
-| `role` | Their rank name |
-| `kills` | Their kills in that clan |
-| `deaths` | Their deaths in that clan |
-| `kdr` | Their KDR, two decimals |
-| `clan` | Which clan they are from — only meaningful for `ally` |
+| `%exyliaclans_clan_online_member_<n>%` | The player's name |
+| `%exyliaclans_clan_online_member_<n>_role%` | Their rank name |
+| `%exyliaclans_clan_online_member_<n>_kills%` | Their kills in that clan |
+| `%exyliaclans_clan_online_member_<n>_deaths%` | Their deaths in that clan |
+| `%exyliaclans_clan_online_member_<n>_kdr%` | Their KDR, two decimals |
+| `%exyliaclans_clan_online_ally_<n>%` | The allied player's name |
+| `%exyliaclans_clan_online_ally_<n>_role%` | Their rank name |
+| `%exyliaclans_clan_online_ally_<n>_kills%` | Their kills in that clan |
+| `%exyliaclans_clan_online_ally_<n>_deaths%` | Their deaths in that clan |
+| `%exyliaclans_clan_online_ally_<n>_kdr%` | Their KDR, two decimals |
+| `%exyliaclans_clan_online_ally_<n>_clan%` | Which clan they are from |
 
 ```
 %exyliaclans_clan_online_member_3_kdr%
@@ -91,11 +84,11 @@ one rebuild.
 Valid stat keys: `online`, `members`, `kills`, `deaths`, `kdr`, `playtime`, `balance`. Anything
 unranked returns `-`.
 
-| Placeholder | Returns |
+| Placeholder | Description |
 |---|---|
-| `clan_leaderboard_rank_<stat>` | Where the viewer's clan sits, `1` upwards |
-| `clan_leaderboard_top_<n>_<stat>` | The name of the clan at position `<n>` |
-| `clan_leaderboard_top_value_<n>_<stat>` | Its value there, formatted |
+| `%exyliaclans_clan_leaderboard_rank_<stat>%` | Where the viewer's clan sits, `1` upwards |
+| `%exyliaclans_clan_leaderboard_top_<n>_<stat>%` | The name of the clan at position `<n>` |
+| `%exyliaclans_clan_leaderboard_top_value_<n>_<stat>%` | Its value there, formatted |
 
 ```
 %exyliaclans_clan_leaderboard_rank_kills%
@@ -108,13 +101,13 @@ Each ranking is cached for 30 seconds.
 ## Relational
 
 These take a viewer **and** a target, so they belong in nametags, TAB sorting and anywhere one player is
-being drawn to another. Through PlaceholderAPI they are written `%rel_exyliaclans_…%`.
+being drawn to another.
 
-| Placeholder | Returns |
+| Placeholder | Description |
 |---|---|
-| `player_type` | The label for the relation |
-| `player_color` | The colour for it |
-| `player_priority` | `5` own leader, `4` clanmate, `3` ally leader, `2` ally, `1` rival, `0` stranger |
+| `%rel_exyliaclans_player_type%` | The label for the relation |
+| `%rel_exyliaclans_player_color%` | The colour for it |
+| `%rel_exyliaclans_player_priority%` | `5` own leader, `4` clanmate, `3` ally leader, `2` ally, `1` rival, `0` stranger |
 
 `player_priority` is built for sorting a name-sorted list: higher floats to the top.
 
@@ -137,13 +130,13 @@ language your server runs in, this block wants editing on day one.
 
 ## Global
 
-| Placeholder | Returns |
+| Placeholder | Description |
 |---|---|
-| `total_clans` | Clans on the server |
+| `%exyliaclans_total_clans%` | Clans on the server |
 
 ## Formats and fallbacks
 
-Every placeholder here goes through ExyliaLib's registry, so the shared syntax applies:
+Every placeholder here accepts the shared format and fallback syntax:
 
 ```
 %exyliaclans_clan_balance:comma%      1,250,000

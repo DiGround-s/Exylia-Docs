@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { CodeBlock } from "./CodeBlock";
+import { InlineCode } from "./InlineCode";
 import type { Lang } from "@/content/registry";
 
 /* ---------------- Callout ---------------- */
@@ -190,6 +191,12 @@ function withLang(href: string, lang: Lang): string {
 export function createMdxComponents(lang: Lang) {
   return {
     pre: (props: { children?: ReactNode }) => <CodeBlock {...props} lang={lang} />,
+    code: (props: { children?: ReactNode }) => <InlineCode {...props} lang={lang} />,
+    table: (props: { children?: ReactNode }) => (
+      <div className="table-wrap">
+        <table {...props} />
+      </div>
+    ),
     a: ({ href = "", ...props }: { href?: string; children?: ReactNode }) => {
       if (href.startsWith("#")) return <a href={href} {...props} />;
       if (href.startsWith("/")) return <Link href={withLang(href, lang)} {...props} />;
