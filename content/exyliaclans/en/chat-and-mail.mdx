@@ -1,0 +1,98 @@
+---
+title: "Chat and mail"
+description: "Three chat channels, two one-character shortcuts, and a clan mailbox that survives a logout."
+---
+
+## Channels
+
+```
+/clan chat
+```
+
+Cycles the player's channel. There are three, in order:
+
+| Channel | Reaches | Format key |
+|---|---|---|
+| `GLOBAL` | Normal server chat | — |
+| `CLAN` | The clan | `clan.chat-format` |
+| `CLAN_AND_ALLIES` | The clan and every allied clan | `clan.ally-chat-format` |
+
+While the channel is anything but `GLOBAL`, everything the player types is captured and sent there
+instead. The channel is per session — it resets to `GLOBAL` on logout, and also resets itself if the
+player stops being in a clan.
+
+```yaml
+clan:
+  chat-format: "{success}[CLAN] {muted}%player%{muted}: {letters}%message%"
+  ally-chat-format: "{info}[ALLY] {muted}%player%{muted}: {letters}%message%"
+```
+
+`/clan chat <message>` sends one line to the current channel without switching to it.
+
+## Quick prefixes
+
+```yaml
+settings:
+  chat:
+    quick-clan-prefixes: ["."]
+    quick-ally-prefixes: ["@"]
+```
+
+Typing `.on my way` in normal chat sends *on my way* to the clan; `@push now` sends *push now* to the
+clan and its allies. The channel is not changed — the next line goes wherever it was going before.
+
+Both lists take as many prefixes as you like, and either can be emptied to disable that shortcut.
+
+<Callout type="warning" title="A prefix swallows the start of a normal message">
+`.` is a common way to start a sentence. Anybody who types `...` or `.gg` is talking to their clan
+without meaning to. Two- or three-character prefixes (`c:`, `!!`) are far less surprising; picking them
+is a one-line change.
+</Callout>
+
+Messages are escaped before they are formatted: MiniMessage tags and `%` are neutralised, so a player
+cannot inject a colour, a click event or a placeholder into what their clan reads.
+
+## Mail
+
+```
+/clan mail                              open the inbox
+/clan mail send <member> <message>      one member
+/clan mail sendclan <message>           the whole clan
+```
+
+Mail is stored, so it is what clan chat is not: a message that is still there when the recipient logs in
+tomorrow. Sending to the whole clan needs `SEND_CLAN_MAIL`; sending to one member needs nothing beyond
+being in the same clan.
+
+```yaml
+mail:
+  expiry-days: 14
+  expiry-check-interval-minutes: 30
+  max-message-length: 256
+  max-mails-per-clan: 100
+```
+
+| Setting | What it does |
+|---|---|
+| `expiry-days` | Days before a mail is deleted. `0` never expires. |
+| `expiry-check-interval-minutes` | How often expired mail is purged. |
+| `max-message-length` | Longest body, in characters. |
+| `max-mails-per-clan` | How many a clan keeps. The oldest **unpinned** are pruned past this. `0` disables. |
+
+### Read, deleted and pinned
+
+Read and deleted are tracked **per member**: the same clan mail can be unread for one player, read by
+another and deleted by a third, all from one row. Deleting is therefore only ever your own copy — the
+mail stays in everybody else's inbox.
+
+Pinning is clan-wide. A pinned mail sits at the top of the inbox and is exempt from the
+`max-mails-per-clan` prune, which is what makes it the right place for the rules of a raid or a schedule.
+
+The inbox menu also offers **mark all read**. On join, a player with unread mail is told how many they
+have, and `%exyliaclans_clan_mail_unread%` is the number for a scoreboard.
+
+<Callout type="note" title="Composing goes through chat, not an anvil">
+Sending from the menu asks for the subject and then the body as chat input, using the prompts in
+`mail.subject-prompt` and `mail.message-prompt`. The command form skips the subject and uses
+`mail.default-subject`.
+</Callout>

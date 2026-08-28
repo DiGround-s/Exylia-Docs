@@ -1,0 +1,141 @@
+---
+title: "Rangos y permisos de clan"
+description: "Los 24 permisos internos, cómo el peso decide quién puede actuar sobre quién, y el bloque default-roles con el que nacen los clanes."
+---
+
+Los rangos son del clan, no del servidor. `default-roles` en `config.yml` solo decide cómo es un clan **el
+día que se crea**; a partir de ahí el clan edita sus propios rangos en el menú, y nada del archivo de
+configuración vuelve a tocarlos.
+
+## default-roles
+
+```yaml
+default-roles:
+  leader:
+    name: Leader
+    weight: 100
+    permissions:
+      - INVITE
+      - KICK
+      - BAN
+      - PROMOTE
+      - DEMOTE
+      - MANAGE_ROLES
+      - SEND_ALLIANCE_REQUEST
+      - ACCEPT_ALLIANCE
+      - REMOVE_ALLY
+      - MANAGE_RIVALS
+      - SET_HOME
+      - REGROUP
+      - DEPOSIT_BANK
+      - WITHDRAW_BANK
+      - TOGGLE_FRIENDLY_FIRE
+      - TOGGLE_OPEN
+      - CLAIM_LAND
+      - UNCLAIM_LAND
+      - BUILD
+      - OPEN_DOORS
+      - OPEN_CONTAINERS
+      - SEND_CLAN_MAIL
+      - MANAGE_LFP
+      - VIEW_LOGS
+    is-default: false
+  officer:
+    name: Officer
+    weight: 50
+    permissions: [INVITE, KICK, BAN, PROMOTE, DEMOTE, SEND_ALLIANCE_REQUEST, ACCEPT_ALLIANCE, REMOVE_ALLY, MANAGE_RIVALS, SET_HOME, REGROUP, DEPOSIT_BANK, WITHDRAW_BANK, SEND_CLAN_MAIL, MANAGE_LFP, VIEW_LOGS]
+    is-default: false
+  member:
+    name: Member
+    weight: 1
+    permissions: []
+    is-default: true
+```
+
+Las claves del mapa (`leader`, `officer`, `member`) son tuyas; añade, renombra o borra entradas sin
+problema. Nada dentro de este bloque se poda nunca, y una entrada que borres se queda borrada.
+
+| Clave | Qué hace |
+|---|---|
+| `name` | Lo que ven los jugadores. |
+| `weight` | Más alto manda sobre más bajo. |
+| `permissions` | Una lista con los nombres de abajo. Lo que no esté se deniega. Un nombre desconocido se descarta. |
+| `is-default` | Si un miembro nuevo recibe este rango. Exactamente una entrada debería estar en `true`. |
+
+<Callout type="danger" title="Un `default-roles` vacío rompe la creación de clanes">
+`/clan create` se niega y registra `Cannot create a clan: default-roles is empty in config.yml.` en vez de
+crear un clan cuyo fundador no tiene rango. No se reescribe nada en el archivo: el bloque es tuyo.
+</Callout>
+
+Al fundador se le da el rango **más pesado** del bloque, no el que se llame `leader`. Si reescribes el
+bloque, el rango al que le pongas más peso es el que recibirá el fundador.
+
+## Los 24 permisos
+
+| Permiso | Da |
+|---|---|
+| `INVITE` | `/clan invite` y cancelar invitaciones |
+| `KICK` | `/clan kick` |
+| `BAN` | `/clan ban`, `/clan unban` |
+| `PROMOTE` | Asignar un rango por encima del actual del miembro |
+| `DEMOTE` | Asignar uno por debajo |
+| `MANAGE_ROLES` | Crear, renombrar y borrar rangos, poner pesos, elegir el rango por defecto y marcar permisos |
+| `SEND_ALLIANCE_REQUEST` | `/clan ally add` |
+| `ACCEPT_ALLIANCE` | `/clan ally accept`, `/clan ally decline` |
+| `REMOVE_ALLY` | `/clan ally remove` |
+| `MANAGE_RIVALS` | `/clan rival add`, `/clan rival remove` |
+| `SET_HOME` | `/clan sethome` |
+| `REGROUP` | `/clan regroup` |
+| `DEPOSIT_BANK` | `/clan deposit` |
+| `WITHDRAW_BANK` | `/clan withdraw` |
+| `TOGGLE_FRIENDLY_FIRE` | `/clan ff` |
+| `TOGGLE_OPEN` | `/clan open` |
+| `CLAIM_LAND` | `/clan claim`, `/clan reclaim` |
+| `UNCLAIM_LAND` | `/clan unclaim` |
+| `BUILD` | Poner y romper bloques, cubos y cuadros dentro del terreno del clan |
+| `OPEN_DOORS` | Puertas, trampillas y vallas dentro del terreno |
+| `OPEN_CONTAINERS` | Cofres y cualquier otro contenedor dentro del terreno |
+| `SEND_CLAN_MAIL` | Enviar correo a todo el clan |
+| `MANAGE_LFP` | Publicar, editar, renovar y cancelar la oferta `/lfp` del clan, y responder solicitudes |
+| `VIEW_LOGS` | El menú de logs |
+
+<Callout type="warning" title="`MANAGE_RIVALS` y `REGROUP` no están en el menú de rangos">
+El menú trae interruptores para veintidós de los veinticuatro. Esos dos se pueden dar desde
+`default-roles` — así los tienen los clanes nuevos — pero un clan existente no puede marcárselos. Añade a
+`menus/role_manage.yml` una acción `exyliaclans:toggle_role_perm %role_id% MANAGE_RIVALS` si los quieres
+clicables.
+</Callout>
+
+<Callout type="note" title="`BUILD`, `OPEN_DOORS` y `OPEN_CONTAINERS` solo aplican en BUILTIN">
+Con `protection-mode: WORLDGUARD` la región es la que protege el terreno, y todos los miembros son
+miembros de la región. Esos tres permisos los lee el listener propio del plugin, que se aparta cuando
+manda WorldGuard. Ver [Terrenos](/docs/exyliaclans/terrenos#modo-de-protección).
+</Callout>
+
+## El líder
+
+El líder es una columna del clan, no un rango. Pasa cualquier comprobación de permiso, dé lo que dé su
+rango, y cuenta como más pesado que todos en la comparación de pesos.
+
+Consecuencias que conviene saber:
+
+- Un líder no puede hacer `/clan leave`. Tiene que `/clan transferleader` o `/clan disband`.
+- Disolver se niega si el estado de DTR del clan no es `NORMAL`.
+- Quitarle todos los permisos al rango del líder no cambia nada para quien tenga el liderazgo.
+
+## El peso
+
+El peso se comprueba en un solo sitio y responde a una pregunta: *¿puede este miembro actuar sobre ese
+miembro?* La respuesta es sí cuando el peso del que actúa es **estrictamente mayor** que el del objetivo.
+
+- Expulsar, banear, ascender y descender pasan por ahí.
+- Asignar un rango se niega si el peso del rango no está por debajo del propio.
+- `/clan promote` y `/clan demote` abren el mismo menú de **asignar rango**; las dos palabras son una
+  comodidad, no dos operaciones distintas.
+- El peso de un rango tiene que ser único dentro del clan, y estar por debajo del de quien lo pone.
+- El rango más pesado no se puede borrar, y el último que quede tampoco.
+
+<Callout type="tip" title="Deja hueco">
+Pesos de 100 / 50 / 1 dejan sitio para meter un rango entre dos existentes sin renumerar el clan. Pesos
+consecutivos, no.
+</Callout>

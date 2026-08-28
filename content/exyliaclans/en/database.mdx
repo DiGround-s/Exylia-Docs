@@ -1,0 +1,91 @@
+---
+title: "Database"
+description: "The thirteen tables, what keys them, and what to know before touching them by hand."
+---
+
+Storage is ExyliaLib's. `database.yml` is written on first start and defaults to H2; MySQL, SQLite,
+MongoDB and Redis are also available. Tables are created and migrated from the record definitions, so
+there is no schema file to apply.
+
+## The thirteen tables
+
+| Table | Key | Holds |
+|---|---|---|
+| `clans` | `id` (UUID text) | Name, leader, balance, open, friendly fire, home, banned list, DTR, DTR freeze, EXP |
+| `clan_members` | `uuid` | The player's clan and their rank |
+| `clan_roles` | `id` | Every rank of every clan: name, weight, permissions, whether it is the default |
+| `clan_relations` | `clanId:targetClanId` | One directional opinion, `ALLY` or `RIVAL` |
+| `clan_invites` | `playerUuid:clanId` | A standing invitation |
+| `clan_claims` | `id` | One rectangle: world, `minX`, `minZ`, `maxX`, `maxZ`, `baseY` |
+| `clan_stats` | `clanId` | Kills, deaths, playtime seconds |
+| `player_stats` | `playerUuid:clanId` | The same per player per clan, plus the last name seen |
+| `clan_logs` | `id` | Action, actor, target, detail, timestamp |
+| `clan_mails` | `id` | Type, sender, recipient, subject, body, sent, expires, read list, deleted list, pinned |
+| `lfc_profiles` | `playerUuid` | Status, posted, last posted, expires, the answers |
+| `lfp_postings` | `clanId` | Status, posted, last posted, expires, description, the answers |
+| `lfp_applications` | `playerUuid:clanId` | Status, applied, decided, message |
+
+## What the keys buy you
+
+Several rules that would otherwise need enforcing are enforced by the key itself:
+
+- **A player is in one clan.** `clan_members` is keyed by the player's UUID, so a second membership row
+  cannot exist.
+- **A clan has one claim, one LFP posting.** Both are keyed by the clan id.
+- **A player has one LFC profile, and one application per clan.**
+- **An invitation is unique per pair**, and so is a relation.
+
+## Two indexes
+
+| Index | On | For |
+|---|---|---|
+| `idx_cl_clan_ts` | `clan_logs (clanId, timestamp DESC)` | The logs menu: filter by clan, newest first, take a page |
+| `idx_cm_clan_sent` | `clan_mails (clanId, sentAt DESC)` | The inbox, the same way |
+
+Both make a page a bounded read rather than a scan.
+
+## Columns worth knowing about
+
+| Column | Format |
+|---|---|
+| `clans.banned_players` | Comma-separated UUIDs |
+| `clan_roles.permissions` | Comma-separated permission names. An unknown name is skipped when read |
+| `clans.home_location` | A serialised location; `null` when unset |
+| `clan_mails.read_by_players` / `deleted_by_players` | Comma-separated UUIDs — which is how read and deleted are per member off one row |
+| `lfc_profiles.data` / `lfp_postings.data` | The serialised answers |
+| `*.status` | `ACTIVE` / `EXPIRED` for postings and profiles; `PENDING` / `ACCEPTED` / `REJECTED` for applications |
+
+## What is not in the database
+
+- **Alliance requests.** Held in memory with a 60-second expiry, so a restart drops the pending ones.
+- **Chat channels.** Per session; everybody is back on global after a restart.
+- **Kill streaks.** Per session, and reset by dying.
+- **Camp, rally, focus and regroup markers.** All in memory.
+- **The clan level.** Derived from `clans.exp` on every read, never stored.
+- **Claim ownership of members.** Derived from `clan_members`; the claim row names only the clan.
+
+## Caches
+
+Clans, members, ranks, relations, claims and invitations are held in memory and written through on
+change, so the hot path never touches the database. Two things are cached with a TTL instead:
+
+| Cache | TTL | Why |
+|---|---|---|
+| Each leaderboard ranking | 30 s | A scoreboard asks four times a second |
+| The online roster per clan and per alliance | 1 s | Thirty slots × several viewers × four times a second |
+
+<Callout type="warning" title="Editing rows by hand needs a restart">
+The caches are loaded at enable and kept in step by the plugin's own writes. A row changed directly in
+the database is not noticed, and will be overwritten the next time that clan changes. Use
+`/clanadmin` where it covers what you need, and stop the server where it does not.
+</Callout>
+
+## Startup
+
+The repositories are read asynchronously, so the plugin finishes enabling before the tables have
+answered. Until they do, every lookup says *no clan* — the safe way to be wrong for a moment. Once the
+caches are true, anybody already online has their join replayed, so a player who logged in during that
+window is not left invisible to their own clan.
+
+If the read fails outright, the console says so and the plugin stays idle rather than starting to write
+against caches it knows are empty.

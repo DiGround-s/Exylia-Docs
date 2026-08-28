@@ -1,0 +1,133 @@
+---
+title: "Reclutamiento"
+description: "/lfc y /lfp: un tablón de agentes libres y otro de ofertas, los dos construidos con preguntas que escribes tú."
+---
+
+Dos tablones, apuntando en sentidos opuestos, construidos con los mismos tres tipos de pregunta.
+
+| Comando | Quién publica | Quién lee |
+|---|---|---|
+| `/lfc` | Un jugador sin clan, anunciando a qué juega | Los clanes, mirando e invitando |
+| `/lfp` | Un clan, anunciando lo que busca | Los jugadores, mirando y solicitando |
+
+Los dos son módulos y pueden funcionar por separado. Sus preguntas viven en `lfc.yml` y `lfp.yml`.
+
+## Tipos de pregunta
+
+Una categoría es una pregunta. Hay tres clases:
+
+| `type` | Qué hace el jugador | Usa |
+|---|---|---|
+| `TOGGLE` | La marca o la desmarca | `answers` y `selections` se ignoran |
+| `SINGLE_SELECT` | Elige una respuesta | `answers` |
+| `MULTI_ANSWER` | Elige respuestas y luego un tier para cada una | `answers` y `selections` |
+
+```yaml
+categories:
+  pvp:
+    display-name: "&cPvP"
+    icon: DIAMOND_SWORD
+    type: MULTI_ANSWER
+    answers:
+      PotPvP:     { name: PotPvP,     icon: SPLASH_POTION }
+      CrystalPvP: { name: CrystalPvP, icon: END_CRYSTAL }
+      MacePvP:    { name: MacePvP,    icon: MACE }
+    selections:
+      HT1: { name: HT1, color: "&4", icon: NETHERITE_SWORD }
+      LT1: { name: LT1, color: "&a", icon: NETHERITE_INGOT }
+      HT2: { name: HT2, color: "&c", icon: DIAMOND_SWORD }
+  farmer:
+    display-name: "&aFarmer"
+    icon: DIAMOND_HOE
+    type: TOGGLE
+  role:
+    display-name: "&eRol principal"
+    icon: SHIELD
+    type: SINGLE_SELECT
+    answers:
+      Atacante: { name: Atacante, icon: IRON_SWORD }
+      Soporte:  { name: Soporte,  icon: SHIELD }
+```
+
+Los ids de categoría, de respuesta y de tier son todos tuyos. Nada dentro de `categories` se poda, y una
+entrada que borres se queda borrada. `icon` acepta un material o una referencia a cabeza.
+
+`MULTI_ANSWER` es lo que convierte una lista plana en un perfil que dice algo: un jugador no marca solo
+*PotPvP*, lo marca en *HT2*. Los dos archivos vienen con la misma escalera de diez tiers de ejemplo.
+
+## Looking for clan
+
+```yaml
+settings:
+  cooldown-seconds: 300
+  expiry-days: 7
+  broadcast-on-post: true
+  expiry-check-interval-minutes: 10
+```
+
+`/lfc` abre el navegador. Un jugador sin perfil lo construye con las categorías, lo envía y aparece en la
+lista. Uno que ya lo tiene lo ve arriba y puede editarlo, renovarlo o cancelarlo.
+
+| Regla | Detalle |
+|---|---|
+| Solo publican jugadores sin clan | `lfc.error-in-clan` |
+| Un perfil por jugador | La clave de la fila es su UUID |
+| Cooldown | `cooldown-seconds` entre publicar y renovar, 300 s |
+| Caducidad | `expiry-days` desde la última publicación o renovación, 7 días |
+| Barrido | Cada `expiry-check-interval-minutes`, 10 min |
+| Anuncio | `broadcast-on-post` anuncia publicaciones y renovaciones a todo el servidor |
+
+Un perfil se elimina automáticamente en cuanto su dueño entra en un clan, y se le avisa.
+
+Un clan que mire la lista invita desde el propio perfil: el botón es una invitación de clan normal, así
+que sigue necesitando `INVITE`.
+
+## Looking for players
+
+```yaml
+settings:
+  cooldown-seconds: 300
+  expiry-days: 7
+  broadcast-on-post: true
+  expiry-check-interval-minutes: 10
+  description-max-length: 200
+  application-message-max-length: 200
+  application-cooldown-seconds: 120
+  max-applications-per-player: 3
+```
+
+`/lfp` abre el navegador. Un miembro con `MANAGE_LFP` puede publicar, editar, renovar o cancelar la oferta
+del clan y leer sus solicitudes; el resto ve el tablón y solicita.
+
+Una oferta lleva las categorías **y** una descripción libre, limitada a `description-max-length`.
+
+### Solicitar
+
+El jugador elige una oferta, escribe un mensaje limitado a `application-message-max-length` y lo envía.
+
+| Regla | Ajuste |
+|---|---|
+| Solicitudes pendientes a la vez, entre todos los clanes | `max-applications-per-player`, 3 |
+| Espera antes de volver a solicitar al mismo clan tras un rechazo o una retirada | `application-cooldown-seconds`, 120 s |
+| Una solicitud por jugador y clan | la clave de la fila es `playerUuid:clanId` |
+
+Las solicitudes son `PENDING`, `ACCEPTED` o `REJECTED`. Al solicitante se le avisa en los dos casos, y
+puede retirar una pendiente desde **Mis solicitudes**.
+
+Aceptar mete al jugador en el clan en ese momento, así que siguen aplicando todas las reglas normales de
+entrada: que el clan esté lleno, que el jugador esté baneado de él, o que se haya metido en otro mientras
+tanto. Todas las solicitudes de un jugador se limpian cuando entra en un clan por cualquier vía.
+
+Una solicitud aceptada se escribe en el log del clan, igual que la creación, edición, renovación y
+cancelación de la oferta.
+
+## Los siete menús de cada uno
+
+Los dos tablones tienen la misma forma: un navegador, una pantalla de crear/editar, un selector de modo,
+uno de opción y uno de tier; `/lfp` añade la lista de solicitudes, el detalle de una solicitud y *mis
+solicitudes*. Son menús normales — ver [Menús](/docs/exyliaclans/menus).
+
+<Callout type="tip" title="Empieza con menos preguntas">
+Cada categoría es un clic más entre un jugador y un perfil publicado. Tres o cuatro preguntas que de
+verdad clasifiquen — un modo, un tier, un rol — valen más que diez que todos marcan igual.
+</Callout>

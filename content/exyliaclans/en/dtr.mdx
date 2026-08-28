@@ -1,0 +1,114 @@
+---
+title: "DTR"
+description: "Deaths till raidable: the pool, the freeze, the regeneration tick, and what going below zero opens up."
+---
+
+DTR is the number that decides whether a clan's land is protected. It falls when members die, freezes
+for a while after each death, regenerates on a timer, and once it goes negative the clan is **raidable**.
+
+## The maximum
+
+```
+max DTR = max(1.0, member count ÷ members-per-point)
+```
+
+With `members-per-point: 3`, a three-member clan has a maximum of 1.0, a nine-member clan 3.0, and a
+thirty-member clan 10.0. A clan smaller than the divisor still gets 1.0 — never less.
+
+The maximum moves with the roster. Recruiting raises the ceiling; losing members lowers it, and a clan
+sitting above its new maximum simply stops regenerating.
+
+## Losing it
+
+Every member death costs `death-loss` (0.9) and freezes regeneration for `frozen-duration-seconds`
+(600 — ten minutes). Another death restarts the freeze from zero rather than extending it.
+
+The floor is `min-dtr`, `-1.0` by default: a clan cannot be pushed further negative than that, so the
+time to recover from a raid is bounded no matter how badly it went.
+
+Every death broadcasts to the clan who died and where the pool now stands, coloured green at maximum,
+amber below it and red below zero.
+
+```yaml
+dtr:
+  no-loss-worlds: []
+  death-loss: 0.9
+  members-per-point: 3
+  frozen-duration-seconds: 600
+  regen-amount: 0.1
+  regen-interval-seconds: 45
+  min-dtr: -1.0
+  color-normal: "&a"
+  color-regenerating: "&e"
+  color-frozen: "&b"
+  color-raidable: "&c"
+```
+
+`no-loss-worlds` is the escape hatch: a death in a world listed there costs nothing. Put the lobby, the
+event world and the practice world in it.
+
+## Regaining it
+
+A task runs every `regen-interval-seconds` (45 s) and adds `regen-amount` (0.1) to every clan that is not
+frozen and not already at its maximum. With the defaults that is 0.08 DTR per minute, so a single death
+takes about eleven minutes to undo — ten of them being the freeze.
+
+## The four states
+
+| State | When | Default colour |
+|---|---|---|
+| `FROZEN` | The freeze from the last death has not expired | `&b` |
+| `RAIDABLE` | DTR is below zero and the freeze has expired | `&c` |
+| `REGENERATING` | DTR is above zero but below the maximum | `&e` |
+| `NORMAL` | DTR is at the maximum | `&a` |
+
+`FROZEN` is checked first, so a clan that has just been pushed negative reads `FROZEN` for ten minutes
+before it reads `RAIDABLE` — even though its claim is already open, which is decided by the number
+being below zero and not by the state label.
+
+The menus also print a detail line: how long until the freeze lifts, or an estimate of how long until
+the pool is full again.
+
+## Going raidable
+
+Crossing from zero or above to below zero, once:
+
+- The clan loses `exp-actions.raided.exp-loss` — 50 EXP by default.
+- Its claim stops protecting anything. Under `BUILTIN` every build, door and container check passes for
+  everybody; under `WORLDGUARD` the region's `BUILD` flag is set to `ALLOW`.
+- Explosions stop being filtered out of the claim.
+
+Crossing back above zero puts all of it back on the next regeneration tick.
+
+## What DTR gates
+
+Two operations are refused unless the clan's state is `NORMAL`:
+
+| Operation | Message |
+|---|---|
+| `/clan disband` | `errors.clan-raidable` |
+| `/clan unclaim` | `errors.dtr-not-normal` |
+
+`/clan reclaim` has its own check and is refused specifically while raidable. A clan cannot drop its
+land, redraw it or dissolve itself to escape a raid it is losing.
+
+## Admin
+
+```
+/clanadmin setdtr <clan> <SET|ADD|REMOVE> <value>
+```
+
+Clamped between `min-dtr` and the clan's current maximum, so it cannot be used to hand out more DTR than
+the roster supports.
+
+## Turning it off
+
+With `modules.dtr: false` there is no regeneration task, no freeze, no death broadcast and no raidable
+state — which means **no claim ever opens**. Territory becomes permanent, and disband and unclaim lose
+their state check. If your server has claims, it almost certainly wants DTR too.
+
+<Callout type="note" title="The one-off backfill">
+On the first start after DTR is enabled, every clan sitting at exactly `0.0` with no freeze is given its
+maximum, and the count is logged. That is a migration for clans created while the module was off, not
+something that runs again.
+</Callout>

@@ -1,0 +1,94 @@
+---
+title: "Instalación"
+description: "Dependencias, los archivos que escribe, las tablas que crea y qué mirar en el primer arranque."
+---
+
+## Instalar
+
+<Steps>
+  <Step title="Suelta los jars">
+    `ExyliaClans.jar`, más `ExyliaLib` y `packetevents`, en `plugins/`.
+  </Step>
+  <Step title="Añade un plugin de economía">
+    El banco paga los terrenos y se lee a través del puente de economía de ExyliaLib. Sin uno,
+    `/clan deposit` y `/clan withdraw` se niegan y no se puede comprar ningún terreno.
+  </Step>
+  <Step title="Decide quién protege el terreno">
+    `claims.protection-mode` viene como `WORLDGUARD`. Si WorldGuard no está instalado, ponlo en `BUILTIN`
+    antes de que nadie reclame nada — ver [Terrenos](/docs/exyliaclans/terrenos#modo-de-protección).
+  </Step>
+  <Step title="Arranca el servidor">
+    Escribe cuatro archivos de configuración y treinta y siete menús, y crea trece tablas.
+  </Step>
+  <Step title="Da los nodos de comando">
+    No hay nada abierto por defecto: cada subcomando de `/clan` comprueba su propio nodo. Ver
+    [Permisos](/docs/exyliaclans/permisos).
+  </Step>
+</Steps>
+
+## Archivos
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | Límites, warmups, los doce interruptores de módulo, terrenos, DTR, niveles, bossbars y `default-roles`. |
+| `messages.yml` | Cada línea que envía el plugin, en once secciones. |
+| `lfc.yml` | Looking for clan: cooldowns, caducidad y las preguntas que responde un jugador. |
+| `lfp.yml` | Looking for players: cooldowns, caducidad, límites de texto, límites de solicitudes y lo que puede pedir un clan. |
+| `menus/*.yml` | Treinta y siete pantallas. |
+| `database.yml` | Lo escribe ExyliaLib. H2 por defecto; también MySQL, SQLite, MongoDB y Redis. |
+
+<Callout type="note" title="El YAML se genera, no se copia">
+`config.yml`, `messages.yml`, `lfc.yml` y `lfp.yml` se escriben desde records tipados en el primer
+arranque, comentarios incluidos. Una clave que el lector no reconoce se poda — salvo dentro de
+`default-roles`, `levels.level-definitions`, `levels.kill-streak-bonuses` y los dos bloques `categories`,
+que son tuyos y no se tocan nunca.
+</Callout>
+
+## Tablas
+
+| Tabla | Guarda |
+|---|---|
+| `clans` | Una fila por clan: nombre, líder, saldo, abierto, friendly fire, home, baneados, DTR, EXP. |
+| `clan_members` | Una fila por jugador. La clave es su UUID, así que un jugador está en un clan por construcción. |
+| `clan_roles` | Cada rango de cada clan, con su peso y sus permisos separados por comas. |
+| `clan_relations` | Direccional. Dos filas hacen una alianza mutua; una fila hace una rivalidad. |
+| `clan_invites` | Invitaciones vigentes, con clave `playerUuid:clanId`. |
+| `clan_claims` | Un rectángulo por clan: mundo, `minX`, `minZ`, `maxX`, `maxZ` y la altura a la que se hizo. |
+| `clan_stats` | Bajas, muertes y tiempo jugado por clan. |
+| `player_stats` | Lo mismo por jugador **y por clan**, con clave `playerUuid:clanId`. |
+| `clan_logs` | El registro de auditoría, indexado por clan y fecha descendente. |
+| `clan_mails` | El buzón, con leído/borrado por miembro como listas de UUID. |
+| `lfc_profiles` | Una fila por jugador que se anuncia. |
+| `lfp_postings` | Una fila por clan que busca miembros. |
+| `lfp_applications` | Solicitudes, con clave `playerUuid:clanId`. |
+
+## Integraciones opcionales
+
+| Plugin | Qué cambia |
+|---|---|
+| `PlaceholderAPI` | Registra la expansión `exyliaclans`, relacionales incluidos. |
+| `WorldGuard` | Pasa a proteger los terrenos con `protection-mode: WORLDGUARD`, y bloquea reclamar sobre una región existente. |
+| `TAB` | Su gestión de equipos se pausa para un jugador mientras este plugin lo colorea, y se reanuda al salir del clan. |
+| Economía | El banco. |
+| `Apollo` / `FeatherServerAPI` | Waypoints de cliente para el home del clan y para los marcadores de camp y rally. |
+
+## El primer arranque
+
+Lee la consola. Tres cosas se avisan ahí y en ningún otro sitio:
+
+- **Problemas de configuración.** Una clave que no se pudo leer se nombra, una vez, con qué tenía mal.
+- **`default-roles is empty`.** Si vaciaste ese bloque, `/clan create` se niega en vez de crear un clan
+  cuyo líder no tiene rango. No se reescribe nada en el archivo.
+- **Backfill de DTR.** En el primer arranque tras activar el módulo DTR, cada clan que esté a `0.0`
+  recibe su máximo, y se registra el número.
+
+## Actualizar
+
+Sustituye el jar y reinicia. `/clanadmin reload` vuelve a leer `config.yml`, `messages.yml`, `lfc.yml` y
+`lfp.yml`, reconstruye la tabla de niveles y recompila todos los menús. `/exylialib reload` también
+recompila los menús, así que un cambio de paleta hecho desde la librería se ve sin reiniciar.
+
+<Callout type="warning" title="El reload no reescribe los clanes existentes">
+Cambiar `default-roles` solo afecta a los clanes creados después. Los que ya existen conservan los rangos
+con los que se crearon, porque son filas de `clan_roles` que el clan ya ha editado.
+</Callout>

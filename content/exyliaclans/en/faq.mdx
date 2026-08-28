@@ -1,0 +1,123 @@
+---
+title: "FAQ"
+description: "The questions the defaults actually cause."
+---
+
+## Nobody can use any command
+
+Nothing is granted by default. Give `exyliaclans.commands.*` to the default group — see
+[Permissions](/docs/exyliaclans/permissions).
+
+## Claims are not protecting anything
+
+`claims.protection-mode` ships as `WORLDGUARD`. If WorldGuard is not installed, no region is created and
+the built-in listener stands down, so the claim is drawn and paid for and protects nothing. Set it to
+`BUILTIN`, or install WorldGuard.
+
+Check next that the owning clan is not raidable: a raidable clan's claim is open on purpose.
+
+## A member cannot break blocks in our own claim
+
+Under `BUILTIN` that is the `BUILD` rank permission, which the shipped **Member** rank does not have.
+Tick it in `/clan` → **Roles**, or add it to `default-roles` for clans created from now on.
+
+## `/clan sethome` says I must be inside the claim
+
+You must — while the claims module is on. Claim first, then set the home inside it. With
+`modules.claims: false` the home can be set anywhere.
+
+## We unclaimed and lost our home
+
+That is deliberate: the home lives inside the claim, so removing the claim removes it. Both are written
+to the log.
+
+## `/clan deposit` says the economy is unavailable
+
+There is no economy plugin ExyliaLib can read. Install one — the bank is what pays for land, so without
+it no claim can be bought either.
+
+## A clan cannot disband or unclaim
+
+Both are refused unless the DTR state is `NORMAL`. A clan that has just lost a member is `FROZEN` for ten
+minutes. `/clanadmin disband` bypasses this.
+
+## We are stuck raidable
+
+DTR regenerates `regen-amount` (0.1) every `regen-interval-seconds` (45 s) — but only while the clan is
+**not frozen**, and every death restarts the ten-minute freeze. A clan being farmed never leaves the
+freeze. Lower `frozen-duration-seconds`, raise `regen-amount`, or add the world to `no-loss-worlds` if
+deaths there should not count.
+
+## Deaths in the lobby cost us DTR
+
+Add the world to `dtr.no-loss-worlds`. The lobby, the event world and any practice world belong there.
+
+## Typing `.` in chat sends to my clan
+
+`settings.chat.quick-clan-prefixes` is `["."]` and `quick-ally-prefixes` is `["@"]`. Change them to
+something nobody starts a sentence with — `c:` and `a:` — or empty the lists to disable the shortcuts.
+
+## Players see `MIEMBRO` and `NADA` in TAB
+
+Two of the four shipped relational labels are Spanish. Edit `relational-placeholders.label-member` and
+`label-none` in `config.yml`.
+
+## Invites never expire
+
+They do not. `invite-expire-seconds` is read by the alliance request cache only; a `/clan invite` is a
+row in `clan_invites` that stands until it is accepted, declined, cancelled, or the player joins a clan.
+
+## Our alliance request vanished
+
+Alliance requests live in memory with a 60-second expiry, and a restart drops the pending ones. The
+requesting clan is told when one times out.
+
+## We are allied but still hitting each other
+
+Both clans need friendly fire **on** for allies to be protected — one is not enough. Check the world is
+not in `settings.forced-ff-worlds`, which overrides every clan's setting.
+
+## The rivals or regroup permission is missing from the roles menu
+
+`MANAGE_RIVALS` and `REGROUP` have no toggle in `menus/role_manage.yml`. Grant them through
+`default-roles`, or add a button with
+`exyliaclans:toggle_role_perm %role_id% MANAGE_RIVALS` — see [Roles](/docs/exyliaclans/roles).
+
+## Our clan lost a level
+
+Deaths cost 5 EXP and going raidable costs 50, and the level is recomputed from the total. Members are
+never kicked for it; the clan just cannot recruit past the smaller cap until it climbs back.
+
+## The kills leaderboard is higher than the members' kills add up to
+
+`rivals.kill-stat-multiplier` inflates the clan's recorded kill for a rival kill; the per-player row
+always records one. Set it to `1.0` to keep the two in step.
+
+## A scoreboard slot is blank
+
+An online-roster slot with nobody in it resolves to nothing. Use the fallback syntax —
+`%exyliaclans_clan_online_member_5|%` — or check the console: a placeholder nothing answers is reported
+once by name.
+
+## `/clan map` shows nothing
+
+Nothing is claimed within `claims.map-radius` (200 blocks). The command says so and names the radius. The
+map also switches itself off after two minutes.
+
+## Menu edits are not showing up
+
+`/clanadmin reload` recompiles every menu. If the file is still not read, the console names the part it
+could not make sense of — the rest of the screen opens without it.
+
+## I changed default-roles and existing clans did not change
+
+They will not. `default-roles` describes a clan on the day it is created; after that its ranks are rows in
+`clan_roles` the clan itself edits.
+
+## Does it work on Folia?
+
+Yes — `folia-supported: true`, and scheduling goes through ExyliaLib's Folia-aware scheduler.
+
+## Can I run it without packetevents?
+
+No. It is a hard dependency, and the server will not enable the plugin without it.

@@ -1,0 +1,135 @@
+---
+title: "Menus"
+description: "The thirty-seven screens, how a menu file is put together, and the actions its buttons can call."
+---
+
+Every screen is a file under `plugins/ExyliaClans/menus/`. They are written on first start, never
+overwritten, compiled once at enable and recompiled on reload — so opening one renders slots rather than
+re-reading YAML.
+
+## The thirty-seven files
+
+| Group | Files |
+|---|---|
+| Main | `main_clan`, `main_no_clan`, `clan_info`, `settings`, `confirm` |
+| Members | `members`, `members_view`, `member_manage`, `banned`, `clan_invitations`, `clan_pending_invites` |
+| Ranks | `roles`, `role_manage`, `assign_role` |
+| Economy and progress | `bank`, `level`, `leaderboard`, `logs` |
+| Relations | `allies`, `rivals`, `browse_clans` |
+| Mail | `mail_inbox`, `mail_view`, `mail_member_select` |
+| LFC | `lfc_browse`, `lfc_create`, `lfc_mode_select`, `lfc_option_select`, `lfc_tier_select` |
+| LFP | `lfp_browse`, `lfp_create`, `lfp_applications`, `lfp_application_detail`, `lfp_my_applications`, `lfp_mode_select`, `lfp_option_select`, `lfp_tier_select` |
+
+`main_clan` and `main_no_clan` are two files because `/clan` opens a different screen depending on
+whether the player is in one.
+
+## What a file looks like
+
+```yaml
+title: "{primary}&l%clan_name%"
+size: 45
+type: SIMPLE
+refresh:
+  mode: SMART
+  interval: 20
+animation: "center_out"
+
+open_sounds:
+  - "ENTITY_EXPERIENCE_ORB_PICKUP|1.0|1.2"
+click_sounds:
+  - "UI_BUTTON_CLICK|1.0|1.5"
+
+filler:
+  global:
+    material: GRAY_STAINED_GLASS_PANE
+    hide_tooltip: true
+
+items:
+  level:
+    slot: 16
+    material: EXPERIENCE_BOTTLE
+    name: "{warning}&lCLAN LEVEL"
+    lore:
+      - " {muted}❙ {letters}Level: {warning}%clan_level%{muted}/{warning}%max_level%"
+      - "{info}» Click to view all levels"
+    actions:
+      - "exyliaclans:open_level_menu"
+```
+
+The full grammar — sections, pagination, conditions, item options, click kinds — belongs to ExyliaLib's
+menu module and is documented in [its own reference](/docs/exylialib/menus). What is specific to this
+plugin is the placeholders each screen supplies and the actions it can call.
+
+<Callout type="note" title="A broken part costs that part, not the menu">
+An item the reader cannot make sense of is reported by name in the console and the rest of the screen
+still opens. That is why a mistyped material shows up as a missing button rather than a menu that
+refuses.
+</Callout>
+
+## Per-screen placeholders
+
+Each screen supplies its own values on top of the global ones. A few of the most useful:
+
+| Screen | Supplies |
+|---|---|
+| `main_clan` | `%clan_name%`, `%leader%`, `%members%`, `%max_members%`, `%online_members%`, `%balance%`, `%status%`, `%ff%`, `%allies%`, `%rivals%`, `%home%`, `%dtr%`, `%max_dtr%`, `%dtr_state%`, `%dtr_detail%`, `%clan_level%`, `%max_level%`, `%clan_exp%`, `%level_progress%`, `%clan_kills%`, `%clan_deaths%`, `%clan_kdr%`, `%clan_playtime%`, `%chat_channel%`, `%mail_unread_badge%` |
+| `members` / `members_view` | `%member_name%`, `%member_role%`, `%member_status%`, `%member_kills%`, `%member_deaths%`, `%member_kdr%`, `%member_playtime%`, `%member_action%` |
+| `roles` / `role_manage` | `%role_name%`, `%role_weight%`, `%role_members%`, `%role_default%`, `%role_id%`, and `%perm_<name>_status%` / `%perm_<name>_mat%` per permission |
+| `allies` / `rivals` | `%ally_name%` / `%rival_name%` plus that clan's members, online count, kills, deaths, KDR and playtime |
+| `leaderboard` | `%clan_rank%`, `%stat_name%`, `%stat_value%`, `%stat_material%`, `%stat_type_name%` |
+| `level` | `%current_level%`, `%current_exp%`, `%exp_needed%`, `%progress_bar%`, `%level_members_bonus%`, `%level_alliances_bonus%`, `%level_rivals_bonus%`, `%level_status%` |
+| `logs` | `%log_entry%`, `%log_action%`, `%log_detail%`, `%log_date%`, `%log_date_relative%` |
+| `mail_inbox` / `mail_view` | `%mail_subject%`, `%mail_sender%`, `%mail_body%`, `%mail_sent_relative%`, `%mail_expires%`, `%mail_read_status%`, `%unread_count%`, `%mail_pin_label%` |
+| `lfc_*` / `lfp_*` | `%cat_display_name%`, `%cat_status%`, `%cat_type_hint%`, `%option_name%`, `%tier_name%`, `%tier_color%`, `%profile_summary%` / `%posting_summary%`, `%application_status%` |
+| Any paginated screen | `%current_page%`, `%total_pages%` |
+
+Every global `%exyliaclans_…%` placeholder works in a menu too, and so does anything PlaceholderAPI
+provides.
+
+## Actions
+
+Buttons call actions in the `exyliaclans:` namespace. Ninety-odd are registered; these are the ones worth
+knowing when rearranging a menu.
+
+### Opening screens
+
+`open_main_menu`, `open_members`, `open_clan_members <clanId>`, `open_member_manage`, `open_roles`,
+`open_role_manage`, `open_assign_role`, `open_banned`, `open_bank`, `open_level_menu`, `open_allies`,
+`open_rivals`, `open_clan_allies_by_id <clanId>`, `open_browse_clans`, `open_clan_info_by_id <clanId>`,
+`open_invitations`, `open_pending_invites`, `open_settings`, `open_leaderboard`, `open_clan_logs`,
+`open_mail_inbox`, `open_mail_view`, `open_lfc_browse`, `open_lfc_create`, `open_lfp_browse`,
+`open_lfp_applications`, `close_menu`.
+
+### Acting
+
+| Action | Does |
+|---|---|
+| `create_clan_input` | Asks for a name in chat, then creates the clan |
+| `invite_player_input` | Asks for a player name, then invites them |
+| `join_clan` | Joins the clan the row is showing |
+| `accept_invite` / `decline_invite` / `cancel_invite` | Answer an invitation |
+| `assign_role` | Give the member the rank the row is showing |
+| `toggle_role_perm %role_id% <PERMISSION>` | Tick one rank permission |
+| `create_role_input`, `rename_role_input`, `set_weight_input`, `delete_role`, `set_role_default` | Rank management |
+| `deposit_input` / `withdraw_input` | Ask for an amount, then move the money |
+| `send_alliance_request`, `remove_ally`, `declare_rival_input`, `remove_rival_by_id` | Relations |
+| `set_home`, `teleport_home` | The clan home |
+| `toggle_ff`, `toggle_open`, `toggle_chat` | The three switches |
+| `lb_select_type <key>` | Switch the leaderboard ranking |
+| `compose_mail_clan_input`, `select_mail_recipient`, `delete_mail`, `toggle_mail_pin`, `mail_mark_all_read` | Mail |
+| `lfc_submit`, `lfc_renew_profile`, `lfc_cancel_profile`, `lfc_invite_player` | LFC |
+| `lfp_submit`, `lfp_set_description`, `lfp_apply`, `lfp_accept_application`, `lfp_reject_application`, `lfp_withdraw_application` | LFP |
+| `confirm_disband`, `confirm_leave`, `confirm_kick`, `confirm_ban`, `confirm_unban`, `confirm_transfer_leader` | The confirmation screen |
+
+Every action that acts on the clan still runs the same rank-permission and module checks the command does
+— moving a button does not move a permission.
+
+## The leaderboard's counters
+
+`leaderboard.yml`'s `stat_types` section declares `selected_template` and `not_selected_template` with no
+`actions` key. The click is bound in code — `exyliaclans:lb_select_type %stat_type%` on every click kind —
+so the file works as written. If you rewrite that section, add the action explicitly.
+
+## Resetting a menu
+
+Delete the file and restart. It is written back from the jar; existing files are never overwritten.

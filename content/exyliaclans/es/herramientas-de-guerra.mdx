@@ -1,0 +1,150 @@
+---
+title: "Herramientas de guerra"
+description: "Focus, camp, rally y regroup: las cuatro cosas con las que un clan señala algo, y las bossbars que las siguen."
+---
+
+Hay cuatro comandos para la pelea en sí. Ninguno necesita permiso de rango salvo `/clan regroup`, que
+necesita `REGROUP` — los otros tres los puede usar cualquier miembro.
+
+## Focus
+
+```
+/clan focus <jugador>
+```
+
+Marca a un enemigo para todo el clan: se le pinta de **rojo y brillando** para cada miembro conectado, y
+una bossbar muestra su vida. Es la forma de cantar un objetivo en mitad de una pelea sin escribir un
+nombre por el chat.
+
+| Se niega cuando | Mensaje |
+|---|---|
+| El objetivo eres tú | `errors.cannot-target-self` |
+| El objetivo está en tu clan | `errors.cannot-target-own-clan` |
+| El objetivo está en un clan aliado | `errors.cannot-target-ally` |
+
+```yaml
+bossbars:
+  focus:
+    enabled: true
+    config:
+      text: "{warning}⚔ %player%  {error}❤ %health%/%max_health%"
+      color: RED
+      style: NOTCHED_20
+```
+
+Quitar un focus repinta al objetivo para cada espectador según las reglas de visibilidad, así que vuelve
+al color que le toque — no al que tuviera antes.
+
+## Camp
+
+```
+/clan camp <clan>
+```
+
+Pone un marcador sobre el **home** de otro clan, para todo el tuyo: un waypoint rojo en los clientes que
+los dibujan, y una bossbar contando la distancia. Repetirlo sobre el mismo clan quita el marcador.
+
+Se niega si ese clan no tiene home. No está limitado a rivales: se puede campear a cualquiera.
+
+```yaml
+bossbars:
+  camp:
+    enabled: true
+    max-distance: 500
+    duration-seconds: 0
+    config:
+      text: "{error}⚔ Camp: {highlight}%label%  {muted}%distance% blocks  %x%, %y%, %z%"
+      color: RED
+      style: PROGRESS
+```
+
+`max-distance` es dónde la barra se lee vacía, no un límite de alcance. `duration-seconds: 0` significa
+que el marcador de camp no caduca solo.
+
+## Rally
+
+```
+/clan rally
+```
+
+Deja un marcador en tus pies para todo el clan — waypoint amarillo, barra amarilla, coordenadas anunciadas
+por chat. Es un "venid aquí", no un teletransporte: no se mueve nadie.
+
+```yaml
+bossbars:
+  rally:
+    enabled: true
+    max-distance: 500
+    duration-seconds: 120
+    config:
+      text: "{success}⚑ Rally  {muted}%distance% blocks  %x%, %y%, %z%"
+      color: YELLOW
+      style: PROGRESS
+```
+
+Un rally caduca a los `duration-seconds` (120 s) y se avisa al clan cuando lo hace.
+
+## Regroup
+
+```
+/clan regroup
+/clan regroup join
+```
+
+La versión con teletransporte. `/clan regroup` necesita el permiso de rango `REGROUP` y envía un mensaje
+**clicable** a todo el clan; al pulsarlo — o al escribir `/clan regroup join` — el miembro pasa por un
+warmup y se teletransporta al punto.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `regroup-warmup-seconds` | 5 | Cuenta atrás antes del teletransporte. `0` es instantáneo. |
+| `regroup-cancel-on-move` | `true` | Moverse lo cancela |
+| `regroup-cancel-on-damage` | `true` | Recibir daño lo cancela |
+| `regroup-warmup-tick-sound` | `UI_BUTTON_CLICK\|0.6\|1.3` | Suena cada segundo. Vacío para silencio. |
+| `regroup-cooldown-seconds` | 60 | Por clan, entre llamadas. `0` lo desactiva. |
+| `regroup-expire-seconds` | 60 | Cuánto sigue disponible el punto. `0` no caduca. |
+
+La cuenta atrás la dibuja `regroup-effects`, y a un miembro que siga en el warmup cuando el punto caduque
+se le detiene en vez de teletransportarlo.
+
+```yaml
+regroup-effects:
+  warmup-actionbar:
+    text: "{primary}⚑ Regroup {muted}| {primary}Teleporting in {highlight}%time%"
+  warmup-title:
+    title: "{highlight}%time%"
+    subtitle: "{muted}Don't move!"
+    fade-in: 0
+    stay: 10
+    fade-out: 0
+  teleport-title:
+    title: "{primary}&lREGROUP"
+    subtitle: "{muted}You joined the regroup!"
+    fade-in: 10
+    stay: 50
+    fade-out: 15
+```
+
+`%time%` son los segundos que faltan. Los tiempos van en ticks: veinte por segundo.
+
+<Callout type="note" title="Rally y regroup son cosas distintas">
+El rally es un marcador que puede dejar cualquiera y que no mueve a nadie. El regroup es un
+teletransporte, con permiso de rango y cooldown de clan. Un clan puede tener los dos a la vez.
+</Callout>
+
+## El home del clan
+
+No es una herramienta de guerra como tal, pero comparte la maquinaria. `/clan home` usa el mismo tipo de
+warmup, dibujado por `home-effects`, con `home-warmup-seconds`, `home-cancel-on-move`,
+`home-cancel-on-damage` y `home-warmup-tick-sound` en `settings`. El home es además un waypoint permanente
+para miembros y aliados.
+
+## Apagar las barras
+
+Cada una de las tres bossbars tiene su propio `enabled`. Apagar una deja el waypoint y el aviso por chat
+en su sitio: solo desaparece la barra.
+
+| Clave | Acepta |
+|---|---|
+| `color` | `PINK`, `BLUE`, `RED`, `GREEN`, `YELLOW`, `PURPLE`, `WHITE` |
+| `style` | `PROGRESS`, `NOTCHED_6`, `NOTCHED_10`, `NOTCHED_12`, `NOTCHED_20` |

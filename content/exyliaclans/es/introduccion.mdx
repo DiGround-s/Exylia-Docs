@@ -1,0 +1,105 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaClans: rangos que escribe cada clan, terrenos rectangulares, deaths till raidable y un tablón de reclutamiento en los dos sentidos."
+---
+
+ExyliaClans es un plugin de clanes para un servidor donde los clanes se pelean entre ellos. Un jugador
+escribe `/clan create`, obtiene un clan con tres rangos y un banco, compra un rectángulo de terreno con el
+dinero del banco, y a partir de ahí su territorio está tan seguro como su **DTR**: la reserva que baja
+cada vez que muere un miembro y que, al llegar a negativo, abre el terreno a todo el mundo.
+
+Son **doce módulos, treinta y siete menús, trece tablas y cuatro comandos**, y cada uno de los módulos se
+puede apagar en `config.yml` sin tocar el resto.
+
+## Qué hace
+
+<Cards>
+  <Card title="Rangos que escribe el clan" href="/docs/exyliaclans/roles">
+    Cada clan crea sus rangos, los nombra, les pone peso y marca los 24 permisos uno a uno.
+  </Card>
+  <Card title="Terrenos" href="/docs/exyliaclans/terrenos">
+    Un rectángulo por clan, seleccionado con una herramienta, pagado desde el banco y protegido por
+    WorldGuard o por el propio plugin.
+  </Card>
+  <Card title="Deaths till raidable" href="/docs/exyliaclans/dtr">
+    Un clan que muere lo suficiente pierde la protección de su propio terreno hasta que la reserva se
+    regenera.
+  </Card>
+  <Card title="Niveles" href="/docs/exyliaclans/niveles">
+    Las bajas dan EXP, las muertes y los raideos la quitan, y cada nivel sube los topes de miembros,
+    aliados y rivales.
+  </Card>
+  <Card title="Aliados y rivales" href="/docs/exyliaclans/relaciones">
+    Las alianzas son mutuas y se piden; las rivalidades son unilaterales, y matar a un rival vale el
+    doble de EXP.
+  </Card>
+  <Card title="Reclutamiento en los dos sentidos" href="/docs/exyliaclans/reclutamiento">
+    Los jugadores se anuncian con `/lfc`; los clanes buscan miembros con `/lfp` y leen las solicitudes en
+    un menú.
+  </Card>
+  <Card title="Herramientas de guerra" href="/docs/exyliaclans/herramientas-de-guerra">
+    Marcar a un enemigo, campear la base de un rival, dejar un rally o llamar a todo el clan a tus pies.
+  </Card>
+  <Card title="Chat y correo" href="/docs/exyliaclans/chat-y-correo">
+    Chat de clan, chat de aliados, dos atajos de un carácter y un buzón de clan persistente.
+  </Card>
+</Cards>
+
+## Cómo transcurre un clan
+
+<Steps>
+  <Step title="Creado">
+    `/clan create <nombre>` no cuesta nada y crea el clan con los tres rangos escritos en
+    `default-roles`. El fundador recibe el más pesado y queda como líder; el líder pasa cualquier
+    comprobación de permiso sin necesitar un rango que se lo dé.
+  </Step>
+  <Step title="Financiado">
+    Los miembros hacen `/clan deposit` al banco desde su propio saldo. El banco es lo único con lo que se
+    compra terreno, así que un clan sin plugin de economía tampoco tiene terrenos.
+  </Step>
+  <Step title="Reclamado">
+    `/clan claim` entrega una azada de oro. Clic izquierdo marca una esquina, clic derecho la otra, y
+    shift + clic al aire paga y confirma. El precio es `base-price` más `price-per-block` por bloque del
+    rectángulo.
+  </Step>
+  <Step title="Asentado">
+    `/clan sethome` solo funciona dentro del terreno propio. El home se convierte en un waypoint de
+    cliente para cada miembro, y también para los aliados.
+  </Step>
+  <Step title="En guerra">
+    Cada muerte de un miembro cuesta `death-loss` de DTR y congela la regeneración diez minutos. Una baja
+    contra un rival vale el doble de EXP. `/clan focus <jugador>` pinta a un enemigo de rojo y brillando
+    para todo el clan.
+  </Step>
+  <Step title="Raideado">
+    Con el DTR por debajo de cero el clan es **raidable**: el terreno deja de proteger nada, las
+    explosiones funcionan dentro, y el clan pierde 50 EXP. Se queda así hasta que la reserva vuelve a
+    superar el cero.
+  </Step>
+</Steps>
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. Compatible con Folia. |
+| Java | 21 |
+| Obligatorio | `ExyliaLib`, `packetevents` |
+| Opcional | `PlaceholderAPI`, `WorldGuard`, `TAB`, un plugin de economía, `Worlds`, `Apollo`, `FeatherServerAPI` |
+
+<Callout type="warning" title="`packetevents` es dependencia dura">
+Está declarado en `depend`, no en `softdepend`: sin él el servidor no activa el plugin. Cuatro cosas se
+apoyan en él — el coloreado de amigos y enemigos, el brillo del focus, la herramienta de selección de
+terreno y los pilares de `/clan map`.
+</Callout>
+
+## Qué no hace
+
+No hay guerras programadas, ni declaraciones de guerra con hora de inicio, ni cuadro de torneo entre
+clanes. Lo que hay es una ventana de raideo que un clan abre muriendo, que es exactamente lo que es el
+DTR.
+
+Tampoco se apropia de la pregunta amigo/enemigo del resto del servidor: la **responde**. El plugin
+registra un puente de clanes en ExyliaLib, así que el friendly fire de una arena de ExyliaFFA, una
+comprobación de equipo de ExyliaCapture y una de party de ExyliaPracticeCore coinciden con el clan real
+del jugador sin que ninguna esté configurada para ello.

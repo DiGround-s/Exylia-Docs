@@ -1,0 +1,137 @@
+---
+title: "Aliados y rivales"
+description: "Las alianzas son mutuas y se piden; las rivalidades son unilaterales y se declaran. Qué cambia cada una."
+---
+
+Las dos viven en la misma tabla, `clan_relations`, y las dos se guardan **direccionalmente**: una fila
+significa "el clan A ve así al clan B". Una alianza necesita las dos filas; una rivalidad, una.
+
+## Alianzas
+
+Una alianza es una petición y una respuesta.
+
+```
+/clan ally add <clan>        necesita SEND_ALLIANCE_REQUEST
+/clan ally accept <clan>     necesita ACCEPT_ALLIANCE
+/clan ally decline <clan>    necesita ACCEPT_ALLIANCE
+/clan ally remove <clan>     necesita REMOVE_ALLY
+```
+
+La petición se guarda en memoria, no en la base de datos, y caduca a los `settings.invite-expire-seconds`
+(60 s), momento en el que se avisa al clan que la envió. Un reinicio se lleva las peticiones pendientes.
+
+Aceptar escribe las dos filas a la vez. Quitar borra las dos: una alianza no puede ser unilateral, así que
+salirse de una la termina también para el otro clan.
+
+| Se niega cuando | Mensaje |
+|---|---|
+| Alguno de los dos está en su tope de alianzas | `errors.max-allies` / `errors.target-max-allies` |
+| Los clanes ya son aliados | `errors.already-allies` |
+| Ya hay una petición pendiente | `errors.alliance-request-already-sent` |
+| Se acepta sin nada pendiente | `errors.alliance-request-not-found` |
+
+El tope es `settings.max-alliances` (5) más el bonus de nivel, así que un clan de nivel 10 puede tener
+diez.
+
+### Qué cambia una alianza
+
+- **Friendly fire.** Los aliados no pueden hacerse daño salvo que **los dos** clanes lo tengan activado.
+- **Color.** Los aliados se pintan según `visibility-mode` — ver más abajo.
+- **Equipo de cliente.** Cada clan alcanzable por alianzas se mete en un mismo equipo de cliente, así que
+  los aliados salen como compañeros en el mapa de un cliente modificado. Dos clanes aliados hacen un
+  equipo, no tres.
+- **Waypoint del home.** El home de un aliado aparece como waypoint para tus miembros.
+- **Chat de aliados.** `/clan chat` cicla a un canal que llega a tu clan y a todos los aliados, y `@`
+  envía una sola línea ahí.
+- **Placeholders.** `clan_allies`, `clan_allies_total_members`, `clan_allies_total_online`,
+  `clan_allies_total_max_members` y toda la lista `clan_online_ally_<n>`.
+
+## Rivales
+
+Una rivalidad es una declaración. No hay nada que aceptar.
+
+```
+/clan rival add <clan>       necesita MANAGE_RIVALS
+/clan rival remove <clan>    necesita MANAGE_RIVALS
+```
+
+Se escribe una fila, de tu clan al suyo. Son tus rivales les guste o no, y no se convierten
+automáticamente en rivales tuyos: si `notify-target-on-declare` está activo, simplemente se les avisa.
+
+| Se niega cuando | Mensaje |
+|---|---|
+| Se está en el tope de rivales | `errors.max-rivals` |
+| Ya está declarado | `errors.already-rivals` |
+| El objetivo es un aliado | `errors.cannot-rival-ally` |
+
+```yaml
+rivals:
+  kill-exp-multiplier: 2.0
+  kill-stat-multiplier: 1.0
+  notify-target-on-declare: true
+```
+
+### Qué cambia una rivalidad
+
+| Ajuste | Efecto |
+|---|---|
+| `kill-exp-multiplier` | La EXP de la baja — base más bonus de racha — se multiplica por esto cuando la víctima estaba en un clan rival. `1.0` desactiva la consulta. |
+| `kill-stat-multiplier` | La baja registrada del clan se multiplica por esto en una baja contra rival. Se redondea, así que `2.0` registra dos bajas y `1.5` registra una. |
+| `notify-target-on-declare` | Si se avisa al clan declarado. |
+
+Los rivales son además lo que lee `/clan camp`, y lo que hace que un jugador salga como enemigo en los
+placeholders relacionales.
+
+<Callout type="note" title="`kill-stat-multiplier` infla el ranking, no al jugador">
+Solo toca `clan_stats`, que es lo que ordena el ranking de bajas. La fila por jugador de `player_stats`
+sigue registrando una baja. Dejarlo en `1.0` mantiene los dos números en sintonía.
+</Callout>
+
+## Cómo se pinta a un jugador
+
+```yaml
+settings:
+  visibility-mode: UNIFIED
+```
+
+| Modo | A quién se pinta |
+|---|---|
+| `CLAN_ONLY` | Compañeros de clan, en verde. Los aliados se ven como desconocidos. |
+| `ALLY_ONLY` | Aliados, en aqua. Los del clan se ven como desconocidos. |
+| `CLAN_AND_ALLY_MIXED` | Clan en verde; aliados en aqua **y brillando**, para distinguirlos. |
+| `UNIFIED` | Todos los amigos en un mismo color. |
+
+El color es por espectador, no un equipo de scoreboard compartido por todo el servidor, así que dos
+jugadores pueden ver a un tercero de forma distinta. Con `TAB` instalado, su gestión de equipos se pausa
+para un jugador mientras este plugin lo colorea, y se reanuda cuando sale del clan.
+
+## Friendly fire
+
+```yaml
+settings:
+  forced-ff-worlds: []
+```
+
+| Pareja | El daño entra cuando |
+|---|---|
+| Mismo clan | El clan tiene friendly fire activado, o el mundo está en `forced-ff-worlds` |
+| Aliados mutuos | **Los dos** clanes lo tienen activado, o el mundo está forzado |
+| Cualquier otro | Siempre |
+
+`/clan ff` lo alterna y necesita `TOGGLE_FRIENDLY_FIRE`. Los proyectiles se resuelven a quien los disparó,
+así que una flecha sigue las mismas reglas que una espada. Un jugador sin clan nunca está protegido por
+nada de esto.
+
+`forced-ff-worlds` ignora el ajuste de cada clan: el mundo de arena donde todos pegan a todos.
+
+## Admin
+
+```
+/clanadmin addally <clanA> <clanB>
+/clanadmin removeally <clanA> <clanB>
+/clanadmin addrival <clanA> <clanB>
+/clanadmin removerival <clanA> <clanB>
+```
+
+Escriben las filas directamente, sin petición, sin comprobar topes y sin comprobar permisos dentro del
+clan.

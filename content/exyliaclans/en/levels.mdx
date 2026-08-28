@@ -1,0 +1,123 @@
+---
+title: "Levels"
+description: "EXP from kills, kill streaks and rival multipliers, the ten-level table, and the caps each level raises."
+---
+
+A clan's level is not stored. It is derived from its EXP every time it is read: the highest level whose
+`required-exp` the clan has reached, capped at `max-level`.
+
+## Earning and losing
+
+```yaml
+levels:
+  max-level: 10
+  exp-actions:
+    kill:
+      enabled: true
+      exp: 10
+    death:
+      enabled: true
+      exp-loss: 5
+    raided:
+      enabled: true
+      exp-loss: 50
+```
+
+| Event | Effect |
+|---|---|
+| A member kills somebody | `+10` EXP to the killer's clan, before bonuses |
+| A member dies | `-5` EXP from their clan, and their kill streak resets |
+| The clan goes raidable | `-50` EXP, once, on the crossing |
+
+EXP never drops below zero. A clan already at `max-level` with the EXP for it stops gaining, so overflow
+is not banked against a level cap you raise later.
+
+## Kill streaks
+
+```yaml
+levels:
+  kill-streak-bonuses:
+    "3": 5
+    "5": 10
+    "10": 25
+```
+
+A streak is counted per player and is reset by dying, by logging out, or by the level module being
+reloaded. The bonus applied is the **highest threshold at or below** the current streak, added to the
+base kill EXP — so at a streak of 7 a kill is worth 10 + 10 = 20, and at 12 it is 10 + 25 = 35.
+
+The keys are yours: add as many thresholds as you like, in any order. A key that is not a number costs
+that entry and nothing else.
+
+## Rival kills
+
+If the victim was in a clan the killer's clan has declared a rival, the whole kill EXP — base plus
+streak bonus — is multiplied by `rivals.kill-exp-multiplier`, which ships at `2.0`.
+
+```
+(10 base + 10 streak) × 2.0 = 40 EXP
+```
+
+The relation is checked one way only: it is enough that the killer's clan declared the victim's, whether
+or not the victim declared back. With the `rivals` module off, or the multiplier at `1.0`, no lookup is
+done at all.
+
+## The level table
+
+```yaml
+levels:
+  level-definitions:
+    "1":  { required-exp: 0,     max-members-bonus: 0,  max-alliances-bonus: 0, max-rivals-bonus: 0 }
+    "2":  { required-exp: 500,   max-members-bonus: 5,  max-alliances-bonus: 1, max-rivals-bonus: 1 }
+    "3":  { required-exp: 1500,  max-members-bonus: 10, max-alliances-bonus: 1, max-rivals-bonus: 2 }
+    "4":  { required-exp: 3500,  max-members-bonus: 15, max-alliances-bonus: 2, max-rivals-bonus: 2 }
+    "5":  { required-exp: 7000,  max-members-bonus: 20, max-alliances-bonus: 2, max-rivals-bonus: 3 }
+    "6":  { required-exp: 12000, max-members-bonus: 25, max-alliances-bonus: 3, max-rivals-bonus: 4 }
+    "7":  { required-exp: 20000, max-members-bonus: 30, max-alliances-bonus: 3, max-rivals-bonus: 5 }
+    "8":  { required-exp: 32000, max-members-bonus: 35, max-alliances-bonus: 4, max-rivals-bonus: 6 }
+    "9":  { required-exp: 50000, max-members-bonus: 40, max-alliances-bonus: 4, max-rivals-bonus: 7 }
+    "10": { required-exp: 75000, max-members-bonus: 50, max-alliances-bonus: 5, max-rivals-bonus: 10 }
+```
+
+`required-exp` is a **total**, not a step: a clan is level 5 once it has 7 000 EXP in the bank, not once
+it has earned 7 000 since level 4.
+
+The bonuses are added to the base caps in `settings`, and they do not stack across levels — a level 10
+clan gets exactly the level 10 row:
+
+| Cap | Base | At level 10 |
+|---|---|---|
+| Members | `max-members`, 30 | 30 + 50 = **80** |
+| Alliances | `max-alliances`, 5 | 5 + 5 = **10** |
+| Rivals | `max-rivals`, 10 | 10 + 10 = **20** |
+
+The keys are yours. Add an eleventh level and raise `max-level` to 11, or delete rows to shorten the
+ladder. A key that is not a number is skipped.
+
+<Callout type="warning" title="Losing EXP can lose a level">
+Deaths and raids remove EXP, and the level is recomputed from the new total. A clan that drops below a
+threshold is told, and its caps shrink with it — which does **not** kick members it now has too many of.
+It simply cannot recruit until it climbs back.
+</Callout>
+
+## What a level-up looks like
+
+Crossing a threshold broadcasts `level.level-up` to every online member; dropping below one broadcasts
+`level.level-down`. `/clan` → **Clan level** shows the whole ladder with the current level marked, the
+progress bar and each row's bonuses, styled by the `level.*` block in `messages.yml`.
+
+## Admin
+
+```
+/clanadmin setexp <clan> <SET|ADD|REMOVE> <amount>
+/clanadmin setlevel <clan> <level>
+```
+
+`setlevel` is a shortcut for setting the EXP to that level's `required-exp`. Both report the module as
+disabled when `modules.levels` is `false`.
+
+## Turning levels off
+
+With `modules.levels: false` nothing earns or loses EXP, the level menu refuses to open, and every cap
+is the base value in `settings`. Existing EXP stays in the `clans` table and comes back untouched when
+the module is switched on again.

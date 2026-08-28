@@ -1,0 +1,125 @@
+---
+title: "API"
+description: "The reflection-based API jar for third-party plugins, and the ExyliaLib clan bridge every Exylia plugin already reads."
+---
+
+There are two ways to ask ExyliaClans a question, and most of the time you want the second one.
+
+## The clan bridge — nothing to do
+
+ExyliaClans registers itself with ExyliaLib's `Clans` registry at priority 100 on enable. Anything in the
+ecosystem that asks *are these two on the same side* gets ExyliaClans' answer, without being configured
+to and without importing anything from this plugin.
+
+That is why an ExyliaFFA arena's friendly fire, an ExyliaCapture team check and an ExyliaPracticeCore
+party check all already agree with the clan a player is actually in. If you are writing a plugin on
+ExyliaLib, read `net.exylia.lib.clan.Clans` and you are done.
+
+The snapshot the bridge exposes carries the id, the name — used as the tag, because clans here have no
+separate one — the leader, the members, the moderators (every member whose rank may `INVITE`), the online
+count, the level, the balance, the effective member cap, the allies and the rivals.
+
+## The API jar
+
+For a plugin that is **not** on ExyliaLib, `ExyliaClans-API-1.0.0.jar` is a standalone jar with no
+dependencies of its own. It talks to the plugin by reflection, so it compiles and runs whether or not
+ExyliaClans is installed.
+
+```groovy
+dependencies {
+    compileOnly files('libs/ExyliaClans-API-1.0.0.jar')
+}
+```
+
+```yaml
+softdepend: [ExyliaClans]
+```
+
+### Availability
+
+```java
+if (!ExyliaClansAPI.isAvailable()) return;
+```
+
+Everything else returns a safe empty value when the plugin is absent — `false`, `0`, `Optional.empty()`,
+an empty list — so a guard is a courtesy rather than a requirement.
+
+### What it exposes
+
+```java
+boolean                  isInClan(UUID player);
+boolean                  isLeader(UUID player);
+Optional<String>         getClanId(UUID player);
+Optional<String>         getClanName(UUID player);
+Optional<ClanData>       getClan(UUID player);
+Optional<ClanData>       getClanById(String clanId);
+Optional<ClanData>       getClanByName(String name);
+Collection<ClanData>     getAllClans();
+List<UUID>               getClanMemberUuids(String clanId);
+
+boolean                  areAllies(String clanIdA, String clanIdB);
+boolean                  areSameClan(UUID a, UUID b);
+boolean                  isFriendlyFireEnabled(UUID player);
+
+double                   getClanKdr(String clanId);
+long                     getClanKills(String clanId);
+long                     getClanDeaths(String clanId);
+
+boolean                  isRaidable(UUID player);
+double                   getDtr(String clanId);
+```
+
+`ClanData` is a record:
+
+```java
+record ClanData(
+    String id, String name, UUID leaderId,
+    double balance, boolean friendlyFire,
+    List<UUID> memberUuids,
+    double kdr, long kills, long deaths
+) {
+    int     getMemberCount();
+    boolean isLeader(UUID uuid);
+    boolean isMember(UUID uuid);
+}
+```
+
+### Example
+
+```java
+public boolean canDamage(Player attacker, Player victim) {
+    if (!ExyliaClansAPI.isAvailable()) return true;
+    if (!ExyliaClansAPI.areSameClan(attacker.getUniqueId(), victim.getUniqueId())) return true;
+    return ExyliaClansAPI.isFriendlyFireEnabled(attacker.getUniqueId());
+}
+```
+
+<Callout type="note" title="The API jar is read-only">
+It answers questions; it does not create clans, move members, edit balances or write claims. Anything
+that changes state goes through the commands, the menus or `/clanadmin` — which is what keeps the log,
+the broadcasts, the caches and the WorldGuard regions in step.
+</Callout>
+
+## Actions, from another plugin's menus
+
+Because the actions are registered in ExyliaLib's shared registry under the `exyliaclans:` namespace, any
+ExyliaLib menu — in any plugin — can call them:
+
+```yaml
+items:
+  clans:
+    slot: 22
+    material: SHIELD
+    name: "{primary}&lCLANS"
+    actions:
+      - "exyliaclans:open_main_menu"
+```
+
+That is the supported way to put a clan button in a hub menu. The full list is in
+[Menus](/docs/exyliaclans/menus#actions).
+
+## Placeholders, from anywhere
+
+Every `%exyliaclans_…%` placeholder resolves through ExyliaLib's registry with or without
+PlaceholderAPI, so a scoreboard, a hologram or another plugin's config can read clan state without any
+code at all. See [Placeholders](/docs/exyliaclans/placeholders).

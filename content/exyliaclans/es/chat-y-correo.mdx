@@ -1,0 +1,100 @@
+---
+title: "Chat y correo"
+description: "Tres canales de chat, dos atajos de un carácter y un buzón de clan que sobrevive a la desconexión."
+---
+
+## Canales
+
+```
+/clan chat
+```
+
+Cicla el canal del jugador. Hay tres, en orden:
+
+| Canal | Llega a | Clave de formato |
+|---|---|---|
+| `GLOBAL` | El chat normal del servidor | — |
+| `CLAN` | El clan | `clan.chat-format` |
+| `CLAN_AND_ALLIES` | El clan y todos los clanes aliados | `clan.ally-chat-format` |
+
+Mientras el canal no sea `GLOBAL`, todo lo que escriba el jugador se captura y se envía ahí. El canal es
+por sesión: vuelve a `GLOBAL` al desconectar, y también se reinicia solo si el jugador deja de estar en un
+clan.
+
+```yaml
+clan:
+  chat-format: "{success}[CLAN] {muted}%player%{muted}: {letters}%message%"
+  ally-chat-format: "{info}[ALLY] {muted}%player%{muted}: {letters}%message%"
+```
+
+`/clan chat <mensaje>` envía una línea al canal actual sin cambiarse a él.
+
+## Prefijos rápidos
+
+```yaml
+settings:
+  chat:
+    quick-clan-prefixes: ["."]
+    quick-ally-prefixes: ["@"]
+```
+
+Escribir `.voy` en el chat normal envía *voy* al clan; `@empujad ya` lo envía al clan y a sus aliados. El
+canal no cambia: la siguiente línea va donde fuera antes.
+
+Las dos listas aceptan tantos prefijos como quieras, y cualquiera de las dos se puede vaciar para
+desactivar ese atajo.
+
+<Callout type="warning" title="Un prefijo se come el principio de un mensaje normal">
+`.` es una forma habitual de empezar una frase. Quien escriba `...` o `.gg` está hablando con su clan sin
+querer. Prefijos de dos o tres caracteres (`c:`, `!!`) sorprenden mucho menos, y elegirlos es cambiar una
+línea.
+</Callout>
+
+Los mensajes se escapan antes de formatearse: las etiquetas de MiniMessage y el `%` se neutralizan, así
+que un jugador no puede colar un color, un evento de clic ni un placeholder en lo que lee su clan.
+
+## Correo
+
+```
+/clan mail                              abre el buzón
+/clan mail send <miembro> <mensaje>     a un miembro
+/clan mail sendclan <mensaje>           a todo el clan
+```
+
+El correo se guarda, así que es lo que el chat de clan no es: un mensaje que sigue ahí cuando el
+destinatario entra mañana. Enviar a todo el clan necesita `SEND_CLAN_MAIL`; enviar a un miembro no
+necesita nada más que estar en el mismo clan.
+
+```yaml
+mail:
+  expiry-days: 14
+  expiry-check-interval-minutes: 30
+  max-message-length: 256
+  max-mails-per-clan: 100
+```
+
+| Ajuste | Qué hace |
+|---|---|
+| `expiry-days` | Días antes de que un correo se borre. `0` no caduca. |
+| `expiry-check-interval-minutes` | Cada cuánto se purga el correo caducado. |
+| `max-message-length` | Cuerpo más largo permitido, en caracteres. |
+| `max-mails-per-clan` | Cuántos guarda un clan. Se podan los más antiguos **sin fijar**. `0` lo desactiva. |
+
+### Leído, borrado y fijado
+
+Leído y borrado se guardan **por miembro**: el mismo correo de clan puede estar sin leer para uno, leído
+por otro y borrado por un tercero, todo desde una fila. Borrar es por tanto borrar solo tu copia — el
+correo se queda en el buzón de los demás.
+
+Fijar es de todo el clan. Un correo fijado se queda arriba del buzón y queda exento de la poda por
+`max-mails-per-clan`, que es lo que lo convierte en el sitio adecuado para las normas de un raideo o un
+horario.
+
+El menú del buzón ofrece además **marcar todo como leído**. Al entrar, a un jugador con correo sin leer se
+le dice cuántos tiene, y `%exyliaclans_clan_mail_unread%` es ese número para un scoreboard.
+
+<Callout type="note" title="Redactar pasa por el chat, no por un yunque">
+Enviar desde el menú pide el asunto y luego el cuerpo como entrada de chat, con los textos de
+`mail.subject-prompt` y `mail.message-prompt`. La forma por comando se salta el asunto y usa
+`mail.default-subject`.
+</Callout>

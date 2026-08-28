@@ -1,0 +1,72 @@
+---
+title: "Modules"
+description: "The twelve switches in config.yml, what each one turns off, and what stays behind when it is off."
+---
+
+Every half of the plugin is behind a boolean in `modules`. All twelve ship as `true`.
+
+```yaml
+modules:
+  claims: true
+  dtr: true
+  clan-home: true
+  bank: true
+  allies: true
+  levels: true
+  lfc: true
+  lfp: true
+  rivals: true
+  regroup: true
+  logs: true
+  mail: true
+```
+
+A disabled module does three things: its manager is never built, its commands answer with
+`errors.module-disabled`, and the menu buttons that open it refuse the click with the same line.
+
+## What each one covers
+
+| Module | Turns off |
+|---|---|
+| `claims` | `/clan claim`, `/clan unclaim`, `/clan reclaim`, `/clan map`, the claim tool, the corner pillars, the protection listener and the WorldGuard regions. |
+| `dtr` | The whole deaths-till-raidable pool: the regeneration task, the freeze, the death broadcast and the raidable state. |
+| `clan-home` | `/clan home`, `/clan sethome` and the home waypoints. |
+| `bank` | `/clan deposit`, `/clan withdraw` and the bank menu. |
+| `allies` | `/clan ally` in all four forms and the allies menu. |
+| `levels` | EXP, level-ups, kill-streak bonuses and the level menu — including the member, ally and rival caps each level grants. |
+| `lfc` | `/lfc`, its menus and its expiry task. |
+| `lfp` | `/lfp`, its menus, applications and its expiry task. |
+| `rivals` | `/clan rival` and the rivals menu, plus the rival EXP and kill-stat multipliers. |
+| `regroup` | `/clan regroup` and `/clan regroup join`. |
+| `logs` | Writing the audit trail at all, the logs menu and `/clanadmin logs`. |
+| `mail` | `/clan mail`, the inbox, the unread count on join and the expiry purge. |
+
+## What the switches do to each other
+
+<Callout type="warning" title="Turning off `claims` moves the clan home">
+`/clan sethome` refuses unless you are standing inside your own claim — but only while the claims
+module is on. With claims off, a clan home can be set **anywhere**, which is a very different game.
+</Callout>
+
+<Callout type="warning" title="Turning off `dtr` makes claims permanent">
+A claim only stops protecting its land when the owning clan goes raidable, which is a DTR state. With
+DTR off there is no raidable state, so nothing ever opens a claim: territory becomes permanent until it
+is unclaimed. `/clan unclaim` and `/clan disband` also stop being gated on the DTR being at maximum.
+</Callout>
+
+<Callout type="note" title="Turning off `levels` freezes the caps at the base values">
+`max-members`, `max-alliances` and `max-rivals` are the numbers in `settings`, with no bonus added.
+`/clanadmin setlevel` and `/clanadmin setexp` report the module as disabled.
+</Callout>
+
+Turning off `bank` does not empty existing balances, and it does not stop land already claimed from
+existing — but with no way to fund the bank, no new claim can be paid for.
+
+Turning off `rivals` leaves existing rival rows in `clan_relations` untouched; they simply stop being
+read. Turning it back on brings them back.
+
+## Modules and the recruitment pair
+
+`lfc` and `lfp` are independent. Running only `lfp` gives you a job board clans post to; running only
+`lfc` gives you a list of free agents clans browse and invite from. The `MANAGE_LFP` rank permission
+only matters when `lfp` is on.
