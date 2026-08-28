@@ -3,8 +3,7 @@ title: "Placeholders"
 description: "Every PlaceholderAPI placeholder, and the exact spelling each one needs."
 ---
 
-Expansion identifier: **`exyliacapture`**. Registering the placeholders registers the expansion, so
-nothing is downloaded from eCloud.
+Every placeholder below is written in full, and clicking one copies it.
 
 <Callout type="warning" title="The global counter carries `capture_` twice">
 It is the one spelling here that is easy to guess wrong, and it is explained right below.
@@ -32,27 +31,27 @@ Each configured event registers its id as a placeholder family of its own, so an
 `koth1` answers `%exyliacapture_koth1_status%`. The families are re-registered on
 `/captureadmin reload`, which is how a newly created event becomes readable without a restart.
 
-| Stat | Returns |
+| Placeholder | Description |
 |---|---|
-| `display_name` | The name players read |
-| `id` | The configuration id |
-| `type` | The type id, such as `koth` or `payload` |
-| `color` | The configured hex colour |
-| `max_duration` | The duration, or `∞` when unlimited |
-| `status` | `RUNNING`, `SCHEDULED` or `INACTIVE` |
-| `time_remaining` | Time left in the running event |
-| `time_until_start` | Time until the next scheduled start |
-| `target_points` | Points needed to win |
-| `points_per_second` | Points per second, KOTH Points only |
-| `clan_mode` | `true` or `false` |
-| `leader` | The leading player or clan |
-| `leader_pts` | The leader's points |
-| `top1_name`, `top2_name`, `top3_name` | The live podium's names |
-| `top1_pts`, `top2_pts`, `top3_pts` | The live podium's points |
-| `capturer` | Who is capturing right now |
-| `capturer_clan` | That capturer's clan |
-| `cap_time_remaining` | Time left to complete the current capture |
-| `zone_x`, `zone_y`, `zone_z` | The zone centre's coordinates |
+| `%exyliacapture_<id>_display_name%` | The name players read |
+| `%exyliacapture_<id>_id%` | The configuration id |
+| `%exyliacapture_<id>_type%` | The type id, such as `koth` or `payload` |
+| `%exyliacapture_<id>_color%` | The configured hex colour |
+| `%exyliacapture_<id>_max_duration%` | The duration, or `∞` when unlimited |
+| `%exyliacapture_<id>_status%` | `RUNNING`, `SCHEDULED` or `INACTIVE` |
+| `%exyliacapture_<id>_time_remaining%` | Time left in the running event |
+| `%exyliacapture_<id>_time_until_start%` | Time until the next scheduled start |
+| `%exyliacapture_<id>_target_points%` | Points needed to win |
+| `%exyliacapture_<id>_points_per_second%` | Points per second, KOTH Points only |
+| `%exyliacapture_<id>_clan_mode%` | `true` or `false` |
+| `%exyliacapture_<id>_leader%` | The leading player or clan |
+| `%exyliacapture_<id>_leader_pts%` | The leader's points |
+| `%exyliacapture_<id>_top1_name%` | The live podium's first name — `top2_name` and `top3_name` follow it |
+| `%exyliacapture_<id>_top1_pts%` | Its points — `top2_pts` and `top3_pts` follow it |
+| `%exyliacapture_<id>_capturer%` | Who is capturing right now |
+| `%exyliacapture_<id>_capturer_clan%` | That capturer's clan |
+| `%exyliacapture_<id>_cap_time_remaining%` | Time left to complete the current capture |
+| `%exyliacapture_<id>_zone_x%` | The zone centre's X — `zone_y` and `zone_z` follow it |
 
 Anything with no value returns an em dash rather than an empty string.
 

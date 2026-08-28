@@ -1,56 +1,49 @@
 ---
 title: "Placeholders"
-description: "Every placeholder the plugin answers, in both its bare and PlaceholderAPI forms."
+description: "Every placeholder the plugin answers, written in full."
 ---
 
-Placeholders are registered through ExyliaLib, which means each one has two forms:
-
-| Form | Where it works |
-|---|---|
-| `%stats_kills%` | Inside this plugin's own menus, messages and sidebars |
-| `%exyliapracticecore_stats_kills%` | Anywhere PlaceholderAPI reaches — chat, tab, holograms, other plugins |
-
-The names below are the bare form; prefix `exyliapracticecore_` for the PlaceholderAPI one.
+Every placeholder below is written in full, and clicking one copies it.
 
 ## The reader's stats
 
 All of these read the reader's **global** row for the current season.
 
-| Placeholder | Answers |
+| Placeholder | Description |
 |---|---|
-| `%stats_kills%` | Kills |
-| `%stats_deaths%` | Deaths |
-| `%stats_kdr%` | Kill/death ratio, one decimal |
-| `%stats_wins%` | Wins |
-| `%stats_losses%` | Losses |
-| `%stats_win_rate%` | Win rate as a percentage |
-| `%stats_games%` | Wins plus losses |
-| `%stats_current_streak%` | Current win streak |
-| `%stats_best_streak%` | Best win streak |
-| `%stats_damage%` | Damage dealt, one decimal |
-| `%stats_time%` | Time played, formatted |
+| `%exyliapracticecore_stats_kills%` | Kills |
+| `%exyliapracticecore_stats_deaths%` | Deaths |
+| `%exyliapracticecore_stats_kdr%` | Kill/death ratio, one decimal |
+| `%exyliapracticecore_stats_wins%` | Wins |
+| `%exyliapracticecore_stats_losses%` | Losses |
+| `%exyliapracticecore_stats_win_rate%` | Win rate as a percentage |
+| `%exyliapracticecore_stats_games%` | Wins plus losses |
+| `%exyliapracticecore_stats_current_streak%` | Current win streak |
+| `%exyliapracticecore_stats_best_streak%` | Best win streak |
+| `%exyliapracticecore_stats_damage%` | Damage dealt, one decimal |
+| `%exyliapracticecore_stats_time%` | Time played, formatted |
 
 ## Rank
 
-| Placeholder | Answers |
+| Placeholder | Description |
 |---|---|
-| `%stats_elo%` | Raw MMR |
-| `%stats_rank%` | The rank name, with its division: `Copper II` |
-| `%stats_rank_icon%` | The division's icon, plus the division name |
-| `%stats_rank_full%` | `Copper II — 40/100 LP`. Without divisions, `Legend — 240 LP` |
-| `%stats_lp%` | LP inside the current division |
-| `%stats_lp_max%` | The division's width in LP. `0` for a rank without divisions. |
-| `%stats_rank_position%` | The reader's place on the global rating ladder, as `#4` |
+| `%exyliapracticecore_stats_elo%` | Raw MMR |
+| `%exyliapracticecore_stats_rank%` | The rank name, with its division: `Copper II` |
+| `%exyliapracticecore_stats_rank_icon%` | The division's icon, plus the division name |
+| `%exyliapracticecore_stats_rank_full%` | `Copper II — 40/100 LP`. Without divisions, `Legend — 240 LP` |
+| `%exyliapracticecore_stats_lp%` | LP inside the current division |
+| `%exyliapracticecore_stats_lp_max%` | The division's width in LP. `0` for a rank without divisions. |
+| `%exyliapracticecore_stats_rank_position%` | The reader's place on the global rating ladder, as `#4` |
 
-`%stats_rank_position%` reads the leaderboard cache and never waits on the database. It answers `-`
+`%exyliapracticecore_stats_rank_position%` reads the leaderboard cache and never waits on the database. It answers `-`
 while the board is loading, and `#51+` — one past `leaderboard.max-entries` — for anybody outside the
 board.
 
 ## Leaderboards
 
 ```
-%stats_top_<stat>_<position>%
-%stats_top_<stat>_<position>_value%
+%exyliapracticecore_stats_top_<stat>_<position>%
+%exyliapracticecore_stats_top_<stat>_<position>_value%
 ```
 
 The first gives the player's name at that position, the second gives the counter itself, formatted.
@@ -66,10 +59,10 @@ best_streak  current_streak  damage  time  rank
 Examples:
 
 ```
-%stats_top_kills_1%              → the top killer's name
-%stats_top_kills_1_value%        → their kill count
-%stats_top_win_rate_3_value%     → third place's win rate
-%stats_top_rank_1_value%         → the top player's rank and LP
+%exyliapracticecore_stats_top_kills_1%              → the top killer's name
+%exyliapracticecore_stats_top_kills_1_value%        → their kill count
+%exyliapracticecore_stats_top_win_rate_3_value%     → third place's win rate
+%exyliapracticecore_stats_top_rank_1_value%         → the top player's rank and LP
 ```
 
 These read the **global** leaderboard. A board that has not been loaded yet answers `-` and warms
@@ -77,19 +70,19 @@ itself in the background, so a hologram fills in on its second render rather tha
 
 ## Match
 
-| Placeholder | Answers |
+| Placeholder | Description |
 |---|---|
-| `%game_team_color%` | The reader's side: `&c` for team A, `&9` for team B, empty otherwise |
-| `%game_opponent_color%` | The other side's colour |
+| `%exyliapracticecore_game_team_color%` | The reader's side: `&c` for team A, `&9` for team B, empty otherwise |
+| `%exyliapracticecore_game_opponent_color%` | The other side's colour |
 
 Both answer empty when the reader is not in a match.
 
 ## Server counts
 
-| Placeholder | Answers |
+| Placeholder | Description |
 |---|---|
-| `%total_game_players%` | How many players are in a match right now |
-| `%total_queue_players%` | How many are queued |
+| `%exyliapracticecore_total_game_players%` | How many players are in a match right now |
+| `%exyliapracticecore_total_queue_players%` | How many are queued |
 
 ## Placeholders from other plugins
 

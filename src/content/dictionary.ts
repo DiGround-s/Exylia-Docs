@@ -39,6 +39,8 @@ export const dict = {
     missing: { en: "Something missing on this page?", es: "¿Falta algo en esta página?" },
     missingLink: { en: "Tell us on Discord", es: "Dínoslo en Discord" },
     copy: { en: "Copy code", es: "Copiar código" },
+    copyValue: { en: "Click to copy", es: "Clic para copiar" },
+    copied: { en: "Copied", es: "Copiado" },
     facts: {
       version: { en: "Version", es: "Versión" },
       minecraft: { en: "Minecraft", es: "Minecraft" },

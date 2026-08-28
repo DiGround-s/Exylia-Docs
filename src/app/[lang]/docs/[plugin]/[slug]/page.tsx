@@ -52,7 +52,7 @@ export default async function DocPage({ params }: { params: Params }) {
       <MobileNav plugin={entry} sections={sections} title={doc.title} lang={lang} />
 
       <div className="flex gap-12">
-        <article className="min-w-0 max-w-3xl flex-1 pb-4">
+        <article className="min-w-0 max-w-4xl flex-1 pb-4">
           <DocHeader
             group={doc.group || entry.name}
             title={doc.title}

@@ -313,13 +313,21 @@ body {
 }
 
 /* Tables */
-.prose-docs table {
+.prose-docs .table-wrap {
+  margin-top: 1.5em;
+  overflow-x: auto;
+}
+.prose-docs .table-wrap table {
   width: 100%;
+  min-width: 420px;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 13.6px;
-  margin-top: 1.5em;
-  display: block;
-  overflow-x: auto;
+}
+/* One column rhythm for every table: the name column always the same width. */
+.prose-docs .table-wrap th:first-child,
+.prose-docs .table-wrap td:first-child {
+  width: 50%;
 }
 .prose-docs thead th {
   font-family: var(--font-mono);
@@ -347,6 +355,37 @@ body {
 }
 .prose-docs tbody td:first-child {
   color: rgba(255, 255, 255, 0.88);
+}
+/* A long placeholder wraps inside its column instead of pushing the table wide. */
+.prose-docs td:first-child code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Click-to-copy inline code — placeholders and permission nodes */
+.prose-docs code.copyable {
+  cursor: pointer;
+  user-select: all;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.prose-docs code.copyable:hover,
+.prose-docs code.copyable:focus-visible {
+  background: rgba(124, 92, 255, 0.16);
+  border-color: rgba(124, 92, 255, 0.42);
+  color: #e7e3ff;
+  outline: none;
+}
+.prose-docs code.copyable[data-copied] {
+  background: rgba(120, 220, 170, 0.12);
+  border-color: rgba(120, 220, 170, 0.45);
+  color: #a9e9c8;
+}
+.prose-docs code.copyable[data-copied]::after {
+  content: "\2713";
+  margin-left: 0.4em;
+  font-size: 0.9em;
 }
 
 /* Blockquote — a quiet note */
