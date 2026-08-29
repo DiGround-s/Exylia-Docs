@@ -1,0 +1,70 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaArmorSkin: un color y un trim dibujados sobre cualquier pieza de armadura con paquetes, mientras el objeto real conserva todo lo que tenía."
+---
+
+ExyliaArmorSkin pone una **skin** sobre una pieza de armadura. Una skin es un color, un trim opcional
+y una animación opcional, y se dibuja en el camino hacia el cliente: el peto de netherita sigue
+siendo un peto de netherita en el servidor, y todo el mundo ve cuero azul con trim de vex.
+
+La armadura nunca se convierte. Aplicar una skin escribe **un solo valor** en los datos del objeto —
+`exyliaarmorskin:skin`, el id de la skin — y nada más cambia. Encantamientos, atributos, durabilidad,
+custom model data y los datos de cualquier otro plugin siguen exactamente donde estaban.
+
+## Qué ve el cliente
+
+| En el objeto real | En el visual |
+|---|---|
+| Peto de netherita | La pieza de cuero de esa misma ranura, con el color de la skin |
+| Su trim, o ninguno | El trim de la skin, si la skin define uno |
+| Su nombre | El mismo nombre, o el nombre vanilla del material real |
+| Su lore | El mismo lore, una línea en blanco y después las líneas de `armor-lore` |
+| Sus encantamientos | Ocultos, pero se mantiene el brillo |
+| Su durabilidad | El daño real **y el máximo real**, así que la barra dice la verdad |
+| Sus atributos | Ocultos, y nunca sustituidos por los del cuero |
+
+## Quién ve una skin
+
+| Espectador | Ve |
+|---|---|
+| Todo el que tenga al portador en rango | La skin, sobre el cuerpo |
+| El portador, en su inventario y en su muñeco | La skin |
+| El portador **en creativo** | La armadura real — un cliente en creativo devuelve sus ranuras al servidor, así que hay que mostrarle la verdad |
+| Cualquiera que mire una pieza con skin en un cofre, la hotbar o el cursor | El objeto real con las líneas de lore de la skin añadidas |
+| Todos, cuando el **portador** no tiene el permiso de esa skin | La armadura real — el id sigue en el objeto y el aspecto vuelve con el nodo |
+
+## Qué incluye
+
+Veinte skins en `skins.yml` — diez colores fijos y diez animadas — y once animaciones en
+`animations.yml`, construidas sobre tres tipos: `rainbow`, `pulse` y `frames`. Cada skin animada
+lleva además un **bonus de set**: partículas alrededor del cuerpo y un sonido en cuanto todas las
+piezas que encaja se llevan con ella.
+
+Cada skin tiene un permiso derivado de su id, `exyliaarmorskin.skin.<id>`, y por defecto un jugador
+lo necesita tanto para aplicarla como para que se la vean puesta.
+
+## Cómo llega una skin a la armadura
+
+No hay menú ni comando para el jugador. Una skin viaja como **objeto**: arrastra el objeto de skin
+sobre una pieza de armadura en tu propio inventario y se aplica; arrastra un **removedor** sobre una
+pieza con skin y la skin sale y se devuelve otra vez como objeto.
+
+<Callout type="note" title="Todo son paquetes, así que no se guarda nada">
+No hay base de datos ni archivo por jugador. Lo único que sobrevive a un reinicio es el id escrito en
+la armadura, y por eso una skin acompaña al objeto por cofres, intercambios y otros plugins.
+</Callout>
+
+<Cards>
+  <Card title="Instalación" href="/docs/exyliaarmorskin/instalacion">
+    Los jars que necesita y los tres archivos que escribe.
+  </Card>
+  <Card title="Primeros pasos" href="/docs/exyliaarmorskin/primeros-pasos">
+    Date una skin, póntela, quítatela y escribe la tuya.
+  </Card>
+  <Card title="Skins" href="/docs/exyliaarmorskin/skins">
+    Cada clave de `skins.yml` y las veinte que vienen incluidas.
+  </Card>
+  <Card title="Animaciones" href="/docs/exyliaarmorskin/animaciones">
+    Los tres tipos, sus opciones y los once presets.
+  </Card>
+</Cards>

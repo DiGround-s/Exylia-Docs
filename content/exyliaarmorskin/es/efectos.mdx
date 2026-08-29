@@ -1,0 +1,179 @@
+---
+title: "Efectos"
+description: "Lo que hace una skin además de verse distinta: los efectos al equipar y desequipar, el ambiente que repite mientras se lleva y el bonus de set por llevar todas las piezas que encaja."
+---
+
+Cada skin puede declarar un bloque `effects`. Todo es opcional, y una skin sin nada simplemente se ve
+distinta y no hace nada más.
+
+```yaml title="skins.yml"
+skins:
+  inferno:
+    effects:
+      on-equip:
+        sound:
+          name: ITEM_ARMOR_EQUIP_NETHERITE
+          volume: 0.8
+          pitch: 1.2
+        title:
+          text: '{warning}&lINFERNO'
+          subtitle: '{letters}La armadura arde'
+      on-unequip:
+        sound:
+          name: BLOCK_FIRE_EXTINGUISH
+      ambient:
+        particle: 'FLAME|5|0.3|0'
+        sound: ''
+        interval: 1.0
+        radius: 32.0
+      set:
+        on-complete:
+          sound:
+            name: ITEM_FIRECHARGE_USE
+            volume: 1.0
+            pitch: 1.4
+        on-break: {}
+        ambient:
+          particle: 'FLAME|4|0.4|0.01'
+          sound: ''
+          interval: 0.25
+          radius: 32.0
+```
+
+| Bloque | Cuándo suena |
+|---|---|
+| `on-equip` / `on-unequip` | Justo cuando una pieza con esta skin se pone o se quita. |
+| `ambient` | Se repite en **cada pieza equipada**, a la altura de esa pieza. |
+| `set` | Una vez que todas las piezas que la skin encaja se llevan con ella — ver [Bonus de set](#bonus-de-set). |
+
+## `on-equip` y `on-unequip`
+
+Los dos son efectos estándar de ExyliaLib, así que cada uno puede llevar cualquier combinación de
+seis secciones. Se reproducen **para quien lleva la pieza**.
+
+| Sección | Claves |
+|---|---|
+| `title` | `text`, `subtitle`, `fade-in`, `stay`, `fade-out`, `countdown`, `time-style` |
+| `action-bar` | `text`, `duration`, `countdown`, `time-style` |
+| `boss-bar` | `text`, `colour`, `overlay`, `countdown`, `count-up`, `progress`, `time-style` |
+| `sound` | `name`, `volume`, `pitch`, `category` |
+| `particle` | `name`, `count`, `spread`, `speed` |
+| `firework` | `colours`, `fades`, `shape`, `flicker`, `trail` |
+
+Una sección que no dice nada se deja fuera del archivo, y por eso el `skins.yml` por defecto no
+muestra ningún bloque `sound:` bajo `on-equip`. Escríbela a mano y a partir de ahí se lee. La
+referencia completa está en el [módulo de efectos de ExyliaLib](/docs/exylialib/efectos).
+
+<Callout type="note" title="Suenan al equipar de verdad, no en cada redibujado">
+`on-equip` suena al equipar una pieza o cuando su skin cambia sobre el cuerpo. Entrar al servidor,
+reaparecer, cambiar de mundo, `/armorskin refresh` y `/armorskin reload` reconstruyen el visual **en
+silencio**: a un jugador que se conecta no le reciben cuatro títulos.
+</Callout>
+
+## `ambient`
+
+Se repite mientras la pieza esté puesta.
+
+| Clave | Por defecto | Qué es |
+|---|---|---|
+| `particle` | `''` | `NOMBRE\|cantidad\|dispersión\|velocidad`. Vacío para ninguna. |
+| `sound` | `''` | `NOMBRE\|volumen\|tono`. Vacío para ninguno. |
+| `interval` | `1.0` | Segundos entre repeticiones. Por debajo de `0.05` se sube a ese valor. |
+| `radius` | `32.0` | Bloques alrededor del jugador que lo ven o lo oyen. Por debajo de `1.0` se sube a ese valor. |
+
+Las dos líneas se separan por barras verticales, y una clave con namespace sobrevive porque los dos
+puntos nunca son separador: `minecraft:flame|10|0.4|0.01` es válido. La línea de partícula también
+acepta la forma larga `NOMBRE|cantidad|dx|dy|dz|velocidad` cuando quieres una dispersión distinta por
+eje.
+
+### Dónde suena
+
+A los pies del portador más la altura de la pieza donde está la skin, así que cuatro piezas con skin
+son cuatro alturas distintas:
+
+| Pieza | Altura |
+|---|---|
+| `helmet` | 1,7 |
+| `chestplate` | 1,2 |
+| `leggings` | 0,7 |
+| `boots` | 0,2 |
+
+### Qué cuesta
+
+Una tarea repetida por **pieza equipada que declare un ambiente**, atada a la entidad del jugador
+para que Folia esté conforme y para que muera con él. Se cancela en cuanto la pieza sale, la skin
+cambia o el jugador se desconecta; nada sobrevive a un apagado del plugin.
+
+<Callout type="warning" title="Un intervalo de 0,05 es una tarea por tick, por pieza y por jugador">
+El mínimo existe para que un error tipográfico no pida menos, no como invitación. Una partícula por
+segundo en el peto es para lo que están pensados los valores por defecto.
+</Callout>
+
+## Bonus de set
+
+`effects.set` se dispara cuando un jugador lleva **todas las piezas que la skin encaja** con esa misma
+skin. Para una skin con `pieces` vacío eso son las cuatro; para `golden_sentry`, que solo encaja en
+casco y peto, bastan dos piezas.
+
+| Clave | Qué es |
+|---|---|
+| `on-complete` | Un efecto que suena una vez, justo cuando el set se completa. |
+| `on-break` | Un efecto que suena una vez, cuando deja de estar completo. |
+| `ambient` | Las mismas cuatro claves que el ambiente por pieza, reproducido **alrededor del jugador** a una altura fija de 1,0 mientras el set aguante. |
+
+El set se juzga desde la pieza con skin más alta hacia abajo: la skin que ocupe la primera ranura es
+la única que puede completar. Tres piezas de `inferno` y un casco de `ocean` no completan nada.
+
+<Callout type="note" title="Un temporizador extra, y solo mientras el set aguanta">
+El ambiente de set es un único temporizador por jugador, además de los de cada pieza. Se cancela en
+el tick en que el set se rompe, cuando el portador se desconecta y al apagar el plugin.
+</Callout>
+
+### Qué traen los valores por defecto
+
+Las diez skins de color fijo no declaran bonus de set. Las diez animadas traen cada una una partícula
+alrededor del cuerpo y un sonido al completarse; `on-break` está en silencio en todas.
+
+| Skin | Partícula ambiental | Intervalo | Sonido de `on-complete` |
+|---|---|---|---|
+| `rainbow` | `NOTE\|3\|0.5\|0` | 0,5 s | `ENTITY_PLAYER_LEVELUP` |
+| `pastel` | `CHERRY_LEAVES\|2\|0.4\|0` | 0,5 s | `BLOCK_AMETHYST_BLOCK_CHIME` |
+| `inferno` | `FLAME\|4\|0.4\|0.01` | 0,25 s | `ITEM_FIRECHARGE_USE` |
+| `ocean` | `BUBBLE_POP\|3\|0.4\|0` | 0,3 s | `ENTITY_DOLPHIN_SPLASH` |
+| `heartbeat` | `HEART\|1\|0.3\|0` | 1,2 s | `ENTITY_WARDEN_HEARTBEAT` |
+| `toxic` | `SNEEZE\|2\|0.4\|0.02` | 0,4 s | `ENTITY_CREEPER_PRIMED` |
+| `galaxy` | `END_ROD\|2\|0.5\|0.01` | 0,4 s | `BLOCK_END_PORTAL_FRAME_FILL` |
+| `aurora` | `GLOW\|3\|0.5\|0` | 0,4 s | `BLOCK_BEACON_ACTIVATE` |
+| `strobe` | `ELECTRIC_SPARK\|3\|0.4\|0.05` | 0,3 s | `ENTITY_LIGHTNING_BOLT_IMPACT` |
+| `ember` | `SMALL_FLAME\|3\|0.4\|0.01` | 0,4 s | `BLOCK_FIRE_AMBIENT` |
+
+Todas usan un radio de 32 bloques y un sonido de completado a volumen 1.0, tono 1.4 y categoría
+`PLAYERS`.
+
+<Callout type="tip" title="Cambiar un set completo por otro es silencioso">
+Pasar de un set completo de `inferno` a uno completo de `ocean` reproduce el `on-complete` de `ocean`
+pero no el `on-break` de `inferno`: la línea de ruptura es para un set que de verdad terminó.
+</Callout>
+
+## Aplicar y quitar
+
+Poner una skin y quitarla tienen su propio efecto, y esos dos viven en `config.yml` y no en la skin,
+porque pertenecen al sistema:
+
+```yaml title="config.yml"
+effects:
+  on-apply:
+    sound:
+      name: BLOCK_SMITHING_TABLE_USE
+      volume: 1.0
+      pitch: 1.2
+  on-remove:
+    sound:
+      name: BLOCK_GRINDSTONE_USE
+      volume: 1.0
+      pitch: 1.0
+```
+
+Los dos son efectos completos de ExyliaLib, los dos se reproducen para quien lo hizo y los dos solo
+suenan tras un arrastre **con éxito** en el inventario: un intento rechazado no suena, y la
+[API](/docs/exyliaarmorskin/api) tampoco reproduce nada.

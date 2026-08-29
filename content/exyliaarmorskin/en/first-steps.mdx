@@ -1,0 +1,87 @@
+---
+title: "First steps"
+description: "Give a skin, apply it, take it off, and write a skin of your own."
+---
+
+## Wear a skin
+
+<Steps>
+  <Step title="Give yourself the item">
+    `/armorskin give <you> blue_vex`. The command tab-completes every skin id, and takes an optional
+    amount from 1 to 64.
+  </Step>
+  <Step title="Drag it onto armour">
+    Open your inventory, pick the skin item up with the cursor and click a piece of armour. The click
+    is cancelled, the skin is applied and the item is consumed.
+  </Step>
+  <Step title="Put the armour on">
+    You see the skin in your paper doll and in F5; everyone tracking you sees it on your body. The
+    piece is still whatever it was — check with `/data get entity <you> Inventory`.
+  </Step>
+  <Step title="Take the skin off">
+    `/armorskin remover <you>`, then click that same piece with the remover on the cursor. The skin
+    comes back as a skin item and the remover is consumed.
+  </Step>
+  <Step title="Wear the whole set">
+    Skin all four pieces with the same skin and its set bonus starts: `inferno` plays a sound and
+    surrounds you with flames until you take a piece off.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="Applying needs the skin's own permission">
+By default a player must hold `exyliaarmorskin.skin.<id>` to apply a skin and to be seen wearing it —
+`exyliaarmorskin.skin.*` covers all of them, and both nodes default to `op`. Grant the node, or turn
+`require-permission` and `hide-without-permission` off in `config.yml`. See
+[Permissions](/docs/exyliaarmorskin/permissions).
+</Callout>
+
+<Callout type="note" title="Applying only works in your own inventory">
+The click is only read inside the player inventory window — that includes the four armour slots.
+Dropping a skin item onto armour lying in a chest does nothing.
+</Callout>
+
+## What can go wrong, and what it says
+
+| Situation | Message key |
+|---|---|
+| The clicked item is not armour | `not-armor` |
+| The skin does not list that piece | `unsupported-piece` |
+| The armour already wears a skin | `already-skinned` |
+| The remover was used on unskinned armour | `no-skin` |
+| The skin id on the armour is no longer in `skins.yml` | `unknown-skin` |
+| Removing with no free inventory slot | `inventory-full` — the skin stays on the armour and the remover is not consumed |
+| The player lacks `exyliaarmorskin.skin.<id>` | `no-permission` — nothing is written and nothing is consumed |
+
+## Write your own skin
+
+Add an entry to `skins.yml`. The key is the id stored on armour; everything else is what it looks
+like:
+
+```yaml title="skins.yml"
+skins:
+  ruby_ward:
+    name: '{error}&lRUBY WARD'
+    pieces: []            # empty means all four
+    color: '#c0102a'
+    trim-pattern: ward
+    trim-material: redstone
+    icon: WARD_ARMOR_TRIM_SMITHING_TEMPLATE
+    animation: ''         # a preset from animations.yml, or rainbow / pulse / frames
+```
+
+Then `/armorskin reload`. The skin exists immediately, `/armorskin list` shows it, and anyone already
+wearing a piece with `ruby_ward` on it sees the new colour without re-equipping.
+
+<Callout type="tip" title="The id is what the armour stores">
+Renaming an entry orphans every piece already wearing it: the armour keeps the old id, which no
+longer resolves, so it shows its real look again. Change the `name`, not the key.
+</Callout>
+
+<Cards>
+  <Card title="Skins" href="/docs/exyliaarmorskin/skins">
+    Every key, and the twenty skins that ship.
+  </Card>
+  <Card title="Effects" href="/docs/exyliaarmorskin/effects">
+    Sounds, titles and particles while a skin is worn.
+  </Card>
+</Cards>

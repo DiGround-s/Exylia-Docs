@@ -1,0 +1,178 @@
+---
+title: "Effects"
+description: "What a skin does beyond looking different: the equip and unequip effects, the ambient it repeats while worn, and the set bonus for wearing every piece it fits."
+---
+
+Every skin may declare an `effects` block. All of it is optional, and a skin with none simply looks
+different and does nothing else.
+
+```yaml title="skins.yml"
+skins:
+  inferno:
+    effects:
+      on-equip:
+        sound:
+          name: ITEM_ARMOR_EQUIP_NETHERITE
+          volume: 0.8
+          pitch: 1.2
+        title:
+          text: '{warning}&lINFERNO'
+          subtitle: '{letters}The armour burns'
+      on-unequip:
+        sound:
+          name: BLOCK_FIRE_EXTINGUISH
+      ambient:
+        particle: 'FLAME|5|0.3|0'
+        sound: ''
+        interval: 1.0
+        radius: 32.0
+      set:
+        on-complete:
+          sound:
+            name: ITEM_FIRECHARGE_USE
+            volume: 1.0
+            pitch: 1.4
+        on-break: {}
+        ambient:
+          particle: 'FLAME|4|0.4|0.01'
+          sound: ''
+          interval: 0.25
+          radius: 32.0
+```
+
+| Block | When it runs |
+|---|---|
+| `on-equip` / `on-unequip` | The moment a piece with this skin goes on or comes off. |
+| `ambient` | Repeated at **each worn piece**, at that piece's own height. |
+| `set` | Once every piece the skin fits is worn with it — see [Set bonus](#set-bonus). |
+
+## `on-equip` and `on-unequip`
+
+Both are standard ExyliaLib effects, so each one may carry any combination of six sections. They are
+played **to the wearer**.
+
+| Section | Keys |
+|---|---|
+| `title` | `text`, `subtitle`, `fade-in`, `stay`, `fade-out`, `countdown`, `time-style` |
+| `action-bar` | `text`, `duration`, `countdown`, `time-style` |
+| `boss-bar` | `text`, `colour`, `overlay`, `countdown`, `count-up`, `progress`, `time-style` |
+| `sound` | `name`, `volume`, `pitch`, `category` |
+| `particle` | `name`, `count`, `spread`, `speed` |
+| `firework` | `colours`, `fades`, `shape`, `flicker`, `trail` |
+
+A section that says nothing is left out of the file entirely, which is why the default `skins.yml`
+shows no `sound:` block under `on-equip`. Write the section by hand and it is read from then on. The
+full reference lives in the [ExyliaLib effects module](/docs/exylialib/effects).
+
+<Callout type="note" title="They fire on a real equip, not on every redraw">
+`on-equip` plays when a piece is equipped or when its skin changes on the body. Joining, respawning,
+changing world, `/armorskin refresh` and `/armorskin reload` all rebuild the visual **silently** — a
+player logging in is not greeted by four titles.
+</Callout>
+
+## `ambient`
+
+Repeated for as long as the piece is worn.
+
+| Key | Default | What it is |
+|---|---|---|
+| `particle` | `''` | `NAME\|count\|spread\|speed`. Empty for none. |
+| `sound` | `''` | `NAME\|volume\|pitch`. Empty for none. |
+| `interval` | `1.0` | Seconds between repetitions. Values below `0.05` are raised to it. |
+| `radius` | `32.0` | Blocks around the player that can see or hear it. Values below `1.0` are raised to it. |
+
+Both lines are pipe-separated, and a namespaced key survives because the colon is never a separator:
+`minecraft:flame|10|0.4|0.01` is valid. The particle line also accepts the longer
+`NAME|count|dx|dy|dz|speed` form when you want the spread to differ per axis.
+
+### Where it plays
+
+At the wearer's feet plus the height of the piece the skin is on, so four skinned pieces are four
+different heights:
+
+| Piece | Height |
+|---|---|
+| `helmet` | 1.7 |
+| `chestplate` | 1.2 |
+| `leggings` | 0.7 |
+| `boots` | 0.2 |
+
+### What it costs
+
+One repeating task per **worn piece that declares an ambient**, bound to the player's entity so Folia
+is happy and so it dies with them. It is cancelled the moment the piece comes off, the skin changes,
+or the player quits; nothing survives a plugin disable.
+
+<Callout type="warning" title="An interval of 0.05 is a task every tick, per piece, per player">
+The floor exists so a typo cannot ask for less, not as an invitation. A particle once a second on a
+chestplate is what the defaults are shaped for.
+</Callout>
+
+## Set bonus
+
+`effects.set` fires when a player wears **every piece the skin fits** with that same skin. For a skin
+with an empty `pieces` list that means all four; for `golden_sentry`, which fits only the helmet and
+the chestplate, two pieces complete the set.
+
+| Key | What it is |
+|---|---|
+| `on-complete` | An effect played once, the moment the set becomes complete. |
+| `on-break` | An effect played once, the moment it stops being complete. |
+| `ambient` | The same four keys as the per-piece ambient, played **around the player** at a fixed height of 1.0 while the set holds. |
+
+The set is judged from the topmost skinned piece downwards: whatever skin sits in the first occupied
+slot is the only one that can complete. Three `inferno` pieces and an `ocean` helmet complete nothing.
+
+<Callout type="note" title="One extra timer, and only while the set holds">
+The set ambient is a single timer per player, on top of the per-piece ones. It is cancelled the tick
+the set breaks, when the wearer quits, and on disable.
+</Callout>
+
+### What the defaults ship
+
+The ten still skins declare no set bonus. The ten animated ones each ship a particle around the body
+and a sound on completion; `on-break` is silent everywhere.
+
+| Skin | Ambient particle | Interval | `on-complete` sound |
+|---|---|---|---|
+| `rainbow` | `NOTE\|3\|0.5\|0` | 0.5 s | `ENTITY_PLAYER_LEVELUP` |
+| `pastel` | `CHERRY_LEAVES\|2\|0.4\|0` | 0.5 s | `BLOCK_AMETHYST_BLOCK_CHIME` |
+| `inferno` | `FLAME\|4\|0.4\|0.01` | 0.25 s | `ITEM_FIRECHARGE_USE` |
+| `ocean` | `BUBBLE_POP\|3\|0.4\|0` | 0.3 s | `ENTITY_DOLPHIN_SPLASH` |
+| `heartbeat` | `HEART\|1\|0.3\|0` | 1.2 s | `ENTITY_WARDEN_HEARTBEAT` |
+| `toxic` | `SNEEZE\|2\|0.4\|0.02` | 0.4 s | `ENTITY_CREEPER_PRIMED` |
+| `galaxy` | `END_ROD\|2\|0.5\|0.01` | 0.4 s | `BLOCK_END_PORTAL_FRAME_FILL` |
+| `aurora` | `GLOW\|3\|0.5\|0` | 0.4 s | `BLOCK_BEACON_ACTIVATE` |
+| `strobe` | `ELECTRIC_SPARK\|3\|0.4\|0.05` | 0.3 s | `ENTITY_LIGHTNING_BOLT_IMPACT` |
+| `ember` | `SMALL_FLAME\|3\|0.4\|0.01` | 0.4 s | `BLOCK_FIRE_AMBIENT` |
+
+Every one of them uses a radius of 32 blocks and a completion sound at volume 1.0, pitch 1.4,
+category `PLAYERS`.
+
+<Callout type="tip" title="Swapping one complete set for another is silent">
+Changing straight from a complete `inferno` set to a complete `ocean` set plays `ocean`'s
+`on-complete` but not `inferno`'s `on-break` — the break line is for a set that actually ended.
+</Callout>
+
+## Applying and removing
+
+Putting a skin on and taking it off play their own effect, and those two live in `config.yml` rather
+than on the skin, because they belong to the system:
+
+```yaml title="config.yml"
+effects:
+  on-apply:
+    sound:
+      name: BLOCK_SMITHING_TABLE_USE
+      volume: 1.0
+      pitch: 1.2
+  on-remove:
+    sound:
+      name: BLOCK_GRINDSTONE_USE
+      volume: 1.0
+      pitch: 1.0
+```
+
+Both are full ExyliaLib effects, both are played to the player who did it, and both only fire on a
+**successful** drag in the inventory — a refused apply plays nothing, and the
+[API](/docs/exyliaarmorskin/api) plays nothing either.

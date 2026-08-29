@@ -1,0 +1,86 @@
+---
+title: "Permisos"
+description: "El nodo de administración, el nodo por skin que cada skin deriva de su id y los dos interruptores que deciden si se aplican."
+---
+
+## Los nodos
+
+| Permiso | Por defecto | Da acceso a |
+|---|---|---|
+| `exyliaarmorskin.admin` | `op` | Todos los subcomandos de `/armorskin`: `give`, `remover`, `list`, `refresh` y `reload`. |
+| `exyliaarmorskin.skin.<id>` | — | Aplicar y llevar esa skin concreta. |
+| `exyliaarmorskin.skin.*` | `op` | Todas las skins. |
+
+Los dos nodos fijos se declaran en `plugin.yml` con `default: op`, así que un operador tiene todas
+las skins de salida y el resto no tiene ninguna hasta que digas lo contrario.
+
+## El nodo por skin
+
+No hay clave `permission` en `skins.yml`: el nodo se **deriva del id**, en minúsculas, así que la
+skin `galaxy` siempre es `exyliaarmorskin.skin.galaxy`. Añade una skin y su nodo existe; renómbrala y
+el nodo se renombra con ella.
+
+```text
+/lp group default permission set exyliaarmorskin.skin.blue_vex true
+/lp group vip permission set exyliaarmorskin.skin.galaxy true
+/lp group mvp permission set exyliaarmorskin.skin.* true
+```
+
+## Para qué se comprueba el nodo
+
+<Steps>
+  <Step title="Aplicar">
+    Arrastrar un objeto de skin sobre la armadura sin el nodo se rechaza con el mensaje
+    `no-permission`. No se escribe nada y no se consume nada. Lo gobierna
+    `behaviour.require-permission`.
+  </Step>
+  <Step title="Llevarla puesta">
+    Una pieza cuya skin el **portador** no puede usar se dibuja como la armadura real — para él y
+    para todos los demás — y no reproduce ningún efecto. El id sigue en el objeto, intacto. Lo
+    gobierna `behaviour.hide-without-permission`.
+  </Step>
+</Steps>
+
+La comprobación de llevar puesto ocurre cada vez que la pieza se reconcilia: al equipar, al entrar,
+al reaparecer, con `/armorskin refresh` y con `/armorskin reload`. Quitar un nodo en mitad de una
+sesión surte efecto en la siguiente de esas ocasiones — `/armorskin refresh <jugador>` lo hace
+inmediato. Volver a darlo y refrescar devuelve la skin al momento, porque nunca se le quitó nada al
+objeto.
+
+## Los dos interruptores
+
+```yaml title="config.yml"
+behaviour:
+  require-permission: true
+  hide-without-permission: true
+```
+
+| Combinación | Resultado |
+|---|---|
+| Los dos en `true` (por defecto) | Una skin se posee: hace falta el nodo para aplicarla y para que te la vean puesta. |
+| `require-permission: false` | Cualquiera con el objeto la aplica, pero a un portador sin el nodo se le sigue mostrando la armadura real. |
+| `hide-without-permission: false` | Hace falta el nodo para aplicar, pero una vez aplicada la skin se ve para siempre: un permiso que solo controla la compra. |
+| Los dos en `false` | No se comprueba a nadie. Así se comportaba el plugin antes de los permisos por skin. |
+
+<Callout type="warning" title="Los comandos y la API nunca se limitan">
+`/armorskin give` reparte cualquier objeto de skin a cualquier jugador, y `apply()` en la API escribe
+cualquier skin sobre cualquier pieza, sin mirar el nodo ni `require-permission`: son las herramientas
+con las que concedes una skin. Lo que le falta al portador sin el nodo es la **visualización**, y de
+eso se encarga `hide-without-permission`.
+</Callout>
+
+## Vender skins
+
+Como una skin viaja en un objeto **y** lleva un nodo, puedes vender cualquiera de las dos mitades:
+
+| Lo que quieres | Cómo |
+|---|---|
+| Un consumible que se compra una vez | Da el objeto y concede el nodo con él. |
+| Una ventaja de rango | Concede `exyliaarmorskin.skin.galaxy` al rango y reparte el objeto sin más. |
+| Una skin para todo el mundo | Concede su nodo a `default`, o apaga los dos interruptores. |
+| Una skin que deja de funcionar al caducar el rango | Concede solo el nodo y deja `hide-without-permission: true`. La armadura conserva el id y el aspecto vuelve el día que vuelva el rango. |
+
+<Callout type="tip" title="consume-skin-item decide si una skin es de un solo uso">
+Con `consume-skin-item: true` — por defecto — aplicar consume el objeto, así que la skin es un
+consumible. Desactívalo y un objeto pinta un número ilimitado de piezas.
+</Callout>

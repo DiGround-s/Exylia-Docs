@@ -1,0 +1,155 @@
+---
+title: "Configuración"
+description: "config.yml al completo: el objeto de skin, el removedor, el lore que se añade a la armadura con skin, los cuatro interruptores de comportamiento, los efectos al aplicar y quitar, y todos los mensajes."
+---
+
+`config.yml` guarda todo menos las skins. Valores por defecto:
+
+```yaml title="config.yml"
+skin-item:
+  material: ARMS_UP_POTTERY_SHERD
+  name: '{primary}&lARMOR SKIN &8» %skin%'
+  lore:
+    - '{secondary}Information:'
+    - ' {letters_black}▎ {letters}Drag this skin onto a piece of'
+    - ' {letters_black}▎ {letters}armor to {highlight}wear it{letters}. The armor'
+    - ' {letters_black}▎ {letters}keeps everything it had.'
+    - ''
+    - '{secondary}Fits:'
+    - ' {letters_black}▎ {info}%pieces%'
+    - ''
+    - '{warning}➥ Drop onto armor to apply'
+    - ''
+  glow: true
+
+remover-item:
+  material: SCRAPE_POTTERY_SHERD
+  name: '{primary}&lSKIN REMOVER'
+  lore:
+    - '{secondary}Information:'
+    - ' {letters_black}▎ {letters}Takes the skin off a piece of armor'
+    - ' {letters_black}▎ {letters}and gives you the {highlight}skin item {letters}back.'
+    - ''
+    - '{warning}➥ Drop onto skinned armor'
+    - ''
+  glow: true
+
+armor-lore:
+  enabled: true
+  lines:
+    - '{secondary}Skin:'
+    - ' {letters_black}▎ {highlight}%skin%'
+
+behaviour:
+  consume-remover: true
+  consume-skin-item: true
+  require-permission: true
+  hide-without-permission: true
+
+effects:
+  on-apply:
+    sound:
+      name: BLOCK_SMITHING_TABLE_USE
+      volume: 1.0
+      pitch: 1.2
+      category: PLAYERS
+  on-remove:
+    sound:
+      name: BLOCK_GRINDSTONE_USE
+      volume: 1.0
+      pitch: 1.0
+      category: PLAYERS
+```
+
+## `skin-item` y `remover-item`
+
+| Clave | Qué hace |
+|---|---|
+| `material` | El material del objeto. En el objeto de skin solo se usa cuando la skin no define `icon`. |
+| `name` | El nombre visible. `%skin%` es el nombre de la skin (solo en el objeto de skin). |
+| `lore` | El lore. `%skin%` y `%pieces%` se rellenan en el objeto de skin. |
+| `glow` | Si el objeto lleva el brillo de encantamiento. Los atributos se ocultan siempre. |
+
+Los tokens de paleta (`{primary}`, `{letters}`, …), los códigos `&` y los `%placeholders%` funcionan
+en los dos, y el objeto se renderiza **para el jugador que lo recibe**, así que un placeholder
+resuelve con sus propios valores.
+
+## `armor-lore`
+
+Las líneas que se añaden bajo una pieza de armadura que lleva skin.
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | Desactívalo y la armadura con skin muestra solo su propio lore. |
+| `lines` | dos líneas | `%skin%` es el nombre de la skin. Se muestran tras el lore propio, separadas por una línea en blanco. |
+
+<Callout type="note" title="Estas líneas nunca tocan el objeto">
+Se escriben sobre la copia que sale del servidor, en cada paquete que lleva la pieza — puesta, en la
+hotbar, en un cofre o en el cursor. Cualquier plugin que lea el lore de la armadura encuentra
+exactamente lo que la armadura tenía, y `/data get` no muestra nada de más.
+</Callout>
+
+## `behaviour`
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `consume-skin-item` | `true` | Si el objeto de skin se gasta al aplicarse. Desactivado, un objeto pinta cuantas piezas quieras. |
+| `consume-remover` | `true` | Si el removedor se gasta al quitar una skin. |
+| `require-permission` | `true` | Si aplicar una skin necesita `exyliaarmorskin.skin.<id>`. Los comandos y la API nunca se ven limitados por esto. |
+| `hide-without-permission` | `true` | Si la armadura cuya skin el portador ya no puede usar se dibuja como la pieza real. Se comprueba al equipar la pieza y con `/armorskin refresh`. |
+
+Ver [Permisos](/docs/exyliaarmorskin/permisos) para lo que significan esos dos interruptores en la
+práctica.
+
+Ninguno de los dos interruptores de consumo actúa cuando la operación falla: un removedor usado por un jugador con el inventario
+lleno se queda en el cursor.
+
+## `effects`
+
+Dos momentos que pertenecen al sistema y no a una skin. Los dos son efectos completos de ExyliaLib —
+título, action bar, boss bar, sonido, partícula y firework — y los dos se reproducen para el jugador
+que lo hizo.
+
+| Clave | Por defecto | Cuándo |
+|---|---|---|
+| `on-apply` | `BLOCK_SMITHING_TABLE_USE`, volumen 1.0, tono 1.2, categoría `PLAYERS` | Se arrastró una skin sobre la armadura con éxito. |
+| `on-remove` | `BLOCK_GRINDSTONE_USE`, volumen 1.0, tono 1.0, categoría `PLAYERS` | Se quitó una skin con un removedor con éxito. |
+
+Un intento rechazado no suena, y una skin aplicada por la [API](/docs/exyliaarmorskin/api) tampoco.
+Los efectos que declara una **skin** — equipar, desequipar, ambiente y bonus de set — viven en
+[`skins.yml`](/docs/exyliaarmorskin/efectos).
+
+## `messages`
+
+Todas las líneas que envía el plugin, bajo `messages:`. `%prefix%` se expande al valor de `prefix`;
+`%skin%` se rellena en cada mensaje que nombra una skin.
+
+| Clave | Por defecto | Tokens |
+|---|---|---|
+| `prefix` | `{primary}&lE-SKINS &8•&r ` | — |
+| `applied` | `%prefix%{success}Skin {highlight}%skin% {success}applied.` | `%skin%` |
+| `removed` | `%prefix%{success}Skin {highlight}%skin% {success}removed and returned to you.` | `%skin%` |
+| `not-armor` | `%prefix%{error}That is not a piece of armor.` | — |
+| `unsupported-piece` | `%prefix%{error}The skin {highlight}%skin% {error}does not fit that piece.` | `%skin%` |
+| `unknown-skin` | `%prefix%{error}That skin no longer exists.` | `%skin%` |
+| `already-skinned` | `%prefix%{warning}That armor already wears a skin. Use a remover first.` | — |
+| `no-skin` | `%prefix%{warning}That armor wears no skin.` | — |
+| `inventory-full` | `%prefix%{error}You need a free slot in your inventory.` | — |
+| `no-permission` | `%prefix%{error}You do not own the skin {highlight}%skin%{error}.` | `%skin%` |
+| `given` | `%prefix%{success}You received {highlight}%amount%x %skin%{success}.` | `%skin%`, `%amount%` |
+| `given-remover` | `%prefix%{success}You received {highlight}%amount%x skin remover{success}.` | `%amount%` |
+| `list-header` | `%prefix%{secondary}Available skins:` | — |
+| `list-entry` | ` {letters_black}▎ {info}%id% {letters_black}» {letters}%skin% {letters_black}(%pieces%)` | `%id%`, `%skin%`, `%pieces%` |
+| `list-empty` | `%prefix%{muted}No skins are registered.` | — |
+| `refreshed` | `%prefix%{success}Appearance synchronised.` | — |
+
+<Callout type="tip" title="El prefijo es solo de este plugin">
+`prefix` se registra en ExyliaLib al arrancar y en cada recarga, así que `%prefix%` escrito en
+cualquier texto de este plugin resuelve a él. Otro plugin de Exylia que use `%prefix%` recibe el
+suyo: los dos nunca chocan.
+</Callout>
+
+## Los otros dos archivos
+
+Las skins viven en [`skins.yml`](/docs/exyliaarmorskin/skins) y las animaciones en
+[`animations.yml`](/docs/exyliaarmorskin/animaciones).

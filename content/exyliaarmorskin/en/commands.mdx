@@ -1,0 +1,81 @@
+---
+title: "Commands"
+description: "The five subcommands of /armorskin, who receives each message, and exactly what refresh and reload do."
+---
+
+Everything lives under `/armorskin`. There are no aliases and no player-facing command: a player uses
+skins by dragging items, never by typing.
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/armorskin give <player> <skin> [amount]` | `exyliaarmorskin.admin` | Gives the skin item for `<skin>`. |
+| `/armorskin remover <player> [amount]` | `exyliaarmorskin.admin` | Gives skin removers. |
+| `/armorskin list` | `exyliaarmorskin.admin` | Lists every registered skin. |
+| `/armorskin refresh [player]` | `exyliaarmorskin.admin` | Rebuilds and re-sends what a player is shown wearing. |
+| `/armorskin reload` | `exyliaarmorskin.admin` | Re-reads the three files and redraws everyone. |
+
+## `give`
+
+`<skin>` tab-completes from the registry, and an unknown id answers `unknown-skin` to whoever typed
+the command. `[amount]` is 1 to 64 and defaults to 1.
+
+`give` never checks the skin's own permission: it hands the item to anybody. Whether the player can
+then **use** it is `exyliaarmorskin.skin.<id>` and the two switches in
+[Permissions](/docs/exyliaarmorskin/permissions).
+
+The item is added to the target's inventory; anything that does not fit is dropped at their feet. The
+`given` message — with `%skin%` and `%amount%` — is sent **to the target**, not to the sender, so
+giving from console tells the player and says nothing back.
+
+## `remover`
+
+The same shape without a skin id. The `given-remover` message, carrying `%amount%`, also goes to the
+target.
+
+## `list`
+
+Prints `list-header`, then one `list-entry` per skin with `%id%`, `%skin%` and `%pieces%` filled in.
+With nothing registered it prints `list-empty` instead. The list covers skins from `skins.yml` **and**
+skins another plugin registered through the API.
+
+## `refresh`
+
+| Typed by | With a player | What happens |
+|---|---|---|
+| A player | no | Only that player is refreshed. |
+| A player | yes | Only the named player is refreshed. |
+| Console | no | **Everyone online** is refreshed. |
+| Console | yes | Only the named player is refreshed. |
+
+Refreshing re-reads the armour the player is actually wearing, rebuilds every visual from it and
+re-sends both their inventory and their equipment to everyone tracking them. It is also what applies
+a permission you just granted or revoked, because that is checked while the visual is rebuilt. It plays no effects and
+touches no file — it is the answer to "another plugin changed this item behind my back".
+
+## `reload`
+
+Runs one step, `configs`, which:
+
+<Steps>
+  <Step title="Re-reads every file">
+    `config.yml`, `animations.yml` and `skins.yml`.
+  </Step>
+  <Step title="Re-applies the message prefix">
+    So `%prefix%` matches the rest of the ecosystem again.
+  </Step>
+  <Step title="Rebuilds the skins">
+    Cached trims are dropped, animations are rebuilt from `animations.yml`, and the file's skins
+    replace the previous file's skins. Skins registered through the API are left alone.
+  </Step>
+  <Step title="Redraws everyone online">
+    Every player has their visuals rebuilt and re-sent, silently — no equip effects are played.
+  </Step>
+</Steps>
+
+The step reports success or failure to whoever ran it. It does not reload ExyliaLib; `/exylialib
+reload` is what does that.
+
+<Callout type="note" title="Reload is safe mid-fight">
+Nothing is removed from anybody: the armour keeps its id, the visual is simply rebuilt. A player
+wearing an animated skin sees the new speed or colour on the next frame.
+</Callout>

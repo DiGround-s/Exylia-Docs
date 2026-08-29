@@ -1,0 +1,110 @@
+---
+title: "Skins"
+description: "Every key in skins.yml, how a skin is resolved, and the twenty skins that ship."
+---
+
+A skin lives in `skins.yml` under the id the armour will store. Ids are matched **trimmed and
+lowercased**, so `Blue_Vex` and `blue_vex` are the same skin.
+
+```yaml title="skins.yml"
+skins:
+  blue_vex:
+    name: '{info}&lBLUE VEX'
+    pieces: []
+    color: '#0066ff'
+    trim-pattern: vex
+    trim-material: diamond
+    icon: VEX_ARMOR_TRIM_SMITHING_TEMPLATE
+    animation: ''
+    effects:
+      ambient:
+        particle: ''
+        sound: ''
+        interval: 1.0
+        radius: 32.0
+      set:
+        ambient:
+          particle: ''
+          sound: ''
+          interval: 1.0
+          radius: 32.0
+```
+
+## Keys
+
+| Key | Type | What it does |
+|---|---|---|
+| `name` | text | Shown on the skin item and in every message that names the skin. Takes palette tokens like `{info}` and `&` codes. Blank falls back to the id. |
+| `pieces` | list | `helmet`, `chestplate`, `leggings`, `boots`. **Empty means all four.** A skin that does not list a piece is refused on it with `unsupported-piece`. |
+| `color` | hex | The leather colour, `#0066ff`. Empty keeps leather brown. Anything unparseable is reported in the console and treated as empty. |
+| `trim-pattern` | key | A trim pattern such as `vex` or `minecraft:vex`. |
+| `trim-material` | key | A trim material such as `diamond`. |
+| `icon` | material | The material the **skin item** is made of. Empty uses `skin-item.material` from `config.yml`. |
+| `animation` | name | A preset from `animations.yml`, or a bare type (`rainbow`, `pulse`, `frames`). Empty for a still colour. |
+| `effects` | section | Sounds, titles and particles: `on-equip`, `on-unequip`, the per-piece `ambient` and the `set` bonus for wearing every piece the skin fits. See [Effects](/docs/exyliaarmorskin/effects). |
+
+<Callout type="warning" title="A trim needs both halves">
+`trim-pattern` and `trim-material` are only used together. Writing one without the other logs
+`a trim needs both trim-pattern and trim-material; ignoring the trim` and the skin is drawn with its
+colour alone.
+</Callout>
+
+## How the skin item looks
+
+The skin item is built from `skin-item` in `config.yml` — name, lore, glow — with two substitutions:
+`%skin%` is the skin's `name` and `%pieces%` is the list of pieces it fits. Its material is the
+skin's `icon`, or `skin-item.material` when the skin sets none.
+
+The skin's colour and trim are then painted **onto that item**, which only shows if the material can
+carry them: point `icon` at a leather piece and the item previews the skin exactly. A pottery sherd
+or a banner pattern simply keeps its own texture.
+
+## The twenty that ship
+
+Ten still colours:
+
+| Id | Colour | Trim | Icon | Pieces |
+|---|---|---|---|---|
+| `blue_vex` | `#0066ff` | vex / diamond | `VEX_ARMOR_TRIM_SMITHING_TEMPLATE` | all |
+| `crimson_rib` | `#b3001b` | rib / redstone | `DANGER_POTTERY_SHERD` | all |
+| `emerald_wild` | `#1f9e4a` | wild / emerald | `EXPLORER_POTTERY_SHERD` | all |
+| `golden_sentry` | `#f2c14e` | sentry / gold | `PRIZE_POTTERY_SHERD` | helmet, chestplate |
+| `copper_coast` | `#c8702a` | coast / copper | `MINER_POTTERY_SHERD` | all |
+| `frost_tide` | `#bfe9ff` | tide / quartz | `SHELTER_POTTERY_SHERD` | all |
+| `midnight_silence` | `#0d1b2a` | silence / netherite | `SILENCE_ARMOR_TRIM_SMITHING_TEMPLATE` | all |
+| `void_eye` | `#1a0b2e` | eye / amethyst | `SKULL_POTTERY_SHERD` | all |
+| `rose_spire` | `#ff6b9d` | spire / resin | `FLOWER_BANNER_PATTERN` | all |
+| `ivory_host` | `#f5f0e6` | host / iron | `SHEAF_POTTERY_SHERD` | all |
+
+Ten animated, where the colour moves and the trim stays:
+
+| Id | Base colour | Trim | Icon | Animation |
+|---|---|---|---|---|
+| `rainbow` | `#ff0000` | flow / amethyst | `FLOW_BANNER_PATTERN` | `rainbow` |
+| `pastel` | `#ffb3d9` | shaper / quartz | `FLOW_POTTERY_SHERD` | `pastel` |
+| `inferno` | `#c81d00` | bolt / gold | `BURN_POTTERY_SHERD` | `inferno` |
+| `ocean` | `#0a5c8c` | tide / lapis | `ANGLER_POTTERY_SHERD` | `ocean` |
+| `heartbeat` | `#7a0010` | rib / redstone | `HEARTBREAK_POTTERY_SHERD` | `heartbeat` |
+| `toxic` | `#0b1f0b` | ward / emerald | `CREEPER_BANNER_PATTERN` | `toxic` |
+| `galaxy` | `#4a1b8c` | eye / amethyst | `GLOBE_BANNER_PATTERN` | `galaxy` |
+| `aurora` | `#1fd18a` | wayfinder / diamond | `GUSTER_BANNER_PATTERN` | `aurora` |
+| `strobe` | `#ffffff` | snout / iron | `GUSTER_POTTERY_SHERD` | `strobe` |
+| `ember` | `#2b0a00` | dune / copper | `ARMS_UP_POTTERY_SHERD` | `ember` |
+
+Only `golden_sentry` restricts its pieces; every other shipped skin fits all four.
+
+The ten animated skins also ship a [set bonus](/docs/exyliaarmorskin/effects#set-bonus): particles
+around the body and a sound the moment every piece the skin fits is worn with it. The ten still
+colours ship none.
+
+## What happens to a skin you delete
+
+The id stays on the armour. Nothing resolves it any more, so the piece shows its real look again, and
+a remover used on it answers `unknown-skin` rather than turning the skin into nothing. Put the entry
+back — same key — and every piece wearing it comes back too.
+
+## Reloading
+
+`/armorskin reload` re-reads `config.yml`, `animations.yml` and `skins.yml`, drops the cached trims,
+rebuilds the lore lines and redraws every online player. File entries are replaced wholesale; skins
+another plugin registered through the [API](/docs/exyliaarmorskin/api) survive a reload untouched.

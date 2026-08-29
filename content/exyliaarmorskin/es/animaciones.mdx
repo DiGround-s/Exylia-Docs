@@ -1,0 +1,120 @@
+---
+title: "Animaciones"
+description: "Los tres tipos de animación, las opciones que lee cada uno, los once presets de animations.yml y cómo se mantienen sincronizados los fotogramas."
+---
+
+Una animación mueve el **color** de una skin. El trim, el nombre, el lore y la durabilidad nunca
+cambian con ella.
+
+```yaml title="animations.yml"
+animations:
+  inferno:
+    type: frames
+    interval: 0.1
+    colors: ['#3a0000', '#c81d00', '#ff7a00', '#ffd000', '#ff7a00', '#c81d00']
+    options:
+      steps: '6'
+```
+
+| Clave | Qué es |
+|---|---|
+| `type` | `rainbow`, `pulse`, `frames`, o un tipo que haya registrado otro plugin. |
+| `interval` | Segundos entre fotogramas. Se convierte a ticks y nunca baja de un tick. |
+| `colors` | Colores hex con los que trabaja el tipo. Lo que significan depende del tipo. |
+| `options` | Valores libres por tipo, escritos como texto. |
+
+Luego una skin la nombra:
+
+```yaml title="skins.yml"
+skins:
+  inferno:
+    animation: inferno
+```
+
+<Callout type="note" title="Un tipo directo también vale">
+`animation: rainbow` sin preset con ese nombre cae al **tipo** con sus valores por defecto — dos
+ticks de intervalo, sin colores y sin opciones. Por eso `rainbow` funciona antes de que nadie haya
+abierto `animations.yml`.
+</Callout>
+
+## Los tres tipos
+
+### `rainbow`
+
+Recorre el círculo de tono. Ignora `colors` y el color propio de la skin.
+
+| Opción | Por defecto | Efecto |
+|---|---|---|
+| `step` | `10` | Grados de tono por fotograma. Menos es más lento y más suave. |
+| `saturation` | `1.0` | 0 – 1. Menos lava los colores. |
+| `brightness` | `1.0` | 0 – 1. Menos los oscurece. |
+
+### `pulse`
+
+Respira desde un color de reposo hasta un pico y vuelve.
+
+| Opción | Por defecto | Efecto |
+|---|---|---|
+| `length` | `40` | Fotogramas de una ida y vuelta completa. Mínimo 2. |
+
+La primera entrada de `colors` es el color de reposo; si no hay ninguna se usa el `color` de la skin,
+y si tampoco lo hay, negro. La segunda entrada es el pico; si no hay, blanco.
+
+### `frames`
+
+Recorre `colors` en orden.
+
+| Opción | Por defecto | Efecto |
+|---|---|---|
+| `smooth` | `true` | Mezcla entre colores vecinos en vez de saltar. |
+| `steps` | `10` | Fotogramas que tarda en pasar de un color al siguiente. Solo se lee con `smooth` activo. |
+
+Con `smooth: 'false'` cada fotograma es un color de la lista. Con un solo color lo mantiene; sin
+ninguno deja el color propio de la skin tal cual.
+
+## Los once presets
+
+| Preset | Tipo | Intervalo | Opciones | Colores |
+|---|---|---|---|---|
+| `rainbow` | rainbow | 0,1 s | `step: 8` | — |
+| `rainbow_slow` | rainbow | 0,25 s | `step: 4` | — |
+| `pastel` | rainbow | 0,15 s | `step: 6`, `saturation: 0.45` | — |
+| `heartbeat` | pulse | 0,05 s | `length: 24` | `#7a0010` → `#ff2a4d` |
+| `toxic` | pulse | 0,1 s | `length: 30` | `#0b1f0b` → `#5dff3a` |
+| `ember` | pulse | 0,1 s | `length: 40` | `#2b0a00` → `#ff5a00` |
+| `inferno` | frames | 0,1 s | `steps: 6` | seis rojos y naranjas |
+| `ocean` | frames | 0,15 s | `steps: 8` | seis azules |
+| `galaxy` | frames | 0,15 s | `steps: 8` | cinco morados y rosas |
+| `aurora` | frames | 0,2 s | `steps: 10` | cinco verdes, cianes y violetas |
+| `strobe` | frames | 0,15 s | `smooth: false` | `#ffffff`, `#111111` |
+
+## Todo el mundo va por el mismo fotograma
+
+El número de fotograma sale del reloj del servidor, no de un contador que empieza al equiparse la
+pieza:
+
+```text
+frame = floor(currentTimeMillis / 50 / intervalTicks)
+```
+
+Dos jugadores con `rainbow`, uno desde hace una hora y otro desde hace un segundo, muestran el mismo
+color en el mismo instante. Los temporizadores siguen siendo por jugador — eso es lo que exige Folia —
+pero el reloj que leen es compartido.
+
+## Qué cuesta
+
+Una tarea repetida por **pieza animada equipada**, y nada en absoluto para una skin fija. Un fotograma
+copia una pila de protocolo que el plugin ya tiene, le escribe un componente de color y reenvía esa
+ranura; un fotograma cuyo color no ha cambiado no envía ningún paquete. La tarea se detiene sola en
+cuanto la pieza sale, la skin cambia o el portador se desconecta.
+
+<Callout type="warning" title="Los nombres desconocidos se avisan, no se adivinan">
+`animation: sparkle` sin ese preset ni ese tipo registra qué presets y qué tipos existen, y la skin
+carga como color fijo. Lo mismo ocurre con una entrada de `animations.yml` cuyo `type` sea
+desconocido o falte.
+</Callout>
+
+## Añadir un tipo desde código
+
+Un tipo es una fábrica que va de un spec a una animación, así que otro plugin puede registrar uno y
+usarlo desde YAML como cualquier tipo incluido. Ver [API](/docs/exyliaarmorskin/api).

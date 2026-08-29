@@ -1,0 +1,152 @@
+---
+title: "Configuration"
+description: "config.yml in full: the skin item, the remover, the lore added to skinned armour, the four behaviour switches, the apply and remove effects, and every message."
+---
+
+`config.yml` holds everything except the skins themselves. Defaults:
+
+```yaml title="config.yml"
+skin-item:
+  material: ARMS_UP_POTTERY_SHERD
+  name: '{primary}&lARMOR SKIN &8» %skin%'
+  lore:
+    - '{secondary}Information:'
+    - ' {letters_black}▎ {letters}Drag this skin onto a piece of'
+    - ' {letters_black}▎ {letters}armor to {highlight}wear it{letters}. The armor'
+    - ' {letters_black}▎ {letters}keeps everything it had.'
+    - ''
+    - '{secondary}Fits:'
+    - ' {letters_black}▎ {info}%pieces%'
+    - ''
+    - '{warning}➥ Drop onto armor to apply'
+    - ''
+  glow: true
+
+remover-item:
+  material: SCRAPE_POTTERY_SHERD
+  name: '{primary}&lSKIN REMOVER'
+  lore:
+    - '{secondary}Information:'
+    - ' {letters_black}▎ {letters}Takes the skin off a piece of armor'
+    - ' {letters_black}▎ {letters}and gives you the {highlight}skin item {letters}back.'
+    - ''
+    - '{warning}➥ Drop onto skinned armor'
+    - ''
+  glow: true
+
+armor-lore:
+  enabled: true
+  lines:
+    - '{secondary}Skin:'
+    - ' {letters_black}▎ {highlight}%skin%'
+
+behaviour:
+  consume-remover: true
+  consume-skin-item: true
+  require-permission: true
+  hide-without-permission: true
+
+effects:
+  on-apply:
+    sound:
+      name: BLOCK_SMITHING_TABLE_USE
+      volume: 1.0
+      pitch: 1.2
+      category: PLAYERS
+  on-remove:
+    sound:
+      name: BLOCK_GRINDSTONE_USE
+      volume: 1.0
+      pitch: 1.0
+      category: PLAYERS
+```
+
+## `skin-item` and `remover-item`
+
+| Key | What it does |
+|---|---|
+| `material` | The item's material. For the skin item this is only used when the skin sets no `icon`. |
+| `name` | The display name. `%skin%` is the skin's name (skin item only). |
+| `lore` | The lore. `%skin%` and `%pieces%` are filled in on the skin item. |
+| `glow` | Whether the item has the enchantment glint. Attributes are always hidden. |
+
+Palette tokens (`{primary}`, `{letters}`, …), `&` codes and `%placeholders%` all work in both, and
+the item is rendered **for the receiving player**, so a placeholder resolves to their own values.
+
+## `armor-lore`
+
+The lines added under a piece of armour that wears a skin.
+
+| Key | Default | What it does |
+|---|---|---|
+| `enabled` | `true` | Turn it off and skinned armour shows only its own lore. |
+| `lines` | two lines | `%skin%` is the skin's name. Shown after the armour's own lore, separated by a blank line. |
+
+<Callout type="note" title="These lines never touch the item">
+They are written onto the copy that leaves the server, on every packet that carries the piece —
+worn, in the hotbar, in a chest or on the cursor. Any plugin reading the armour's lore finds exactly
+what the armour had, and `/data get` shows nothing extra.
+</Callout>
+
+## `behaviour`
+
+| Key | Default | What it does |
+|---|---|---|
+| `consume-skin-item` | `true` | Whether the skin item is used up when it is applied. Off means one item skins any number of pieces. |
+| `consume-remover` | `true` | Whether the remover is used up when it removes a skin. |
+| `require-permission` | `true` | Whether applying a skin needs `exyliaarmorskin.skin.<id>`. Commands and the API are never limited by it. |
+| `hide-without-permission` | `true` | Whether armour whose skin the wearer may no longer use is drawn as the real piece. Checked when the piece is equipped and by `/armorskin refresh`. |
+
+See [Permissions](/docs/exyliaarmorskin/permissions) for what those two switches mean in practice.
+
+Neither consume switch takes effect when the operation fails — a remover used on a player with a full inventory stays
+on the cursor.
+
+## `effects`
+
+Two moments that belong to the system rather than to a skin. Both are full ExyliaLib effects — title,
+action bar, boss bar, sound, particle and firework — and both are played to the player who did it.
+
+| Key | Default | When |
+|---|---|---|
+| `on-apply` | `BLOCK_SMITHING_TABLE_USE`, volume 1.0, pitch 1.2, category `PLAYERS` | A skin was successfully dragged onto armour. |
+| `on-remove` | `BLOCK_GRINDSTONE_USE`, volume 1.0, pitch 1.0, category `PLAYERS` | A skin was successfully taken off with a remover. |
+
+A refused apply plays nothing, and neither does a skin applied through the
+[API](/docs/exyliaarmorskin/api). Effects a **skin** declares for itself — equip, unequip, ambient and
+the set bonus — live in [`skins.yml`](/docs/exyliaarmorskin/effects).
+
+## `messages`
+
+Every line the plugin sends, under `messages:`. `%prefix%` expands to the `prefix` value; `%skin%`
+is filled in on every message that names a skin.
+
+| Key | Default | Tokens |
+|---|---|---|
+| `prefix` | `{primary}&lE-SKINS &8•&r ` | — |
+| `applied` | `%prefix%{success}Skin {highlight}%skin% {success}applied.` | `%skin%` |
+| `removed` | `%prefix%{success}Skin {highlight}%skin% {success}removed and returned to you.` | `%skin%` |
+| `not-armor` | `%prefix%{error}That is not a piece of armor.` | — |
+| `unsupported-piece` | `%prefix%{error}The skin {highlight}%skin% {error}does not fit that piece.` | `%skin%` |
+| `unknown-skin` | `%prefix%{error}That skin no longer exists.` | `%skin%` |
+| `already-skinned` | `%prefix%{warning}That armor already wears a skin. Use a remover first.` | — |
+| `no-skin` | `%prefix%{warning}That armor wears no skin.` | — |
+| `inventory-full` | `%prefix%{error}You need a free slot in your inventory.` | — |
+| `no-permission` | `%prefix%{error}You do not own the skin {highlight}%skin%{error}.` | `%skin%` |
+| `given` | `%prefix%{success}You received {highlight}%amount%x %skin%{success}.` | `%skin%`, `%amount%` |
+| `given-remover` | `%prefix%{success}You received {highlight}%amount%x skin remover{success}.` | `%amount%` |
+| `list-header` | `%prefix%{secondary}Available skins:` | — |
+| `list-entry` | ` {letters_black}▎ {info}%id% {letters_black}» {letters}%skin% {letters_black}(%pieces%)` | `%id%`, `%skin%`, `%pieces%` |
+| `list-empty` | `%prefix%{muted}No skins are registered.` | — |
+| `refreshed` | `%prefix%{success}Appearance synchronised.` | — |
+
+<Callout type="tip" title="The prefix belongs to this plugin alone">
+`prefix` is registered with ExyliaLib on start and on every reload, so `%prefix%` written anywhere in
+this plugin's own text resolves to it. Another Exylia plugin using `%prefix%` gets its own — the two
+never collide.
+</Callout>
+
+## The other two files
+
+Skins live in [`skins.yml`](/docs/exyliaarmorskin/skins) and animations in
+[`animations.yml`](/docs/exyliaarmorskin/animations).

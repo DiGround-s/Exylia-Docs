@@ -1,0 +1,173 @@
+---
+title: "API"
+description: "ArmorSkinAPI: registering skins and animation types from code, building skin items, applying and removing skins, and redrawing a player."
+---
+
+Everything another plugin needs is on one class, `net.exylia.exyliaArmorSkin.api.ArmorSkinAPI`.
+
+```java
+import net.exylia.exyliaArmorSkin.api.ArmorSkinAPI;
+
+ArmorSkinAPI api = ArmorSkinAPI.get();
+```
+
+`get()` throws `IllegalStateException` while the plugin is not enabled, so add
+`softdepend: [ExyliaArmorSkin]` to your `plugin.yml` and call it from `onEnable` or later.
+
+## Skins
+
+```java
+import net.exylia.exyliaArmorSkin.skin.SkinDefinition;
+import org.bukkit.Color;
+
+SkinDefinition ruby = new SkinDefinition(
+        "ruby",                                   // id, matched lowercased
+        "{error}&lRUBY",                          // name
+        java.util.Set.of(),                       // pieces: empty means all four
+        new SkinDefinition.Look(Color.fromRGB(0xC0102A), "ward", "redstone"),
+        SkinDefinition.Effects.NONE);
+
+api.register(ruby);
+```
+
+| Method | Returns | What it does |
+|---|---|---|
+| `register(SkinDefinition)` | — | Adds or replaces a skin. Survives `/armorskin reload`. |
+| `unregister(String id)` | `boolean` | Removes one, whether it came from code or from the file. |
+| `skin(String id)` | `Optional<SkinDefinition>` | Looks one up. |
+| `exists(String id)` | `boolean` | Whether an id resolves. |
+| `registry()` | `SkinRegistry` | The registry itself: `all()`, `ids()`, `onChange(listener)`. |
+
+<Callout type="note" title="Code and file live side by side">
+A reload replaces only the entries that came from `skins.yml`. A skin registered here stays until it
+is unregistered or the server stops — and it is listed by `/armorskin list` like any other.
+</Callout>
+
+### What a definition holds
+
+| Component | Type | Notes |
+|---|---|---|
+| `id` | `String` | Stored on the armour. Compared trimmed and lowercased. |
+| `name` | `String` | Palette tokens and `&` codes allowed. |
+| `pieces` | `Set<ArmorPiece>` | `HELMET`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`. **An empty set becomes all four.** |
+| `look` | `Look` | `color`, `trimPattern`, `trimMaterial` — the trim keys resolve when drawn. `Look.PLAIN` for none. |
+| `effects` | `Effects` | `onEquip`, `onUnequip`, `ambient`, `set`. `Effects.NONE` for none, and a three-argument constructor leaves the set bonus empty. |
+| `animation` | `SkinAnimation` | Optional, `null` for a still colour. |
+| `icon` | `String` | Optional material for the skin item, `null` to use `skin-item.material`. |
+
+Three constructors are provided: without an animation and icon, with an animation, and with both.
+
+`Effects.set` is a `SetBonus(EffectConfig onComplete, EffectConfig onBreak, Ambient ambient)` — what
+plays when every piece the skin fits is worn with it, while it lasts, and when it ends. `SetBonus.NONE`
+is the empty one.
+
+`permission()` returns the node that lets a player use the skin, `exyliaarmorskin.skin.<id>` with the
+id lowercased. It is derived, never stored, so a skin registered here has a node like any other.
+
+## Animation types
+
+```java
+import net.exylia.exyliaArmorSkin.skin.SkinAnimation;
+import net.exylia.exyliaArmorSkin.skin.animation.AnimationSpec;
+
+api.animations().register("strobe2", spec -> new SkinAnimation() {
+    @Override public long intervalTicks() { return spec.intervalTicks(); }
+    @Override public org.bukkit.Color colorAt(long frame, org.bukkit.Color base) {
+        return frame % 2 == 0 ? org.bukkit.Color.WHITE : org.bukkit.Color.BLACK;
+    }
+});
+```
+
+A registered type is immediately usable from `animations.yml` as `type: strobe2`, and from code:
+
+```java
+SkinAnimation animation = api.animations()
+        .create("rainbow", new AnimationSpec(2, java.util.List.of(), java.util.Map.of()))
+        .orElseThrow();
+```
+
+| Method on `animations()` | What it does |
+|---|---|
+| `register(String, Function<AnimationSpec, SkinAnimation>)` | Adds a type. |
+| `unregister(String)` | Removes one. |
+| `has(String)` / `types()` | What types exist. |
+| `resolve(String)` | A preset from `animations.yml` first, else a bare type with default values. |
+| `create(String type, AnimationSpec)` | Builds one from a spec. |
+
+`AnimationSpec` is `(long intervalTicks, List<Color> colors, Map<String, String> options)`, with the
+interval floored at one tick, and `option(name, fallback)` for reading numbers and booleans.
+
+## Items
+
+| Method | Returns | What it does |
+|---|---|---|
+| `skinItem(String id, Player viewer)` | `Optional<ItemStack>` | The skin item, rendered for that viewer. |
+| `remover(Player viewer)` | `ItemStack` | A remover. |
+| `isSkinItem(ItemStack)` | `boolean` | Whether a stack is a skin item. |
+| `isRemover(ItemStack)` | `boolean` | Whether a stack is a remover. |
+| `skinId(ItemStack)` | `Optional<String>` | The id on a skin item **or** on skinned armour. |
+| `hasSkin(ItemStack armor)` | `boolean` | Whether a piece of armour wears a skin. |
+
+## Applying and removing
+
+```java
+ApplyResult result = api.apply(chestplate, "ruby");
+if (result.success()) {
+    // the chestplate is unchanged except for one data value
+}
+```
+
+| Method | What it does |
+|---|---|
+| `apply(ItemStack armor, String skinId)` | Applies a skin by id. |
+| `apply(ItemStack armor, ItemStack skinItem)` | Applies the skin a skin item carries. The item is not consumed. |
+| `remove(ItemStack armor, Player receiver)` | Removes the skin and gives it back as an item. |
+| `strip(ItemStack armor)` | Removes the skin and gives nothing back. |
+
+Every check happens before anything is written, so a failed call leaves both stacks exactly as they
+were. The armour is mutated in place.
+
+<Callout type="warning" title="The API ignores per-skin permissions, the display does not">
+`apply()` never checks `exyliaarmorskin.skin.<id>` — it is the tool you grant a skin with. But with
+`hide-without-permission: true`, a wearer without that node is still shown the real armour, so grant
+the node alongside the skin unless you mean it to be invisible.
+</Callout>
+
+### `ApplyResult`
+
+| Value | Meaning |
+|---|---|
+| `APPLIED` | The skin was written. |
+| `REMOVED` | The skin was cleared. |
+| `NOT_ARMOR` | The stack is not a wearable armour piece — or it is a skin item. |
+| `UNSUPPORTED_PIECE` | The skin does not list that slot. |
+| `UNKNOWN_SKIN` | No skin with that id is registered. |
+| `INVALID_ITEM` | The stack handed in as a skin item is not one, or carries no id. |
+| `ALREADY_SKINNED` | The armour already wears a skin. |
+| `NO_SKIN` | The armour wears no skin. |
+| `INVENTORY_FULL` | The receiver has no free slot; nothing was changed. |
+| `NO_PERMISSION` | The player lacks the skin's node. Only ever returned by the inventory drag, never by the API. |
+
+`success()` is true for `APPLIED` and `REMOVED`.
+
+## Redrawing
+
+| Method | What it does |
+|---|---|
+| `refresh(Player)` | Rebuilds that player's visuals from their real armour and re-sends them. |
+| `refreshAll()` | The same for everyone online. |
+
+Call `refresh` after changing a worn piece behind the plugin's back — the armour-change event covers
+equipping and unequipping, but not an item you rewrote in place while it was being worn.
+
+## What is stored on the item
+
+One persistent data value under this plugin's namespace:
+
+| Key | On | Value |
+|---|---|---|
+| `exyliaarmorskin:skin` | Armour, and skin items | The skin id. |
+| `exyliaarmorskin:item` | Skin items and removers only | `skin` or `remover`. |
+
+Armour is told apart from a skin item by the second key: a stack carrying both is a skin item, never
+skinned armour.

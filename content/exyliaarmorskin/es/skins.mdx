@@ -1,0 +1,111 @@
+---
+title: "Skins"
+description: "Cada clave de skins.yml, cómo se resuelve una skin y las veinte que vienen incluidas."
+---
+
+Una skin vive en `skins.yml` bajo el id que la armadura va a guardar. Los ids se comparan **sin
+espacios y en minúsculas**, así que `Blue_Vex` y `blue_vex` son la misma skin.
+
+```yaml title="skins.yml"
+skins:
+  blue_vex:
+    name: '{info}&lBLUE VEX'
+    pieces: []
+    color: '#0066ff'
+    trim-pattern: vex
+    trim-material: diamond
+    icon: VEX_ARMOR_TRIM_SMITHING_TEMPLATE
+    animation: ''
+    effects:
+      ambient:
+        particle: ''
+        sound: ''
+        interval: 1.0
+        radius: 32.0
+      set:
+        ambient:
+          particle: ''
+          sound: ''
+          interval: 1.0
+          radius: 32.0
+```
+
+## Claves
+
+| Clave | Tipo | Qué hace |
+|---|---|---|
+| `name` | texto | Se muestra en el objeto de skin y en cada mensaje que la nombra. Acepta tokens de paleta como `{info}` y códigos `&`. Vacío usa el id. |
+| `pieces` | lista | `helmet`, `chestplate`, `leggings`, `boots`. **Vacío significa las cuatro.** Una skin que no lista una pieza se rechaza en ella con `unsupported-piece`. |
+| `color` | hex | El color del cuero, `#0066ff`. Vacío deja el cuero marrón. Un valor ilegible se avisa por consola y se trata como vacío. |
+| `trim-pattern` | clave | Un patrón de trim como `vex` o `minecraft:vex`. |
+| `trim-material` | clave | Un material de trim como `diamond`. |
+| `icon` | material | El material del **objeto de skin**. Vacío usa `skin-item.material` de `config.yml`. |
+| `animation` | nombre | Un preset de `animations.yml`, o un tipo directo (`rainbow`, `pulse`, `frames`). Vacío para color fijo. |
+| `effects` | sección | Sonidos, títulos y partículas: `on-equip`, `on-unequip`, el `ambient` por pieza y el bonus de `set` por llevar todas las piezas que la skin encaja. Ver [Efectos](/docs/exyliaarmorskin/efectos). |
+
+<Callout type="warning" title="Un trim necesita sus dos mitades">
+`trim-pattern` y `trim-material` solo se usan juntos. Escribir uno sin el otro registra
+`a trim needs both trim-pattern and trim-material; ignoring the trim` y la skin se dibuja solo con su
+color.
+</Callout>
+
+## Cómo se ve el objeto de skin
+
+El objeto de skin se construye desde `skin-item` en `config.yml` — nombre, lore, brillo — con dos
+sustituciones: `%skin%` es el `name` de la skin y `%pieces%` la lista de piezas en las que encaja. Su
+material es el `icon` de la skin, o `skin-item.material` cuando la skin no define ninguno.
+
+El color y el trim de la skin se pintan después **sobre ese objeto**, cosa que solo se nota si el
+material puede llevarlos: apunta `icon` a una pieza de cuero y el objeto es una vista previa exacta
+de la skin. Un pottery sherd o un banner pattern simplemente conserva su textura.
+
+## Las veinte incluidas
+
+Diez de color fijo:
+
+| Id | Color | Trim | Icono | Piezas |
+|---|---|---|---|---|
+| `blue_vex` | `#0066ff` | vex / diamond | `VEX_ARMOR_TRIM_SMITHING_TEMPLATE` | todas |
+| `crimson_rib` | `#b3001b` | rib / redstone | `DANGER_POTTERY_SHERD` | todas |
+| `emerald_wild` | `#1f9e4a` | wild / emerald | `EXPLORER_POTTERY_SHERD` | todas |
+| `golden_sentry` | `#f2c14e` | sentry / gold | `PRIZE_POTTERY_SHERD` | helmet, chestplate |
+| `copper_coast` | `#c8702a` | coast / copper | `MINER_POTTERY_SHERD` | todas |
+| `frost_tide` | `#bfe9ff` | tide / quartz | `SHELTER_POTTERY_SHERD` | todas |
+| `midnight_silence` | `#0d1b2a` | silence / netherite | `SILENCE_ARMOR_TRIM_SMITHING_TEMPLATE` | todas |
+| `void_eye` | `#1a0b2e` | eye / amethyst | `SKULL_POTTERY_SHERD` | todas |
+| `rose_spire` | `#ff6b9d` | spire / resin | `FLOWER_BANNER_PATTERN` | todas |
+| `ivory_host` | `#f5f0e6` | host / iron | `SHEAF_POTTERY_SHERD` | todas |
+
+Diez animadas, donde el color se mueve y el trim se queda:
+
+| Id | Color base | Trim | Icono | Animación |
+|---|---|---|---|---|
+| `rainbow` | `#ff0000` | flow / amethyst | `FLOW_BANNER_PATTERN` | `rainbow` |
+| `pastel` | `#ffb3d9` | shaper / quartz | `FLOW_POTTERY_SHERD` | `pastel` |
+| `inferno` | `#c81d00` | bolt / gold | `BURN_POTTERY_SHERD` | `inferno` |
+| `ocean` | `#0a5c8c` | tide / lapis | `ANGLER_POTTERY_SHERD` | `ocean` |
+| `heartbeat` | `#7a0010` | rib / redstone | `HEARTBREAK_POTTERY_SHERD` | `heartbeat` |
+| `toxic` | `#0b1f0b` | ward / emerald | `CREEPER_BANNER_PATTERN` | `toxic` |
+| `galaxy` | `#4a1b8c` | eye / amethyst | `GLOBE_BANNER_PATTERN` | `galaxy` |
+| `aurora` | `#1fd18a` | wayfinder / diamond | `GUSTER_BANNER_PATTERN` | `aurora` |
+| `strobe` | `#ffffff` | snout / iron | `GUSTER_POTTERY_SHERD` | `strobe` |
+| `ember` | `#2b0a00` | dune / copper | `ARMS_UP_POTTERY_SHERD` | `ember` |
+
+Solo `golden_sentry` restringe sus piezas; el resto de skins incluidas encaja en las cuatro.
+
+Las diez skins animadas traen además un [bonus de set](/docs/exyliaarmorskin/efectos#bonus-de-set):
+partículas alrededor del cuerpo y un sonido en cuanto todas las piezas que la skin encaja se llevan
+con ella. Las diez de color fijo no traen ninguno.
+
+## Qué pasa con una skin que borras
+
+El id se queda en la armadura. Ya no resuelve, así que la pieza vuelve a mostrar su aspecto real, y un
+removedor usado sobre ella responde `unknown-skin` en vez de convertir la skin en nada. Vuelve a
+poner la entrada — con la misma clave — y cada pieza que la llevaba vuelve también.
+
+## Recargar
+
+`/armorskin reload` vuelve a leer `config.yml`, `animations.yml` y `skins.yml`, tira los trims
+cacheados, reconstruye las líneas de lore y redibuja a cada jugador conectado. Las entradas del
+archivo se reemplazan enteras; las skins que otro plugin registró por la [API](/docs/exyliaarmorskin/api)
+sobreviven intactas.
