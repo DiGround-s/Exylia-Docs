@@ -1,0 +1,107 @@
+---
+title: "FAQ"
+description: "Las preguntas que salen primero: qué pasa con el objeto real, el modo creativo, otros plugins, placeholders y rendimiento."
+---
+
+## ¿Aplicar una skin cambia mi armadura?
+
+No. Se escribe un valor en los datos persistentes del objeto — `exyliaarmorskin:skin`, el id — y nada
+más. El material, los encantamientos, los atributos, el daño, la marca de irrompible, el custom model
+data y los datos de cualquier otro plugin siguen igual. Quitar la skin borra ese único valor.
+
+## ¿Siguen funcionando los encantamientos y la protección?
+
+Sí. El servidor nunca ve el cuero: solo la copia que viaja al cliente es de cuero. Protección IV
+sigue reduciendo como Protección IV y un peto de netherita sigue dando la dureza de la netherita.
+
+## ¿La barra de durabilidad miente?
+
+No. El visual lleva el daño real **y** el máximo real como componentes, así que la barra, el tooltip
+y F3+H muestran lo que tiene la pieza real — 592 en netherita, no los 80 del cuero. Una armadura
+irrompible no muestra barra.
+
+## ¿Por qué veo mi armadura real en creativo?
+
+Un cliente en creativo devuelve sus ranuras de inventario al servidor, así que cualquier cosa
+dibujada en ellas acabaría escrita sobre el objeto real. Antes que arriesgarse, al portador se le
+muestra la verdad mientras está en creativo. **Los demás siguen viendo la skin**, y volver a
+supervivencia le devuelve su propia vista.
+
+## ¿Ven la skin los demás jugadores?
+
+Sí, todo el que tenga al portador en rango, al momento y sin relog. Quien entra en distancia de
+renderizado también la ve, porque el visual se aplica sobre los propios paquetes de equipamiento.
+
+## ¿Qué se puede pintar?
+
+Cascos, petos, pantalones y botas — cualquier cosa que Bukkit trate como pieza de armadura, de
+cualquier material. Élitros, cabezas y calabazas talladas no son piezas de armadura y se rechazan con
+`not-armor`.
+
+## ¿Se pueden apilar dos skins en una pieza?
+
+No. Una pieza que ya lleva skin responde `already-skinned`; usa antes un removedor.
+
+## ¿Qué pasa con la skin al morir o al tirar la pieza?
+
+Viaja con el objeto, porque *está* en el objeto. Un peto con skin en un cofre, en un intercambio o en
+el suelo sigue teniendo skin cuando vuelve.
+
+## ¿Funciona junto a otros plugins de armadura?
+
+Sí, siempre que lean el objeto y no el paquete. La skin es un valor de datos más, así que un plugin
+que ponga trims, renombre, encante o guarde sus propios datos sigue funcionando. Al revés también:
+las líneas de lore de la skin nunca se escriben en el objeto, así que nada las puede leer por error.
+
+## ¿Los jugadores necesitan permiso para usar una skin?
+
+Sí, por defecto. Cada skin tiene un nodo derivado de su id, `exyliaarmorskin.skin.<id>`, y tanto
+`require-permission` como `hide-without-permission` vienen en `true`: sin el nodo un jugador no puede
+aplicar la skin, y la armadura que ya la lleva se muestra como la pieza real. Apaga cualquiera de los
+dos interruptores en `config.yml` para volver a «el objeto es el permiso». Ver
+[Permisos](/docs/exyliaarmorskin/permisos).
+
+## Quité un nodo y el jugador sigue viendo la skin
+
+La comprobación ocurre cuando la pieza se reconcilia — al equipar, entrar, reaparecer, con
+`/armorskin refresh` y con `/armorskin reload` — no en un temporizador. `/armorskin refresh <jugador>`
+lo aplica al momento. Al objeto nunca se le quita nada, así que devolver el nodo devuelve el aspecto.
+
+## ¿Qué es un bonus de set?
+
+Un efecto que solo suena cuando un jugador lleva **todas las piezas que una skin encaja** con esa
+skin: un sonido o título al completarse, algo ambiental alrededor del cuerpo mientras aguanta y un
+momento al romperse. Las diez skins animadas traen uno. Ver
+[Efectos](/docs/exyliaarmorskin/efectos#bonus-de-set).
+
+## ¿Hay placeholders?
+
+No. Este plugin no registra ninguna expansión de PlaceholderAPI. PlaceholderAPI es `softdepend` solo
+para que se resuelvan los `%placeholders%` que **tú** escribas en los nombres, el lore y los mensajes.
+
+## ¿Hay menú?
+
+No. Las skins se dan como objetos y se aplican arrastrándolas sobre la armadura. Cualquier cosa con
+forma de menú se construye encima con la [API](/docs/exyliaarmorskin/api) o con un plugin de cajas
+ejecutando `/armorskin give`.
+
+## ¿Necesita resource pack?
+
+No. Todo lo que se muestra es vanilla: cuero teñido, trims vanilla y objetos vanilla.
+
+## ¿Qué cuesta tenerlo funcionando?
+
+Nada por tick con una skin fija. La reescritura ocurre sobre tres tipos de paquete, y solo mientras
+alguien lleva una skin. Una skin animada añade un temporizador por pieza animada equipada, y un
+fotograma que no cambia de color no envía nada; un bloque `ambient` añade un temporizador por pieza
+equipada que lo declare.
+
+## ¿Funciona en Folia?
+
+Sí. `folia-supported: true`, y cada temporizador está atado a la entidad del jugador.
+
+## Ha desaparecido una skin después de editar el archivo
+
+Cambió el id. La armadura conserva el id que se le puso, así que renombrar una entrada deja huérfana
+cada pieza que la llevaba: la pieza muestra su aspecto real y un removedor responde `unknown-skin`.
+Restaura la clave y vuelve todo.

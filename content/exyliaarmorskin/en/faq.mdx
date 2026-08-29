@@ -1,0 +1,104 @@
+---
+title: "FAQ"
+description: "The questions that come up first: what happens to the real item, creative mode, other plugins, placeholders and performance."
+---
+
+## Does applying a skin change my armour?
+
+No. One value is written into the item's persistent data — `exyliaarmorskin:skin`, the id — and
+nothing else. The material, enchantments, attributes, damage, unbreakable flag, custom model data and
+every other plugin's data stay as they were. Removing a skin clears that one value.
+
+## Do enchantments and armour points still work?
+
+Yes. The server never sees the leather: only the copy travelling to the client is leather. Protection
+IV still reduces damage by Protection IV, and a netherite chestplate still gives netherite's toughness.
+
+## Does the durability bar lie?
+
+No. The visual carries the real damage **and** the real maximum as components, so the bar, the
+tooltip and F3+H all read what the real piece has — 592 for netherite, not leather's 80. Unbreakable
+armour shows no bar at all.
+
+## Why do I see my real armour in creative?
+
+A creative client sends its inventory slots back to the server, so anything drawn into them would be
+written onto the real item. Rather than risk that, the wearer is shown the truth while in creative.
+**Everyone else still sees the skin**, and switching back to survival restores the wearer's own view.
+
+## Is the skin visible to other players?
+
+Yes — to everyone tracking the wearer, immediately, without a relog. Viewers entering render distance
+see it too, because the visual is applied to the equipment packets themselves.
+
+## What can be skinned?
+
+Helmets, chestplates, leggings and boots — anything Bukkit treats as an armour piece, of any
+material. Elytra, mob heads and carved pumpkins are not armour pieces and are refused with
+`not-armor`.
+
+## Can two skins stack on one piece?
+
+No. A piece that already wears a skin answers `already-skinned`; use a remover first.
+
+## What happens to the skin when I die or drop the piece?
+
+It travels with the item, because it *is* on the item. A skinned chestplate in a chest, in a trade or
+on the ground is still skinned when it comes back.
+
+## Does it work alongside other armour plugins?
+
+Yes, as long as they read the item rather than the packet. The skin is one extra data value, so a
+plugin that trims armour, names it, enchants it or stores its own data keeps working. The reverse is
+also true: the skin's lore lines are never written to the item, so nothing else can read them by
+accident.
+
+## Do players need a permission to use a skin?
+
+Yes, by default. Every skin has a node derived from its id, `exyliaarmorskin.skin.<id>`, and both
+`require-permission` and `hide-without-permission` ship as `true`: without the node a player cannot
+apply the skin, and armour already wearing it is shown as the real piece. Turn either switch off in
+`config.yml` to go back to "the item is the permission". See
+[Permissions](/docs/exyliaarmorskin/permissions).
+
+## I revoked a node and the player still sees the skin
+
+The check runs when the piece is reconciled — on equip, join, respawn, `/armorskin refresh` and
+`/armorskin reload` — not on a timer. `/armorskin refresh <player>` applies it immediately. Nothing
+is ever removed from the item, so granting the node back restores the look.
+
+## What is a set bonus?
+
+An effect that plays only when a player wears **every piece a skin fits** with that skin: a sound or
+title on completion, something ambient around the body while it holds, and a moment when it breaks.
+The ten animated skins ship one. See [Effects](/docs/exyliaarmorskin/effects#set-bonus).
+
+## Are there placeholders?
+
+No. This plugin registers no PlaceholderAPI expansion. PlaceholderAPI is a `softdepend` only so that
+`%placeholders%` **you** write into the item names, lore and messages resolve.
+
+## Is there a menu?
+
+No. Skins are given as items and applied by dragging them onto armour. Anything menu-shaped is built
+on top with the [API](/docs/exyliaarmorskin/api) or a crate plugin running `/armorskin give`.
+
+## Does it need a resource pack?
+
+No. Everything shown is vanilla: dyed leather, vanilla trims and vanilla items.
+
+## What does it cost to run?
+
+Nothing per tick for a still skin. Rewriting happens on three packet types, and only while somebody
+is wearing a skin. An animated skin adds one timer per worn animated piece, and a frame that did not
+change colour sends nothing; an `ambient` block adds one timer per worn piece that declares one.
+
+## Does it run on Folia?
+
+Yes. `folia-supported: true`, and every timer is bound to the player's entity.
+
+## A skin disappeared after I edited the file
+
+The id changed. The armour keeps the id it was given, so renaming an entry orphans every piece
+wearing it — the piece shows its real look and a remover answers `unknown-skin`. Restore the key and
+everything comes back.

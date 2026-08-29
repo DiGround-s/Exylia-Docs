@@ -1,0 +1,119 @@
+---
+title: "Animations"
+description: "The three animation types, the options each one reads, the eleven presets in animations.yml, and how frames stay in step."
+---
+
+An animation makes a skin's **colour** move. The trim, the name, the lore and the durability never
+change with it.
+
+```yaml title="animations.yml"
+animations:
+  inferno:
+    type: frames
+    interval: 0.1
+    colors: ['#3a0000', '#c81d00', '#ff7a00', '#ffd000', '#ff7a00', '#c81d00']
+    options:
+      steps: '6'
+```
+
+| Key | What it is |
+|---|---|
+| `type` | `rainbow`, `pulse`, `frames`, or a type another plugin registered. |
+| `interval` | Seconds between frames. Converted to ticks and never below one tick. |
+| `colors` | Hex colours the type works with. What they mean depends on the type. |
+| `options` | Free-form per-type values, written as text. |
+
+A skin then names it:
+
+```yaml title="skins.yml"
+skins:
+  inferno:
+    animation: inferno
+```
+
+<Callout type="note" title="A bare type works too">
+`animation: rainbow` with no matching preset falls back to the **type** with its defaults — an
+interval of two ticks, no colours, no options. That is why `rainbow` works before anybody has opened
+`animations.yml`.
+</Callout>
+
+## The three types
+
+### `rainbow`
+
+Walks the hue circle. Ignores `colors` and the skin's own colour.
+
+| Option | Default | Effect |
+|---|---|---|
+| `step` | `10` | Degrees of hue per frame. Lower is slower and smoother. |
+| `saturation` | `1.0` | 0 – 1. Lower washes the colours out. |
+| `brightness` | `1.0` | 0 – 1. Lower darkens them. |
+
+### `pulse`
+
+Breathes from a rest colour to a peak and back.
+
+| Option | Default | Effect |
+|---|---|---|
+| `length` | `40` | Frames for a full there-and-back. Minimum 2. |
+
+The first entry in `colors` is the rest colour; with none, the skin's own `color` is used, and with
+neither, black. The second entry is the peak; with none, white.
+
+### `frames`
+
+Cycles through `colors` in order.
+
+| Option | Default | Effect |
+|---|---|---|
+| `smooth` | `true` | Blends between neighbouring colours instead of jumping. |
+| `steps` | `10` | Frames spent blending from one colour to the next. Only read when `smooth` is on. |
+
+With `smooth: 'false'` each frame is one colour from the list. With one colour it holds that colour;
+with none it leaves the skin's own colour alone.
+
+## The eleven presets
+
+| Preset | Type | Interval | Options | Colours |
+|---|---|---|---|---|
+| `rainbow` | rainbow | 0.1 s | `step: 8` | — |
+| `rainbow_slow` | rainbow | 0.25 s | `step: 4` | — |
+| `pastel` | rainbow | 0.15 s | `step: 6`, `saturation: 0.45` | — |
+| `heartbeat` | pulse | 0.05 s | `length: 24` | `#7a0010` → `#ff2a4d` |
+| `toxic` | pulse | 0.1 s | `length: 30` | `#0b1f0b` → `#5dff3a` |
+| `ember` | pulse | 0.1 s | `length: 40` | `#2b0a00` → `#ff5a00` |
+| `inferno` | frames | 0.1 s | `steps: 6` | six reds and oranges |
+| `ocean` | frames | 0.15 s | `steps: 8` | six blues |
+| `galaxy` | frames | 0.15 s | `steps: 8` | five purples and pinks |
+| `aurora` | frames | 0.2 s | `steps: 10` | five greens, cyans and violets |
+| `strobe` | frames | 0.15 s | `smooth: false` | `#ffffff`, `#111111` |
+
+## Everyone is on the same frame
+
+The frame number comes from the server clock, not from a counter started when the piece was equipped:
+
+```text
+frame = floor(currentTimeMillis / 50 / intervalTicks)
+```
+
+Two players wearing `rainbow`, one for an hour and one for a second, show the same colour at the same
+instant. Timers still run per player — that is what Folia requires — but the clock they read is
+shared.
+
+## What it costs
+
+One repeating task per **animated piece worn**, and nothing at all for a still skin. A frame copies a
+protocol stack the plugin already holds, writes one colour component on it and re-sends that slot; a
+frame whose colour has not changed sends no packet. The task stops itself the moment the piece comes
+off, the skin changes, or the wearer leaves.
+
+<Callout type="warning" title="Unknown names are reported, not guessed">
+`animation: sparkle` with no such preset and no such type logs which presets and which types exist,
+and the skin loads as a still colour. The same happens to an entry in `animations.yml` whose `type`
+is unknown or missing.
+</Callout>
+
+## Adding a type in code
+
+A type is a factory from a spec to an animation, so another plugin can register one and then use it
+from YAML like any built-in. See [API](/docs/exyliaarmorskin/api).

@@ -1,0 +1,83 @@
+---
+title: "Comandos"
+description: "Los cinco subcomandos de /armorskin, quién recibe cada mensaje y qué hacen exactamente refresh y reload."
+---
+
+Todo cuelga de `/armorskin`. No hay alias ni comando para el jugador: un jugador usa las skins
+arrastrando objetos, nunca escribiendo.
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/armorskin give <jugador> <skin> [cantidad]` | `exyliaarmorskin.admin` | Da el objeto de skin de `<skin>`. |
+| `/armorskin remover <jugador> [cantidad]` | `exyliaarmorskin.admin` | Da removedores de skin. |
+| `/armorskin list` | `exyliaarmorskin.admin` | Lista todas las skins registradas. |
+| `/armorskin refresh [jugador]` | `exyliaarmorskin.admin` | Reconstruye y reenvía lo que se ve puesto a un jugador. |
+| `/armorskin reload` | `exyliaarmorskin.admin` | Vuelve a leer los tres archivos y redibuja a todos. |
+
+## `give`
+
+`<skin>` autocompleta desde el registro, y un id desconocido responde `unknown-skin` a quien escribió
+el comando. `[cantidad]` va de 1 a 64 y por defecto es 1.
+
+`give` nunca comprueba el permiso propio de la skin: entrega el objeto a cualquiera. Que el jugador
+pueda **usarlo** depende de `exyliaarmorskin.skin.<id>` y de los dos interruptores de
+[Permisos](/docs/exyliaarmorskin/permisos).
+
+El objeto se añade al inventario del destinatario; lo que no cabe se tira a sus pies. El mensaje
+`given` — con `%skin%` y `%amount%` — se envía **al destinatario**, no al que ejecuta, así que dar
+desde consola avisa al jugador y no devuelve nada.
+
+## `remover`
+
+Lo mismo sin id de skin. El mensaje `given-remover`, con `%amount%`, también va al destinatario.
+
+## `list`
+
+Imprime `list-header` y luego un `list-entry` por skin con `%id%`, `%skin%` y `%pieces%` rellenados.
+Sin nada registrado imprime `list-empty`. La lista incluye las skins de `skins.yml` **y** las que otro
+plugin haya registrado por la API.
+
+## `refresh`
+
+| Lo ejecuta | Con jugador | Qué pasa |
+|---|---|---|
+| Un jugador | no | Solo se refresca ese jugador. |
+| Un jugador | sí | Solo se refresca el jugador indicado. |
+| La consola | no | Se refresca **todo el mundo conectado**. |
+| La consola | sí | Solo el jugador indicado. |
+
+Refrescar vuelve a leer la armadura que el jugador lleva de verdad, reconstruye cada visual a partir
+de ella y reenvía tanto su inventario como su equipamiento a todo el que lo tenga en rango. También
+es lo que aplica un permiso que acabas de dar o quitar, porque eso se comprueba al reconstruir el
+visual. No
+reproduce efectos ni toca ningún archivo: es la respuesta a «otro plugin me ha cambiado este objeto
+por detrás».
+
+## `reload`
+
+Ejecuta un paso, `configs`, que:
+
+<Steps>
+  <Step title="Vuelve a leer cada archivo">
+    `config.yml`, `animations.yml` y `skins.yml`.
+  </Step>
+  <Step title="Reaplica el prefijo de mensajes">
+    Para que `%prefix%` vuelva a coincidir con el resto del ecosistema.
+  </Step>
+  <Step title="Reconstruye las skins">
+    Se tiran los trims cacheados, se reconstruyen las animaciones desde `animations.yml` y las skins
+    del archivo sustituyen a las anteriores. Las registradas por la API se quedan como están.
+  </Step>
+  <Step title="Redibuja a todos los conectados">
+    A cada jugador se le reconstruyen y reenvían sus visuales, en silencio: no suena ningún efecto de
+    equipar.
+  </Step>
+</Steps>
+
+El paso informa de éxito o fallo a quien lo ejecutó. No recarga ExyliaLib; de eso se encarga
+`/exylialib reload`.
+
+<Callout type="note" title="Recargar es seguro en mitad de una pelea">
+No se le quita nada a nadie: la armadura conserva su id y el visual simplemente se reconstruye. Quien
+lleve una skin animada ve la nueva velocidad o el nuevo color en el siguiente fotograma.
+</Callout>

@@ -1,0 +1,61 @@
+---
+title: "Instalación"
+description: "Dependencias, los tres archivos que escribe al primer arranque y qué cubre una actualización."
+---
+
+## Instalar
+
+<Steps>
+  <Step title="Mete los jars">
+    `ExyliaArmorSkin.jar`, además de `ExyliaLib` y `packetevents`, en `plugins/`. PlaceholderAPI es
+    opcional: solo se usa para resolver los `%placeholders%` que escribas en el nombre y el lore de
+    los objetos.
+  </Step>
+  <Step title="Arranca el servidor">
+    Escribe `config.yml`, `skins.yml` y `animations.yml` en `plugins/ExyliaArmorSkin/`.
+  </Step>
+  <Step title="Date una skin">
+    `/armorskin give <tú> blue_vex` y arrastra el objeto sobre un peto en tu inventario.
+  </Step>
+  <Step title="Edita los archivos">
+    Añade o cambia skins en `skins.yml` y animaciones en `animations.yml`, y luego `/armorskin reload`.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="packetevents es dependencia obligatoria">
+Está declarado como `depend`, así que el servidor se niega a activar el plugin sin él. Todo el plugin
+es una reescritura de paquetes: sin él no hay nada que hacer. ExyliaLib está como `softdepend` por
+orden de carga, pero el plugin está construido sobre ella y tampoco funciona sin ella.
+</Callout>
+
+## Requisitos
+
+| Requisito | Notas |
+|---|---|
+| Minecraft 1.21+ | `api-version: '1.21'`, compilado contra la API de Paper 1.21.4. |
+| Java 21 | El jar está compilado para 21. |
+| Paper, o Folia | Usa el evento de cambio de armadura de Paper y `sendEquipmentChange`. Folia está soportado (`folia-supported: true`). |
+| ExyliaLib | Configuración, texto, objetos, efectos y tareas. |
+| packetevents | Obligatorio. Los paquetes de equipamiento, de ranura y de inventario se reescriben con él. |
+| PlaceholderAPI | Opcional. Solo para los `%placeholders%` del nombre y el lore de los objetos. |
+
+## Archivos
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | El objeto de skin, el removedor, el lore que se añade a la armadura con skin, dos interruptores de comportamiento y todos los mensajes. |
+| `skins.yml` | Las skins, indexadas por id. |
+| `animations.yml` | Animaciones con nombre a las que una skin puede referirse. |
+
+No hay base de datos ni datos de jugador. Lo único que se escribe fuera de estos archivos es el id de
+la skin en la propia armadura.
+
+<Callout type="note" title="Los mensajes viven en config.yml">
+A diferencia de la mayoría de plugins de Exylia, este no tiene `messages.yml`. Todas las líneas que
+envía están bajo `messages:` en `config.yml`.
+</Callout>
+
+## Actualizar
+
+Cambia el jar y reinicia. `/armorskin reload` vuelve a leer los tres archivos, reconstruye cada skin
+y redibuja a todo el mundo conectado, así que un cambio de color se ve sin que nadie se reequipe.

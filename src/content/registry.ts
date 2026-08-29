@@ -325,6 +325,35 @@ const CLANS_NAV: NavGroup[] = [
   },
 ];
 
+const ARMORSKIN_NAV: NavGroup[] = [
+  {
+    label: { en: "Getting started", es: "Empezar" },
+    pages: [
+      page("introduction", "introduction", "introduccion"),
+      page("installation", "installation", "instalacion"),
+      page("first-steps", "first-steps", "primeros-pasos"),
+    ],
+  },
+  {
+    label: { en: "Configuring", es: "Configurar" },
+    pages: [
+      page("skins", "skins", "skins"),
+      page("animations", "animations", "animaciones"),
+      page("effects", "effects", "efectos"),
+    ],
+  },
+  {
+    label: { en: "Reference", es: "Referencia" },
+    pages: [
+      page("commands", "commands", "comandos"),
+      page("permissions", "permissions", "permisos"),
+      page("configuration", "configuration", "configuracion"),
+      page("api", "api", "api"),
+      page("faq", "faq", "faq"),
+    ],
+  },
+];
+
 const CLASSES_NAV: NavGroup[] = [
   {
     label: { en: "Getting started", es: "Empezar" },
@@ -561,6 +590,30 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: cosmeticNav("trims", "trims"),
+    links: [
+      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
+      { label: "Discord", href: "https://discord.exylia.net" },
+    ],
+  },
+  {
+    id: "exyliaarmorskin",
+    name: "ExyliaArmorSkin",
+    tagline: { en: "Armour skins that never touch the item", es: "Skins de armadura que nunca tocan el objeto" },
+    summary: {
+      en: "Twenty colour-and-trim skins worn over any armour piece, drawn on the way to the client with packets: enchantments, attributes, durability and plugin data stay exactly as they were, and eleven animations move the colour in step for everyone wearing them.",
+      es: "Veinte skins de color y trim que se llevan sobre cualquier pieza de armadura, dibujadas en el camino al cliente con paquetes: encantamientos, atributos, durabilidad y datos de otros plugins quedan intactos, y once animaciones mueven el color a la vez para todo el que las lleve.",
+    },
+    version: "1.0.0",
+    status: "stable",
+    category: { en: "Cosmetic", es: "Cosmético" },
+    minecraft: "1.21+",
+    tags: [
+      { en: "Skins", es: "Skins" },
+      { en: "Cosmetic", es: "Cosmético" },
+      { en: "Packets", es: "Paquetes" },
+      { en: "Folia", es: "Folia" },
+    ],
+    nav: ARMORSKIN_NAV,
     links: [
       { label: "SpigotMC", href: "https://link.exylia.net/@services" },
       { label: "Discord", href: "https://discord.exylia.net" },

@@ -1,0 +1,70 @@
+---
+title: "Introduction"
+description: "What ExyliaArmorSkin is: a colour and a trim drawn over any armour piece with packets, while the real item keeps everything it had."
+---
+
+ExyliaArmorSkin puts a **skin** on a piece of armour. A skin is a colour, an optional trim and an
+optional animation, and it is drawn on the way to the client: the netherite chestplate stays a
+netherite chestplate on the server, and everyone sees blue leather with a vex trim.
+
+The armour itself is never converted. Applying a skin writes **one value** into the item's data —
+`exyliaarmorskin:skin`, the skin id — and nothing else changes. Enchantments, attributes, durability,
+custom model data and any other plugin's data stay exactly where they were.
+
+## What the client is shown
+
+| On the real item | On the visual |
+|---|---|
+| Netherite chestplate | The leather piece of the same slot, in the skin's colour |
+| Its trim, or none | The skin's trim, when the skin sets one |
+| Its display name | The same name, or the vanilla name of the real material |
+| Its lore | The same lore, then a blank line, then the `armor-lore` lines |
+| Its enchantments | Hidden, but the glint is kept |
+| Its durability | The real damage **and the real maximum**, so the bar reads true |
+| Its attributes | Hidden, and never replaced by leather's |
+
+## Who sees a skin
+
+| Viewer | Sees |
+|---|---|
+| Everyone tracking the wearer | The skin, on the body |
+| The wearer, in their own inventory and paper doll | The skin |
+| The wearer **in creative** | The real armour — a creative client echoes its slots back to the server, so it must be shown the truth |
+| Anyone looking at a skinned piece in a chest, hotbar or on the cursor | The real item with the skin's lore lines added |
+| Everyone, when the **wearer** lacks that skin's permission | The real armour — the id stays on the item and the look returns with the node |
+
+## What ships
+
+Twenty skins in `skins.yml` — ten still colours and ten animated — and eleven animations in
+`animations.yml`, built from three animation types: `rainbow`, `pulse` and `frames`. Each animated
+skin also carries a **set bonus**: particles around the body and a sound once every piece it fits is
+worn with it.
+
+Each skin owns a permission derived from its id, `exyliaarmorskin.skin.<id>`, and by default a player
+needs it both to apply the skin and to be seen wearing it.
+
+## How a skin gets onto armour
+
+There is no menu and no player command. A skin travels as an **item**: drag a skin item onto a piece
+of armour in your own inventory and it is applied; drag a **remover** onto skinned armour and the
+skin comes off and is handed back as the skin item again.
+
+<Callout type="note" title="Everything is packets, so nothing is stored">
+There is no database and no per-player file. The only state that survives a restart is the id written
+on the armour, which is why a skin follows the item through chests, trades and other plugins.
+</Callout>
+
+<Cards>
+  <Card title="Installation" href="/docs/exyliaarmorskin/installation">
+    The jars it needs and the three files it writes.
+  </Card>
+  <Card title="First steps" href="/docs/exyliaarmorskin/first-steps">
+    Give yourself a skin, wear it, take it off, then write your own.
+  </Card>
+  <Card title="Skins" href="/docs/exyliaarmorskin/skins">
+    Every key in `skins.yml`, and the twenty that ship.
+  </Card>
+  <Card title="Animations" href="/docs/exyliaarmorskin/animations">
+    The three types, their options, and the eleven presets.
+  </Card>
+</Cards>
