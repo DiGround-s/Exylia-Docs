@@ -447,6 +447,17 @@ const PRACTICE_NAV: NavGroup[] = [
   },
 ];
 
+/** Only the reference pages: the rest of the documentation follows the plugin. */
+const SURVIVALCORE_NAV: NavGroup[] = [
+  {
+    label: { en: "Reference", es: "Referencia" },
+    pages: [
+      page("permissions", "permissions", "permisos"),
+      page("placeholders", "placeholders", "placeholders"),
+    ],
+  },
+];
+
 export const plugins: Plugin[] = [
   {
     id: "exyliaffa",
@@ -732,6 +743,33 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: EVENTS_NAV,
+    links: [
+      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
+      { label: "Discord", href: "https://discord.exylia.net" },
+    ],
+  },
+  {
+    id: "exyliasurvivalcore",
+    name: "ExyliaSurvivalCore",
+    tagline: {
+      en: "Thirty survival modules in one plugin",
+      es: "Treinta módulos de survival en un solo plugin",
+    },
+    summary: {
+      en: "Homes, warps, TPA, RTP, kits, mines, bounties, loot chests, power-ups, rankup, farming milestones and regenerating zones, each one a module that registers nothing at all when it is turned off.",
+      es: "Homes, warps, TPA, RTP, kits, minas, recompensas por cabeza, cofres de loot, power-ups, rankup, hitos de farmeo y zonas que se regeneran, cada uno un módulo que no registra absolutamente nada cuando está apagado.",
+    },
+    version: "1.0.5",
+    status: "beta",
+    category: { en: "Survival", es: "Survival" },
+    minecraft: "1.21+",
+    tags: [
+      { en: "Survival", es: "Survival" },
+      { en: "Modular", es: "Modular" },
+      { en: "Database", es: "Database" },
+      { en: "Folia", es: "Folia" },
+    ],
+    nav: SURVIVALCORE_NAV,
     links: [
       { label: "SpigotMC", href: "https://link.exylia.net/@services" },
       { label: "Discord", href: "https://discord.exylia.net" },

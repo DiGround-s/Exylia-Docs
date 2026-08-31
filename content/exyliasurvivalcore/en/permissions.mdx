@@ -1,0 +1,237 @@
+---
+title: "Permissions"
+description: "Every node the plugin checks, module by module, the ones that carry a number, and the ones you write yourself in a config file."
+---
+
+Nothing is declared in `plugin.yml`. There is no `permissions:` block, so no node carries a
+`default:` — an operator passes every check because operators pass every check, and everybody else
+starts with nothing until a node is granted.
+
+<Callout type="warning" title="Eight nodes still start with `survivalcore.`">
+The prefix everywhere else is `exyliasurvivalcore.`, but the administration, rankup admin, farming
+admin and portals admin nodes were written without it and are checked exactly as spelled below.
+Grant them as they are; a `exyliasurvivalcore.admin` does nothing.
+</Callout>
+
+<Callout type="note" title="A disabled module checks nothing">
+Modules register their own commands and listeners as they enable. A module turned off in
+`config.yml` never registers, so its nodes are never read — granting them is harmless and changes
+nothing until the module is back on.
+</Callout>
+
+## Administration
+
+| Permission | Grants |
+|---|---|
+| `survivalcore.admin` | `/survivalcore`, `/sc` |
+| `survivalcore.admin.reload` | `/sc reload` |
+| `survivalcore.admin.homes` | `/homesadmin delhome` and `/homesadmin listhomes` |
+
+## Movement and places
+
+| Permission | Grants |
+|---|---|
+| `exyliasurvivalcore.spawn.set` | `/spawn set` |
+| `exyliasurvivalcore.spawn.bypass` | Teleporting to spawn with no warmup |
+| `exyliasurvivalcore.homes` | `/homes`, the home menu |
+| `exyliasurvivalcore.homes.set` | `/sethome` and `/homes set` |
+| `exyliasurvivalcore.homes.del` | `/homes del` |
+| `exyliasurvivalcore.homes.tp` | `/home` and `/homes tp` |
+| `exyliasurvivalcore.homes.bypass` | Teleporting to a home with no warmup |
+| `exyliasurvivalcore.back` | `/back` |
+| `exyliasurvivalcore.back.bypass` | `/back` with no warmup |
+| `exyliasurvivalcore.tpa` | `/tpa` |
+| `exyliasurvivalcore.tpa.here` | `/tpahere` |
+| `exyliasurvivalcore.tpa.accept` | `/tpaccept` |
+| `exyliasurvivalcore.tpa.deny` | `/tpadeny` |
+| `exyliasurvivalcore.tpa.toggle` | `/tpatoggle` |
+| `exyliasurvivalcore.tpa.autoaccept` | `/autotpaaccept` and `/tpatoggle autoaccept` |
+| `exyliasurvivalcore.tpa.confirm` | `/tpatoggle confirm` |
+| `exyliasurvivalcore.rtp` | `/rtp`, with or without a world |
+| `exyliasurvivalcore.rtp.admin` | `/rtpadmin`, `/rtpa`, and `/rtpadmin pool` |
+| `exyliasurvivalcore.rtp.admin.forcertp` | `/rtpadmin forcertp` |
+| `exyliasurvivalcore.warps.use` | `/warp`, `/warps`, and any warp with no permission of its own |
+| `exyliasurvivalcore.warps.admin` | `/warpadmin` |
+| `exyliasurvivalcore.warps.bypass` | Both of the two below at once |
+| `exyliasurvivalcore.warps.bypass.cost` | Warping without paying |
+| `exyliasurvivalcore.warps.bypass.cooldown` | Warping while on cooldown |
+| `exyliasurvivalcore.near` | `/near` |
+| `survivalcore.portals.admin` | `/portalsadmin` |
+| `exyliasurvivalcore.jumpads.admin` | `/jumpadmin` |
+
+`/spawn` itself has no node: everybody who can run a command can run it. Only `set` is gated.
+
+## Rewards and progression
+
+| Permission | Grants |
+|---|---|
+| `exyliasurvivalcore.kits` | `/kit`, `/kit preview`, `/kit claim` |
+| `exyliasurvivalcore.kits.admin` | `/kitadmin give`, `preview`, `reset` and `resetall` |
+| `exyliasurvivalcore.kits.bypass` | Claiming a kit while on cooldown or out of uses |
+| `exyliasurvivalcore.playtimerewards.admin` | `/playtimeadmin`, `/pta`, `reset` and `resetall` |
+| `exyliasurvivalcore.rankup` | `/rankup` and `/rankup claim` |
+| `survivalcore.rankup.admin` | `/rankupadmin`, `/rua`, and `/rankupadmin info` |
+| `survivalcore.rankup.admin.set` | `/rankupadmin set`, `reset` and `prestige` |
+| `exyliasurvivalcore.farming` | `/farming` |
+| `survivalcore.farming.admin` | `/farmingadmin`, `/fa`, and `/farmingadmin info` |
+| `survivalcore.farming.admin.set` | `/farmingadmin set`, `reset` and `resetall` |
+| `exyliasurvivalcore.killrewards.admin` | `/killrewardsadmin`, `/kra`, `reset` and `resetbest` |
+| `exyliasurvivalcore.reclaim.admin` | `/reclaimadmin reset` and `/reclaimadmin resetsection` |
+| `exyliasurvivalcore.bounties.use` | `/bounty`, `/bounty place`, `/bounty cancel` |
+| `exyliasurvivalcore.bounties.admin` | `/bountyadmin remove`, `clear` and `add` |
+| `exyliasurvivalcore.bounties.anonymous` | Placing a bounty without your name on it |
+| `exyliasurvivalcore.stats` | `/stats` |
+| `exyliasurvivalcore.stats.others` | `/stats <player>` |
+
+`/playtime` and `/reclaim` have no node. What a player may reclaim is decided by the section
+permissions instead — see [Sections, warps, kits and mines](#nodes-you-write-yourself).
+
+## Content and the world
+
+| Permission | Grants |
+|---|---|
+| `exyliasurvivalcore.mines.admin` | `/minesadmin`, and entering or breaking inside any mine regardless of its own permission |
+| `exyliasurvivalcore.lootchests.admin` | `/lootchestsadmin` |
+| `exyliasurvivalcore.lootchests.bypass` | Breaking a loot chest block, which deletes the chest instead of being cancelled |
+| `exyliasurvivalcore.powerups.admin` | `/powerupsadmin` |
+| `exyliasurvivalcore.afkzones.use` | `/afkzone` and `/afkzone preview` |
+| `exyliasurvivalcore.afkzones.admin` | `/afkzonesadmin` |
+| `exyliasurvivalcore.itemspawners.admin` | `/spawnersadmin` |
+| `exyliasurvivalcore.regenzones.admin` | `/regenzonesadmin` |
+
+## Utilities and rules
+
+| Permission | Grants |
+|---|---|
+| `exyliasurvivalcore.playerutils.fly` | `/fly` |
+| `exyliasurvivalcore.playerutils.heal` | `/heal` |
+| `exyliasurvivalcore.playerutils.feed` | `/feed` |
+| `exyliasurvivalcore.playerutils.hat` | `/hat` |
+| `exyliasurvivalcore.playerutils.craft` | `/craft`, `/workbench`, `/wb` |
+| `exyliasurvivalcore.playerutils.anvil` | `/anvil` |
+| `exyliasurvivalcore.playerutils.ec` | `/ec`, `/enderchest` |
+| `exyliasurvivalcore.playerutils.nightvision` | `/nightvision`, `/nv` |
+| `exyliasurvivalcore.playerutils.ping` | `/ping` |
+| `exyliasurvivalcore.repair.hand` | `/repair hand` |
+| `exyliasurvivalcore.repair.all` | `/repair all` |
+| `exyliasurvivalcore.repair.hand.others` | `/repair hand <player>` |
+| `exyliasurvivalcore.repair.all.others` | `/repair all <player>` |
+| `exyliasurvivalcore.repair.lock` | `/repair lock` and `/repair unlock` |
+| `exyliasurvivalcore.repair.bypass.price` | Repairing without paying |
+| `exyliasurvivalcore.repair.bypass.cooldown` | Repairing while on cooldown |
+| `exyliasurvivalcore.enchantments.bypass` | Keeping enchantments above the configured limits |
+| `exyliasurvivalcore.blockeditems.bypass` | Using items the blocked-items rules forbid |
+
+`/repair` on its own does nothing: the aliases `/fix` and `/reparar` still need `hand` or `all`
+after them, each with its own node.
+
+## Nodes that carry a number
+
+Three nodes end in a value rather than a word.
+
+| Permission | Effect |
+|---|---|
+| `exyliasurvivalcore.homes.max_homes.<n>` | How many homes the player may set. The **highest** `<n>` they hold wins; with none, the `max-homes` in `modules/homes/config.yml` applies. |
+| `exyliasurvivalcore.near.radius.<n>` | The radius `/near` searches. The **highest** `<n>` they hold wins, still capped by `max-radius` in `modules/near/config.yml`. |
+| `exyliasurvivalcore.repair.group.<name>` | The repair prices and cooldowns of that group, out of `modules/repair/groups.yml`. |
+
+```text
+/lp group vip permission set exyliasurvivalcore.homes.max_homes.8 true
+/lp group vip permission set exyliasurvivalcore.near.radius.500 true
+/lp group vip permission set exyliasurvivalcore.repair.group.vip true
+```
+
+The repair groups are read in file order and the first group whose node the player holds is the one
+that applies, so a player in two groups gets whichever is written higher in `groups.yml` — not the
+cheaper one.
+
+## Nodes you write yourself
+
+Several things are gated by a node **you** choose, stored next to the thing it protects rather than
+in the plugin's code.
+
+| Where | Key | Default |
+|---|---|---|
+| A warp | Its `permission`, set through `/warpadmin` | Empty, which falls back to `exyliasurvivalcore.warps.use` |
+| A kit | Its `permission`, set through `/kitadmin` | Empty, which means every holder of `exyliasurvivalcore.kits` |
+| A mine | Its `permission`, set through `/minesadmin` | Empty, which means anybody may enter and mine it |
+| A reclaim section | `sections.<id>.permission` in `modules/reclaim/config.yml` | `exyliasurvivalcore.reclaim.<id>` |
+| A join / leave group | `groups.<id>.permission` in `modules/join-leave/groups.yml` | Empty, which never matches |
+| A rank requirement | A `PERMISSION` requirement's `node`, in the rankup config | None |
+
+A mine's permission gates the whole region: without it nothing inside may be broken, minable or
+not. `exyliasurvivalcore.mines.admin` passes both that check and the entry check.
+
+The reclaim sections are picked by **priority**: a player is given the highest-priority section
+whose permission they hold, so `vip` at `priority: 1` beats `usuario` at `priority: 0` for anybody
+holding both.
+
+### The warmup and RTP bypasses are config keys too
+
+```yaml title="modules/spawn/config.yml"
+settings:
+  permission-bypass-warmup: exyliasurvivalcore.spawn.bypass
+```
+
+The same key exists in `modules/homes/config.yml` and `modules/back/config.yml`, defaulting to
+`exyliasurvivalcore.homes.bypass` and `exyliasurvivalcore.back.bypass`. RTP has two of its own:
+
+```yaml title="modules/rtp/config.yml"
+settings:
+  bypass-cooldown-permission: survivalcore.rtp.bypass
+  bypass-price-permission: survivalcore.rtp.bypass
+```
+
+<Callout type="warning" title="Two declared nodes are never checked">
+`exyliasurvivalcore.spawn` and `exyliasurvivalcore.rtp.bypass` exist in the code and nothing reads
+them. `/spawn` is open to everybody, and the RTP bypass that is actually read is whatever
+`modules/rtp/config.yml` names — `survivalcore.rtp.bypass` out of the box.
+</Callout>
+
+## A setup to start from
+
+```text
+# Everybody
+/lp group default permission set exyliasurvivalcore.homes true
+/lp group default permission set exyliasurvivalcore.homes.set true
+/lp group default permission set exyliasurvivalcore.homes.del true
+/lp group default permission set exyliasurvivalcore.homes.tp true
+/lp group default permission set exyliasurvivalcore.homes.max_homes.2 true
+/lp group default permission set exyliasurvivalcore.back true
+/lp group default permission set exyliasurvivalcore.tpa true
+/lp group default permission set exyliasurvivalcore.tpa.accept true
+/lp group default permission set exyliasurvivalcore.tpa.deny true
+/lp group default permission set exyliasurvivalcore.tpa.toggle true
+/lp group default permission set exyliasurvivalcore.rtp true
+/lp group default permission set exyliasurvivalcore.warps.use true
+/lp group default permission set exyliasurvivalcore.kits true
+/lp group default permission set exyliasurvivalcore.rankup true
+/lp group default permission set exyliasurvivalcore.farming true
+/lp group default permission set exyliasurvivalcore.stats true
+/lp group default permission set exyliasurvivalcore.bounties.use true
+/lp group default permission set exyliasurvivalcore.afkzones.use true
+/lp group default permission set exyliasurvivalcore.near true
+/lp group default permission set exyliasurvivalcore.repair.hand true
+/lp group default permission set exyliasurvivalcore.playerutils.ping true
+
+# VIP, on top of the above
+/lp group vip permission set exyliasurvivalcore.homes.max_homes.8 true
+/lp group vip permission set exyliasurvivalcore.tpa.here true
+/lp group vip permission set exyliasurvivalcore.tpa.autoaccept true
+/lp group vip permission set exyliasurvivalcore.playerutils.fly true
+/lp group vip permission set exyliasurvivalcore.playerutils.ec true
+/lp group vip permission set exyliasurvivalcore.repair.all true
+/lp group vip permission set exyliasurvivalcore.repair.group.vip true
+/lp group vip permission set exyliasurvivalcore.reclaim.vip true
+
+# Staff
+/lp group admin permission set survivalcore.admin true
+/lp group admin permission set survivalcore.admin.reload true
+/lp group admin permission set survivalcore.admin.homes true
+/lp group admin permission set exyliasurvivalcore.mines.admin true
+/lp group admin permission set exyliasurvivalcore.warps.admin true
+/lp group admin permission set exyliasurvivalcore.kits.admin true
+```
+
+Grant `default` only what your players should have; every admin node above is one an operator
+already passes without being granted anything.

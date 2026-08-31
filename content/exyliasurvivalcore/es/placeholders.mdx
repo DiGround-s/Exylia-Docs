@@ -1,0 +1,238 @@
+---
+title: "Placeholders"
+description: "Todos los nombres que registra el plugin, grupo a grupo, en sus dos escrituras: la corta para los archivos de Exylia y la de PlaceholderAPI para todo lo demás."
+---
+
+Cada placeholder tiene **dos escrituras**, y las dos devuelven el mismo valor:
+
+```text
+%homes_count%                      dentro de cualquier archivo de Exylia: menús, mensajes, lore
+%exyliasurvivalcore_homes_count%   por PlaceholderAPI: scoreboards, hologramas, chat
+```
+
+El nombre corto es contra el que están escritos los menús y los mensajes del propio plugin. El
+largo es ese mismo nombre con el identificador del plugin delante, que es lo que PlaceholderAPI
+entrega a quien pregunte. Todas las tablas de abajo están escritas en corto; ponle
+`exyliasurvivalcore_` delante para cualquier cosa fuera de los archivos de este plugin.
+
+<Callout type="note" title="Un módulo desactivado no registra ningún nombre">
+Cada módulo reclama su grupo al activarse. Un módulo apagado en `config.yml` no registra nada, así
+que sus placeholders no resuelven y el texto se queda en pantalla tal y como lo escribiste. Volver
+a encender el módulo y recargar los reclama otra vez.
+</Callout>
+
+Las duraciones se escriben enteras — `1h 5m 3s`. El dinero se formatea igual que en el resto del
+plugin.
+
+## Homes
+
+| Placeholder | Descripción |
+|---|---|
+| `%homes_count%` | Homes que tiene puestos |
+| `%homes_max%` | Cuántos puede poner, permisos incluidos |
+| `%homes_free%` | La resta de los dos de arriba, nunca por debajo de `0` |
+| `%homes_has_<nombre>%` | `true` / `false` para un home concreto |
+
+## Warps
+
+| Placeholder | Descripción |
+|---|---|
+| `%warp_count%` | Warps que existen |
+| `%warp_exists_<id>%` | `true` / `false` |
+| `%warp_cooldown_<id>%` | Tiempo restante, `Ready` o `N/A` si el warp no existe |
+
+## TPA
+
+| Placeholder | Descripción |
+|---|---|
+| `%tpa_enabled%` | Si acepta solicitudes siquiera |
+| `%tpa_auto_accept%` | Su interruptor de aceptar automáticamente |
+| `%tpa_send_confirm%` | Su interruptor de confirmar antes de enviar |
+| `%tpa_has_request%` | `true` / `false` |
+| `%tpa_request_from%` | Quién le está esperando, o `—` |
+| `%tpa_request_type%` | `tpa` o `tpa_here`, o `—` |
+
+## Back
+
+| Placeholder | Descripción |
+|---|---|
+| `%back_available%` | Si `/back` tiene a dónde llevarle |
+
+## Teletransporte aleatorio
+
+| Placeholder | Descripción |
+|---|---|
+| `%rtp_searching%` | Si hay una búsqueda en marcha para ese jugador ahora mismo |
+| `%rtp_worlds%` | Mundos configurados para RTP |
+| `%rtp_cooldown_<mundo>%` | Tiempo restante, `Ready` o `N/A` |
+
+El `<mundo>` es un id de `modules/rtp/config.yml`, no el nombre de un mundo de Bukkit.
+
+## Kits
+
+| Placeholder | Descripción |
+|---|---|
+| `%kit_cooldown_<id>%` | Tiempo restante, `Ready` o `N/A` si el kit no existe |
+| `%kit_uses_<id>%` | Usos que le quedan, `∞` si son ilimitados, o `N/A` |
+
+## Tiempo jugado
+
+| Placeholder | Descripción |
+|---|---|
+| `%playtime%` | Tiempo jugado total, escrito entero |
+| `%playtime_seconds%` | Lo mismo, en segundos |
+| `%playtime_hours%` | Lo mismo, en horas enteras |
+| `%playtime_rewards_claimed%` | Recompensas ya reclamadas |
+| `%playtime_next_reward%` | Nombre de la siguiente recompensa, o `—` |
+| `%playtime_next_reward_remaining%` | Cuánto queda para desbloquearla, `Now` o `—` |
+
+<Callout type="tip" title="`%playtime%` está sin prefijo a propósito">
+Es la escritura que ya usan todos los scoreboards y menús de un servidor de survival, y este plugin
+es la autoridad del tiempo jugado, así que la palabra le pertenece. Todo lo nuevo va bajo
+`playtime_`.
+</Callout>
+
+## Escalera de rangos
+
+| Placeholder | Descripción |
+|---|---|
+| `%rankup_rank%` | Nombre visible del rango actual, o un `None` gris |
+| `%rankup_rank_id%` | Su id, o `none` |
+| `%rankup_rank_order%` | Su posición en la escalera, `0` sin rango |
+| `%rankup_next_rank%` | Nombre visible del siguiente rango, o un `Max rank reached!` verde |
+| `%rankup_next_rank_id%` | Su id, o `none` |
+| `%rankup_prestige%` | Nivel de prestigio |
+| `%rankup_can_rankup%` | `yes` / `no` |
+| `%rankup_ranks_total%` | Rangos configurados |
+| `%rankup_requirements_total%` | Requisitos que pide el siguiente rango |
+| `%rankup_requirements_met%` | Cuántos de esos ya cumple |
+| `%rankup_progress_bar%` | Esos dos dibujados como barra; llena cuando no hay siguiente rango |
+
+## Farming
+
+| Placeholder | Descripción |
+|---|---|
+| `%farming_count_<categoría>%` | Lo que ha cultivado en esa categoría |
+| `%farming_level_<categoría>%` | Hitos reclamados en ella, `0` si la categoría no existe |
+| `%farming_total%` | Todas las categorías sumadas |
+
+## Estadísticas
+
+| Placeholder | Descripción |
+|---|---|
+| `%stats_kills%` | Kills |
+| `%stats_deaths%` | Muertes |
+| `%stats_kdr%` | Kills entre muertes, con dos decimales |
+| `%stats_streak%` | La racha que lleva |
+| `%stats_best_streak%` | Su mejor racha |
+| `%stats_rank_<stat>%` | Su posición en el ranking de esa estadística, o `N/A` |
+| `%stats_value_<stat>%` | Su valor, formateado, o `N/A` |
+
+### Rankings
+
+```text
+%stats_top_name_<posición>_<stat>%
+%stats_top_value_<posición>_<stat>%
+```
+
+La **posición va primero** a propósito: el id de una estadística puede llevar guiones bajos y una
+posición no, así que la posición es el único argumento que se puede leer solo. Una fila que no
+ocupa nadie resuelve a `—`.
+
+```text
+#1 %stats_top_name_1_kills% — %stats_top_value_1_kills%
+```
+
+## Rachas de kills
+
+| Placeholder | Descripción |
+|---|---|
+| `%killstreak_streak%` | La racha que lleva el jugador |
+| `%killstreak_best%` | Su mejor racha |
+
+## Recompensas por cabeza
+
+Dos grupos, porque son dos preguntas. Los `bounty_` nombran a alguien y responden por cualquiera;
+los `my_` van de quien está leyendo.
+
+| Placeholder | Descripción |
+|---|---|
+| `%bounty_total_<jugador>%` | Lo que hay sobre su cabeza, formateado |
+| `%bounty_count_<jugador>%` | De cuántas recompensas sale ese total |
+| `%bounty_has_<jugador>%` | `true` / `false` |
+| `%bounty_count_all%` | Recompensas activas en el servidor |
+| `%bounty_top_name_<posición>%` | El nombre en esa posición, o `—` |
+| `%bounty_top_amount_<posición>%` | Su total. Sin posición, la mayor recompensa del servidor |
+| `%my_bounty_total%` | Lo que hay sobre la cabeza de quien lee |
+| `%my_bounty_count%` | De cuántas recompensas sale |
+| `%my_bounty_has%` | `true` / `false` |
+| `%my_placed_count%` | Recompensas que ha puesto sobre otros |
+| `%my_placed_total%` | Cuánto suman esas |
+
+`<jugador>` es un nombre que el servidor ya haya visto, o un UUID. Un nombre que nunca ha estado
+aquí responde `0` en lugar de buscarlo por red desde dentro de un placeholder.
+
+## Minas
+
+| Placeholder | Descripción |
+|---|---|
+| `%mine_count%` | Minas activas |
+| `%mine_reset_<id>%` | Cuánto queda para que se reinicie, o `-` |
+| `%mine_reset_seconds_<id>%` | Lo mismo en segundos, `-1` cuando no hay reinicio |
+| `%mine_current%` | La mina en la que está el jugador, o `—` |
+| `%mine_current_id%` | Su id, o `—` |
+| `%mine_time%` | Segundos que lleva dentro, `0` fuera |
+
+Solo las minas clásicas tienen un reinicio que contar: una mina realista se regenera bloque a
+bloque, así que su cuenta atrás es `-` y no un número que no llegaría nunca.
+
+## Zonas AFK
+
+| Placeholder | Descripción |
+|---|---|
+| `%afkzone_count%` | Zonas configuradas |
+| `%afkzone_in_zone%` | `true` / `false` |
+| `%afkzone_current%` | Nombre visible de la zona, o `—` |
+| `%afkzone_current_id%` | Su id, o `—` |
+| `%afkzone_time%` | Segundos que lleva dentro, `0` fuera |
+| `%afkzone_next_reward%` | Segundos hasta que vuelva a pagar, `0` fuera |
+
+## Reclaim
+
+| Placeholder | Descripción |
+|---|---|
+| `%reclaim_available%` | Si hay algo que reclamar ahora mismo |
+| `%reclaim_cooldown%` | Tiempo restante, `Now`, o `—` cuando no le toca ninguna sección |
+| `%reclaim_sections%` | Secciones configuradas |
+
+## Reparación
+
+| Placeholder | Descripción |
+|---|---|
+| `%repair_cooldown_hand%` | Tiempo restante, o `Ready` |
+| `%repair_cooldown_all%` | Tiempo restante, o `Ready` |
+
+## Utilidades de jugador
+
+| Placeholder | Descripción |
+|---|---|
+| `%utils_fly%` | El interruptor de vuelo guardado |
+| `%utils_night_vision%` | El interruptor de visión nocturna guardado |
+
+Son los interruptores guardados, no el estado en vivo: lo que eligió el jugador es lo que sobrevive
+a una reconexión, que es lo que debe enseñar un menú de ajustes.
+
+## Comandos programados
+
+| Placeholder | Descripción |
+|---|---|
+| `%scheduledcmds_remaining_<sección>%` | Cuánto queda para que esa sección vuelva a ejecutarse, `Now` o `N/A` |
+
+Este no pide jugador: cuánto queda para que se ejecute una sección es la misma respuesta para todo
+el mundo, así que funciona igual en un scoreboard de consola que en el de un jugador.
+
+<Callout type="warning" title="Un id con guion bajo no da problemas">
+Todo lo que va detrás del nombre se vuelve a unir antes de leerse, así que `%farming_count_sugar_cane%`,
+`%kit_cooldown_starter_kit%` y `%warp_cooldown_pvp_arena%` resuelven sin más. La única excepción es
+`stats_top_*`, donde la posición se lee primero y el id de la estadística es todo lo que va detrás.
+</Callout>
