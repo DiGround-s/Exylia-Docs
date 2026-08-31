@@ -1,19 +1,19 @@
 ---
 title: "Placeholders"
-description: "Todos los nombres que registra el plugin, grupo a grupo, en sus dos escrituras: la corta para los archivos de Exylia y la de PlaceholderAPI para todo lo demás."
+description: "Todos los placeholders que registra el plugin, grupo a grupo, en su forma de PlaceholderAPI y en la forma corta que usan los plugins de Exylia."
 ---
 
-Cada placeholder tiene **dos escrituras**, y las dos devuelven el mismo valor:
+Todos los placeholders de abajo están escritos enteros, y al hacer clic en uno se copia.
 
-```text
-%homes_count%                      dentro de cualquier archivo de Exylia: menús, mensajes, lore
-%exyliasurvivalcore_homes_count%   por PlaceholderAPI: scoreboards, hologramas, chat
-```
+Se registran a través de ExyliaLib, lo que significa que cada uno tiene dos escrituras:
 
-El nombre corto es contra el que están escritos los menús y los mensajes del propio plugin. El
-largo es ese mismo nombre con el identificador del plugin delante, que es lo que PlaceholderAPI
-entrega a quien pregunte. Todas las tablas de abajo están escritas en corto; ponle
-`exyliasurvivalcore_` delante para cualquier cosa fuera de los archivos de este plugin.
+| Dónde | Forma |
+|---|---|
+| PlaceholderAPI — scoreboards, tab, hologramas, plugins de chat | `%exyliasurvivalcore_homes_count%` |
+| Dentro del texto de cualquier plugin de Exylia | `%homes_count%` |
+
+La forma larga es el identificador de PlaceholderAPI del plugin seguido del nombre propio del
+placeholder. Úsala en todo lo que no sea un plugin de Exylia.
 
 <Callout type="note" title="Un módulo desactivado no registra ningún nombre">
 Cada módulo reclama su grupo al activarse. Un módulo apagado en `config.yml` no registra nada, así
@@ -28,43 +28,43 @@ plugin.
 
 | Placeholder | Descripción |
 |---|---|
-| `%homes_count%` | Homes que tiene puestos |
-| `%homes_max%` | Cuántos puede poner, permisos incluidos |
-| `%homes_free%` | La resta de los dos de arriba, nunca por debajo de `0` |
-| `%homes_has_<nombre>%` | `true` / `false` para un home concreto |
+| `%exyliasurvivalcore_homes_count%` | Homes que tiene puestos |
+| `%exyliasurvivalcore_homes_max%` | Cuántos puede poner, permisos incluidos |
+| `%exyliasurvivalcore_homes_free%` | La resta de los dos de arriba, nunca por debajo de `0` |
+| `%exyliasurvivalcore_homes_has_<nombre>%` | `true` / `false` para un home concreto |
 
 ## Warps
 
 | Placeholder | Descripción |
 |---|---|
-| `%warp_count%` | Warps que existen |
-| `%warp_exists_<id>%` | `true` / `false` |
-| `%warp_cooldown_<id>%` | Tiempo restante, `Ready` o `N/A` si el warp no existe |
+| `%exyliasurvivalcore_warp_count%` | Warps que existen |
+| `%exyliasurvivalcore_warp_exists_<id>%` | `true` / `false` |
+| `%exyliasurvivalcore_warp_cooldown_<id>%` | Tiempo restante, `Ready` o `N/A` si el warp no existe |
 
 ## TPA
 
 | Placeholder | Descripción |
 |---|---|
-| `%tpa_enabled%` | Si acepta solicitudes siquiera |
-| `%tpa_auto_accept%` | Su interruptor de aceptar automáticamente |
-| `%tpa_send_confirm%` | Su interruptor de confirmar antes de enviar |
-| `%tpa_has_request%` | `true` / `false` |
-| `%tpa_request_from%` | Quién le está esperando, o `—` |
-| `%tpa_request_type%` | `tpa` o `tpa_here`, o `—` |
+| `%exyliasurvivalcore_tpa_enabled%` | Si acepta solicitudes siquiera |
+| `%exyliasurvivalcore_tpa_auto_accept%` | Su interruptor de aceptar automáticamente |
+| `%exyliasurvivalcore_tpa_send_confirm%` | Su interruptor de confirmar antes de enviar |
+| `%exyliasurvivalcore_tpa_has_request%` | `true` / `false` |
+| `%exyliasurvivalcore_tpa_request_from%` | Quién le está esperando, o `—` |
+| `%exyliasurvivalcore_tpa_request_type%` | `tpa` o `tpa_here`, o `—` |
 
 ## Back
 
 | Placeholder | Descripción |
 |---|---|
-| `%back_available%` | Si `/back` tiene a dónde llevarle |
+| `%exyliasurvivalcore_back_available%` | Si `/back` tiene a dónde llevarle |
 
 ## Teletransporte aleatorio
 
 | Placeholder | Descripción |
 |---|---|
-| `%rtp_searching%` | Si hay una búsqueda en marcha para ese jugador ahora mismo |
-| `%rtp_worlds%` | Mundos configurados para RTP |
-| `%rtp_cooldown_<mundo>%` | Tiempo restante, `Ready` o `N/A` |
+| `%exyliasurvivalcore_rtp_searching%` | Si hay una búsqueda en marcha para ese jugador ahora mismo |
+| `%exyliasurvivalcore_rtp_worlds%` | Mundos configurados para RTP |
+| `%exyliasurvivalcore_rtp_cooldown_<mundo>%` | Tiempo restante, `Ready` o `N/A` |
 
 El `<mundo>` es un id de `modules/rtp/config.yml`, no el nombre de un mundo de Bukkit.
 
@@ -72,21 +72,21 @@ El `<mundo>` es un id de `modules/rtp/config.yml`, no el nombre de un mundo de B
 
 | Placeholder | Descripción |
 |---|---|
-| `%kit_cooldown_<id>%` | Tiempo restante, `Ready` o `N/A` si el kit no existe |
-| `%kit_uses_<id>%` | Usos que le quedan, `∞` si son ilimitados, o `N/A` |
+| `%exyliasurvivalcore_kit_cooldown_<id>%` | Tiempo restante, `Ready` o `N/A` si el kit no existe |
+| `%exyliasurvivalcore_kit_uses_<id>%` | Usos que le quedan, `∞` si son ilimitados, o `N/A` |
 
 ## Tiempo jugado
 
 | Placeholder | Descripción |
 |---|---|
-| `%playtime%` | Tiempo jugado total, escrito entero |
-| `%playtime_seconds%` | Lo mismo, en segundos |
-| `%playtime_hours%` | Lo mismo, en horas enteras |
-| `%playtime_rewards_claimed%` | Recompensas ya reclamadas |
-| `%playtime_next_reward%` | Nombre de la siguiente recompensa, o `—` |
-| `%playtime_next_reward_remaining%` | Cuánto queda para desbloquearla, `Now` o `—` |
+| `%exyliasurvivalcore_playtime%` | Tiempo jugado total, escrito entero |
+| `%exyliasurvivalcore_playtime_seconds%` | Lo mismo, en segundos |
+| `%exyliasurvivalcore_playtime_hours%` | Lo mismo, en horas enteras |
+| `%exyliasurvivalcore_playtime_rewards_claimed%` | Recompensas ya reclamadas |
+| `%exyliasurvivalcore_playtime_next_reward%` | Nombre de la siguiente recompensa, o `—` |
+| `%exyliasurvivalcore_playtime_next_reward_remaining%` | Cuánto queda para desbloquearla, `Now` o `—` |
 
-<Callout type="tip" title="`%playtime%` está sin prefijo a propósito">
+<Callout type="tip" title="Aquí la forma corta es `%playtime%`, sin nada delante">
 Es la escritura que ya usan todos los scoreboards y menús de un servidor de survival, y este plugin
 es la autoridad del tiempo jugado, así que la palabra le pertenece. Todo lo nuevo va bajo
 `playtime_`.
@@ -96,43 +96,43 @@ es la autoridad del tiempo jugado, así que la palabra le pertenece. Todo lo nue
 
 | Placeholder | Descripción |
 |---|---|
-| `%rankup_rank%` | Nombre visible del rango actual, o un `None` gris |
-| `%rankup_rank_id%` | Su id, o `none` |
-| `%rankup_rank_order%` | Su posición en la escalera, `0` sin rango |
-| `%rankup_next_rank%` | Nombre visible del siguiente rango, o un `Max rank reached!` verde |
-| `%rankup_next_rank_id%` | Su id, o `none` |
-| `%rankup_prestige%` | Nivel de prestigio |
-| `%rankup_can_rankup%` | `yes` / `no` |
-| `%rankup_ranks_total%` | Rangos configurados |
-| `%rankup_requirements_total%` | Requisitos que pide el siguiente rango |
-| `%rankup_requirements_met%` | Cuántos de esos ya cumple |
-| `%rankup_progress_bar%` | Esos dos dibujados como barra; llena cuando no hay siguiente rango |
+| `%exyliasurvivalcore_rankup_rank%` | Nombre visible del rango actual, o un `None` gris |
+| `%exyliasurvivalcore_rankup_rank_id%` | Su id, o `none` |
+| `%exyliasurvivalcore_rankup_rank_order%` | Su posición en la escalera, `0` sin rango |
+| `%exyliasurvivalcore_rankup_next_rank%` | Nombre visible del siguiente rango, o un `Max rank reached!` verde |
+| `%exyliasurvivalcore_rankup_next_rank_id%` | Su id, o `none` |
+| `%exyliasurvivalcore_rankup_prestige%` | Nivel de prestigio |
+| `%exyliasurvivalcore_rankup_can_rankup%` | `yes` / `no` |
+| `%exyliasurvivalcore_rankup_ranks_total%` | Rangos configurados |
+| `%exyliasurvivalcore_rankup_requirements_total%` | Requisitos que pide el siguiente rango |
+| `%exyliasurvivalcore_rankup_requirements_met%` | Cuántos de esos ya cumple |
+| `%exyliasurvivalcore_rankup_progress_bar%` | Esos dos dibujados como barra; llena cuando no hay siguiente rango |
 
 ## Farming
 
 | Placeholder | Descripción |
 |---|---|
-| `%farming_count_<categoría>%` | Lo que ha cultivado en esa categoría |
-| `%farming_level_<categoría>%` | Hitos reclamados en ella, `0` si la categoría no existe |
-| `%farming_total%` | Todas las categorías sumadas |
+| `%exyliasurvivalcore_farming_count_<categoría>%` | Lo que ha cultivado en esa categoría |
+| `%exyliasurvivalcore_farming_level_<categoría>%` | Hitos reclamados en ella, `0` si la categoría no existe |
+| `%exyliasurvivalcore_farming_total%` | Todas las categorías sumadas |
 
 ## Estadísticas
 
 | Placeholder | Descripción |
 |---|---|
-| `%stats_kills%` | Kills |
-| `%stats_deaths%` | Muertes |
-| `%stats_kdr%` | Kills entre muertes, con dos decimales |
-| `%stats_streak%` | La racha que lleva |
-| `%stats_best_streak%` | Su mejor racha |
-| `%stats_rank_<stat>%` | Su posición en el ranking de esa estadística, o `N/A` |
-| `%stats_value_<stat>%` | Su valor, formateado, o `N/A` |
+| `%exyliasurvivalcore_stats_kills%` | Kills |
+| `%exyliasurvivalcore_stats_deaths%` | Muertes |
+| `%exyliasurvivalcore_stats_kdr%` | Kills entre muertes, con dos decimales |
+| `%exyliasurvivalcore_stats_streak%` | La racha que lleva |
+| `%exyliasurvivalcore_stats_best_streak%` | Su mejor racha |
+| `%exyliasurvivalcore_stats_rank_<stat>%` | Su posición en el ranking de esa estadística, o `N/A` |
+| `%exyliasurvivalcore_stats_value_<stat>%` | Su valor, formateado, o `N/A` |
 
 ### Rankings
 
 ```text
-%stats_top_name_<posición>_<stat>%
-%stats_top_value_<posición>_<stat>%
+%exyliasurvivalcore_stats_top_name_<posición>_<stat>%
+%exyliasurvivalcore_stats_top_value_<posición>_<stat>%
 ```
 
 La **posición va primero** a propósito: el id de una estadística puede llevar guiones bajos y una
@@ -140,15 +140,15 @@ posición no, así que la posición es el único argumento que se puede leer sol
 ocupa nadie resuelve a `—`.
 
 ```text
-#1 %stats_top_name_1_kills% — %stats_top_value_1_kills%
+#1 %exyliasurvivalcore_stats_top_name_1_kills% — %exyliasurvivalcore_stats_top_value_1_kills%
 ```
 
 ## Rachas de kills
 
 | Placeholder | Descripción |
 |---|---|
-| `%killstreak_streak%` | La racha que lleva el jugador |
-| `%killstreak_best%` | Su mejor racha |
+| `%exyliasurvivalcore_killstreak_streak%` | La racha que lleva el jugador |
+| `%exyliasurvivalcore_killstreak_best%` | Su mejor racha |
 
 ## Recompensas por cabeza
 
@@ -157,17 +157,17 @@ los `my_` van de quien está leyendo.
 
 | Placeholder | Descripción |
 |---|---|
-| `%bounty_total_<jugador>%` | Lo que hay sobre su cabeza, formateado |
-| `%bounty_count_<jugador>%` | De cuántas recompensas sale ese total |
-| `%bounty_has_<jugador>%` | `true` / `false` |
-| `%bounty_count_all%` | Recompensas activas en el servidor |
-| `%bounty_top_name_<posición>%` | El nombre en esa posición, o `—` |
-| `%bounty_top_amount_<posición>%` | Su total. Sin posición, la mayor recompensa del servidor |
-| `%my_bounty_total%` | Lo que hay sobre la cabeza de quien lee |
-| `%my_bounty_count%` | De cuántas recompensas sale |
-| `%my_bounty_has%` | `true` / `false` |
-| `%my_placed_count%` | Recompensas que ha puesto sobre otros |
-| `%my_placed_total%` | Cuánto suman esas |
+| `%exyliasurvivalcore_bounty_total_<jugador>%` | Lo que hay sobre su cabeza, formateado |
+| `%exyliasurvivalcore_bounty_count_<jugador>%` | De cuántas recompensas sale ese total |
+| `%exyliasurvivalcore_bounty_has_<jugador>%` | `true` / `false` |
+| `%exyliasurvivalcore_bounty_count_all%` | Recompensas activas en el servidor |
+| `%exyliasurvivalcore_bounty_top_name_<posición>%` | El nombre en esa posición, o `—` |
+| `%exyliasurvivalcore_bounty_top_amount_<posición>%` | Su total. Sin posición, la mayor recompensa del servidor |
+| `%exyliasurvivalcore_my_bounty_total%` | Lo que hay sobre la cabeza de quien lee |
+| `%exyliasurvivalcore_my_bounty_count%` | De cuántas recompensas sale |
+| `%exyliasurvivalcore_my_bounty_has%` | `true` / `false` |
+| `%exyliasurvivalcore_my_placed_count%` | Recompensas que ha puesto sobre otros |
+| `%exyliasurvivalcore_my_placed_total%` | Cuánto suman esas |
 
 `<jugador>` es un nombre que el servidor ya haya visto, o un UUID. Un nombre que nunca ha estado
 aquí responde `0` en lugar de buscarlo por red desde dentro de un placeholder.
@@ -176,12 +176,12 @@ aquí responde `0` en lugar de buscarlo por red desde dentro de un placeholder.
 
 | Placeholder | Descripción |
 |---|---|
-| `%mine_count%` | Minas activas |
-| `%mine_reset_<id>%` | Cuánto queda para que se reinicie, o `-` |
-| `%mine_reset_seconds_<id>%` | Lo mismo en segundos, `-1` cuando no hay reinicio |
-| `%mine_current%` | La mina en la que está el jugador, o `—` |
-| `%mine_current_id%` | Su id, o `—` |
-| `%mine_time%` | Segundos que lleva dentro, `0` fuera |
+| `%exyliasurvivalcore_mine_count%` | Minas activas |
+| `%exyliasurvivalcore_mine_reset_<id>%` | Cuánto queda para que se reinicie, o `-` |
+| `%exyliasurvivalcore_mine_reset_seconds_<id>%` | Lo mismo en segundos, `-1` cuando no hay reinicio |
+| `%exyliasurvivalcore_mine_current%` | La mina en la que está el jugador, o `—` |
+| `%exyliasurvivalcore_mine_current_id%` | Su id, o `—` |
+| `%exyliasurvivalcore_mine_time%` | Segundos que lleva dentro, `0` fuera |
 
 Solo las minas clásicas tienen un reinicio que contar: una mina realista se regenera bloque a
 bloque, así que su cuenta atrás es `-` y no un número que no llegaría nunca.
@@ -190,34 +190,34 @@ bloque, así que su cuenta atrás es `-` y no un número que no llegaría nunca.
 
 | Placeholder | Descripción |
 |---|---|
-| `%afkzone_count%` | Zonas configuradas |
-| `%afkzone_in_zone%` | `true` / `false` |
-| `%afkzone_current%` | Nombre visible de la zona, o `—` |
-| `%afkzone_current_id%` | Su id, o `—` |
-| `%afkzone_time%` | Segundos que lleva dentro, `0` fuera |
-| `%afkzone_next_reward%` | Segundos hasta que vuelva a pagar, `0` fuera |
+| `%exyliasurvivalcore_afkzone_count%` | Zonas configuradas |
+| `%exyliasurvivalcore_afkzone_in_zone%` | `true` / `false` |
+| `%exyliasurvivalcore_afkzone_current%` | Nombre visible de la zona, o `—` |
+| `%exyliasurvivalcore_afkzone_current_id%` | Su id, o `—` |
+| `%exyliasurvivalcore_afkzone_time%` | Segundos que lleva dentro, `0` fuera |
+| `%exyliasurvivalcore_afkzone_next_reward%` | Segundos hasta que vuelva a pagar, `0` fuera |
 
 ## Reclaim
 
 | Placeholder | Descripción |
 |---|---|
-| `%reclaim_available%` | Si hay algo que reclamar ahora mismo |
-| `%reclaim_cooldown%` | Tiempo restante, `Now`, o `—` cuando no le toca ninguna sección |
-| `%reclaim_sections%` | Secciones configuradas |
+| `%exyliasurvivalcore_reclaim_available%` | Si hay algo que reclamar ahora mismo |
+| `%exyliasurvivalcore_reclaim_cooldown%` | Tiempo restante, `Now`, o `—` cuando no le toca ninguna sección |
+| `%exyliasurvivalcore_reclaim_sections%` | Secciones configuradas |
 
 ## Reparación
 
 | Placeholder | Descripción |
 |---|---|
-| `%repair_cooldown_hand%` | Tiempo restante, o `Ready` |
-| `%repair_cooldown_all%` | Tiempo restante, o `Ready` |
+| `%exyliasurvivalcore_repair_cooldown_hand%` | Tiempo restante, o `Ready` |
+| `%exyliasurvivalcore_repair_cooldown_all%` | Tiempo restante, o `Ready` |
 
 ## Utilidades de jugador
 
 | Placeholder | Descripción |
 |---|---|
-| `%utils_fly%` | El interruptor de vuelo guardado |
-| `%utils_night_vision%` | El interruptor de visión nocturna guardado |
+| `%exyliasurvivalcore_utils_fly%` | El interruptor de vuelo guardado |
+| `%exyliasurvivalcore_utils_night_vision%` | El interruptor de visión nocturna guardado |
 
 Son los interruptores guardados, no el estado en vivo: lo que eligió el jugador es lo que sobrevive
 a una reconexión, que es lo que debe enseñar un menú de ajustes.
@@ -226,13 +226,14 @@ a una reconexión, que es lo que debe enseñar un menú de ajustes.
 
 | Placeholder | Descripción |
 |---|---|
-| `%scheduledcmds_remaining_<sección>%` | Cuánto queda para que esa sección vuelva a ejecutarse, `Now` o `N/A` |
+| `%exyliasurvivalcore_scheduledcmds_remaining_<sección>%` | Cuánto queda para que esa sección vuelva a ejecutarse, `Now` o `N/A` |
 
 Este no pide jugador: cuánto queda para que se ejecute una sección es la misma respuesta para todo
 el mundo, así que funciona igual en un scoreboard de consola que en el de un jugador.
 
 <Callout type="warning" title="Un id con guion bajo no da problemas">
-Todo lo que va detrás del nombre se vuelve a unir antes de leerse, así que `%farming_count_sugar_cane%`,
-`%kit_cooldown_starter_kit%` y `%warp_cooldown_pvp_arena%` resuelven sin más. La única excepción es
+Todo lo que va detrás del nombre se vuelve a unir antes de leerse, así que
+`%exyliasurvivalcore_farming_count_sugar_cane%`, `%exyliasurvivalcore_kit_cooldown_starter_kit%` y
+`%exyliasurvivalcore_warp_cooldown_pvp_arena%` resuelven sin más. La única excepción es
 `stats_top_*`, donde la posición se lee primero y el id de la estadística es todo lo que va detrás.
 </Callout>

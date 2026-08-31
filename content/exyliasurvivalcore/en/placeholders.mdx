@@ -1,19 +1,19 @@
 ---
 title: "Placeholders"
-description: "Every name the plugin registers, group by group, in both spellings — the bare one for Exylia files and the PlaceholderAPI one for everything else."
+description: "Every placeholder the plugin registers, group by group, in the PlaceholderAPI form and the short form Exylia plugins use."
 ---
 
-Every placeholder has **two spellings**, and both answer the same value:
+Every placeholder below is written in full, and clicking one copies it.
 
-```text
-%homes_count%                      inside any Exylia file: menus, messages, lore
-%exyliasurvivalcore_homes_count%   through PlaceholderAPI: scoreboards, holograms, chat
-```
+They are registered through ExyliaLib, which means each one has two spellings:
 
-The bare name is what the plugin's own menus and messages are written against. The prefixed one is
-the same name with the plugin's identifier in front, which is what PlaceholderAPI hands over to
-whoever asks. Every table below is written bare; put `exyliasurvivalcore_` in front for anything
-outside this plugin's files.
+| Where | Form |
+|---|---|
+| PlaceholderAPI — scoreboards, tab, holograms, chat plugins | `%exyliasurvivalcore_homes_count%` |
+| Inside any Exylia plugin's own text | `%homes_count%` |
+
+The long form is the plugin's PlaceholderAPI identifier followed by the placeholder's own name. Use
+it everywhere outside Exylia plugins.
 
 <Callout type="note" title="A disabled module registers no names">
 Each module claims its group as it enables. A module turned off in `config.yml` registers nothing,
@@ -28,43 +28,43 @@ formats it.
 
 | Placeholder | Description |
 |---|---|
-| `%homes_count%` | Homes the player has set |
-| `%homes_max%` | How many they may set, permission included |
-| `%homes_free%` | The two above subtracted, never below `0` |
-| `%homes_has_<name>%` | `true` / `false` for one home by name |
+| `%exyliasurvivalcore_homes_count%` | Homes the player has set |
+| `%exyliasurvivalcore_homes_max%` | How many they may set, permission included |
+| `%exyliasurvivalcore_homes_free%` | The two above subtracted, never below `0` |
+| `%exyliasurvivalcore_homes_has_<name>%` | `true` / `false` for one home by name |
 
 ## Warps
 
 | Placeholder | Description |
 |---|---|
-| `%warp_count%` | Warps that exist |
-| `%warp_exists_<id>%` | `true` / `false` |
-| `%warp_cooldown_<id>%` | Time left, `Ready`, or `N/A` for a warp that does not exist |
+| `%exyliasurvivalcore_warp_count%` | Warps that exist |
+| `%exyliasurvivalcore_warp_exists_<id>%` | `true` / `false` |
+| `%exyliasurvivalcore_warp_cooldown_<id>%` | Time left, `Ready`, or `N/A` for a warp that does not exist |
 
 ## TPA
 
 | Placeholder | Description |
 |---|---|
-| `%tpa_enabled%` | Whether the player accepts requests at all |
-| `%tpa_auto_accept%` | Their auto-accept toggle |
-| `%tpa_send_confirm%` | Their confirm-before-sending toggle |
-| `%tpa_has_request%` | `true` / `false` |
-| `%tpa_request_from%` | Who is waiting on them, or `—` |
-| `%tpa_request_type%` | `tpa` or `tpa_here`, or `—` |
+| `%exyliasurvivalcore_tpa_enabled%` | Whether the player accepts requests at all |
+| `%exyliasurvivalcore_tpa_auto_accept%` | Their auto-accept toggle |
+| `%exyliasurvivalcore_tpa_send_confirm%` | Their confirm-before-sending toggle |
+| `%exyliasurvivalcore_tpa_has_request%` | `true` / `false` |
+| `%exyliasurvivalcore_tpa_request_from%` | Who is waiting on them, or `—` |
+| `%exyliasurvivalcore_tpa_request_type%` | `tpa` or `tpa_here`, or `—` |
 
 ## Back
 
 | Placeholder | Description |
 |---|---|
-| `%back_available%` | Whether `/back` has somewhere to send them |
+| `%exyliasurvivalcore_back_available%` | Whether `/back` has somewhere to send them |
 
 ## Random teleport
 
 | Placeholder | Description |
 |---|---|
-| `%rtp_searching%` | Whether a search is running for this player right now |
-| `%rtp_worlds%` | Worlds configured for RTP |
-| `%rtp_cooldown_<world>%` | Time left, `Ready`, or `N/A` |
+| `%exyliasurvivalcore_rtp_searching%` | Whether a search is running for this player right now |
+| `%exyliasurvivalcore_rtp_worlds%` | Worlds configured for RTP |
+| `%exyliasurvivalcore_rtp_cooldown_<world>%` | Time left, `Ready`, or `N/A` |
 
 The `<world>` is an id out of `modules/rtp/config.yml`, not a Bukkit world name.
 
@@ -72,21 +72,21 @@ The `<world>` is an id out of `modules/rtp/config.yml`, not a Bukkit world name.
 
 | Placeholder | Description |
 |---|---|
-| `%kit_cooldown_<id>%` | Time left, `Ready`, or `N/A` for a kit that does not exist |
-| `%kit_uses_<id>%` | Uses left, `∞` when unlimited, or `N/A` |
+| `%exyliasurvivalcore_kit_cooldown_<id>%` | Time left, `Ready`, or `N/A` for a kit that does not exist |
+| `%exyliasurvivalcore_kit_uses_<id>%` | Uses left, `∞` when unlimited, or `N/A` |
 
 ## Playtime
 
 | Placeholder | Description |
 |---|---|
-| `%playtime%` | Total playtime, written out |
-| `%playtime_seconds%` | The same, in seconds |
-| `%playtime_hours%` | The same, in whole hours |
-| `%playtime_rewards_claimed%` | Rewards already claimed |
-| `%playtime_next_reward%` | The next reward's display name, or `—` |
-| `%playtime_next_reward_remaining%` | Time until it unlocks, `Now`, or `—` |
+| `%exyliasurvivalcore_playtime%` | Total playtime, written out |
+| `%exyliasurvivalcore_playtime_seconds%` | The same, in seconds |
+| `%exyliasurvivalcore_playtime_hours%` | The same, in whole hours |
+| `%exyliasurvivalcore_playtime_rewards_claimed%` | Rewards already claimed |
+| `%exyliasurvivalcore_playtime_next_reward%` | The next reward's display name, or `—` |
+| `%exyliasurvivalcore_playtime_next_reward_remaining%` | Time until it unlocks, `Now`, or `—` |
 
-<Callout type="tip" title="`%playtime%` is deliberately bare">
+<Callout type="tip" title="The short form here is `%playtime%`, with nothing in front">
 It is the spelling every board and menu on a survival server already writes, and this plugin is the
 playtime authority, so it owns the word. Anything new lives under `playtime_`.
 </Callout>
@@ -95,43 +95,43 @@ playtime authority, so it owns the word. Anything new lives under `playtime_`.
 
 | Placeholder | Description |
 |---|---|
-| `%rankup_rank%` | Current rank's display name, or a grey `None` |
-| `%rankup_rank_id%` | Its id, or `none` |
-| `%rankup_rank_order%` | Its position on the ladder, `0` with no rank |
-| `%rankup_next_rank%` | The next rank's display name, or a green `Max rank reached!` |
-| `%rankup_next_rank_id%` | Its id, or `none` |
-| `%rankup_prestige%` | Prestige level |
-| `%rankup_can_rankup%` | `yes` / `no` |
-| `%rankup_ranks_total%` | Ranks configured |
-| `%rankup_requirements_total%` | Requirements the next rank asks for |
-| `%rankup_requirements_met%` | How many of those are already met |
-| `%rankup_progress_bar%` | Those two drawn as a bar; full when there is no next rank |
+| `%exyliasurvivalcore_rankup_rank%` | Current rank's display name, or a grey `None` |
+| `%exyliasurvivalcore_rankup_rank_id%` | Its id, or `none` |
+| `%exyliasurvivalcore_rankup_rank_order%` | Its position on the ladder, `0` with no rank |
+| `%exyliasurvivalcore_rankup_next_rank%` | The next rank's display name, or a green `Max rank reached!` |
+| `%exyliasurvivalcore_rankup_next_rank_id%` | Its id, or `none` |
+| `%exyliasurvivalcore_rankup_prestige%` | Prestige level |
+| `%exyliasurvivalcore_rankup_can_rankup%` | `yes` / `no` |
+| `%exyliasurvivalcore_rankup_ranks_total%` | Ranks configured |
+| `%exyliasurvivalcore_rankup_requirements_total%` | Requirements the next rank asks for |
+| `%exyliasurvivalcore_rankup_requirements_met%` | How many of those are already met |
+| `%exyliasurvivalcore_rankup_progress_bar%` | Those two drawn as a bar; full when there is no next rank |
 
 ## Farming
 
 | Placeholder | Description |
 |---|---|
-| `%farming_count_<category>%` | What the player has farmed in that category |
-| `%farming_level_<category>%` | Milestones claimed in it, `0` for an unknown category |
-| `%farming_total%` | Every category summed |
+| `%exyliasurvivalcore_farming_count_<category>%` | What the player has farmed in that category |
+| `%exyliasurvivalcore_farming_level_<category>%` | Milestones claimed in it, `0` for an unknown category |
+| `%exyliasurvivalcore_farming_total%` | Every category summed |
 
 ## Statistics
 
 | Placeholder | Description |
 |---|---|
-| `%stats_kills%` | Kills |
-| `%stats_deaths%` | Deaths |
-| `%stats_kdr%` | Kills over deaths, two decimals |
-| `%stats_streak%` | The streak they are on |
-| `%stats_best_streak%` | Their best ever |
-| `%stats_rank_<stat>%` | Their position on that stat's board, or `N/A` |
-| `%stats_value_<stat>%` | Their value for it, formatted, or `N/A` |
+| `%exyliasurvivalcore_stats_kills%` | Kills |
+| `%exyliasurvivalcore_stats_deaths%` | Deaths |
+| `%exyliasurvivalcore_stats_kdr%` | Kills over deaths, two decimals |
+| `%exyliasurvivalcore_stats_streak%` | The streak they are on |
+| `%exyliasurvivalcore_stats_best_streak%` | Their best ever |
+| `%exyliasurvivalcore_stats_rank_<stat>%` | Their position on that stat's board, or `N/A` |
+| `%exyliasurvivalcore_stats_value_<stat>%` | Their value for it, formatted, or `N/A` |
 
 ### Leaderboards
 
 ```text
-%stats_top_name_<position>_<stat>%
-%stats_top_value_<position>_<stat>%
+%exyliasurvivalcore_stats_top_name_<position>_<stat>%
+%exyliasurvivalcore_stats_top_value_<position>_<stat>%
 ```
 
 The **position comes first** on purpose: a stat id may contain underscores and a position may not,
@@ -139,15 +139,15 @@ so the position is the one argument that can be read on its own. A row nobody oc
 `—`.
 
 ```text
-#1 %stats_top_name_1_kills% — %stats_top_value_1_kills%
+#1 %exyliasurvivalcore_stats_top_name_1_kills% — %exyliasurvivalcore_stats_top_value_1_kills%
 ```
 
 ## Kill streaks
 
 | Placeholder | Description |
 |---|---|
-| `%killstreak_streak%` | The streak the player is on |
-| `%killstreak_best%` | Their best |
+| `%exyliasurvivalcore_killstreak_streak%` | The streak the player is on |
+| `%exyliasurvivalcore_killstreak_best%` | Their best |
 
 ## Bounties
 
@@ -156,17 +156,17 @@ the `my_` ones are about whoever is reading.
 
 | Placeholder | Description |
 |---|---|
-| `%bounty_total_<player>%` | What is on their head, formatted |
-| `%bounty_count_<player>%` | How many bounties make it up |
-| `%bounty_has_<player>%` | `true` / `false` |
-| `%bounty_count_all%` | Bounties standing on the server |
-| `%bounty_top_name_<position>%` | The name at that position, or `—` |
-| `%bounty_top_amount_<position>%` | Its total. Without a position, the biggest bounty on the server |
-| `%my_bounty_total%` | What is on the reader's head |
-| `%my_bounty_count%` | How many bounties make it up |
-| `%my_bounty_has%` | `true` / `false` |
-| `%my_placed_count%` | Bounties they have placed on others |
-| `%my_placed_total%` | What those add up to |
+| `%exyliasurvivalcore_bounty_total_<player>%` | What is on their head, formatted |
+| `%exyliasurvivalcore_bounty_count_<player>%` | How many bounties make it up |
+| `%exyliasurvivalcore_bounty_has_<player>%` | `true` / `false` |
+| `%exyliasurvivalcore_bounty_count_all%` | Bounties standing on the server |
+| `%exyliasurvivalcore_bounty_top_name_<position>%` | The name at that position, or `—` |
+| `%exyliasurvivalcore_bounty_top_amount_<position>%` | Its total. Without a position, the biggest bounty on the server |
+| `%exyliasurvivalcore_my_bounty_total%` | What is on the reader's head |
+| `%exyliasurvivalcore_my_bounty_count%` | How many bounties make it up |
+| `%exyliasurvivalcore_my_bounty_has%` | `true` / `false` |
+| `%exyliasurvivalcore_my_placed_count%` | Bounties they have placed on others |
+| `%exyliasurvivalcore_my_placed_total%` | What those add up to |
 
 `<player>` is a name the server has seen before, or a UUID. A name nobody here has ever been answers
 `0` rather than looking it up over the network from inside a placeholder.
@@ -175,12 +175,12 @@ the `my_` ones are about whoever is reading.
 
 | Placeholder | Description |
 |---|---|
-| `%mine_count%` | Mines enabled |
-| `%mine_reset_<id>%` | Time until it resets, or `-` |
-| `%mine_reset_seconds_<id>%` | The same in seconds, `-1` when there is no reset |
-| `%mine_current%` | The mine the player is standing in, or `—` |
-| `%mine_current_id%` | Its id, or `—` |
-| `%mine_time%` | Seconds they have been inside it, `0` outside |
+| `%exyliasurvivalcore_mine_count%` | Mines enabled |
+| `%exyliasurvivalcore_mine_reset_<id>%` | Time until it resets, or `-` |
+| `%exyliasurvivalcore_mine_reset_seconds_<id>%` | The same in seconds, `-1` when there is no reset |
+| `%exyliasurvivalcore_mine_current%` | The mine the player is standing in, or `—` |
+| `%exyliasurvivalcore_mine_current_id%` | Its id, or `—` |
+| `%exyliasurvivalcore_mine_time%` | Seconds they have been inside it, `0` outside |
 
 Only classic mines have a reset to count down to: a realistic mine regenerates block by block, so
 its countdown is `-` rather than a number that would never arrive.
@@ -189,34 +189,34 @@ its countdown is `-` rather than a number that would never arrive.
 
 | Placeholder | Description |
 |---|---|
-| `%afkzone_count%` | Zones configured |
-| `%afkzone_in_zone%` | `true` / `false` |
-| `%afkzone_current%` | The zone's display name, or `—` |
-| `%afkzone_current_id%` | Its id, or `—` |
-| `%afkzone_time%` | Seconds spent in it, `0` outside |
-| `%afkzone_next_reward%` | Seconds until it pays again, `0` outside |
+| `%exyliasurvivalcore_afkzone_count%` | Zones configured |
+| `%exyliasurvivalcore_afkzone_in_zone%` | `true` / `false` |
+| `%exyliasurvivalcore_afkzone_current%` | The zone's display name, or `—` |
+| `%exyliasurvivalcore_afkzone_current_id%` | Its id, or `—` |
+| `%exyliasurvivalcore_afkzone_time%` | Seconds spent in it, `0` outside |
+| `%exyliasurvivalcore_afkzone_next_reward%` | Seconds until it pays again, `0` outside |
 
 ## Reclaim
 
 | Placeholder | Description |
 |---|---|
-| `%reclaim_available%` | Whether there is something to claim right now |
-| `%reclaim_cooldown%` | Time left, `Now`, or `—` when no section applies to them |
-| `%reclaim_sections%` | Sections configured |
+| `%exyliasurvivalcore_reclaim_available%` | Whether there is something to claim right now |
+| `%exyliasurvivalcore_reclaim_cooldown%` | Time left, `Now`, or `—` when no section applies to them |
+| `%exyliasurvivalcore_reclaim_sections%` | Sections configured |
 
 ## Repair
 
 | Placeholder | Description |
 |---|---|
-| `%repair_cooldown_hand%` | Time left, or `Ready` |
-| `%repair_cooldown_all%` | Time left, or `Ready` |
+| `%exyliasurvivalcore_repair_cooldown_hand%` | Time left, or `Ready` |
+| `%exyliasurvivalcore_repair_cooldown_all%` | Time left, or `Ready` |
 
 ## Player utilities
 
 | Placeholder | Description |
 |---|---|
-| `%utils_fly%` | The saved fly toggle |
-| `%utils_night_vision%` | The saved night vision toggle |
+| `%exyliasurvivalcore_utils_fly%` | The saved fly toggle |
+| `%exyliasurvivalcore_utils_night_vision%` | The saved night vision toggle |
 
 These are the stored toggles, not the live state: what the player chose is what survives a relog,
 which is what a menu showing the toggle should show.
@@ -225,13 +225,14 @@ which is what a menu showing the toggle should show.
 
 | Placeholder | Description |
 |---|---|
-| `%scheduledcmds_remaining_<section>%` | Time until that section runs again, `Now`, or `N/A` |
+| `%exyliasurvivalcore_scheduledcmds_remaining_<section>%` | Time until that section runs again, `Now`, or `N/A` |
 
 This one asks for no viewer: how long until a section runs is the same answer for everybody, so it
 works in a console-rendered board as well as in a player's.
 
 <Callout type="warning" title="An id with an underscore is fine">
-Everything after the name is put back together before it is read, so `%farming_count_sugar_cane%`,
-`%kit_cooldown_starter_kit%` and `%warp_cooldown_pvp_arena%` all resolve. The one exception is
-`stats_top_*`, where the position is read first and the stat id is everything after it.
+Everything after the name is put back together before it is read, so
+`%exyliasurvivalcore_farming_count_sugar_cane%`, `%exyliasurvivalcore_kit_cooldown_starter_kit%` and
+`%exyliasurvivalcore_warp_cooldown_pvp_arena%` all resolve. The one exception is `stats_top_*`,
+where the position is read first and the stat id is everything after it.
 </Callout>
