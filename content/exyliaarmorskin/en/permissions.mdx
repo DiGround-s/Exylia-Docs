@@ -1,14 +1,16 @@
 ---
 title: "Permissions"
-description: "The admin node, the per-skin node every skin derives from its id, and the two switches that decide whether either one is enforced."
+description: "The wardrobe node, the admin node, the per-skin and per-piece nodes, and the two switches that decide whether they are enforced."
 ---
 
 ## The nodes
 
 | Permission | Default | Grants |
 |---|---|---|
-| `exyliaarmorskin.admin` | `op` | Every subcommand of `/armorskin`: `give`, `remover`, `list`, `refresh` and `reload`. |
-| `exyliaarmorskin.skin.<id>` | — | Applying and wearing that one skin. |
+| `exyliaarmorskin.wardrobe` | — | `/wardrobe`. |
+| `exyliaarmorskin.admin` | `op` | Every subcommand of `/armorskinsadmin`: `give`, `remover`, `list`, `refresh`, `wardrobe open`, `wardrobe clear` and `reload`. |
+| `exyliaarmorskin.skin.<id>` | — | Applying and wearing that one skin, on every piece it fits. |
+| `exyliaarmorskin.skin.<id>.<piece>` | — | That skin on one slot only: `helmet`, `chestplate`, `leggings` or `boots`. |
 | `exyliaarmorskin.skin.*` | `op` | Every skin. |
 
 Both fixed nodes are declared in `plugin.yml` with `default: op`, so an operator owns every skin out
@@ -20,18 +22,32 @@ There is no `permission` key in `skins.yml`: the node is **derived from the id**
 skin `galaxy` is always `exyliaarmorskin.skin.galaxy`. Add a skin and its node exists; rename it and
 the node renames with it.
 
+## Selling half a skin
+
+Each slot has a node of its own, `exyliaarmorskin.skin.<id>.<piece>`. The whole-skin node covers all
+four; a piece node covers exactly one.
+
 ```text
-/lp group default permission set exyliaarmorskin.skin.blue_vex true
-/lp group vip permission set exyliaarmorskin.skin.galaxy true
-/lp group mvp permission set exyliaarmorskin.skin.* true
+/lp group vip permission set exyliaarmorskin.skin.celestial.helmet true
+```
+
+In the wardrobe a skin the player owns for one piece is offered on that piece, and dressing the full
+set dresses only the pieces they are allowed to wear — a rank holding one piece still gets it rather
+than being refused outright.
+
+```text
+/lp group default permission set exyliaarmorskin.wardrobe true
+/lp group vip     permission set exyliaarmorskin.skin.galaxy true
+/lp group mvp     permission set exyliaarmorskin.skin.* true
 ```
 
 ## What the node is checked for
 
 <Steps>
   <Step title="Applying">
-    Dragging a skin item onto armour without the node is refused with the `no-permission` message.
-    Nothing is written and nothing is consumed. Governed by `behaviour.require-permission`.
+    Dragging a skin item onto armour, or wearing one in the wardrobe, without the node is refused
+    with the `no-permission` message. Nothing is written and nothing is consumed. Governed by
+    `behaviour.require-permission`.
   </Step>
   <Step title="Wearing">
     A piece whose skin the **wearer** may not use is drawn as the real armour — to them and to
@@ -41,8 +57,8 @@ the node renames with it.
 </Steps>
 
 The wearing check runs whenever the piece is reconciled: on equip, on join, on respawn, on
-`/armorskin refresh` and on `/armorskin reload`. Revoking a node mid-session therefore takes effect
-on the next of those — `/armorskin refresh <player>` makes it immediate. Granting it back and
+`/armorskinsadmin refresh` and on `/armorskinsadmin reload`. Revoking a node mid-session therefore takes effect
+on the next of those — `/armorskinsadmin refresh <player>` makes it immediate. Granting it back and
 refreshing brings the skin straight back, because nothing was ever removed from the item.
 
 ## The two switches
@@ -61,7 +77,7 @@ behaviour:
 | Both `false` | Nobody is checked. This is how the plugin behaved before per-skin permissions existed. |
 
 <Callout type="warning" title="Commands and the API are never gated">
-`/armorskin give` hands out any skin item to any player, and `apply()` in the API writes any skin
+`/armorskinsadmin give` hands out any skin item to any player, and `apply()` in the API writes any skin
 onto any piece, regardless of the node or of `require-permission` — those are the tools you use to
 grant a skin. What the wearer lacks the node for is the **display**, which `hide-without-permission`
 governs.
@@ -76,7 +92,8 @@ Because a skin travels as an item **and** carries a node, you can sell either ha
 | A consumable a player buys once | Give the item and grant the node with it. |
 | A rank perk | Grant `exyliaarmorskin.skin.galaxy` to the rank; hand the item out freely. |
 | A skin anyone may use | Grant its node to `default`, or turn both switches off. |
-| A skin that stops working when a rank expires | Grant only the node, leave `hide-without-permission: true`. The armour keeps the id and the look returns the day the rank does. |
+| A skin that stops working when a rank expires | Grant only the node, leave `hide-without-permission: true`. The armour keeps the id — or the wardrobe keeps the row — and the look returns the day the rank does. |
+| A skin on one slot only | Grant `exyliaarmorskin.skin.<id>.<piece>` instead of the whole node. |
 
 <Callout type="tip" title="consume-skin-item decides whether a skin is single-use">
 With `consume-skin-item: true` — the default — applying eats the item, so a skin is a consumable.

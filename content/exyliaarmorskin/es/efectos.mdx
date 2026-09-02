@@ -66,7 +66,7 @@ referencia completa está en el [módulo de efectos de ExyliaLib](/docs/exyliali
 
 <Callout type="note" title="Suenan al equipar de verdad, no en cada redibujado">
 `on-equip` suena al equipar una pieza o cuando su skin cambia sobre el cuerpo. Entrar al servidor,
-reaparecer, cambiar de mundo, `/armorskin refresh` y `/armorskin reload` reconstruyen el visual **en
+reaparecer, cambiar de mundo, `/armorskinsadmin refresh` y `/armorskinsadmin reload` reconstruyen el visual **en
 silencio**: a un jugador que se conecta no le reciben cuatro títulos.
 </Callout>
 
@@ -131,24 +131,36 @@ el tick en que el set se rompe, cuando el portador se desconecta y al apagar el 
 
 ### Qué traen los valores por defecto
 
-Las diez skins de color fijo no declaran bonus de set. Las diez animadas traen cada una una partícula
-alrededor del cuerpo y un sonido al completarse; `on-break` está en silencio en todas.
+**Todas** las skins incluidas traen el espectáculo completo: un sonido al ponerse, una partícula
+alrededor del cuerpo mientras el set aguanta, una línea en la action bar — `✦ Full set » <NOMBRE>` —
+al completarse y `✧ Set broken` al romperse.
 
-| Skin | Partícula ambiental | Intervalo | Sonido de `on-complete` |
-|---|---|---|---|
-| `rainbow` | `NOTE\|3\|0.5\|0` | 0,5 s | `ENTITY_PLAYER_LEVELUP` |
-| `pastel` | `CHERRY_LEAVES\|2\|0.4\|0` | 0,5 s | `BLOCK_AMETHYST_BLOCK_CHIME` |
-| `inferno` | `FLAME\|4\|0.4\|0.01` | 0,25 s | `ITEM_FIRECHARGE_USE` |
-| `ocean` | `BUBBLE_POP\|3\|0.4\|0` | 0,3 s | `ENTITY_DOLPHIN_SPLASH` |
-| `heartbeat` | `HEART\|1\|0.3\|0` | 1,2 s | `ENTITY_WARDEN_HEARTBEAT` |
-| `toxic` | `SNEEZE\|2\|0.4\|0.02` | 0,4 s | `ENTITY_CREEPER_PRIMED` |
-| `galaxy` | `END_ROD\|2\|0.5\|0.01` | 0,4 s | `BLOCK_END_PORTAL_FRAME_FILL` |
-| `aurora` | `GLOW\|3\|0.5\|0` | 0,4 s | `BLOCK_BEACON_ACTIVATE` |
-| `strobe` | `ELECTRIC_SPARK\|3\|0.4\|0.05` | 0,3 s | `ENTITY_LIGHTNING_BOLT_IMPACT` |
-| `ember` | `SMALL_FLAME\|3\|0.4\|0.01` | 0,4 s | `BLOCK_FIRE_AMBIENT` |
+| Skin | Partícula ambiental del set | Intervalo | Sonido de `on-equip` | Sonido de `on-complete` |
+|---|---|---|---|---|
+| `rainbow` | `NOTE\|3\|0.5\|0` | 0,5 s | `BLOCK_NOTE_BLOCK_CHIME` | `ENTITY_PLAYER_LEVELUP` |
+| `pastel` | `END_ROD\|2\|0.4\|0` | 0,5 s | `BLOCK_AMETHYST_BLOCK_CHIME` | `BLOCK_AMETHYST_BLOCK_CHIME` |
+| `inferno` | `FLAME\|4\|0.4\|0.01` | 0,25 s | `ITEM_FIRECHARGE_USE` | `ENTITY_BLAZE_SHOOT` |
+| `ocean` | `BUBBLE_POP\|3\|0.4\|0` | 0,3 s | `AMBIENT_UNDERWATER_ENTER` | `ENTITY_DOLPHIN_SPLASH` |
+| `heartbeat` | `HEART\|1\|0.3\|0` | 1,2 s | `ENTITY_WARDEN_HEARTBEAT` | `ENTITY_WARDEN_HEARTBEAT` |
+| `toxic` | `SNEEZE\|2\|0.4\|0.02` | 0,4 s | `ENTITY_CREEPER_HURT` | `ENTITY_CREEPER_PRIMED` |
+| `galaxy` | `END_ROD\|2\|0.5\|0.01` | 0,4 s | `BLOCK_PORTAL_TRIGGER` | `BLOCK_END_PORTAL_FRAME_FILL` |
+| `aurora` | `GLOW\|3\|0.5\|0` | 0,4 s | `BLOCK_AMETHYST_CLUSTER_PLACE` | `BLOCK_BEACON_ACTIVATE` |
+| `ember` | `SMALL_FLAME\|3\|0.4\|0.01` | 0,4 s | `BLOCK_FIRE_AMBIENT` | `ITEM_FIRECHARGE_USE` |
+| `voltage` | `ELECTRIC_SPARK\|4\|0.4\|0.05` | 0,25 s | `BLOCK_COPPER_BULB_TURN_ON` | `ENTITY_LIGHTNING_BOLT_IMPACT` |
+| `tempest` | `CLOUD\|3\|0.5\|0.02` | 0,4 s | `ENTITY_BREEZE_WIND_BURST` | `ENTITY_LIGHTNING_BOLT_THUNDER` |
+| `sakura` | `CHERRY_LEAVES\|3\|0.5\|0` | 0,4 s | `BLOCK_CHERRY_WOOD_PLACE` | `BLOCK_NOTE_BLOCK_CHIME` |
+| `shogun` | `CRIT\|3\|0.4\|0.05` | 0,5 s | `ITEM_ARMOR_EQUIP_NETHERITE` | `ENTITY_PLAYER_ATTACK_SWEEP` |
+| `dragonfire` | `LAVA\|2\|0.4\|0` | 0,35 s | `ENTITY_ENDER_DRAGON_FLAP` | `ENTITY_ENDER_DRAGON_SHOOT` |
+| `void_dragon` | `DRAGON_BREATH\|3\|0.5\|0.01` | 0,35 s | `ENTITY_ENDER_DRAGON_GROWL` | `ENTITY_ENDER_DRAGON_GROWL` |
+| `frostbite` | `SNOWFLAKE\|4\|0.5\|0.01` | 0,4 s | `BLOCK_POWDER_SNOW_STEP` | `BLOCK_GLASS_BREAK` |
+| `neon` | `GLOW\|3\|0.4\|0` | 0,3 s | `BLOCK_BEACON_POWER_SELECT` | `BLOCK_BEACON_POWER_SELECT` |
+| `verdant` | `FALLING_SPORE_BLOSSOM\|2\|0.5\|0` | 0,5 s | `BLOCK_MOSS_PLACE` | `BLOCK_AZALEA_PLACE` |
+| `bloodmoon` | `CRIMSON_SPORE\|4\|0.5\|0` | 0,4 s | `ENTITY_WOLF_GROWL` | `ENTITY_WOLF_HOWL` |
+| `celestial` | `WAX_ON\|3\|0.5\|0` | 0,4 s | `BLOCK_AMETHYST_BLOCK_CHIME` | `ITEM_TOTEM_USE` |
 
-Todas usan un radio de 32 bloques y un sonido de completado a volumen 1.0, tono 1.4 y categoría
-`PLAYERS`.
+Todas usan un radio de 32 bloques, un sonido de equipado a volumen 0.8 y uno de completado a volumen
+1.0, tono 1.4 y categoría `PLAYERS`. El `on-break` es el mismo en todas:
+`BLOCK_BEACON_DEACTIVATE` a volumen 0.7 con la línea de set roto.
 
 <Callout type="tip" title="Cambiar un set completo por otro es silencioso">
 Pasar de un set completo de `inferno` a uno completo de `ocean` reproduce el `on-complete` de `ocean`

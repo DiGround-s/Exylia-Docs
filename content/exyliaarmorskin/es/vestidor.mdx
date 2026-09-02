@@ -1,0 +1,109 @@
+---
+title: "El vestidor"
+description: "Una pantalla que viste al jugador y no a la armadura: foco, poner, quitar y todas las plantillas de menus/wardrobe.yml."
+---
+
+El vestidor es la segunda forma de llevar una skin. Un objeto de skin escribe en la **armadura**; el
+vestidor guarda la elección contra el **jugador**, así que sobrevive a la muerte, a los intercambios y
+a un cambio de equipo — y la armadura no se toca en absoluto.
+
+`/wardrobe` abre una sola ventana de 54 huecos.
+
+## Los tres modos
+
+`behaviour.mode` decide de dónde sale la skin de una pieza:
+
+| Modo | De dónde sale | Qué implica |
+|---|---|---|
+| `item` | Solo de lo que un objeto de skin escribió en la armadura. | La skin se comercia, se cae y se pierde con la pieza. Sin vestidor y sin base de datos. |
+| `wardrobe` | Solo de lo que el jugador eligió en `/wardrobe`. | Sigue al jugador y cae sobre lo que se equipe. Los objetos de skin no hacen nada. |
+| `both` | La skin propia de la armadura y, para la que no lleva ninguna, el vestidor. | El valor por defecto. |
+
+En `both` **gana la armadura**: una pieza con skin se dibuja con la suya, y el vestidor solo cubre las
+piezas peladas.
+
+## Las dos listas
+
+| Sección | Huecos | Qué contiene |
+|---|---|---|
+| `targets` | `2,3,4,5,6` | Lo que se está vistiendo: el set completo y luego casco, peto, pantalones y botas. |
+| `skins` | `10-16,19-25,28-34,37-43` | Todas las skins, paginadas con los botones de los huecos `48` y `50`. |
+
+**UNDRESS** está en el hueco `45` y lo quita todo; **CLOSE** en el `49`.
+
+Cada fila de armadura se dibuja con la pieza de cuero de su propia ranura, teñida con la skin que
+lleva ahí, así que la parte de arriba de la pantalla es el aspecto actual del jugador. Una fila de la
+rejilla se dibuja en **la pieza que se está vistiendo**, para que la skin se vea donde va a acabar;
+una skin que no encaja en la pieza enfocada se dibuja en una que sí.
+
+## Qué hace un clic
+
+| Clic | Sobre | Resultado |
+|---|---|---|
+| Izquierdo | Una fila de armadura | La enfoca — la rejilla pasa a vestir esa pieza. |
+| Derecho | Una fila de armadura | Le quita la skin. |
+| Izquierdo | La fila del set completo | Enfoca las cuatro piezas a la vez. |
+| Derecho | La fila del set completo | Vacía el vestidor entero. |
+| Cualquiera | Una skin | La pone en lo que esté enfocado, o la quita si ya es la que lleva. |
+
+<Callout type="note" title="Vestir el set completo viste lo que se puede llevar">
+Con el set enfocado, la skin se aplica a todas las piezas para las que el jugador tenga permiso — así
+que un rango que tiene una sola pieza de una skin se lleva esa pieza en vez de un rechazo entero.
+</Callout>
+
+## Plantillas
+
+| Sección | Plantilla | Cuándo se usa |
+|---|---|---|
+| `targets` | `item_template` | Una ranura de armadura sin enfocar. |
+| | `focused_template` | La ranura que se está vistiendo. |
+| | `set_template` | La fila del set completo, sin enfocar. |
+| | `focused_set_template` | La fila del set completo mientras está enfocada. |
+| `skins` | `item_template` | Una skin que el jugador puede usar y que encaja. |
+| | `selected_template` | La skin puesta en la pieza enfocada — o en todas las que la skin encaja, con el set enfocado. |
+| | `unsupported_template` | Una skin cuyas `pieces` no incluyen la ranura enfocada. |
+| | `no_permissions_template` | Una skin que el jugador no tiene. |
+
+`item_template` es el estado normal y debe ir primera en cada lista. Las filas bloqueadas y las que no
+encajan no llevan acción propia: hacer clic en ellas no hace nada.
+
+## Placeholders
+
+| Dónde | Disponibles |
+|---|---|
+| `targets` | `%target%` `%target_name%` `%piece%` `%piece_material%` `%skin_name%` `%skin_color%` `%skin_trim_pattern%` `%skin_trim_material%` `%dressed%` `%pieces%` |
+| `skins` | `%skin_id%` `%skin_name%` `%skin_icon%` `%skin_preview%` `%skin_color%` `%skin_trim_pattern%` `%skin_trim_material%` `%skin_pieces%` `%skin_worn%` `%skin_worn_name%` |
+
+## Acciones
+
+| Acción | Qué hace |
+|---|---|
+| `armorskin:wardrobe` | Abre la pantalla. |
+| `armorskin:focus <objetivo>` | Viste una pieza, o `set` para las cuatro. |
+| `armorskin:wear <skin>` | Pone una skin en el foco, o la quita si ya está puesta. |
+| `armorskin:clear <objetivo>` | Limpia una pieza, o `set` para el vestidor entero. |
+
+## Textos
+
+Las pocas cadenas que una plantilla dibuja para todas las filas viven en `config.yml`:
+
+```yaml title="config.yml"
+wardrobe:
+  full-set: "{primary}&lFULL SET"
+  helmet: "{primary}&lHELMET"
+  chestplate: "{primary}&lCHESTPLATE"
+  leggings: "{primary}&lLEGGINGS"
+  boots: "{primary}&lBOOTS"
+  empty: "{muted}Nothing"
+```
+
+## Dónde se guarda
+
+Una fila por jugador en `armorskin_wardrobe`: el uuid y una columna por pieza con un id de skin. Las
+lecturas nunca bloquean — un vestidor que todavía viene de la base de datos responde "aún no hay
+skin", y el jugador se redibuja en cuanto llega.
+
+<Callout type="tip" title="No hay nada que devolver">
+Vaciar un vestidor no entrega ningún objeto, porque nunca se consumió ninguno: una elección de
+vestidor es una fila, no un objeto. Los objetos de skin y los removedores son de `item` y `both`.
+</Callout>

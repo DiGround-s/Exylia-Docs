@@ -1,14 +1,16 @@
 ---
 title: "Permisos"
-description: "El nodo de administración, el nodo por skin que cada skin deriva de su id y los dos interruptores que deciden si se aplican."
+description: "El nodo del vestidor, el de administración, los nodos por skin y por pieza, y los dos interruptores que deciden si se aplican."
 ---
 
 ## Los nodos
 
 | Permiso | Por defecto | Da acceso a |
 |---|---|---|
-| `exyliaarmorskin.admin` | `op` | Todos los subcomandos de `/armorskin`: `give`, `remover`, `list`, `refresh` y `reload`. |
-| `exyliaarmorskin.skin.<id>` | — | Aplicar y llevar esa skin concreta. |
+| `exyliaarmorskin.wardrobe` | — | `/wardrobe`. |
+| `exyliaarmorskin.admin` | `op` | Todos los subcomandos de `/armorskinsadmin`: `give`, `remover`, `list`, `refresh`, `wardrobe open`, `wardrobe clear` y `reload`. |
+| `exyliaarmorskin.skin.<id>` | — | Aplicar y llevar esa skin concreta, en todas las piezas que encaja. |
+| `exyliaarmorskin.skin.<id>.<pieza>` | — | Esa skin en una sola ranura: `helmet`, `chestplate`, `leggings` o `boots`. |
 | `exyliaarmorskin.skin.*` | `op` | Todas las skins. |
 
 Los dos nodos fijos se declaran en `plugin.yml` con `default: op`, así que un operador tiene todas
@@ -20,18 +22,27 @@ No hay clave `permission` en `skins.yml`: el nodo se **deriva del id**, en minú
 skin `galaxy` siempre es `exyliaarmorskin.skin.galaxy`. Añade una skin y su nodo existe; renómbrala y
 el nodo se renombra con ella.
 
+## Vender media skin
+
+Cada ranura tiene su propio nodo, `exyliaarmorskin.skin.<id>.<pieza>`. El nodo de la skin entera cubre
+las cuatro; el de una pieza cubre exactamente una.
+
 ```text
-/lp group default permission set exyliaarmorskin.skin.blue_vex true
-/lp group vip permission set exyliaarmorskin.skin.galaxy true
-/lp group mvp permission set exyliaarmorskin.skin.* true
+/lp group default permission set exyliaarmorskin.wardrobe true
+/lp group vip     permission set exyliaarmorskin.skin.celestial.helmet true
+/lp group mvp     permission set exyliaarmorskin.skin.* true
 ```
+
+En el vestidor, una skin que el jugador tiene para una pieza se le ofrece en esa pieza, y vestir el
+set completo viste solo las piezas que puede llevar — un rango con una sola pieza se la lleva en vez
+de recibir un rechazo entero.
 
 ## Para qué se comprueba el nodo
 
 <Steps>
   <Step title="Aplicar">
-    Arrastrar un objeto de skin sobre la armadura sin el nodo se rechaza con el mensaje
-    `no-permission`. No se escribe nada y no se consume nada. Lo gobierna
+    Arrastrar un objeto de skin sobre la armadura, o ponérsela en el vestidor, sin el nodo se
+    rechaza con el mensaje `no-permission`. No se escribe nada y no se consume nada. Lo gobierna
     `behaviour.require-permission`.
   </Step>
   <Step title="Llevarla puesta">
@@ -42,8 +53,8 @@ el nodo se renombra con ella.
 </Steps>
 
 La comprobación de llevar puesto ocurre cada vez que la pieza se reconcilia: al equipar, al entrar,
-al reaparecer, con `/armorskin refresh` y con `/armorskin reload`. Quitar un nodo en mitad de una
-sesión surte efecto en la siguiente de esas ocasiones — `/armorskin refresh <jugador>` lo hace
+al reaparecer, con `/armorskinsadmin refresh` y con `/armorskinsadmin reload`. Quitar un nodo en mitad de una
+sesión surte efecto en la siguiente de esas ocasiones — `/armorskinsadmin refresh <jugador>` lo hace
 inmediato. Volver a darlo y refrescar devuelve la skin al momento, porque nunca se le quitó nada al
 objeto.
 
@@ -63,7 +74,7 @@ behaviour:
 | Los dos en `false` | No se comprueba a nadie. Así se comportaba el plugin antes de los permisos por skin. |
 
 <Callout type="warning" title="Los comandos y la API nunca se limitan">
-`/armorskin give` reparte cualquier objeto de skin a cualquier jugador, y `apply()` en la API escribe
+`/armorskinsadmin give` reparte cualquier objeto de skin a cualquier jugador, y `apply()` en la API escribe
 cualquier skin sobre cualquier pieza, sin mirar el nodo ni `require-permission`: son las herramientas
 con las que concedes una skin. Lo que le falta al portador sin el nodo es la **visualización**, y de
 eso se encarga `hide-without-permission`.

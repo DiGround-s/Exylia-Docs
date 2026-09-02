@@ -1,6 +1,6 @@
 ---
 title: "Instalación"
-description: "Dependencias, los tres archivos que escribe al primer arranque y qué cubre una actualización."
+description: "Dependencias, los archivos que escribe al primer arranque, la tabla del vestidor y qué cubre una actualización."
 ---
 
 ## Instalar
@@ -12,13 +12,14 @@ description: "Dependencias, los tres archivos que escribe al primer arranque y q
     los objetos.
   </Step>
   <Step title="Arranca el servidor">
-    Escribe `config.yml`, `skins.yml` y `animations.yml` en `plugins/ExyliaArmorSkin/`.
+    Escribe `config.yml`, `skins.yml` y `animations.yml` en `plugins/ExyliaArmorSkin/`. Con el
+    vestidor encendido escribe además `menus/wardrobe.yml`, abre `database.yml` y crea su tabla.
   </Step>
   <Step title="Date una skin">
-    `/armorskin give <tú> blue_vex` y arrastra el objeto sobre un peto en tu inventario.
+    `/armorskinsadmin give <tú> galaxy` y arrastra el objeto sobre un peto en tu inventario.
   </Step>
   <Step title="Edita los archivos">
-    Añade o cambia skins en `skins.yml` y animaciones en `animations.yml`, y luego `/armorskin reload`.
+    Añade o cambia skins en `skins.yml` y animaciones en `animations.yml`, y luego `/armorskinsadmin reload`.
   </Step>
 </Steps>
 
@@ -43,12 +44,23 @@ orden de carga, pero el plugin está construido sobre ella y tampoco funciona si
 
 | Archivo | Contenido |
 |---|---|
-| `config.yml` | El objeto de skin, el removedor, el lore que se añade a la armadura con skin, dos interruptores de comportamiento y todos los mensajes. |
+| `config.yml` | El objeto de skin, el removedor, el lore que se añade a la armadura con skin, los textos del vestidor, los interruptores de comportamiento y todos los mensajes. |
 | `skins.yml` | Las skins, indexadas por id. |
 | `animations.yml` | Animaciones con nombre a las que una skin puede referirse. |
+| `menus/wardrobe.yml` | La pantalla del vestidor: la fila de armadura, la rejilla de skins, sus plantillas y botones. Solo se escribe con el vestidor encendido. |
+| `database.yml` | Dónde se guardan los vestidores. H2 por defecto. |
 
-No hay base de datos ni datos de jugador. Lo único que se escribe fuera de estos archivos es el id de
-la skin en la propia armadura.
+## La tabla
+
+`armorskin_wardrobe`, una fila por jugador: el uuid y una columna por pieza — `helmet`,
+`chestplate`, `leggings`, `boots` — con un id de skin o nada.
+
+Solo se lee y se escribe con el vestidor encendido (`behaviour.mode` en `wardrobe` o `both`). En un
+servidor `item`, lo único que se escribe fuera de los archivos es el id de la skin en la propia
+armadura.
+
+Un id de skin en una columna que `skins.yml` ya no declara simplemente no dibuja nada: la fila se
+queda como está, y el aspecto vuelve si la skin vuelve.
 
 <Callout type="note" title="Los mensajes viven en config.yml">
 A diferencia de la mayoría de plugins de Exylia, este no tiene `messages.yml`. Todas las líneas que
@@ -57,5 +69,5 @@ envía están bajo `messages:` en `config.yml`.
 
 ## Actualizar
 
-Cambia el jar y reinicia. `/armorskin reload` vuelve a leer los tres archivos, reconstruye cada skin
+Cambia el jar y reinicia. `/armorskinsadmin reload` vuelve a leer esos archivos, reconstruye cada skin
 y redibuja a todo el mundo conectado, así que un cambio de color se ve sin que nadie se reequipe.

@@ -1,13 +1,38 @@
 ---
 title: "Primeros pasos"
-description: "Dar una skin, aplicarla, quitarla y escribir una propia."
+description: "Vestirse en el vestidor, aplicar un objeto de skin, quitarlo y escribir una skin propia."
 ---
 
-## Llevar una skin
+## Llevar una skin desde el vestidor
+
+<Steps>
+  <Step title="Concede el comando">
+    ```text
+    /lp group default permission set exyliaarmorskin.wardrobe true
+    ```
+  </Step>
+  <Step title="Ábrelo">
+    `/wardrobe`. La armadura de arriba es lo que se está vistiendo; la rejilla de abajo son todas las
+    skins, dibujadas en la pieza que esté enfocada.
+  </Step>
+  <Step title="Viste una ranura, o las cuatro">
+    Clic izquierdo en una ranura para enfocarla y luego clic en una skin. El botón del set completo,
+    a la izquierda, viste de golpe todas las piezas que el jugador pueda llevar.
+  </Step>
+  <Step title="Quítatela">
+    Haz clic en la skin que ya llevas, o clic derecho en la ranura. Clic derecho en el botón del set
+    completo vacía el vestidor.
+  </Step>
+</Steps>
+
+No se escribió nada en la armadura: la elección es una fila en `armorskin_wardrobe` y sigue al
+jugador, lleve lo que lleve.
+
+## Llevar una skin desde un objeto
 
 <Steps>
   <Step title="Date el objeto">
-    `/armorskin give <tú> blue_vex`. El comando autocompleta todos los ids de skin y acepta una
+    `/armorskinsadmin give <tú> galaxy`. El comando autocompleta todos los ids de skin y acepta una
     cantidad opcional de 1 a 64.
   </Step>
   <Step title="Arrástralo sobre la armadura">
@@ -19,12 +44,12 @@ description: "Dar una skin, aplicarla, quitarla y escribir una propia."
     sigue siendo lo que era — compruébalo con `/data get entity <tú> Inventory`.
   </Step>
   <Step title="Quita la skin">
-    `/armorskin remover <tú>` y haz clic sobre esa misma pieza con el removedor en el cursor. La skin
+    `/armorskinsadmin remover <tú>` y haz clic sobre esa misma pieza con el removedor en el cursor. La skin
     vuelve como objeto y el removedor se consume.
   </Step>
   <Step title="Lleva el set entero">
-    Pinta las cuatro piezas con la misma skin y arranca su bonus de set: `inferno` suena y te rodea
-    de llamas hasta que te quites una pieza.
+    Lleva las cuatro piezas con la misma skin y arranca su bonus de set: `inferno` anuncia el set y
+    te rodea de llamas hasta que te quites una pieza.
   </Step>
 </Steps>
 
@@ -69,7 +94,7 @@ skins:
     animation: ''         # un preset de animations.yml, o rainbow / pulse / frames
 ```
 
-Después `/armorskin reload`. La skin existe al momento, `/armorskin list` la muestra y quien ya
+Después `/armorskinsadmin reload`. La skin existe al momento, `/armorskinsadmin list` la muestra y quien ya
 llevara una pieza con `ruby_ward` ve el color nuevo sin reequiparse.
 
 <Callout type="tip" title="El id es lo que guarda la armadura">

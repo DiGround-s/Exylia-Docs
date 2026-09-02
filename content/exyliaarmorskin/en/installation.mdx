@@ -1,6 +1,6 @@
 ---
 title: "Installation"
-description: "Dependencies, the three files it writes on first start, and what updating covers."
+description: "Dependencies, the files it writes on first start, the wardrobe table, and what updating covers."
 ---
 
 ## Installing
@@ -11,13 +11,15 @@ description: "Dependencies, the three files it writes on first start, and what u
     optional: it is only used to resolve `%placeholders%` written in the item names and lore.
   </Step>
   <Step title="Start the server">
-    It writes `config.yml`, `skins.yml` and `animations.yml` under `plugins/ExyliaArmorSkin/`.
+    It writes `config.yml`, `skins.yml` and `animations.yml` under `plugins/ExyliaArmorSkin/`. While
+    the wardrobe is on it also writes `menus/wardrobe.yml`, opens `database.yml` and creates its
+    table.
   </Step>
   <Step title="Give yourself a skin">
-    `/armorskin give <you> blue_vex`, then drag the item onto a chestplate in your inventory.
+    `/armorskinsadmin give <you> galaxy`, then drag the item onto a chestplate in your inventory.
   </Step>
   <Step title="Edit the files">
-    Add or change skins in `skins.yml` and animations in `animations.yml`, then `/armorskin reload`.
+    Add or change skins in `skins.yml` and animations in `animations.yml`, then `/armorskinsadmin reload`.
   </Step>
 </Steps>
 
@@ -42,12 +44,22 @@ for load ordering, but the plugin is built on it and will not work without it ei
 
 | File | Contents |
 |---|---|
-| `config.yml` | The skin item, the remover item, the lore added to skinned armour, two behaviour switches and every message. |
+| `config.yml` | The skin item, the remover item, the lore added to skinned armour, the wardrobe wording, the behaviour switches and every message. |
 | `skins.yml` | The skins themselves, keyed by id. |
 | `animations.yml` | Named animations a skin can refer to. |
+| `menus/wardrobe.yml` | The wardrobe screen: the armour row, the skin grid, its templates and buttons. Written only while the wardrobe is on. |
+| `database.yml` | Where wardrobes are stored. H2 by default. |
 
-There is no database and no player data. The only thing written outside these files is the skin id on
-the armour item.
+## The table
+
+`armorskin_wardrobe`, one row per player: the uuid and one column per piece — `helmet`,
+`chestplate`, `leggings`, `boots` — each holding a skin id or nothing.
+
+It is only read and written while the wardrobe is on (`behaviour.mode` is `wardrobe` or `both`). On
+an `item` server the only thing written outside the files is the skin id on the armour itself.
+
+A skin id in a column that `skins.yml` no longer declares simply draws nothing — the row is left
+alone, and the look returns if the skin comes back.
 
 <Callout type="note" title="Messages live in config.yml">
 Unlike most Exylia plugins, this one has no `messages.yml`. Every line it sends is under `messages:`
@@ -56,5 +68,5 @@ in `config.yml`.
 
 ## Updating
 
-Replace the jar and restart. `/armorskin reload` re-reads all three files, rebuilds every skin and
+Replace the jar and restart. `/armorskinsadmin reload` re-reads those files, rebuilds every skin and
 redraws everyone online, so a colour change is visible without anybody re-equipping.

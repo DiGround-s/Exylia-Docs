@@ -35,8 +35,12 @@ renderizado también la ve, porque el visual se aplica sobre los propios paquete
 ## ¿Qué se puede pintar?
 
 Cascos, petos, pantalones y botas — cualquier cosa que Bukkit trate como pieza de armadura, de
-cualquier material. Élitros, cabezas y calabazas talladas no son piezas de armadura y se rechazan con
+cualquier material. Cabezas y calabazas talladas no son piezas de armadura y se rechazan con
 `not-armor`.
+
+Un **élitro** también se rechaza, y el vestidor tampoco lo viste nunca: va en la ranura del pecho y
+responde a todo lo que normalmente significa «peto», pero dibujarlo como uno le costaría el vuelo al
+portador.
 
 ## ¿Se pueden apilar dos skins en una pieza?
 
@@ -44,8 +48,9 @@ No. Una pieza que ya lleva skin responde `already-skinned`; usa antes un removed
 
 ## ¿Qué pasa con la skin al morir o al tirar la pieza?
 
-Viaja con el objeto, porque *está* en el objeto. Un peto con skin en un cofre, en un intercambio o en
-el suelo sigue teniendo skin cuando vuelve.
+Una skin aplicada con un **objeto** viaja con la pieza, porque *está* en la pieza: un peto con skin
+en un cofre, en un intercambio o en el suelo sigue teniendo skin cuando vuelve. Una elección de
+**vestidor** no toca la armadura: se queda con el jugador y cae sobre lo que se equipe después.
 
 ## ¿Funciona junto a otros plugins de armadura?
 
@@ -55,7 +60,8 @@ las líneas de lore de la skin nunca se escriben en el objeto, así que nada las
 
 ## ¿Los jugadores necesitan permiso para usar una skin?
 
-Sí, por defecto. Cada skin tiene un nodo derivado de su id, `exyliaarmorskin.skin.<id>`, y tanto
+Sí, por defecto. Cada skin tiene un nodo derivado de su id, `exyliaarmorskin.skin.<id>`, más uno por
+ranura debajo (`exyliaarmorskin.skin.<id>.helmet`), y tanto
 `require-permission` como `hide-without-permission` vienen en `true`: sin el nodo un jugador no puede
 aplicar la skin, y la armadura que ya la lleva se muestra como la pieza real. Apaga cualquiera de los
 dos interruptores en `config.yml` para volver a «el objeto es el permiso». Ver
@@ -64,14 +70,14 @@ dos interruptores en `config.yml` para volver a «el objeto es el permiso». Ver
 ## Quité un nodo y el jugador sigue viendo la skin
 
 La comprobación ocurre cuando la pieza se reconcilia — al equipar, entrar, reaparecer, con
-`/armorskin refresh` y con `/armorskin reload` — no en un temporizador. `/armorskin refresh <jugador>`
+`/armorskinsadmin refresh` y con `/armorskinsadmin reload` — no en un temporizador. `/armorskinsadmin refresh <jugador>`
 lo aplica al momento. Al objeto nunca se le quita nada, así que devolver el nodo devuelve el aspecto.
 
 ## ¿Qué es un bonus de set?
 
 Un efecto que solo suena cuando un jugador lleva **todas las piezas que una skin encaja** con esa
 skin: un sonido o título al completarse, algo ambiental alrededor del cuerpo mientras aguanta y un
-momento al romperse. Las diez skins animadas traen uno. Ver
+momento al romperse. Todas las skins incluidas traen uno. Ver
 [Efectos](/docs/exyliaarmorskin/efectos#bonus-de-set).
 
 ## ¿Hay placeholders?
@@ -81,9 +87,22 @@ para que se resuelvan los `%placeholders%` que **tú** escribas en los nombres, 
 
 ## ¿Hay menú?
 
-No. Las skins se dan como objetos y se aplican arrastrándolas sobre la armadura. Cualquier cosa con
-forma de menú se construye encima con la [API](/docs/exyliaarmorskin/api) o con un plugin de cajas
-ejecutando `/armorskin give`.
+Sí: `/wardrobe`, una pantalla que viste al jugador en lugar de a la armadura. Está encendida mientras
+`behaviour.mode` sea `wardrobe` o `both`; en un servidor `item` se niega a abrir y lo dice. Ver
+[El vestidor](/docs/exyliaarmorskin/vestidor).
+
+## ¿Cuál es la diferencia entre un objeto de skin y el vestidor?
+
+Un objeto de skin escribe en la **armadura**, así que el aspecto se comercia, se cae y se pierde con
+la pieza. Una elección de vestidor se guarda contra el **jugador**, así que sobrevive a la muerte y
+cae sobre lo que se equipe. En `both` gana la armadura: una pieza con skin conserva la suya y el
+vestidor rellena las peladas.
+
+## ¿Se puede comer, lanzar o colocar un objeto de skin?
+
+No. Los objetos de este plugin son inertes: sea cual sea el material con el que se dibujan, usarlos
+no hace nada. Se pueden coger, tirar, comerciar y hacer clic en un menú — simplemente se niegan a
+gastarse como el objeto que aparentan.
 
 ## ¿Necesita resource pack?
 

@@ -1,6 +1,6 @@
 ---
 title: "Configuration"
-description: "config.yml in full: the skin item, the remover, the lore added to skinned armour, the four behaviour switches, the apply and remove effects, and every message."
+description: "config.yml in full: the skin item, the remover, the lore added to skinned armour, the wardrobe wording, the five behaviour switches, the apply and remove effects, and every message."
 ---
 
 `config.yml` holds everything except the skins themselves. Defaults:
@@ -40,7 +40,16 @@ armor-lore:
     - '{secondary}Skin:'
     - ' {letters_black}▎ {highlight}%skin%'
 
+wardrobe:
+  full-set: '{primary}&lFULL SET'
+  helmet: '{primary}&lHELMET'
+  chestplate: '{primary}&lCHESTPLATE'
+  leggings: '{primary}&lLEGGINGS'
+  boots: '{primary}&lBOOTS'
+  empty: '{muted}Nothing'
+
 behaviour:
+  mode: both
   consume-remover: true
   consume-skin-item: true
   require-permission: true
@@ -92,12 +101,24 @@ what the armour had, and `/data get` shows nothing extra.
 
 | Key | Default | What it does |
 |---|---|---|
+| `mode` | `both` | `item`, `wardrobe` or `both`. See [The wardrobe](/docs/exyliaarmorskin/wardrobe). |
 | `consume-skin-item` | `true` | Whether the skin item is used up when it is applied. Off means one item skins any number of pieces. |
 | `consume-remover` | `true` | Whether the remover is used up when it removes a skin. |
 | `require-permission` | `true` | Whether applying a skin needs `exyliaarmorskin.skin.<id>`. Commands and the API are never limited by it. |
-| `hide-without-permission` | `true` | Whether armour whose skin the wearer may no longer use is drawn as the real piece. Checked when the piece is equipped and by `/armorskin refresh`. |
+| `hide-without-permission` | `true` | Whether armour whose skin the wearer may no longer use is drawn as the real piece. Checked when the piece is equipped and by `/armorskinsadmin refresh`. |
 
-See [Permissions](/docs/exyliaarmorskin/permissions) for what those two switches mean in practice.
+See [Permissions](/docs/exyliaarmorskin/permissions) for what the two permission switches mean in
+practice.
+
+## `wardrobe`
+
+What the wardrobe screen calls things. The screen itself is `menus/wardrobe.yml`.
+
+| Key | Default | What it does |
+|---|---|---|
+| `full-set` | `{primary}&lFULL SET` | The button that dresses every piece at once. |
+| `helmet`, `chestplate`, `leggings`, `boots` | `{primary}&lHELMET` … | What each slot is called. |
+| `empty` | `{muted}Nothing` | Shown where a piece wears no skin. |
 
 Neither consume switch takes effect when the operation fails — a remover used on a player with a full inventory stays
 on the cursor.
@@ -139,6 +160,8 @@ is filled in on every message that names a skin.
 | `list-entry` | ` {letters_black}▎ {info}%id% {letters_black}» {letters}%skin% {letters_black}(%pieces%)` | `%id%`, `%skin%`, `%pieces%` |
 | `list-empty` | `%prefix%{muted}No skins are registered.` | — |
 | `refreshed` | `%prefix%{success}Appearance synchronised.` | — |
+| `wardrobe-disabled` | `%prefix%{error}The wardrobe is off on this server.` | — |
+| `wardrobe-cleared` | `%prefix%{success}Your wardrobe is empty again.` | — |
 
 <Callout type="tip" title="The prefix belongs to this plugin alone">
 `prefix` is registered with ExyliaLib on start and on every reload, so `%prefix%` written anywhere in

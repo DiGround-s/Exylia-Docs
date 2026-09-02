@@ -32,7 +32,7 @@ api.register(ruby);
 
 | Method | Returns | What it does |
 |---|---|---|
-| `register(SkinDefinition)` | — | Adds or replaces a skin. Survives `/armorskin reload`. |
+| `register(SkinDefinition)` | — | Adds or replaces a skin. Survives `/armorskinsadmin reload`. |
 | `unregister(String id)` | `boolean` | Removes one, whether it came from code or from the file. |
 | `skin(String id)` | `Optional<SkinDefinition>` | Looks one up. |
 | `exists(String id)` | `boolean` | Whether an id resolves. |
@@ -40,7 +40,7 @@ api.register(ruby);
 
 <Callout type="note" title="Code and file live side by side">
 A reload replaces only the entries that came from `skins.yml`. A skin registered here stays until it
-is unregistered or the server stops — and it is listed by `/armorskin list` like any other.
+is unregistered or the server stops — and it is listed by `/armorskinsadmin list` like any other.
 </Callout>
 
 ### What a definition holds
@@ -149,6 +149,18 @@ the node alongside the skin unless you mean it to be invisible.
 | `NO_PERMISSION` | The player lacks the skin's node. Only ever returned by the inventory drag, never by the API. |
 
 `success()` is true for `APPLIED` and `REMOVED`.
+
+## The wardrobe
+
+| Method | Returns | What it does |
+|---|---|---|
+| `wardrobe()` | `Wardrobe` or `null` | The wardrobe itself, or `null` while `behaviour.mode` is `item`. |
+| `wear(Player, ArmorPiece, String skinId)` | `ApplyResult` | Wears a skin on one slot, or on every slot the player may use when the piece is `null`. |
+| `undress(Player, ArmorPiece)` | `ApplyResult` | Clears one slot, or the whole wardrobe when the piece is `null`. |
+| `chosen(Player, ArmorPiece)` | `Optional<String>` | The skin chosen for that slot, whatever they are wearing there. |
+
+These write to the player's row, never to the armour. With the wardrobe off, `wear` answers
+`UNKNOWN_SKIN`, `undress` answers `NO_SKIN` and `chosen` is empty.
 
 ## Redrawing
 

@@ -40,7 +40,16 @@ armor-lore:
     - '{secondary}Skin:'
     - ' {letters_black}▎ {highlight}%skin%'
 
+wardrobe:
+  full-set: '{primary}&lFULL SET'
+  helmet: '{primary}&lHELMET'
+  chestplate: '{primary}&lCHESTPLATE'
+  leggings: '{primary}&lLEGGINGS'
+  boots: '{primary}&lBOOTS'
+  empty: '{muted}Nothing'
+
 behaviour:
+  mode: both
   consume-remover: true
   consume-skin-item: true
   require-permission: true
@@ -93,13 +102,24 @@ exactamente lo que la armadura tenía, y `/data get` no muestra nada de más.
 
 | Clave | Por defecto | Qué hace |
 |---|---|---|
+| `mode` | `both` | `item`, `wardrobe` o `both`. Ver [El vestidor](/docs/exyliaarmorskin/vestidor). |
 | `consume-skin-item` | `true` | Si el objeto de skin se gasta al aplicarse. Desactivado, un objeto pinta cuantas piezas quieras. |
 | `consume-remover` | `true` | Si el removedor se gasta al quitar una skin. |
 | `require-permission` | `true` | Si aplicar una skin necesita `exyliaarmorskin.skin.<id>`. Los comandos y la API nunca se ven limitados por esto. |
-| `hide-without-permission` | `true` | Si la armadura cuya skin el portador ya no puede usar se dibuja como la pieza real. Se comprueba al equipar la pieza y con `/armorskin refresh`. |
+| `hide-without-permission` | `true` | Si la armadura cuya skin el portador ya no puede usar se dibuja como la pieza real. Se comprueba al equipar la pieza y con `/armorskinsadmin refresh`. |
 
-Ver [Permisos](/docs/exyliaarmorskin/permisos) para lo que significan esos dos interruptores en la
-práctica.
+Ver [Permisos](/docs/exyliaarmorskin/permisos) para lo que significan los dos interruptores de
+permiso en la práctica.
+
+## `wardrobe`
+
+Cómo llama el vestidor a cada cosa. La pantalla en sí es `menus/wardrobe.yml`.
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `full-set` | `{primary}&lFULL SET` | El botón que viste las cuatro piezas a la vez. |
+| `helmet`, `chestplate`, `leggings`, `boots` | `{primary}&lHELMET` … | Cómo se llama cada ranura. |
+| `empty` | `{muted}Nothing` | Lo que se muestra donde una pieza no lleva skin. |
 
 Ninguno de los dos interruptores de consumo actúa cuando la operación falla: un removedor usado por un jugador con el inventario
 lleno se queda en el cursor.
@@ -142,6 +162,8 @@ Todas las líneas que envía el plugin, bajo `messages:`. `%prefix%` se expande 
 | `list-entry` | ` {letters_black}▎ {info}%id% {letters_black}» {letters}%skin% {letters_black}(%pieces%)` | `%id%`, `%skin%`, `%pieces%` |
 | `list-empty` | `%prefix%{muted}No skins are registered.` | — |
 | `refreshed` | `%prefix%{success}Appearance synchronised.` | — |
+| `wardrobe-disabled` | `%prefix%{error}The wardrobe is off on this server.` | — |
+| `wardrobe-cleared` | `%prefix%{success}Your wardrobe is empty again.` | — |
 
 <Callout type="tip" title="El prefijo es solo de este plugin">
 `prefix` se registra en ExyliaLib al arrancar y en cada recarga, así que `%prefix%` escrito en
@@ -149,7 +171,8 @@ cualquier texto de este plugin resuelve a él. Otro plugin de Exylia que use `%p
 suyo: los dos nunca chocan.
 </Callout>
 
-## Los otros dos archivos
+## Los otros archivos
 
-Las skins viven en [`skins.yml`](/docs/exyliaarmorskin/skins) y las animaciones en
-[`animations.yml`](/docs/exyliaarmorskin/animaciones).
+Las skins viven en [`skins.yml`](/docs/exyliaarmorskin/skins), las animaciones en
+[`animations.yml`](/docs/exyliaarmorskin/animaciones) y la pantalla del vestidor en
+[`menus/wardrobe.yml`](/docs/exyliaarmorskin/vestidor).

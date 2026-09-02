@@ -32,7 +32,7 @@ api.register(ruby);
 
 | Método | Devuelve | Qué hace |
 |---|---|---|
-| `register(SkinDefinition)` | — | Añade o reemplaza una skin. Sobrevive a `/armorskin reload`. |
+| `register(SkinDefinition)` | — | Añade o reemplaza una skin. Sobrevive a `/armorskinsadmin reload`. |
 | `unregister(String id)` | `boolean` | Quita una, venga del código o del archivo. |
 | `skin(String id)` | `Optional<SkinDefinition>` | Busca una. |
 | `exists(String id)` | `boolean` | Si un id resuelve. |
@@ -40,7 +40,7 @@ api.register(ruby);
 
 <Callout type="note" title="Código y archivo conviven">
 Una recarga reemplaza solo las entradas que venían de `skins.yml`. Una skin registrada aquí se queda
-hasta que se desregistre o el servidor pare, y `/armorskin list` la muestra como a cualquier otra.
+hasta que se desregistre o el servidor pare, y `/armorskinsadmin list` la muestra como a cualquier otra.
 </Callout>
 
 ### Qué contiene una definición
@@ -151,6 +151,18 @@ armadura real, así que concede el nodo junto con la skin salvo que la quieras i
 | `NO_PERMISSION` | Al jugador le falta el nodo de la skin. Solo lo devuelve el arrastre en el inventario, nunca la API. |
 
 `success()` es cierto para `APPLIED` y `REMOVED`.
+
+## El vestidor
+
+| Método | Devuelve | Qué hace |
+|---|---|---|
+| `wardrobe()` | `Wardrobe` o `null` | El vestidor, o `null` mientras `behaviour.mode` sea `item`. |
+| `wear(Player, ArmorPiece, String skinId)` | `ApplyResult` | Pone una skin en una ranura, o en todas las que el jugador pueda usar cuando la pieza es `null`. |
+| `undress(Player, ArmorPiece)` | `ApplyResult` | Limpia una ranura, o el vestidor entero cuando la pieza es `null`. |
+| `chosen(Player, ArmorPiece)` | `Optional<String>` | La skin elegida para esa ranura, lleve lo que lleve puesto. |
+
+Escriben en la fila del jugador, nunca en la armadura. Con el vestidor apagado, `wear` responde
+`UNKNOWN_SKIN`, `undress` responde `NO_SKIN` y `chosen` viene vacío.
 
 ## Redibujar
 

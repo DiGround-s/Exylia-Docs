@@ -1,18 +1,35 @@
 ---
 title: "Commands"
-description: "The five subcommands of /armorskin, who receives each message, and exactly what refresh and reload do."
+description: "The wardrobe command a player types, and the seven admin subcommands."
 ---
 
-Everything lives under `/armorskin`. There are no aliases and no player-facing command: a player uses
-skins by dragging items, never by typing.
+## The player command
 
 | Command | Permission | What it does |
 |---|---|---|
-| `/armorskin give <player> <skin> [amount]` | `exyliaarmorskin.admin` | Gives the skin item for `<skin>`. |
-| `/armorskin remover <player> [amount]` | `exyliaarmorskin.admin` | Gives skin removers. |
-| `/armorskin list` | `exyliaarmorskin.admin` | Lists every registered skin. |
-| `/armorskin refresh [player]` | `exyliaarmorskin.admin` | Rebuilds and re-sends what a player is shown wearing. |
-| `/armorskin reload` | `exyliaarmorskin.admin` | Re-reads the three files and redraws everyone. |
+| `/wardrobe` | `exyliaarmorskin.wardrobe` | Opens the wardrobe. Alias: `/armorskins`. |
+
+That is the only command a player needs. Skin **items** need no command at all: they are dragged onto
+armour.
+
+<Callout type="note" title="It refuses to open in item mode">
+With `behaviour.mode: item` a wardrobe choice would never be read, so the command answers
+`wardrobe-disabled` instead of opening a screen that changes nothing.
+</Callout>
+
+## The admin command
+
+`/armorskinsadmin`, alias `/armorskinadmin`. Everything under it needs `exyliaarmorskin.admin`.
+
+| Command | What it does |
+|---|---|
+| `give <player> <skin> [1-64]` | Gives the skin item for `<skin>`. |
+| `remover <player> [1-64]` | Gives skin removers. |
+| `list` | Lists every registered skin. |
+| `refresh [player]` | Rebuilds and re-sends what a player is shown wearing. |
+| `wardrobe open <player>` | Opens somebody's wardrobe for them. |
+| `wardrobe clear <player>` | Empties their wardrobe: every slot back to their real armour. |
+| `reload` | Re-reads this plugin's files and redraws everyone. |
 
 ## `give`
 
@@ -49,8 +66,15 @@ skins another plugin registered through the API.
 
 Refreshing re-reads the armour the player is actually wearing, rebuilds every visual from it and
 re-sends both their inventory and their equipment to everyone tracking them. It is also what applies
-a permission you just granted or revoked, because that is checked while the visual is rebuilt. It plays no effects and
-touches no file — it is the answer to "another plugin changed this item behind my back".
+a permission you just granted or revoked, because that is checked while the visual is rebuilt. It
+plays no effects and touches no file — it is the answer to "another plugin changed this item behind
+my back".
+
+## `wardrobe open` and `wardrobe clear`
+
+`open` shows the target their own wardrobe — the screen belongs to them, not to the admin who opened
+it. `clear` empties every slot and answers `wardrobe-cleared`; the armour itself is untouched, since
+a wardrobe was never written to it.
 
 ## `reload`
 
@@ -58,7 +82,7 @@ Runs one step, `configs`, which:
 
 <Steps>
   <Step title="Re-reads every file">
-    `config.yml`, `animations.yml` and `skins.yml`.
+    `config.yml`, `animations.yml`, `skins.yml` and `menus/wardrobe.yml`.
   </Step>
   <Step title="Re-applies the message prefix">
     So `%prefix%` matches the rest of the ecosystem again.
@@ -76,6 +100,6 @@ The step reports success or failure to whoever ran it. It does not reload Exylia
 reload` is what does that.
 
 <Callout type="note" title="Reload is safe mid-fight">
-Nothing is removed from anybody: the armour keeps its id, the visual is simply rebuilt. A player
-wearing an animated skin sees the new speed or colour on the next frame.
+Nothing is removed from anybody: the armour keeps its id, the wardrobe keeps its rows, and the visual
+is simply rebuilt. A player wearing an animated skin sees the new speed or colour on the next frame.
 </Callout>

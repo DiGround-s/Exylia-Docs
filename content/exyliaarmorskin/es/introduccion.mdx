@@ -31,40 +31,54 @@ custom model data y los datos de cualquier otro plugin siguen exactamente donde 
 | El portador, en su inventario y en su muñeco | La skin |
 | El portador **en creativo** | La armadura real — un cliente en creativo devuelve sus ranuras al servidor, así que hay que mostrarle la verdad |
 | Cualquiera que mire una pieza con skin en un cofre, la hotbar o el cursor | El objeto real con las líneas de lore de la skin añadidas |
-| Todos, cuando el **portador** no tiene el permiso de esa skin | La armadura real — el id sigue en el objeto y el aspecto vuelve con el nodo |
+| Todos, cuando el **portador** no tiene el permiso de esa skin | La armadura real — el id sigue en el objeto, o la fila sigue en el vestidor, y el aspecto vuelve con el nodo |
+| Cualquiera que mire una **elytra** | La elytra. Va en la ranura del pecho pero no es armadura, y vestirla de peto le costaría el vuelo al portador |
 
 ## Qué incluye
 
-Veinte skins en `skins.yml` — diez colores fijos y diez animadas — y once animaciones en
-`animations.yml`, construidas sobre tres tipos: `rainbow`, `pulse` y `frames`. Cada skin animada
-lleva además un **bonus de set**: partículas alrededor del cuerpo y un sonido en cuanto todas las
-piezas que encaja se llevan con ella.
+Veinte skins en `skins.yml` — **todas animadas** — y veintiún animaciones en `animations.yml`,
+construidas sobre tres tipos: `rainbow`, `pulse` y `frames`. Cada skin lleva además un **bonus de
+set**: partículas alrededor del cuerpo, una línea al completarse el set y otra al romperse, en cuanto
+todas las piezas que encaja se llevan con ella.
 
-Cada skin tiene un permiso derivado de su id, `exyliaarmorskin.skin.<id>`, y por defecto un jugador
-lo necesita tanto para aplicarla como para que se la vean puesta.
+Cada skin tiene un permiso derivado de su id, `exyliaarmorskin.skin.<id>`, con un nodo por ranura
+debajo (`…skin.<id>.helmet`), y por defecto un jugador lo necesita tanto para llevarla como para que
+se la vean puesta.
 
-## Cómo llega una skin a la armadura
+## Dos formas de llevar una skin
 
-No hay menú ni comando para el jugador. Una skin viaja como **objeto**: arrastra el objeto de skin
-sobre una pieza de armadura en tu propio inventario y se aplica; arrastra un **removedor** sobre una
-pieza con skin y la skin sale y se devuelve otra vez como objeto.
+| Forma | De quién es | Para qué servidor |
+|---|---|---|
+| **Un objeto de skin** | De la armadura: se escribe un valor en la pieza y viaja con ella por cofres, intercambios y muertes. | Survival, economía |
+| **El vestidor** | Del jugador: se guarda por jugador y por ranura en una tabla, y cae sobre lo que se equipe. | Práctica, PvP |
 
-<Callout type="note" title="Todo son paquetes, así que no se guarda nada">
-No hay base de datos ni archivo por jugador. Lo único que sobrevive a un reinicio es el id escrito en
-la armadura, y por eso una skin acompaña al objeto por cofres, intercambios y otros plugins.
+`behaviour.mode` decide cuál se lee — `item`, `wardrobe` o `both` — y está en
+[El vestidor](/docs/exyliaarmorskin/vestidor).
+
+Un objeto de skin se usa arrastrándolo: se suelta sobre una pieza de armadura en tu propio inventario
+y se aplica; se suelta un **removedor** sobre una pieza con skin y la skin sale y vuelve como objeto.
+El vestidor es `/wardrobe`: una pantalla, clic en una ranura, clic en una skin.
+
+<Callout type="note" title="La armadura nunca se reescribe">
+Un objeto de skin aplicado escribe un solo valor en la pieza; una elección de vestidor no escribe
+nada en ella. Todo lo demás son paquetes, así que lo que cualquier otro plugin lea de esa armadura es
+exactamente lo que tenía.
 </Callout>
 
 <Cards>
   <Card title="Instalación" href="/docs/exyliaarmorskin/instalacion">
-    Los jars que necesita y los tres archivos que escribe.
+    Los jars que necesita, los archivos que escribe y la tabla del vestidor.
   </Card>
   <Card title="Primeros pasos" href="/docs/exyliaarmorskin/primeros-pasos">
     Date una skin, póntela, quítatela y escribe la tuya.
+  </Card>
+  <Card title="El vestidor" href="/docs/exyliaarmorskin/vestidor">
+    Una pantalla que viste al jugador en lugar de a la armadura.
   </Card>
   <Card title="Skins" href="/docs/exyliaarmorskin/skins">
     Cada clave de `skins.yml` y las veinte que vienen incluidas.
   </Card>
   <Card title="Animaciones" href="/docs/exyliaarmorskin/animaciones">
-    Los tres tipos, sus opciones y los once presets.
+    Los tres tipos, sus opciones y los veintiún presets.
   </Card>
 </Cards>

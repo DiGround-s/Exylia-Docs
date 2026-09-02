@@ -1,13 +1,38 @@
 ---
 title: "First steps"
-description: "Give a skin, apply it, take it off, and write a skin of your own."
+description: "Dress from the wardrobe, apply a skin item, take it off, and write a skin of your own."
 ---
 
-## Wear a skin
+## Wear a skin from the wardrobe
+
+<Steps>
+  <Step title="Grant the command">
+    ```text
+    /lp group default permission set exyliaarmorskin.wardrobe true
+    ```
+  </Step>
+  <Step title="Open it">
+    `/wardrobe`. The armour along the top is what is being dressed; the grid below it is every skin,
+    previewed in the piece that is focused.
+  </Step>
+  <Step title="Dress a slot, or all four">
+    Left click a slot to focus it, then click a skin. The full-set button on the left dresses every
+    piece the player is allowed to wear at once.
+  </Step>
+  <Step title="Take it off">
+    Click the skin that is already on, or right click the slot. Right clicking the full-set button
+    empties the wardrobe.
+  </Step>
+</Steps>
+
+Nothing was written to the armour: the choice is a row in `armorskin_wardrobe` and follows the
+player, whatever they equip.
+
+## Wear a skin from an item
 
 <Steps>
   <Step title="Give yourself the item">
-    `/armorskin give <you> blue_vex`. The command tab-completes every skin id, and takes an optional
+    `/armorskinsadmin give <you> galaxy`. The command tab-completes every skin id, and takes an optional
     amount from 1 to 64.
   </Step>
   <Step title="Drag it onto armour">
@@ -19,11 +44,11 @@ description: "Give a skin, apply it, take it off, and write a skin of your own."
     piece is still whatever it was — check with `/data get entity <you> Inventory`.
   </Step>
   <Step title="Take the skin off">
-    `/armorskin remover <you>`, then click that same piece with the remover on the cursor. The skin
+    `/armorskinsadmin remover <you>`, then click that same piece with the remover on the cursor. The skin
     comes back as a skin item and the remover is consumed.
   </Step>
   <Step title="Wear the whole set">
-    Skin all four pieces with the same skin and its set bonus starts: `inferno` plays a sound and
+    Wear all four pieces with the same skin and its set bonus starts: `inferno` announces the set and
     surrounds you with flames until you take a piece off.
   </Step>
 </Steps>
@@ -69,7 +94,7 @@ skins:
     animation: ''         # a preset from animations.yml, or rainbow / pulse / frames
 ```
 
-Then `/armorskin reload`. The skin exists immediately, `/armorskin list` shows it, and anyone already
+Then `/armorskinsadmin reload`. The skin exists immediately, `/armorskinsadmin list` shows it, and anyone already
 wearing a piece with `ruby_ward` on it sees the new colour without re-equipping.
 
 <Callout type="tip" title="The id is what the armour stores">

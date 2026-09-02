@@ -1,6 +1,6 @@
 ---
 title: "Animaciones"
-description: "Los tres tipos de animación, las opciones que lee cada uno, los once presets de animations.yml y cómo se mantienen sincronizados los fotogramas."
+description: "Los tres tipos de animación, las opciones que lee cada uno, los veintiún presets de animations.yml y cómo se mantienen sincronizados los fotogramas."
 ---
 
 Una animación mueve el **color** de una skin. El trim, el nombre, el lore y la durabilidad nunca
@@ -72,7 +72,7 @@ Recorre `colors` en orden.
 Con `smooth: 'false'` cada fotograma es un color de la lista. Con un solo color lo mantiene; sin
 ninguno deja el color propio de la skin tal cual.
 
-## Los once presets
+## Los veintiún presets
 
 | Preset | Tipo | Intervalo | Opciones | Colores |
 |---|---|---|---|---|
@@ -82,11 +82,23 @@ ninguno deja el color propio de la skin tal cual.
 | `heartbeat` | pulse | 0,05 s | `length: 24` | `#7a0010` → `#ff2a4d` |
 | `toxic` | pulse | 0,1 s | `length: 30` | `#0b1f0b` → `#5dff3a` |
 | `ember` | pulse | 0,1 s | `length: 40` | `#2b0a00` → `#ff5a00` |
+| `shogun` | pulse | 0,08 s | `length: 32` | `#1a0000` → `#c8102e` |
+| `bloodmoon` | pulse | 0,1 s | `length: 36` | `#2a0000` → `#a3001b` |
 | `inferno` | frames | 0,1 s | `steps: 6` | seis rojos y naranjas |
 | `ocean` | frames | 0,15 s | `steps: 8` | seis azules |
 | `galaxy` | frames | 0,15 s | `steps: 8` | cinco morados y rosas |
 | `aurora` | frames | 0,2 s | `steps: 10` | cinco verdes, cianes y violetas |
-| `strobe` | frames | 0,15 s | `smooth: false` | `#ffffff`, `#111111` |
+| `voltage` | frames | 0,08 s | `smooth: false` | cuatro azules y blanco, sin degradado |
+| `tempest` | frames | 0,12 s | `steps: 8` | cinco grises y azules pálidos |
+| `sakura` | frames | 0,2 s | `steps: 10` | cinco rosas |
+| `dragonfire` | frames | 0,1 s | `steps: 6` | cinco brasas |
+| `void_dragon` | frames | 0,18 s | `steps: 8` | cinco violetas |
+| `frostbite` | frames | 0,2 s | `steps: 10` | cuatro azules de hielo |
+| `neon` | frames | 0,1 s | `steps: 6` | cuatro neones |
+| `verdant` | frames | 0,25 s | `steps: 10` | cinco verdes |
+| `celestial` | frames | 0,2 s | `steps: 10` | cuatro dorados |
+
+Cada skin incluida apunta al preset con su mismo nombre.
 
 ## Todo el mundo va por el mismo fotograma
 

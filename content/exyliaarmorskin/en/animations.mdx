@@ -1,6 +1,6 @@
 ---
 title: "Animations"
-description: "The three animation types, the options each one reads, the eleven presets in animations.yml, and how frames stay in step."
+description: "The three animation types, the options each one reads, the twenty-one presets in animations.yml, and how frames stay in step."
 ---
 
 An animation makes a skin's **colour** move. The trim, the name, the lore and the durability never
@@ -72,7 +72,7 @@ Cycles through `colors` in order.
 With `smooth: 'false'` each frame is one colour from the list. With one colour it holds that colour;
 with none it leaves the skin's own colour alone.
 
-## The eleven presets
+## The twenty-one presets
 
 | Preset | Type | Interval | Options | Colours |
 |---|---|---|---|---|
@@ -82,11 +82,23 @@ with none it leaves the skin's own colour alone.
 | `heartbeat` | pulse | 0.05 s | `length: 24` | `#7a0010` → `#ff2a4d` |
 | `toxic` | pulse | 0.1 s | `length: 30` | `#0b1f0b` → `#5dff3a` |
 | `ember` | pulse | 0.1 s | `length: 40` | `#2b0a00` → `#ff5a00` |
+| `shogun` | pulse | 0.08 s | `length: 32` | `#1a0000` → `#c8102e` |
+| `bloodmoon` | pulse | 0.1 s | `length: 36` | `#2a0000` → `#a3001b` |
 | `inferno` | frames | 0.1 s | `steps: 6` | six reds and oranges |
 | `ocean` | frames | 0.15 s | `steps: 8` | six blues |
 | `galaxy` | frames | 0.15 s | `steps: 8` | five purples and pinks |
 | `aurora` | frames | 0.2 s | `steps: 10` | five greens, cyans and violets |
-| `strobe` | frames | 0.15 s | `smooth: false` | `#ffffff`, `#111111` |
+| `voltage` | frames | 0.08 s | `smooth: false` | four blues and white, switched hard |
+| `tempest` | frames | 0.12 s | `steps: 8` | five greys and pale blues |
+| `sakura` | frames | 0.2 s | `steps: 10` | five pinks |
+| `dragonfire` | frames | 0.1 s | `steps: 6` | five embers |
+| `void_dragon` | frames | 0.18 s | `steps: 8` | five violets |
+| `frostbite` | frames | 0.2 s | `steps: 10` | four ice blues |
+| `neon` | frames | 0.1 s | `steps: 6` | four neons |
+| `verdant` | frames | 0.25 s | `steps: 10` | five greens |
+| `celestial` | frames | 0.2 s | `steps: 10` | four golds |
+
+Every shipped skin points at the preset of the same name.
 
 ## Everyone is on the same frame
 

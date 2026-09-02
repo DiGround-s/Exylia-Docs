@@ -1,0 +1,109 @@
+---
+title: "The wardrobe"
+description: "One screen that dresses the player rather than the armour: focus, wear, clear, and every template menus/wardrobe.yml declares."
+---
+
+The wardrobe is the second way to wear a skin. A skin item writes onto the **armour**; the wardrobe
+stores the choice against the **player**, so it survives death, trading and a change of gear — and the
+armour is never written to at all.
+
+`/wardrobe` opens one window of 54 slots.
+
+## The three modes
+
+`behaviour.mode` decides where a piece's skin comes from:
+
+| Mode | Where it comes from | What it implies |
+|---|---|---|
+| `item` | Only what a skin item wrote onto the armour. | The skin is traded, dropped and lost with the piece. No wardrobe, no database. |
+| `wardrobe` | Only what the player picked in `/wardrobe`. | It follows the player and lands on whatever they equip. Skin items do nothing. |
+| `both` | The armour's own skin, and the wardrobe for armour that carries none. | The default. |
+
+In `both` the **armour wins**: a skinned piece is drawn with its own skin, and the wardrobe only
+covers bare pieces.
+
+## The two lists
+
+| Section | Slots | What it holds |
+|---|---|---|
+| `targets` | `2,3,4,5,6` | What is being dressed: the full set, then helmet, chestplate, leggings and boots. |
+| `skins` | `10-16,19-25,28-34,37-43` | Every skin, paged with the buttons at slots `48` and `50`. |
+
+**UNDRESS** sits at slot `45` and clears everything; **CLOSE** at `49`.
+
+Each armour row is drawn in the leather piece of its own slot, tinted with the skin worn there, so the
+top of the screen is what the player currently looks like. A grid row is drawn in **the piece being
+dressed**, so the skin is previewed where it is going to end up; a skin that does not fit the focused
+piece is drawn in a piece it does fit.
+
+## What a click does
+
+| Click | On | Result |
+|---|---|---|
+| Left | An armour row | Focuses it — the grid now dresses that piece. |
+| Right | An armour row | Clears that piece. |
+| Left | The full-set row | Focuses every piece at once. |
+| Right | The full-set row | Clears the whole wardrobe. |
+| Any click | A skin | Wears it on whatever is focused, or takes it off when it is already the one worn. |
+
+<Callout type="note" title="Dressing the whole set dresses what you are allowed to wear">
+With the full set focused, a skin is applied to every piece the player has permission for — so a rank
+that owns one piece of a skin still gets that piece rather than being refused outright.
+</Callout>
+
+## Templates
+
+| Section | Template | Used when |
+|---|---|---|
+| `targets` | `item_template` | An armour slot that is not focused. |
+| | `focused_template` | The armour slot being dressed. |
+| | `set_template` | The full-set row, not focused. |
+| | `focused_set_template` | The full-set row while it is focused. |
+| `skins` | `item_template` | A skin the player may use and that fits. |
+| | `selected_template` | The skin worn on the focused piece — or on every piece the skin fits, with the set focused. |
+| | `unsupported_template` | A skin whose `pieces` do not include the focused slot. |
+| | `no_permissions_template` | A skin the player does not own. |
+
+`item_template` is the plain state and must stay first in each list. The locked and unsupported rows
+carry no action of their own: clicking one does nothing.
+
+## Placeholders
+
+| Where | Available |
+|---|---|
+| `targets` | `%target%` `%target_name%` `%piece%` `%piece_material%` `%skin_name%` `%skin_color%` `%skin_trim_pattern%` `%skin_trim_material%` `%dressed%` `%pieces%` |
+| `skins` | `%skin_id%` `%skin_name%` `%skin_icon%` `%skin_preview%` `%skin_color%` `%skin_trim_pattern%` `%skin_trim_material%` `%skin_pieces%` `%skin_worn%` `%skin_worn_name%` |
+
+## Actions
+
+| Action | What it does |
+|---|---|
+| `armorskin:wardrobe` | Opens the screen. |
+| `armorskin:focus <target>` | Dresses one piece, or `set` for all four. |
+| `armorskin:wear <skin>` | Wears a skin on the focus, or takes it off when it is already worn. |
+| `armorskin:clear <target>` | Clears one piece, or `set` for the whole wardrobe. |
+
+## Wording
+
+The few strings one template draws for every row live in `config.yml`:
+
+```yaml title="config.yml"
+wardrobe:
+  full-set: "{primary}&lFULL SET"
+  helmet: "{primary}&lHELMET"
+  chestplate: "{primary}&lCHESTPLATE"
+  leggings: "{primary}&lLEGGINGS"
+  boots: "{primary}&lBOOTS"
+  empty: "{muted}Nothing"
+```
+
+## Where it is stored
+
+One row per player in `armorskin_wardrobe`: the uuid, and one column per piece holding a skin id.
+Reads never block — a wardrobe still coming back from the database answers "no skin yet", and the
+player is redrawn as soon as it lands.
+
+<Callout type="tip" title="Nothing has to be given back">
+Clearing a wardrobe hands out no item, because none was ever consumed: a wardrobe choice is a row,
+not an item. Skin items and removers belong to `item` and `both`.
+</Callout>
