@@ -169,6 +169,7 @@ const EVENTS_NAV: NavGroup[] = [
     label: { en: "Systems", es: "Sistemas" },
     pages: [
       page("game-flow", "game-flow", "flujo-de-juego"),
+      page("gauntlets", "gauntlets", "gauntlets"),
       page("inscriptions", "inscriptions", "inscripciones"),
       page("stats", "stats", "estadisticas"),
       page("visuals", "visuals", "visuales"),
@@ -338,6 +339,7 @@ const ARMORSKIN_NAV: NavGroup[] = [
     label: { en: "Configuring", es: "Configurar" },
     pages: [
       page("skins", "skins", "skins"),
+      page("wardrobe", "wardrobe", "vestidor"),
       page("animations", "animations", "animaciones"),
       page("effects", "effects", "efectos"),
     ],
@@ -348,6 +350,69 @@ const ARMORSKIN_NAV: NavGroup[] = [
       page("commands", "commands", "comandos"),
       page("permissions", "permissions", "permisos"),
       page("configuration", "configuration", "configuracion"),
+      page("api", "api", "api"),
+      page("faq", "faq", "faq"),
+    ],
+  },
+];
+
+function effectsNav(): NavGroup[] {
+  return [
+    {
+      label: { en: "Getting started", es: "Empezar" },
+      pages: [
+        page("introduction", "introduction", "introduccion"),
+        page("installation", "installation", "instalacion"),
+        page("first-steps", "first-steps", "primeros-pasos"),
+      ],
+    },
+    {
+      label: { en: "Configuring", es: "Configurar" },
+      pages: [
+        page("effects", "effects", "efectos"),
+        page("sequences", "sequences", "secuencias"),
+        page("modes-and-tokens", "modes-and-tokens", "modos-y-fichas"),
+        page("menu", "menu", "menu"),
+      ],
+    },
+    {
+      label: { en: "Reference", es: "Referencia" },
+      pages: [
+        page("commands", "commands", "comandos"),
+        page("permissions", "permissions", "permisos"),
+        page("configuration", "configuration", "configuracion"),
+        page("placeholders", "placeholders", "placeholders"),
+        page("api", "api", "api"),
+        page("faq", "faq", "faq"),
+      ],
+    },
+  ];
+}
+
+const ARMORTRIMS_NAV: NavGroup[] = [
+  {
+    label: { en: "Getting started", es: "Empezar" },
+    pages: [
+      page("introduction", "introduction", "introduccion"),
+      page("installation", "installation", "instalacion"),
+      page("first-steps", "first-steps", "primeros-pasos"),
+    ],
+  },
+  {
+    label: { en: "Configuring", es: "Configurar" },
+    pages: [
+      page("trims", "trims", "trims"),
+      page("modes-and-items", "modes-and-items", "modos-y-objetos"),
+      page("menu", "menu", "menu"),
+    ],
+  },
+  {
+    label: { en: "Reference", es: "Referencia" },
+    pages: [
+      page("commands", "commands", "comandos"),
+      page("permissions", "permissions", "permisos"),
+      page("configuration", "configuration", "configuracion"),
+      page("placeholders", "placeholders", "placeholders"),
       page("api", "api", "api"),
       page("faq", "faq", "faq"),
     ],
@@ -540,21 +605,21 @@ export const plugins: Plugin[] = [
   {
     id: "exyliakilleffect",
     name: "ExyliaKillEffect",
-    tagline: { en: "Particle effects on every kill", es: "Efectos de partículas en cada baja" },
+    tagline: { en: "Kill effects drawn with display entities", es: "Efectos de muerte hechos con display entities" },
     summary: {
-      en: "144 kill effects across 14 categories, chosen from a menu, sold by permission and written as sequences a server owner can edit.",
-      es: "144 efectos de muerte en 14 categorías, elegidos desde un menú, vendidos por permiso y escritos como secuencias que el dueño puede editar.",
+      en: "120 kill effects across six categories, drawn with real items and blocks that fall, turn and slam: chosen from a menu or bound to a weapon with a token, and written as sequences a server owner can edit.",
+      es: "120 efectos de muerte en seis categorías, dibujados con objetos y bloques reales que caen, giran y se clavan: elegidos desde un menú o atados a un arma con una ficha, y escritos como secuencias que el dueño puede editar.",
     },
-    version: "1.0.8",
+    version: "1.0.10",
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
     tags: [
-      { en: "Particles", es: "Partículas" },
+      { en: "Displays", es: "Displays" },
       { en: "Cosmetic", es: "Cosmético" },
       { en: "Folia", es: "Folia" },
     ],
-    nav: cosmeticNav("effects", "efectos"),
+    nav: effectsNav(),
     links: [
       { label: "SpigotMC", href: "https://link.exylia.net/@services" },
       { label: "Discord", href: "https://discord.exylia.net" },
@@ -563,21 +628,21 @@ export const plugins: Plugin[] = [
   {
     id: "exyliahiteffect",
     name: "ExyliaHitEffect",
-    tagline: { en: "Particle effects on every hit", es: "Efectos de partículas en cada golpe" },
+    tagline: { en: "Hit effects drawn with display entities", es: "Efectos de golpe hechos con display entities" },
     summary: {
-      en: "80 hit effects across 9 categories, played on the victim as they are struck, chosen from a menu and gated by permission.",
-      es: "80 efectos de golpe en 9 categorías, lanzados sobre la víctima al recibir el impacto, elegidos desde un menú y limitados por permiso.",
+      en: "90 hit effects across six categories, played on the body of whoever was struck and written to a budget of six tenths of a second: chosen from a menu or bound to a weapon with a token.",
+      es: "90 efectos de golpe en seis categorías, lanzados sobre el cuerpo de quien recibe el impacto y escritos con un presupuesto de seis décimas de segundo: elegidos desde un menú o atados a un arma con una ficha.",
     },
-    version: "1.0.8",
+    version: "1.0.10",
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
     tags: [
-      { en: "Particles", es: "Partículas" },
+      { en: "Displays", es: "Displays" },
       { en: "Combat", es: "Combate" },
       { en: "Folia", es: "Folia" },
     ],
-    nav: cosmeticNav("effects", "efectos"),
+    nav: effectsNav(),
     links: [
       { label: "SpigotMC", href: "https://link.exylia.net/@services" },
       { label: "Discord", href: "https://discord.exylia.net" },
@@ -586,12 +651,12 @@ export const plugins: Plugin[] = [
   {
     id: "exyliaarmortrims",
     name: "ExyliaArmorTrims",
-    tagline: { en: "Armour trims without a smithing table", es: "Trims de armadura sin mesa de forja" },
+    tagline: { en: "Armour trims drawn with packets", es: "Trims de armadura dibujados con paquetes" },
     summary: {
-      en: "18 patterns and 11 materials applied to equipped armour from a menu, per piece, sold by permission and reapplied whenever armour is equipped.",
-      es: "18 patrones y 11 materiales aplicados a la armadura equipada desde un menú, pieza por pieza, vendidos por permiso y reaplicados al equiparse.",
+      en: "Eighteen named presets plus any pattern and material combined by hand, chosen on one screen or carried as a trim item, and drawn on the way to the client so the armour itself is never converted.",
+      es: "Dieciocho presets con nombre más cualquier combinación de patrón y material hecha a mano, elegidos en una sola pantalla o llevados como objeto, y dibujados en el camino al cliente para que la armadura nunca se convierta.",
     },
-    version: "1.0.10",
+    version: "1.1.0",
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
@@ -600,7 +665,7 @@ export const plugins: Plugin[] = [
       { en: "Cosmetic", es: "Cosmético" },
       { en: "Folia", es: "Folia" },
     ],
-    nav: cosmeticNav("trims", "trims"),
+    nav: ARMORTRIMS_NAV,
     links: [
       { label: "SpigotMC", href: "https://link.exylia.net/@services" },
       { label: "Discord", href: "https://discord.exylia.net" },
@@ -611,8 +676,8 @@ export const plugins: Plugin[] = [
     name: "ExyliaArmorSkin",
     tagline: { en: "Armour skins that never touch the item", es: "Skins de armadura que nunca tocan el objeto" },
     summary: {
-      en: "Twenty colour-and-trim skins worn over any armour piece, drawn on the way to the client with packets: enchantments, attributes, durability and plugin data stay exactly as they were, and eleven animations move the colour in step for everyone wearing them.",
-      es: "Veinte skins de color y trim que se llevan sobre cualquier pieza de armadura, dibujadas en el camino al cliente con paquetes: encantamientos, atributos, durabilidad y datos de otros plugins quedan intactos, y once animaciones mueven el color a la vez para todo el que las lleve.",
+      en: "Twenty animated colour-and-trim skins worn over any armour piece, chosen from a wardrobe or carried as an item, and drawn on the way to the client with packets: enchantments, attributes, durability and plugin data stay exactly as they were.",
+      es: "Veinte skins animadas de color y trim que se llevan sobre cualquier pieza de armadura, elegidas en un vestidor o llevadas como objeto, y dibujadas en el camino al cliente con paquetes: encantamientos, atributos, durabilidad y datos de otros plugins quedan intactos.",
     },
     version: "1.0.0",
     status: "stable",
@@ -727,12 +792,12 @@ export const plugins: Plugin[] = [
   {
     id: "exyliaevents",
     name: "ExyliaEvents",
-    tagline: { en: "Thirty-four minigames in one plugin", es: "Treinta y cuatro minijuegos en un plugin" },
+    tagline: { en: "Forty-nine minigames in one plugin", es: "Cuarenta y nueve minijuegos en un plugin" },
     summary: {
-      en: "TNT Tag, Spleef, OITC, CS:GO, Build Battle, Survival Games and thirty more, each with its own arena, settings, kits, rewards and scoreboard, run from in-game menus.",
-      es: "TNT Tag, Spleef, OITC, CS:GO, Build Battle, Survival Games y treinta más, cada uno con su arena, ajustes, kits, recompensas y scoreboard, todo desde menús in-game.",
+      en: "TNT Tag, Spleef, OITC, CS:GO, Capture the Flag, Murder Mystery, Zombie Horde and forty more, each with its own arena, settings, kits, rewards and scoreboard, run from in-game menus \u2014 and gauntlets that chain them into one series.",
+      es: "TNT Tag, Spleef, OITC, CS:GO, Capture the Flag, Murder Mystery, Zombie Horde y cuarenta m\u00e1s, cada uno con su arena, ajustes, kits, recompensas y scoreboard, todo desde men\u00fas in-game \u2014 m\u00e1s gauntlets que los encadenan en una serie.",
     },
-    version: "1.0.13",
+    version: "1.2.0",
     status: "stable",
     category: { en: "Events", es: "Eventos" },
     minecraft: "1.21+",
