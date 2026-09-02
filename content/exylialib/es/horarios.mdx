@@ -1,0 +1,140 @@
+---
+title: "Horarios"
+description: "Timetables: qué arranca solo, cuándo, y qué tiene que ser cierto para que pase."
+---
+
+```java
+PluginSchedules schedules = Schedules.of(this);
+
+// La condición que solo este plugin puede responder.
+schedules.condition("event-inactive", s -> !events.isActive(s.target()));
+// Qué hace un disparo.
+schedules.onFire(s -> events.start(s.target()));
+
+// Cada vez que se (re)carga la configuración:
+schedules.set(configs.stream().flatMap(c -> c.schedules().stream()).toList());
+```
+
+## Qué reemplaza
+
+Cada plugin que arrancaba algo por reloj escribía el mismo scheduler: una tarea repetida, una lista de
+entradas parseada de YAML, una comparación de la hora y el minuto actuales contra cada una, y un mapa
+del último minuto en que disparó cada entrada para que el segundo tick del mismo minuto no la
+disparara dos veces. Había al menos tres copias, y ya habían derivado hasta discrepar en la clave del
+mínimo de jugadores.
+
+El coste ahora es **una tarea asíncrona para todo el servidor**. Cada pasada lee un `long` por plugin
+y lo compara con el reloj; no se recorre, parsea ni compara nada hasta que un horario toca. En cuanto
+toca, el trabajo se mueve al scheduler del plugin dueño antes de evaluar una sola condición, así que
+una condición puede tocar el servidor y el handler también.
+
+## Un horario
+
+Un record inmutable, con la misma forma que todo lo demás configurable de la librería.
+
+| Campo | Qué significa |
+|---|---|
+| `name` | Cómo llama un admin a la línea. En blanco muestra las horas. |
+| `target` | Qué arranca. El significado es del plugin dueño — normalmente un id de configuración. |
+| `enabled` | Si puede disparar. |
+| `days` | Qué días. Vacío significa todos. |
+| `times` | Las horas de reloj a las que dispara. |
+| `every` | Repetir cada tanto en vez de usar horas fijas. |
+| `from` / `to` | La ventana dentro de la que corre la repetición. |
+| `minPlayers` / `maxPlayers` | Cuántos jugadores tiene que haber, y cuántos como mucho. |
+| `condition` | Una comparación de Exylia, como `%server_tps% >= 18`. |
+| `requires` | Condiciones con nombre que registró el plugin dueño. |
+| `cooldown` | El hueco mínimo entre dos disparos de esta línea. |
+
+```java
+Schedule.at("koth_desert", LocalTime.of(20, 0), LocalTime.of(22, 30))
+        .withDays(Set.of(DayOfWeek.FRIDAY, DayOfWeek.SATURDAY));
+
+Schedule.every("koth_desert", Duration.ofHours(2));   // y luego from/to
+```
+
+Una repetición se ancla a **la apertura de su propia ventana**, no al momento en que cargó el plugin:
+un horario cada dos horas que abre a las 10:00 dispara a las 10:00, 12:00 y 14:00 aunque el servidor
+reiniciara a las 13:07.
+
+<Callout type="note" title="No hay cadenas cron">
+Una cadena cron es ilegible en un menú e inescribible en un formulario, y todos los horarios que ha
+necesitado cualquier plugin de Exylia son "estas horas, estos días, si se cumple esto".
+</Callout>
+
+## Condiciones con nombre
+
+Lo que la configuración no puede expresar:
+
+```java
+schedules.condition("event-inactive", s -> !events.isActive(s.target()));
+```
+
+Un horario que liste `event-inactive` en su `requires` solo dispara cuando la prueba pasa. Los nombres
+que ofrece un plugin se le muestran al admin en el formulario, así que nadie tiene que adivinarlos.
+
+<Callout type="warning" title="Una condición desconocida falla cerrada">
+Un horario que exige un nombre que el plugin nunca registró **no dispara**, y lo dice a gritos. Es lo
+contrario a propósito de lo que hacen recompensas y efectos, que fallan abiertos: no dar una
+recompensa es invisible, mientras que arrancar un evento que el admin pidió no arrancar es ruidoso.
+</Callout>
+
+Un disparo bloqueado por una condición se salta, no se reintenta — un evento bloqueado a las ocho
+arrancando a las ocho y ocho no es lo que decía el horario. Un disparo con más de dos minutos de
+retraso, tras un servidor congelado o un host suspendido, también se salta: lanzar un día entero de
+horarios perdidos de golpe al volver es peor que perderlos.
+
+## Guardarlos y leerlos
+
+```java
+String stored = ScheduleCodec.encode(schedules);
+List<Schedule> schedules = ScheduleCodec.decode(stored);
+```
+
+Un array JSON, así que un timetable vive en una columna `TEXT` junto a las recompensas y los comandos
+de la misma fila. Solo se escribe lo que significa algo, y una lista vacía se guarda como `null` y no
+como `[]`.
+
+`ScheduleCodec.fromMapList` lee el formato en bloque que tenía cada plugin antes de este módulo —
+incluidas las dos formas de escribir la clave de jugadores — así que migrar es una lectura y no que un
+admin reescriba su horario:
+
+```yaml
+- name: 'Friday night'
+  target: 'koth_desert'
+  time: '20:00'              # o times: ['20:00', '22:30']
+  days: [FRIDAY, SATURDAY]   # o ['*'] para todos los días
+  min-players: 10            # también se lee min-players-online
+```
+
+## Editarlos y leer el reloj
+
+```java
+schedules.editor(config.schedules(), config.id())
+         .title("{primary}&lSCHEDULES")
+         .onSave(edited -> configs.save(config.withSchedules(edited)))
+         .open(player);
+```
+
+El [editor de listas](/docs/exylialib/entrada-y-editores) sobre horarios: paginación, añadir, editar,
+borrar, copiar y pegar. Pasar el target hace que la pantalla ya sepa qué arranca, así que al admin no
+se le pide un id que solo puede equivocar; pasar `null` lo convierte en un campo.
+
+```java
+schedules.nextFireOf("koth_desert");        // Optional<Instant>
+schedules.millisUntilNext("koth_desert");   // OptionalLong, para un placeholder
+schedules.isScheduled("koth_desert");
+schedules.fireNow(schedule);                // antes de hora, pero se comprueban todas las condiciones
+```
+
+## Zona horaria
+
+Un ajuste, en el `config.yml` de la propia librería:
+
+```yaml
+timezone: 'Europe/Madrid'
+```
+
+Vacío significa la zona del host, que está bien hasta que el host y los jugadores están en países
+distintos. Un plugin que de verdad corra con otro reloj llama a `schedules.zone(...)`; nadie más
+debería.

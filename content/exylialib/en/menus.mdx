@@ -339,6 +339,26 @@ if the menu has something that could change, and it dies with the player.
 A click redraws everything that can change, not only the slot it landed on: adding a layer moves a
 counter, a preview and a list, and none of those is the slot that was clicked.
 
+## Where a player was
+
+A player who closes a menu and opens it again is put back where they were: **the page of every list is
+restored on its own**. Anything else worth keeping — the tab that was open, a filter — is marked by
+the menu and read back before it opens, because which tab is open decides which rows there are:
+
+```java
+session.remember("category");                                  // while it is open
+Object tab = menus.remembered(player, "effects").get("category");   // before opening it again
+```
+
+Reading does not consume it, and nothing is put back behind the caller's back: what to do with it is
+the menu's decision. Check it against the catalogue as it is now — a tab that was renamed between two
+visits would otherwise draw an empty grid with no way out.
+
+<Callout type="note" title="A double-click is refused outright">
+The click before it already ran the button, so delivering the pair would run it twice — a toggle
+clicked quickly would turn itself back off. It is refused before it reaches a handler.
+</Callout>
+
 ## Animations
 
 ```yaml

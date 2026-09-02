@@ -122,6 +122,23 @@ pueden escribir `id` en un item sin chocar. `Items.parse` sin plugin está bien 
 guardan valores, que son casi todas.
 </Callout>
 
+## Objetos que no son lo que aparentan
+
+Los objetos propios de un plugin se dibujan con el material que les venga bien, y el material es sobre
+lo que actúa el servidor: una ficha dibujada como perla del end **es** una perla que se lanza, una
+dibujada como comida se come, una dibujada como bloque se coloca. Todas esas gastan algo que el
+jugador tenía que conservar.
+
+```java
+PluginItems items = Items.of(this);
+items.inert("item");     // la clave de datos que llevan los objetos de este plugin
+```
+
+Todo lo que lleve esa clave pasa a ser inerte: usarlo no hace nada. Se puede seguir cogiendo, tirando,
+comerciando, metiendo en un cofre y clicando en un menú — simplemente se niega a gastarse como el
+objeto que aparenta. Pedirlo dos veces reemplaza las claves en vez de registrar un segundo guardián,
+así que un plugin que se recarga en caliente no acaba con uno por recarga.
+
 ## Guardar lo que alguien lleva en la mano
 
 La otra dirección, para un selector de iconos:

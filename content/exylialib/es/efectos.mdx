@@ -66,6 +66,25 @@ Effects.bossBar("{primary}Empieza en {highlight}%time%").countdown(10).showAll()
 Effects.firework().shape("BALL_LARGE").colours("#8a51c4").at(location).show();
 ```
 
+## La cuenta atrás es de quien llama
+
+**Cuánto dura un temporizador no es una clave de config.** Una cuenta atrás siempre es el mismo número
+que ya está contando otra cosa — la partida, el calentamiento, el tag de combate — así que una clave
+que pudiera ponerle otro valor solo podría contradecir lo que está pasando. Los segundos vienen del
+código; el aspecto, del archivo:
+
+```java
+Effects.play(config.onCountdown(), player, matchSeconds);   // un bloque entero, contando
+Effects.title(text).countdown(matchSeconds).show(player);   // o un solo display
+```
+
+Un teletransporte ya lo hace por ti: `onStart(effect)` cuenta sobre el calentamiento que recibió.
+
+Los tiempos son **segundos con decimales**: `countdown(3.3)` son 3,3 segundos reales y `%time%`
+muestra `3.3`. `%time%` es del efecto, nunca del registro global — dos cuentas atrás en pantalla no
+pueden mostrar el mismo número. `timeStyle` es un nombre de estilo de `TimeFormats`: `auto`, `tenths`,
+`clock` y demás.
+
 ## Temporizadores
 
 `Timer` es el reloj detrás de un efecto con tiempo — un valor, no una tarea.
@@ -83,6 +102,24 @@ nada en un temporizador así; da el tiempo por `Cooldowns` y la barra lo muestra
 `Ticks` convierte: `fromSeconds`, `toSeconds`, `fromMillis`, `toMillis`, y `parse(texto, alternativa)`
 entendiendo sufijos `s`, `ms`, `t`, `m` y `h`.
 
+### Estilos de tiempo
+
+`TimeFormats` es lo que nombra un `timeStyle`, y con lo que se escribe cada duración del ecosistema:
+
+| Estilo | Se lee | Para |
+|---|---|---|
+| `AUTO` | `3.3`, `47`, `1:35` | Decimales solo donde aportan. El valor por defecto. |
+| `SECONDS` | `3` | Segundos enteros, hacia abajo. |
+| `TENTHS` / `HUNDREDTHS` | `3.3` / `3.34` | Un número al que el jugador reacciona. |
+| `CLOCK` | `1:35`, `1:05:03` | Con relleno, pasada una hora. |
+| `FULL` | `1h 5m 3s`, `5d` | Todas las partes, de días hacia abajo, para una duración que se lee una vez. |
+| `COMPACT` | `3d`, `2.5h`, `45s` | Solo la unidad mayor, hasta años, para una duración dentro de una frase. |
+
+`FULL` sube hasta días en vez de contar horas para siempre, así que un cooldown de cinco días se lee
+`5d` y no `120h`. `COMPACT` va más lejos — un mes son treinta días y un año trescientos sesenta y
+cinco, que es justo la idea: `2mo ago` no pretende saber qué meses. Todo lo que escriben estos
+estilos lo vuelve a leer una entrada `duration()`: `30s`, `1h30m`, `2d`, `1w`, `2.5h`.
+
 ## Lanzar y parar
 
 | Llamada | Qué hace |
@@ -97,23 +134,23 @@ quita.
 
 ## Secuencias
 
-Una secuencia es coreografía escrita en configuración — formas, sonidos y retrasos, compilada una vez:
+Una secuencia es coreografía escrita en configuración — formas, sonidos, pausas, display entities y
+cuerpos, compilada una vez:
 
 ```java
 PluginSequences sequences = Sequences.of(this);
 Sequence intro = sequences.compile(config.onCapture());
 
 sequences.play(intro, SequenceTarget.at(location));
-sequences.play(intro, SequenceTarget.of(player));
 ```
 
-Una secuencia se compila desde las líneas que guarda una config y se lanza contra una ubicación o un
-jugador. `sequences.shape(nombre, forma)` añade una forma propia a las que ya conoce.
+Veinticinco formas, trece tokens más, y cualquier forma dibujable con partículas **o** con display
+entities que se mueven, giran y caen solos. Las entradas llevan probabilidad, condiciones y audiencia,
+así que "una de cada cinco veces, solo si el jugador está agachado, visible a veinte bloques" es
+configuración y no código.
 
-Las entradas llevan probabilidades, condiciones y audiencia, así que "una de cada cinco veces, solo si
-el jugador está agachado, visto por todos a veinte bloques" es configuración y no código. Se editan
-en el juego con `Sequences.of(plugin).editor(effects)` — ver
-[Entrada, editores y asistentes](/docs/exylialib/entrada-y-editores#editar-una-lista-de-cosas).
+La sintaxis completa, la API y el editor en el juego están en
+[Secuencias](/docs/exylialib/secuencias).
 
 ## Vistas previas
 

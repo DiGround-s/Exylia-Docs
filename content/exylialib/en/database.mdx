@@ -124,6 +124,21 @@ public static void registerCodecs() {
 
 `Location`, `ItemStack`, `ItemStack[]` and enums are already known.
 
+## A column that grew
+
+A field's length can grow between two versions of a plugin — an icon column declared 64 characters
+long and later holding a serialised item. The table on an existing server still has the old width,
+and the first long value is refused, or truncated into something that no longer parses back.
+
+A **text** column narrower than the record declares is widened in place on the start that finds it,
+and the change is named in the schema summary. Its data and its name are untouched, and a `NOT NULL`
+column stays `NOT NULL`.
+
+It never goes the other way: a column stored wider than the record declares is left exactly as it is,
+because it may be another plugin's view of the same table and narrowing truncates rows. Numeric
+columns are not touched at all — precision is not a width. A database that refuses the alteration is
+left as it was rather than kept from starting, with a warning naming the table and the column.
+
 ## Moving data
 
 ```text

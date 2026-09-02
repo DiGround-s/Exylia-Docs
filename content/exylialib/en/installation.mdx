@@ -81,8 +81,10 @@ from a dying classloader cannot answer one last click.
 | `/exylialib reload` | Refreshes colours, formats and the rest of the shared configuration, and notifies every plugin listening for it. |
 | `/exylialib info` | Version, platform and who depends on this library. |
 | `/exylialib stats` | Live counters from every module. |
+| `/exylialib update` | Checks GitHub now and stages a newer release. |
 | `/exylialib export <plugin>` | Writes that plugin's tables to a dump. |
-| `/exylialib import <plugin> <file> [force]` | Reads one back. |
+| `/exylialib import <plugin> <file> [force]` | Reads one back; `force` **merges**, it does not replace. |
+| `/exylialib wipe <plugin> <table\|*> [code]` | Empties one table or all of them, after a typed confirmation and an automatic dump. |
 
 A plugin listens for that reload with `Reloads.onLibraryReload(plugin, runnable)` — the palette
 changing is the usual reason, since every compiled menu is holding the old colours.

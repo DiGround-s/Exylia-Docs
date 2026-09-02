@@ -81,8 +81,10 @@ cuyo handler viene de un classloader moribundo no pueda responder un último cli
 | `/exylialib reload` | Refresca colores, formatos y el resto de la configuración compartida, y avisa a cada plugin que esté escuchando. |
 | `/exylialib info` | Versión, plataforma y quién depende de esta librería. |
 | `/exylialib stats` | Contadores en vivo de cada módulo. |
+| `/exylialib update` | Consulta GitHub al momento y deja preparada una release más nueva. |
 | `/exylialib export <plugin>` | Escribe las tablas de ese plugin en un volcado. |
-| `/exylialib import <plugin> <archivo> [force]` | Lee uno de vuelta. |
+| `/exylialib import <plugin> <archivo> [force]` | Lee uno de vuelta; `force` **fusiona**, no reemplaza. |
+| `/exylialib wipe <plugin> <tabla\|*> [código]` | Vacía una tabla o todas, tras una confirmación escrita y un volcado automático. |
 
 Un plugin escucha esa recarga con `Reloads.onLibraryReload(plugin, runnable)` — el motivo habitual es
 que cambie la paleta, porque cada menú compilado se queda con los colores viejos.

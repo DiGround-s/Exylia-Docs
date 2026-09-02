@@ -343,6 +343,26 @@ arranca el temporizador si el menú tiene algo que pueda cambiar, y muere con el
 Un clic redibuja todo lo que puede cambiar, no solo el slot donde cayó: añadir una capa mueve un
 contador, una vista previa y una lista, y ninguna de esas es el slot que se pulsó.
 
+## Dónde estaba el jugador
+
+Un jugador que cierra un menú y lo vuelve a abrir aparece donde estaba: **la página de cada lista se
+restaura sola**. Lo demás que valga la pena conservar — la pestaña abierta, un filtro — lo marca el
+menú y se lee antes de abrirlo, porque qué pestaña está abierta decide qué filas hay:
+
+```java
+session.remember("category");                                  // mientras está abierto
+Object tab = menus.remembered(player, "effects").get("category");   // antes de reabrirlo
+```
+
+Leerlo no lo consume, y no se restaura nada a espaldas de quien llama: qué hacer con ello lo decide el
+menú. Compruébalo contra el catálogo actual — una pestaña renombrada entre dos visitas dibujaría una
+rejilla vacía sin salida.
+
+<Callout type="note" title="El doble clic se rechaza de plano">
+El clic anterior ya ejecutó el botón, así que entregar el par lo ejecutaría dos veces — un
+interruptor pulsado rápido se apagaría solo. Se rechaza antes de llegar a ningún handler.
+</Callout>
+
 ## Animaciones
 
 ```yaml

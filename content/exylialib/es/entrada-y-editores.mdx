@@ -64,6 +64,22 @@ El chat es el respaldo universal: cualquier jugador de Java puede responder por 
 ninguna integración de paquetes ni de puente. Ni PacketEvents ni Floodgate son obligatorios, y los
 transportes se descubren por reflexión, así que uno que falte simplemente no se ofrece.
 
+### Elegir un icono, y el catálogo de cabezas
+
+`icon` pregunta con qué se dibuja algo, y ofrece tres formas de responder: el objeto en la mano, una
+búsqueda sobre los materiales del propio servidor y **`BROWSE`** — el catálogo de cabezas decorativas,
+unas ochenta y seis mil, buscadas una página cada vez y sin descargar nada.
+
+```java
+Heads.browse(inputs, player, "{warning}Browse a head")
+     .open(head -> arenas.save(arena.withIcon(head.icon())));
+```
+
+`browse` devuelve el `SearchInput<Head>` en vez de abrirlo, así que el timeout, la validación o el
+tamaño de página siguen siendo de quien llama. Un `Head` lleva `id()`, `name()`, `texture()`,
+`category()`, `icon()` — el valor `urlhead-<textura>` que guarda una config — e `item()`. La consulta
+se compara contra nombres, ids y etiquetas, así que `cat` encuentra los gatos y `flag` las banderas.
+
 ### Un desenlace, exactamente una vez
 
 `COMPLETED`, `CANCELLED`, `TIMED_OUT` y los demás llegan **exactamente una vez por petición**, pase lo

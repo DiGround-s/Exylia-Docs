@@ -1,0 +1,184 @@
+---
+title: "Overlays"
+description: "Objetos en el inventario de un jugador que el servidor no tiene: una hotbar de staff que un crash no puede dejar atrás."
+---
+
+Un overlay dibuja objetos en el inventario del propio jugador **solo en el cliente**. El inventario
+real nunca se escribe, así que no se puede perder, duplicar ni dejar nada atrás.
+
+```java
+PluginOverlays overlays = Overlays.of(this);
+overlays.load("staff", getConfig().getConfigurationSection("staff-hotbar"));
+
+overlays.show(player, "staff");   // entrando en modo staff
+overlays.hide(player);            // saliendo
+```
+
+## Por qué no cambiar el inventario y ya
+
+Guardar el inventario, escribir las herramientas y devolver el viejo es lo obvio, y cada paso es una
+forma de perderle los objetos a alguien:
+
+- Un crash, una desconexión o un autoguardado entre la escritura y la restauración guardan las
+  herramientas en el mundo como objetos reales — herramientas de staff funcionales, con acciones
+  atadas, en el cofre de alguien.
+- Meter un objeto en un inventario real dispara el trigger de logro `inventory_changed`, así que un
+  diamante decorativo reparte un logro.
+- Un objeto recogido mientras las herramientas estorban o reemplaza una o se pierde.
+
+Nada de eso puede pasar aquí: un crash pierde el cuento y conserva el inventario.
+
+<Callout type="note" title="PacketEvents es obligatorio">
+Sin él `Overlays.isAvailable()` es `false`, mostrar un overlay no hace nada y al plugin se le avisa
+una vez en consola. Cubre el inventario y nada más — el daño, romper bloques, el vuelo y el chat son
+cosa del modo staff.
+</Callout>
+
+## Escribir uno
+
+El mismo formato que usan los objetos de un menú: mismo `material`, `name`, `lore`, `actions`,
+`condition`. Solo cambia el hueco, porque los huecos de un overlay son sitios del inventario del
+jugador.
+
+```yaml
+lock: FULL          # FULL (por defecto) | OWNED
+pickup: false       # por defecto true
+hide_rest: true     # por defecto false
+
+refresh:
+  mode: SMART
+  interval: 20
+
+items:
+  teleport:
+    slot: 0
+    material: COMPASS
+    name: '{primary}&lTELETRANSPORTE'
+    actions:
+      - 'right: staff:random_teleport'
+
+  leave:
+    slot: 8
+    material: BARRIER
+    name: '{error}&lSALIR DE STAFF'
+    actions:
+      - 'any: staff:leave'
+```
+
+O en código, para un overlay que ningún archivo describe:
+
+```java
+OverlayDefinition staff = OverlayDefinition.of("staff")
+        .slot(0, UiItem.of(compass).bindings(bindings).build())
+        .lock(OverlayLock.FULL)
+        .pickup(false)
+        .hideRest()
+        .build();
+overlays.show(player, staff);
+```
+
+## Huecos
+
+Numerados como los numera `player.getInventory().setItem`, que no es como los numera el cliente ni
+como los numera una ventana de contenedor. `OverlaySlots` convierte entre las tres; un archivo solo
+escribe la primera.
+
+| Índice | Qué |
+|---|---|
+| `0-8` | Hotbar |
+| `9-35` | Las tres filas de almacenamiento |
+| `36-39` | Botas, pantalones, peto, casco |
+| `40` | Mano secundaria |
+
+Los cinco huecos que se llevan puestos se pueden escribir por nombre — `boots`, `leggings`,
+`chestplate`, `helmet`, `offhand` — porque `slot: 39` para un casco es un número que nadie recuerda.
+Los rangos y las listas funcionan como en todas partes: `slots: "0-8"`, `slots: ["0-2", "helmet"]`.
+
+## Los tres ajustes
+
+| Ajuste | Valores | Qué hace |
+|---|---|---|
+| `lock` | `FULL` (por defecto), `OWNED` | Cuánto inventario se congela: todo lo que está en la pantalla del jugador, o solo los huecos que dibuja el overlay. |
+| `pickup` | `true` (por defecto), `false` | Si aún se pueden recoger objetos. `true` los deja en el inventario real, invisibles bajo el overlay; `false` los deja en el suelo, que es lo que quiere un modo staff. |
+| `hide_rest` | `false` (por defecto), `true` | Si los huecos que el overlay no dibuja se ven vacíos. `true` deja los cuarenta y uno en blanco: el equipo real no solo es inusable, no está en pantalla. |
+
+Los rechazos son **a nivel de paquete**: el mensaje del cliente nunca llega al servidor, así que el
+servidor nunca lo responde con los objetos que de verdad tiene. Con los dos locks se rechaza cualquier
+clic cuyo destino elija el servidor y no el jugador — shift-clic, tecla numérica, cambio a la mano
+secundaria, doble clic, arrastre — venga del hueco que venga, además de tirar objetos, el intercambio
+de mano, el clic central y la escritura de hueco en creativo.
+
+<Callout type="tip" title="Un overlay se aparta mientras hay otra ventana abierta">
+La mitad de abajo de cada cofre y de cada menú **es** el inventario del jugador. Mantenido ahí, un
+overlay convertiría un contenedor en algo de lo que se puede sacar y donde nunca se puede meter. Así
+que desde que se abre una ventana hasta que se cierra, el jugador ve y mueve su inventario real, y el
+overlay se vuelve a dibujar después — desde cero, porque los objetos dibujados nunca fueron reales.
+</Callout>
+
+## Qué ejecuta una pulsación
+
+El mismo vocabulario de clics que responde un botón de menú, así que un objeto de overlay y uno de
+menú se escriben igual — salvo que el de overlay se pulsa **en el mundo** además de en la pantalla de
+inventario.
+
+| Escrito | Qué lo hace |
+|---|---|
+| `left` | Clic izquierdo sobre un bloque, una entidad o el aire |
+| `right` | Clic derecho, en el aire, sobre un bloque o sobre una entidad |
+| `shift_left`, `shift_right` | Lo mismo agachado |
+| `drop`, `control_drop` | `Q` y `Ctrl+Q` |
+| `swap` | `F` |
+| `middle`, `double`, `number_key` | En la pantalla de inventario |
+
+A las acciones se les pasa `overlay.id`, `overlay.slot`, `overlay.click` y — cuando la pulsación fue
+sobre algo — `overlay.target` y `overlay.block`. `OverlayKeys` les pone nombre.
+
+## Qué hace una mano vacía
+
+```yaml
+empty_hand:
+  actions:
+    - 'right: staff:inspect'
+  commands:
+    - 'shift_right: player: co i'
+```
+
+Las mismas líneas que acepta un objeto, sin el objeto, para todos los huecos que el overlay posee y
+deja vacíos — las herramientas que responden a un sitio y no a un botón, como el clic derecho sobre un
+cofre para mirarlo por dentro.
+
+<Callout type="warning" title="Atar un clic aquí se lo quita al mundo para siempre">
+Una pulsación atada la responde el overlay haya o no un objeto real bajo el hueco vacío. Esa es la
+idea: la alternativa es una herramienta que funciona en un hueco de la hotbar y no en el siguiente,
+por un motivo que el portador no puede ver. Los clics sin atar siguen llegando al mundo cuando la
+mano está de verdad vacía.
+</Callout>
+
+## Redibujado y ciclo de vida
+
+`refresh` es el bloque de los menús y significa lo mismo: `SMART` redibuja solo lo que puede cambiar,
+`FULL` lo redibuja todo y `ON_CLICK` redibuja lo que se pulsó. Un overlay estático no arranca ningún
+temporizador, y un hueco que se dibuja idéntico a lo que hay en pantalla no manda paquete.
+
+```java
+overlays.refresh(player);              // ahora, sin esperar al temporizador
+overlays.isShowing(player);
+overlays.showing(player);              // Optional<OverlayDefinition>
+overlays.hide(player);
+overlays.hideAll();
+Overlays.hide(player);                 // lo pusiera quien lo pusiera
+Overlays.worn();                       // cuántos jugadores llevan uno
+```
+
+Un jugador lleva **un** overlay a la vez, lo haya puesto quien lo haya puesto: mostrar un segundo
+quita el primero. Todo lo que puso un plugin se quita al desactivarlo, así que un reload nunca deja a
+nadie con botones cuyas acciones vienen de un classloader que ya no existe.
+
+Todos los métodos son seguros desde cualquier hilo; lo que toca a un jugador salta antes a su hilo,
+así que se comporta igual en Folia.
+
+<Callout type="note" title="Los huecos de armadura se dibujan, no se llevan puestos">
+Vaciar los huecos `36-40` los vacía en la pantalla de inventario; lo que lleva puesto el cuerpo es
+otro paquete distinto. Un modo staff que quiera la armadura fuera del cuerpo está pidiendo vanish, que
+es el módulo de paquetes.
+</Callout>

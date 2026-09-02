@@ -1,0 +1,179 @@
+---
+title: "Overlays"
+description: "Items in a player's own inventory that the server does not have — a staff hotbar a crash cannot leave behind."
+---
+
+An overlay draws items into a player's own inventory **on the client only**. The real inventory is
+never written to, so nothing can be lost, duplicated or left behind.
+
+```java
+PluginOverlays overlays = Overlays.of(this);
+overlays.load("staff", getConfig().getConfigurationSection("staff-hotbar"));
+
+overlays.show(player, "staff");   // entering staff mode
+overlays.hide(player);            // leaving it
+```
+
+## Why not just swap the inventory
+
+Saving a player's inventory, writing tools in and putting the old one back is the obvious way, and
+every step of it is a way to lose somebody's items:
+
+- A crash, a disconnect or an autosave between the write and the restore saves the tools to the world
+  as real items — working staff tools, with actions bound, in somebody's chest.
+- Putting an item in a real inventory fires the `inventory_changed` advancement trigger, so a
+  decorative diamond hands out an advancement.
+- An item picked up while the tools are in the way either replaces one or is lost.
+
+None of that can happen here: a crash loses the story and keeps the inventory.
+
+<Callout type="note" title="PacketEvents is required">
+Without it `Overlays.isAvailable()` is `false`, showing an overlay does nothing, and the plugin is
+told once in its console. It covers the inventory and nothing else — damage, block breaking, flight
+and chat are a staff mode's business.
+</Callout>
+
+## Writing one
+
+The same format a menu's items use: same `material`, `name`, `lore`, `actions`, `condition`. Only the
+slot differs, because an overlay's slots are places in a player's own inventory.
+
+```yaml
+lock: FULL          # FULL (default) | OWNED
+pickup: false       # default true
+hide_rest: true     # default false
+
+refresh:
+  mode: SMART
+  interval: 20
+
+items:
+  teleport:
+    slot: 0
+    material: COMPASS
+    name: '{primary}&lTELEPORT'
+    actions:
+      - 'right: staff:random_teleport'
+
+  leave:
+    slot: 8
+    material: BARRIER
+    name: '{error}&lLEAVE STAFF'
+    actions:
+      - 'any: staff:leave'
+```
+
+Or in code, for an overlay no file describes:
+
+```java
+OverlayDefinition staff = OverlayDefinition.of("staff")
+        .slot(0, UiItem.of(compass).bindings(bindings).build())
+        .lock(OverlayLock.FULL)
+        .pickup(false)
+        .hideRest()
+        .build();
+overlays.show(player, staff);
+```
+
+## Slots
+
+Numbered the way `player.getInventory().setItem` numbers them — which is neither how the client nor a
+container window numbers them. `OverlaySlots` converts between all three; a file only writes the first.
+
+| Index | What |
+|---|---|
+| `0-8` | Hotbar |
+| `9-35` | The three storage rows |
+| `36-39` | Boots, leggings, chestplate, helmet |
+| `40` | Off-hand |
+
+The five worn slots can be written by name — `boots`, `leggings`, `chestplate`, `helmet`, `offhand` —
+because `slot: 39` for a helmet is a number nobody remembers. Ranges and lists work as everywhere
+else: `slots: "0-8"`, `slots: ["0-2", "helmet"]`.
+
+## The three settings
+
+| Setting | Values | What it does |
+|---|---|---|
+| `lock` | `FULL` (default), `OWNED` | How much of the inventory is frozen: everything on the player's own screen, or only the slots the overlay draws. |
+| `pickup` | `true` (default), `false` | Whether items may still be picked up. `true` puts them in the real inventory, invisible under the overlay; `false` leaves them on the ground, which is what a staff mode wants. |
+| `hide_rest` | `false` (default), `true` | Whether the slots the overlay does not draw look empty. `true` blanks all forty-one — the real gear is not merely unusable, it is not on screen. |
+
+Refusals are **packet-level**: the client's message never reaches the server, so the server never
+answers it from the items it really has. Under both locks, a click whose destination the server picks
+rather than the player — shift-click, number key, off-hand swap, double-click, drag — is refused
+whatever slot it started from, along with dropping, off-hand swap, middle-click pick and the
+creative-mode slot write.
+
+<Callout type="tip" title="An overlay steps aside while another window is open">
+The bottom half of every chest and menu **is** the player's own inventory. Kept up there, an overlay
+would turn a container into something a player can take from and never put back into. So from the
+moment a window opens until it closes the player sees and moves their real inventory, and the overlay
+draws itself again afterwards — from nothing, since the drawn items were never real.
+</Callout>
+
+## What a press runs
+
+The same click vocabulary a menu button answers to, so an overlay item and a menu item are written
+the same way — except that an overlay item is pressed **in the world** as well as on the inventory
+screen.
+
+| Written | What does it |
+|---|---|
+| `left` | Left-clicking a block, an entity or the air |
+| `right` | Right-clicking, in the air, on a block or on an entity |
+| `shift_left`, `shift_right` | The same while sneaking |
+| `drop`, `control_drop` | `Q` and `Ctrl+Q` |
+| `swap` | `F` |
+| `middle`, `double`, `number_key` | On the inventory screen |
+
+Actions are given `overlay.id`, `overlay.slot`, `overlay.click`, and — when the press was on something
+— `overlay.target` and `overlay.block`. `OverlayKeys` names them.
+
+## What an empty hand does
+
+```yaml
+empty_hand:
+  actions:
+    - 'right: staff:inspect'
+  commands:
+    - 'shift_right: player: co i'
+```
+
+The same lines an item takes, minus the item, for every slot the overlay owns and draws nothing in —
+the tools that answer a place rather than a button, like right-clicking a chest to look inside it.
+
+<Callout type="warning" title="Binding a click here takes it away from the world for good">
+A bound press is answered by the overlay whether or not a real item sits under the blank slot. That
+is the point: the alternative is a tool that works on one hotbar slot and not the next, for a reason
+the wearer cannot see. Unbound clicks still reach the world when the hand is really empty.
+</Callout>
+
+## Redrawing and lifecycle
+
+`refresh` is the menus' block and means the same thing: `SMART` redraws only what can change, `FULL`
+redraws everything, `ON_CLICK` redraws what was pressed. A static overlay starts no timer at all, and
+a slot that renders identical to what is on screen sends no packet.
+
+```java
+overlays.refresh(player);              // now, without waiting for the timer
+overlays.isShowing(player);
+overlays.showing(player);              // Optional<OverlayDefinition>
+overlays.hide(player);
+overlays.hideAll();
+Overlays.hide(player);                 // whoever put it there
+Overlays.worn();                       // how many players are wearing one
+```
+
+A player wears **one** overlay at a time, whoever put it there: showing a second takes the first off.
+Everything a plugin put on comes off when it is disabled, so a reload never leaves somebody wearing
+buttons whose actions come from a classloader that is gone.
+
+Every method is safe from any thread; anything touching a player hops to that player's thread first,
+so it behaves the same on Folia.
+
+<Callout type="note" title="The armour slots are drawn, not worn">
+Blanking slots `36-40` empties them on the inventory screen; what the body is wearing is a different
+packet entirely. A staff mode that wants the armour off the body is asking for vanish, which is the
+packets module.
+</Callout>

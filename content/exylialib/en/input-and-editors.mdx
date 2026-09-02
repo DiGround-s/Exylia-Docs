@@ -63,6 +63,22 @@ Chat is the universal fallback: every Java player can answer in chat even with n
 integration present. Neither PacketEvents nor Floodgate is required, and transports are discovered
 reflectively so a missing one simply is not offered.
 
+### Picking an icon, and the head catalogue
+
+`icon` asks what something is drawn as, and offers three ways of answering: the item in hand, a
+search over the server's own materials, and **`BROWSE`** — the decorative head catalogue, some
+eighty-six thousand heads, searched a page at a time and nothing downloaded.
+
+```java
+Heads.browse(inputs, player, "{warning}Browse a head")
+     .open(head -> arenas.save(arena.withIcon(head.icon())));
+```
+
+`browse` hands back the `SearchInput<Head>` rather than opening it, so a timeout, a validation or a
+page size are still the caller's. A `Head` carries `id()`, `name()`, `texture()`, `category()`,
+`icon()` — the `urlhead-<texture>` value a config stores — and `item()`. The query is matched against
+names, ids and tag names, so `cat` finds the cats and `flag` finds the flags.
+
 ### One outcome, exactly once
 
 `COMPLETED`, `CANCELLED`, `TIMED_OUT` and the rest arrive **exactly once per request**, whatever

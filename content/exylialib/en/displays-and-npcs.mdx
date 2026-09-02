@@ -1,0 +1,201 @@
+---
+title: "Displays and NPCs"
+description: "Solid objects and player-shaped bodies, sent as packets and animated by the client."
+---
+
+Two modules with the same shape: neither creates a real entity, both are drawn straight to a client,
+and both own the lifetime of what they show.
+
+| Module | Entry point | What it draws |
+|---|---|---|
+| Displays | `Displays.of(plugin)` | Item, block, head and text displays that move, spin and fall. |
+| NPCs | `Npcs.of(plugin)` | Player-shaped bodies: a corpse, a statue, a double. |
+
+Both need **PacketEvents**. Without it the module says so once and draws nothing.
+
+<Callout type="note" title="Most callers never touch either API">
+Both are reachable from a [sequence](/docs/exylialib/sequences) line, which is how every cosmetic
+plugin in the ecosystem uses them. The API is for what configuration cannot describe.
+</Callout>
+
+## Why the client animates it
+
+A display is told a pose and how long it has to get there, and draws every frame in between at the
+viewer's own frame rate. A two-second animation is about **six packets per viewer**, and it stays
+smooth on a server running at fifteen ticks a second, because the smoothness never depended on the
+tick rate.
+
+Moving something by re-sending its position every tick is a twenty-frames-a-second animation that
+gets worse under load — which is what a particle trail pretending to be an object looks like.
+
+<Callout type="tip" title="Displays are not a replacement for particles">
+Displays give an effect weight, silhouette and shadow. Particles give it light, smoke and atmosphere.
+Effects that look expensive are both.
+</Callout>
+
+## Drawing a display from a sequence
+
+Any shape line becomes a display line by naming what it is drawn with:
+
+```yaml
+effects:
+  # Twelve swords that fall out of the sky in a ring, spinning as they come.
+  - '[CIRCLE] NETHERITE_SWORD;as:item;radius:2.6;points:12;from:0,9,0;to:0,0,0;spin:2;axis:x;life:0.9;face_out:true;light:15'
+  # The floor buckling: a ring of blocks, flattened, growing outwards.
+  - '[CIRCLE] CRYING_OBSIDIAN;as:block;radius:0.3;points:20;size:0.1;size_to:1.4;to:0,0.2,0;life:0.5;light:15'
+  # One item, thrown up, tumbling, falling back down.
+  - '[DISPLAY] TRIDENT;from:0,0.5,0;to:0,4,0;gravity:14;spin:3;axis:z;life:1.4;size:1.5'
+```
+
+### How it moves
+
+| Parameter | What it does | Default |
+|---|---|---|
+| `life:` | Seconds it exists. | `1` |
+| `from:x,y,z` | Where it starts, relative to its point. | `0,0,0` |
+| `to:x,y,z` | Where it ends. | `0,0,0` |
+| `rise:` | Shorthand for `to:0,n,0`. | |
+| `gravity:` | Blocks per second squared, **added** to the line. | `0`; vanilla is about `32` |
+| `ease:` | `in`, `out`, `in_out`. | linear |
+| `spin:` | Turns over its whole life; `x,y,z` tumbles on three axes. | `0` |
+| `axis:` | Which axis a single-number spin turns around. | `y` |
+| `orbit:` | Turns each point carries round the anchor. | `0` |
+| `vary:` | How much the pieces differ in size, as a fraction. | `0` |
+| `size:` | One number, or `x,y,z` for a plate, a pillar or a blade. | `1` |
+| `size_to:` | The size it ends at. | same as `size` |
+| `tilt:` `roll:` `turn:` | A fixed rotation, in degrees. | `0` |
+| `face_out:` | Each point faces away from the centre. | `false` |
+| `pull:` | How far each point travels towards the centre; negative throws it outwards. | `0` |
+| `glow:` | Outline colour: a name, `#rrggbb` or a `{palette}` token. | none |
+| `light:` | Fixed light level, `0` to `15`. | the light where it stands |
+| `model:` | Custom model data. | none |
+| `billboard:` | `FIXED`, `VERTICAL`, `HORIZONTAL`, `CENTER`. | `FIXED`, `CENTER` for text |
+| `hold:` | Item display context: `0` the model, `5` head, `7` dropped, `8` item frame. | `0` |
+
+`orbit:` is the movement a straight line cannot express and the one that separates a shape that
+appears from a shape that is alive. `vary:0.4` gives the pieces sizes that differ by up to two fifths
+— a hash of each point's position, not a random number, so it is the same every play. `spin:0.5,2,1`
+tumbles on three axes, because nothing thrown in the world spins about exactly one.
+
+### Making a movement land
+
+<Steps>
+  <Step title="ease:in for a slam">
+    It holds the movement back and spends it late: a wind-up and a strike, from the same two numbers.
+  </Step>
+  <Step title="gravity: for debris only">
+    It is added to the line rather than replacing it, so `from:0,9,0;to:0,1,0;gravity:40` descends
+    eight blocks **and then** falls twelve more, through the floor. Half of `gravity` times the life
+    squared is how far it drops: a second in the air wants about `5`.
+  </Step>
+  <Step title="size: for weight">
+    `size:3,0.15,3` is a block flattened into a plate. Grown from nothing it is a shockwave;
+    stretched the other way it is a pillar or a blade.
+  </Step>
+  <Step title="size_to: for arrival">
+    A few percent larger on impact, or smaller on a wind-up. It is the difference between an object
+    arriving and an object being placed.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="A blade is aimed with roll:, not tilt:">
+An item model is a flat plate standing in its own XY plane, facing south, with a sword's tip up and
+to the right. `roll:135` puts it tip-down, `roll:315` tip-up, `roll:225` point-first along its face.
+The turn runs the opposite way from the right-hand rule, so a blade that comes out horizontal wants
+90 added or taken. `face_out:` and `turn:` are applied **after** `roll:` and `tilt:`, which is the
+order a ring needs. A block display is a cube and needs none of it.
+</Callout>
+
+`light:15` is worth setting on nearly every effect: a display lit by the world is black at night, and
+an effect that disappears after sunset is an effect players report as broken.
+
+## The display API
+
+```java
+PluginDisplays displays = Displays.of(this);
+
+DisplayModel blade = DisplayModel.item(new ItemStack(Material.NETHERITE_SWORD))
+        .glow(0xFF6B9D)
+        .light(15);
+
+DisplayMotion thrown = DisplayMotion.builder()
+        .life(1200)
+        .from(0, 7, 0).to(0, 0, 0)
+        .spin(Rotation.Axis.Z, 3)
+        .build();
+
+displays.show(blade, thrown, where, observers);
+```
+
+| Method | What it does |
+|---|---|
+| `show(model, motion, at, viewers)` | Shows one display; it removes itself when the motion ends. Returns a `DisplayHandle`, or `null` when nobody can see it or PacketEvents is absent. |
+| `removeAll()` | Everything this plugin is showing. |
+| `active()` | How many it has on screen. |
+| `isSupported()` | Whether displays can be shown at all here. |
+
+## NPCs
+
+```yaml
+effects:
+  # The victim, face down, wearing what they died in, for four seconds.
+  - '[NPC] {victim};pose:lying;life:4;equip:true'
+  # Standing, turned to face whoever did it, outlined.
+  - '[NPC] {victim};pose:standing;life:3;glow:{error};face:true'
+```
+
+| Parameter | What it does | Default |
+|---|---|---|
+| `pose:` | `lying`, `standing`, `crawling`, `sneaking` or `spinning`. | `lying` |
+| `life:` | Seconds it stays, from `0.2` to `120`. | `5` |
+| `equip:` | Wears the armour and weapon they died in. | `true` |
+| `glow:` | Outline colour. | none |
+| `y:` | Height above the anchor. | `0` |
+| `face:` | Turns to face whoever set the sequence off. | `true` |
+| `from:x,y,z` / `to:x,y,z` | Where it appears and where it ends up. | `0,0,0` |
+| `over:` | Seconds the movement takes. | `0.7` |
+| `ease:` | `out`, `in`, `in_out` or `linear`. | `out` |
+| `gravity:` | Blocks per second squared, added to the line. | `0` |
+| `turn:` | Degrees it turns on the spot over the movement. | `0` |
+| `pose_to:` / `after:` | A second pose, and how long before it. | none / `0.4` |
+| `hurt:` | Flinches red as it appears. | `false` |
+
+```java
+PluginNpcs npcs = Npcs.of(this);
+
+NpcHandle body = npcs.show(NpcModel.of(victim)
+                .wearing(victim)
+                .pose(NpcPose.LYING)
+                .glow(0xA33B53),
+        victim.getLocation(), 4000, observers);
+
+body.lookAt(killer.getLocation());
+```
+
+A body reads better at about **half vanilla gravity** — a real one is heavier than the eye expects and
+slower than the number says. `pose:lying` is the pose a sleeping player is drawn in, which is the only
+way to put a body on the floor without a model of your own; `pose:standing` with `face:true` is a
+different effect entirely: somebody who has stopped, and is looking at you.
+
+<Callout type="note" title="Why an NPC cannot take a player name">
+`NpcModel.of(player)` reads the texture from the connection this server already holds — no lookup, no
+waiting, no failure halfway. A name would be a request to Mojang, and an effect cannot wait for one.
+A base64 texture written into the file works, and is resolved when the file is read.
+</Callout>
+
+<Callout type="warning" title="An NPC always has its own identity">
+It is announced under a UUID of its own, never the wearer's: a second entry under a real player's id
+takes that player's skin off their own body until they relog. It is also announced **unlisted**, so
+it never appears in the tab list beside real players.
+</Callout>
+
+## What both of them guarantee
+
+| | |
+|---|---|
+| **Nothing the server carries** | Not entities: not ticked, not saved, not in any chunk, no hitbox. Two players standing together can be shown different ones. |
+| **Nothing can be left behind** | Nothing else would clean them up, so the module owns their lives: they go when the motion or life ends, when the plugin is disabled, or when the server stops. There is no fourth case. |
+| **One timer, not one per object** | Every display on the server is moved from a single asynchronous driver. |
+| **A spin is cut up for you** | The client turns by the shortest arc, so spins are split into sixths of a turn; `spin:3` is correct without anybody knowing that. |
+| **Capped work** | A file asking for two hundred turns is capped at forty-eight poses rather than sending two hundred packets. |
+| **PacketEvents or nothing** | There is no fallback worth pretending about. |

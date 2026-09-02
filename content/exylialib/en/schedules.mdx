@@ -1,0 +1,138 @@
+---
+title: "Schedules"
+description: "Timetables: what starts by itself, when, and what has to be true for it to happen."
+---
+
+```java
+PluginSchedules schedules = Schedules.of(this);
+
+// The gate only this plugin can answer.
+schedules.condition("event-inactive", s -> !events.isActive(s.target()));
+// What a fire does.
+schedules.onFire(s -> events.start(s.target()));
+
+// Whenever the configuration is (re)loaded:
+schedules.set(configs.stream().flatMap(c -> c.schedules().stream()).toList());
+```
+
+## What it replaces
+
+Every plugin that started something on a clock wrote the same scheduler: a repeating task, a list of
+entries parsed out of YAML, a comparison of the current hour and minute against each one, and a map of
+the last minute each entry fired in so the second tick of the same minute would not fire it twice.
+There were at least three copies, and they had already drifted into disagreeing about the key for the
+minimum player count.
+
+The cost now is **one asynchronous task for the whole server**. Each pass reads one `long` per plugin
+and compares it to the clock; nothing is walked, parsed or compared until a schedule is due. The
+moment one is, the work moves onto the owning plugin's own scheduler before a single gate is
+evaluated, so a condition may touch the server and so may the handler.
+
+## A schedule
+
+An immutable record, the same shape as every other configured thing in the library.
+
+| Field | What it means |
+|---|---|
+| `name` | What an admin calls the line. Blank shows the times instead. |
+| `target` | What it starts. The meaning is the owning plugin's — normally a configuration id. |
+| `enabled` | Whether it may fire at all. |
+| `days` | Which days. Empty means every day. |
+| `times` | The clock times it fires at. |
+| `every` | Repeat this often instead of using fixed times. |
+| `from` / `to` | The window the repeat runs inside. |
+| `minPlayers` / `maxPlayers` | How many players must be, and may be, online. |
+| `condition` | An Exylia comparison, such as `%server_tps% >= 18`. |
+| `requires` | Named gates the owning plugin registered. |
+| `cooldown` | The shortest gap between two fires of this line. |
+
+```java
+Schedule.at("koth_desert", LocalTime.of(20, 0), LocalTime.of(22, 30))
+        .withDays(Set.of(DayOfWeek.FRIDAY, DayOfWeek.SATURDAY));
+
+Schedule.every("koth_desert", Duration.ofHours(2));   // then set from/to
+```
+
+A repeat is anchored to the **window's own opening**, not to the moment the plugin loaded: an
+every-two-hours schedule that opens at 10:00 fires at 10:00, 12:00 and 14:00 whether the server
+restarted at 13:07 or not.
+
+<Callout type="note" title="There is no cron string">
+A cron string is unreadable in a menu and unwritable in a form, and every schedule any Exylia plugin
+has needed is "these times, these days, if these things hold".
+</Callout>
+
+## Named gates
+
+The thing configuration cannot express:
+
+```java
+schedules.condition("event-inactive", s -> !events.isActive(s.target()));
+```
+
+A schedule listing `event-inactive` in its `requires` fires only when the test passes. The names a
+plugin offers are shown to the admin in the edit form, so nobody has to guess them.
+
+<Callout type="warning" title="An unknown gate fails closed">
+A schedule requiring a name the plugin never registered **does not fire**, and says so loudly. That
+is the deliberate opposite of rewards and effects, which fail open: withholding a reward is
+invisible, while starting an event the admin asked not to start is loud.
+</Callout>
+
+A fire stopped by a gate is skipped rather than retried — an event blocked at eight o'clock starting
+at eight minutes past is not what the timetable said. A fire more than two minutes late, after a
+frozen server or a suspended host, is skipped too: firing a day of missed schedules all at once on
+the way back up is worse than missing them.
+
+## Storing and reading them
+
+```java
+String stored = ScheduleCodec.encode(schedules);
+List<Schedule> schedules = ScheduleCodec.decode(stored);
+```
+
+A JSON array, so a timetable lives in a `TEXT` column beside the rewards and commands of the same row.
+Only what carries meaning is written, and an empty list stores as `null` rather than `[]`.
+
+`ScheduleCodec.fromMapList` reads the block form every plugin had before this module — both spellings
+of the player key included — so migrating is a read rather than an admin retyping their timetable:
+
+```yaml
+- name: 'Friday night'
+  target: 'koth_desert'
+  time: '20:00'              # or times: ['20:00', '22:30']
+  days: [FRIDAY, SATURDAY]   # or ['*'] for every day
+  min-players: 10            # also read as min-players-online
+```
+
+## Editing and reading the clock
+
+```java
+schedules.editor(config.schedules(), config.id())
+         .title("{primary}&lSCHEDULES")
+         .onSave(edited -> configs.save(config.withSchedules(edited)))
+         .open(player);
+```
+
+The [list editor](/docs/exylialib/input-and-editors) over schedules: pagination, add, edit, delete,
+copy and paste. Passing the target means the screen already knows what it starts, so the admin is not
+asked for an id they can only get wrong; passing `null` makes it a field.
+
+```java
+schedules.nextFireOf("koth_desert");        // Optional<Instant>
+schedules.millisUntilNext("koth_desert");   // OptionalLong, for a placeholder
+schedules.isScheduled("koth_desert");
+schedules.fireNow(schedule);                // early, but every gate is still checked
+```
+
+## Timezone
+
+One setting, in the library's own `config.yml`:
+
+```yaml
+timezone: 'Europe/Madrid'
+```
+
+Empty means the host's own zone, which is right until the host and the players are in different
+countries. A plugin that genuinely runs on a different clock calls `schedules.zone(...)`; nothing else
+should.

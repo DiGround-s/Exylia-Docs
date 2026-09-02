@@ -1,0 +1,201 @@
+---
+title: "Displays y NPCs"
+description: "Objetos sólidos y cuerpos con forma de jugador, enviados por paquetes y animados por el cliente."
+---
+
+Dos módulos con la misma forma: ninguno crea una entidad real, los dos se dibujan directo al cliente y
+los dos son dueños de la vida de lo que muestran.
+
+| Módulo | Punto de entrada | Qué dibuja |
+|---|---|---|
+| Displays | `Displays.of(plugin)` | Displays de objeto, bloque, cabeza y texto que se mueven, giran y caen. |
+| NPCs | `Npcs.of(plugin)` | Cuerpos con forma de jugador: un cadáver, una estatua, un doble. |
+
+Los dos necesitan **PacketEvents**. Sin él el módulo lo dice una vez y no dibuja nada.
+
+<Callout type="note" title="Casi nadie toca estas APIs">
+A los dos se llega desde una línea de [secuencia](/docs/exylialib/secuencias), que es como los usa
+cada plugin cosmético del ecosistema. La API es para lo que la configuración no puede describir.
+</Callout>
+
+## Por qué anima el cliente
+
+A un display se le dice una pose y cuánto tiempo tiene para llegar, y él dibuja cada frame intermedio
+al framerate de quien mira. Una animación de dos segundos son unos **seis paquetes por espectador**, y
+sigue fluida en un servidor a quince ticks por segundo, porque la fluidez nunca dependió del tick.
+
+Mover algo reenviando su posición cada tick es una animación de veinte fotogramas por segundo que
+empeora bajo carga — que es a lo que se parece una estela de partículas fingiendo ser un objeto.
+
+<Callout type="tip" title="Los displays no sustituyen a las partículas">
+Los displays dan peso, silueta y sombra. Las partículas dan luz, humo y ambiente. Los efectos que
+parecen caros son las dos cosas.
+</Callout>
+
+## Dibujar un display desde una secuencia
+
+Cualquier línea de forma pasa a ser una línea de display diciendo con qué se dibuja:
+
+```yaml
+effects:
+  # Doce espadas que caen del cielo en anillo, girando al venir.
+  - '[CIRCLE] NETHERITE_SWORD;as:item;radius:2.6;points:12;from:0,9,0;to:0,0,0;spin:2;axis:x;life:0.9;face_out:true;light:15'
+  # El suelo cediendo: un anillo de bloques, aplastado, creciendo hacia fuera.
+  - '[CIRCLE] CRYING_OBSIDIAN;as:block;radius:0.3;points:20;size:0.1;size_to:1.4;to:0,0.2,0;life:0.5;light:15'
+  # Un objeto lanzado hacia arriba, volteando, que vuelve a caer.
+  - '[DISPLAY] TRIDENT;from:0,0.5,0;to:0,4,0;gravity:14;spin:3;axis:z;life:1.4;size:1.5'
+```
+
+### Cómo se mueve
+
+| Parámetro | Qué hace | Por defecto |
+|---|---|---|
+| `life:` | Segundos que existe. | `1` |
+| `from:x,y,z` | Dónde empieza, relativo a su punto. | `0,0,0` |
+| `to:x,y,z` | Dónde termina. | `0,0,0` |
+| `rise:` | Atajo de `to:0,n,0`. | |
+| `gravity:` | Bloques por segundo al cuadrado, **sumados** a la línea. | `0`; lo vanilla ronda `32` |
+| `ease:` | `in`, `out`, `in_out`. | lineal |
+| `spin:` | Vueltas en toda su vida; `x,y,z` voltea en tres ejes. | `0` |
+| `axis:` | Sobre qué eje gira un `spin` de un solo número. | `y` |
+| `orbit:` | Vueltas que cada punto da alrededor del ancla. | `0` |
+| `vary:` | Cuánto difieren de tamaño las piezas, como fracción. | `0` |
+| `size:` | Un número, o `x,y,z` para una placa, un pilar o una hoja. | `1` |
+| `size_to:` | El tamaño con el que acaba. | igual que `size` |
+| `tilt:` `roll:` `turn:` | Una rotación fija, en grados. | `0` |
+| `face_out:` | Cada punto mira hacia fuera del centro. | `false` |
+| `pull:` | Cuánto viaja cada punto hacia el centro; negativo lo lanza hacia fuera. | `0` |
+| `glow:` | Color de contorno: un nombre, `#rrggbb` o un token `{paleta}`. | ninguno |
+| `light:` | Nivel de luz fijo, de `0` a `15`. | la luz del sitio |
+| `model:` | Custom model data. | ninguno |
+| `billboard:` | `FIXED`, `VERTICAL`, `HORIZONTAL`, `CENTER`. | `FIXED`, `CENTER` en texto |
+| `hold:` | Contexto del display de objeto: `0` el modelo, `5` cabeza, `7` tirado, `8` marco. | `0` |
+
+`orbit:` es el movimiento que una línea recta no puede expresar y el que separa una forma que aparece
+de una forma que está viva. `vary:0.4` da a las piezas tamaños que difieren hasta en dos quintos — es
+un hash de la posición de cada punto, no un número al azar, así que sale igual cada vez. `spin:0.5,2,1`
+voltea en tres ejes, porque nada lanzado en el mundo gira sobre exactamente uno.
+
+### Hacer que un movimiento aterrice
+
+<Steps>
+  <Step title="ease:in para un golpe">
+    Retiene el movimiento y lo gasta tarde: carga y golpe, con los mismos dos números.
+  </Step>
+  <Step title="gravity: solo para escombros">
+    Se suma a la línea en vez de reemplazarla, así que `from:0,9,0;to:0,1,0;gravity:40` baja ocho
+    bloques **y luego** cae doce más, atravesando el suelo. La mitad de `gravity` por el cuadrado de
+    `life` es cuánto cae: un segundo en el aire quiere un `5`, no un `50`.
+  </Step>
+  <Step title="size: para dar peso">
+    `size:3,0.15,3` es un bloque aplastado en placa. Crecida desde nada es una onda de choque;
+    estirada al revés es un pilar o una hoja.
+  </Step>
+  <Step title="size_to: para la llegada">
+    Un poco más grande al impactar, o más pequeño en la carga. Es la diferencia entre un objeto que
+    llega y un objeto que se coloca.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="Una hoja se apunta con roll:, no con tilt:">
+El modelo de un objeto es una placa plana en su propio plano XY, mirando al sur, con la punta de una
+espada arriba y a la derecha. `roll:135` la deja punta abajo, `roll:315` punta arriba y `roll:225`
+tumbada de punta sobre su cara. El giro va al revés que la regla de la mano derecha, así que a una
+hoja que sale horizontal hay que sumarle o restarle 90. `face_out:` y `turn:` se aplican **después**
+de `roll:` y `tilt:`, que es el orden que necesita un anillo. Un display de bloque es un cubo y no
+necesita nada de esto.
+</Callout>
+
+Vale la pena poner `light:15` en casi todos los efectos: un display iluminado por el mundo es negro de
+noche, y un efecto que desaparece al anochecer es un efecto que los jugadores reportan como roto.
+
+## La API de displays
+
+```java
+PluginDisplays displays = Displays.of(this);
+
+DisplayModel blade = DisplayModel.item(new ItemStack(Material.NETHERITE_SWORD))
+        .glow(0xFF6B9D)
+        .light(15);
+
+DisplayMotion thrown = DisplayMotion.builder()
+        .life(1200)
+        .from(0, 7, 0).to(0, 0, 0)
+        .spin(Rotation.Axis.Z, 3)
+        .build();
+
+displays.show(blade, thrown, where, observers);
+```
+
+| Método | Qué hace |
+|---|---|
+| `show(model, motion, at, viewers)` | Muestra un display; se quita solo al terminar el movimiento. Devuelve un `DisplayHandle`, o `null` si nadie puede verlo o falta PacketEvents. |
+| `removeAll()` | Todo lo que este plugin tenga en pantalla. |
+| `active()` | Cuántos tiene en pantalla. |
+| `isSupported()` | Si se pueden mostrar displays en este servidor. |
+
+## NPCs
+
+```yaml
+effects:
+  # La víctima, boca abajo, con lo que llevaba al morir, durante cuatro segundos.
+  - '[NPC] {victim};pose:lying;life:4;equip:true'
+  # De pie, girado hacia quien lo hizo, con contorno.
+  - '[NPC] {victim};pose:standing;life:3;glow:{error};face:true'
+```
+
+| Parámetro | Qué hace | Por defecto |
+|---|---|---|
+| `pose:` | `lying`, `standing`, `crawling`, `sneaking` o `spinning`. | `lying` |
+| `life:` | Segundos que se queda, de `0.2` a `120`. | `5` |
+| `equip:` | Lleva la armadura y el arma con las que murió. | `true` |
+| `glow:` | Color de contorno. | ninguno |
+| `y:` | Altura sobre el ancla. | `0` |
+| `face:` | Se gira hacia quien disparó la secuencia. | `true` |
+| `from:x,y,z` / `to:x,y,z` | Dónde aparece y dónde acaba. | `0,0,0` |
+| `over:` | Segundos que dura el movimiento. | `0.7` |
+| `ease:` | `out`, `in`, `in_out` o `linear`. | `out` |
+| `gravity:` | Bloques por segundo al cuadrado, sumados a la línea. | `0` |
+| `turn:` | Grados que gira sobre sí mismo durante el movimiento. | `0` |
+| `pose_to:` / `after:` | Una segunda pose, y cuánto tarda en llegar. | ninguna / `0.4` |
+| `hurt:` | Parpadea en rojo al aparecer. | `false` |
+
+```java
+PluginNpcs npcs = Npcs.of(this);
+
+NpcHandle body = npcs.show(NpcModel.of(victim)
+                .wearing(victim)
+                .pose(NpcPose.LYING)
+                .glow(0xA33B53),
+        victim.getLocation(), 4000, observers);
+
+body.lookAt(killer.getLocation());
+```
+
+Un cuerpo se lee mejor a **la mitad de la gravedad vanilla**: uno real pesa más de lo que el ojo
+espera y va más lento de lo que dice el número. `pose:lying` es la pose de un jugador durmiendo, que
+es la única forma de dejar un cuerpo en el suelo sin un modelo propio; `pose:standing` con `face:true`
+es otro efecto completamente distinto: alguien que se ha parado y te está mirando.
+
+<Callout type="note" title="Por qué un NPC no acepta un nombre de jugador">
+`NpcModel.of(player)` lee la textura de la conexión que este servidor ya tiene: sin consulta, sin
+espera, sin fallar a medias. Un nombre sería una petición a Mojang, y un efecto no puede esperarla.
+Una textura en base64 escrita en el archivo sí vale, y se resuelve al leer el archivo.
+</Callout>
+
+<Callout type="warning" title="Un NPC siempre tiene identidad propia">
+Se anuncia bajo un UUID propio, nunca el del portador: una segunda entrada bajo el id de un jugador
+real le quita su propia skin de su propio cuerpo hasta que se reconecte. También se anuncia **sin
+listar**, así que nunca aparece en el tab junto a jugadores reales.
+</Callout>
+
+## Lo que garantizan los dos
+
+| | |
+|---|---|
+| **Nada que el servidor cargue** | No son entidades: ni se tickean, ni se guardan, ni están en ningún chunk, ni tienen hitbox. Dos jugadores juntos pueden ver cosas distintas. |
+| **Nada se puede quedar atrás** | Nada más los limpiaría, así que el módulo es dueño de su vida: se van al acabar el movimiento o la vida, al desactivar el plugin o al parar el servidor. No hay un cuarto caso. |
+| **Un temporizador, no uno por objeto** | Todos los displays del servidor se mueven desde un único driver asíncrono. |
+| **El giro se trocea por ti** | El cliente gira por el arco más corto, así que los giros se parten en sextos de vuelta; `spin:3` sale bien sin que nadie lo sepa. |
+| **Trabajo con techo** | Un archivo que pide doscientas vueltas se limita a cuarenta y ocho poses en vez de mandar doscientos paquetes. |
+| **PacketEvents o nada** | No hay respaldo que valga la pena fingir. |

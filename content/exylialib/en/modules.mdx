@@ -1,6 +1,6 @@
 ---
 title: "Module index"
-description: "All thirty-seven modules, what each is for, and where its entry point lives."
+description: "All forty-three modules, what each is for, and where its entry point lives."
 ---
 
 Every module is reached the same way: a static class named after it, usually with an `of(plugin)`
@@ -38,13 +38,18 @@ handing back a view that belongs to your plugin.
 | Editors | `Editors.of(plugin)` | Screens for editing the lists a plugin configures. |
 | Wizards | `Wizards.of(plugin)` | Walking a player through several questions, applied only on confirm. |
 | Previews | `Previews.of(plugin)` | Showing one player an effect against an empty sky. |
+| Heads | `Heads.browse(inputs, …)` | The decorative head catalogue, searchable from a menu, a page at a time. |
 
 ## On screen
 
 | Module | Entry point | What it is for |
 |---|---|---|
 | Effects | `Effects.play(config, viewer)` | Titles, action bars, boss bars, sounds, particles, fireworks. |
-| Sequences | `Sequences.of(plugin)` | Choreographed effects from configuration: shapes, sounds, delays. |
+| Sequences | `Sequences.of(plugin)` | [Choreographed effects](/docs/exylialib/sequences) from configuration: twenty-five shapes, sounds, delays, displays and bodies. |
+| Displays | `Displays.of(plugin)` | [Item, block and text displays](/docs/exylialib/displays-and-npcs) that move, spin and fall by themselves, animated by the client. |
+| NPCs | `Npcs.of(plugin)` | [Player-shaped bodies](/docs/exylialib/displays-and-npcs) that exist only on a client. |
+| Overlays | `Overlays.of(plugin)` | [Items in a player's own inventory](/docs/exylialib/overlays) that the server does not have. |
+| Packets | `Packets.of(plugin)` | Vanish, fake blocks, freezing, a fake spectator and silent chest viewing. |
 | Scoreboard | `Scoreboards.show(plugin, player, config)` | Packet sidebars declared in config. |
 | Hologram | `Holograms.show(plugin, id, location, config)` | Packet holograms declared in config. |
 | Nametags | `Nametags.of(plugin)` | Name colour, glow and collision as one player sees another. |
@@ -65,6 +70,7 @@ handing back a view that belongs to your plugin.
 |---|---|---|
 | Sessions | `Sessions.of(plugin)` | One claim registry so two plugins cannot hold the same player. |
 | Cooldowns | `Cooldowns.of(plugin)` | The base every cooldown in the ecosystem sits on. |
+| Schedules | `Schedules.of(plugin)` | [Timetables](/docs/exylialib/schedules): what starts by itself, when, and under what conditions. |
 | Teleport | `Teleports.of(plugin)` | Warmups, safe landings, `/back`, requests and handovers. |
 | Combat | `Combat.isTagged(player)` | Whether a player is fighting, over DeluxeCombat or PvPManager. |
 | Clan | `Clans.clanOf(uuid)` | One API over eight clan plugins and external bridges. |
@@ -83,6 +89,7 @@ handing back a view that belongs to your plugin.
 |---|---|
 | `net.exylia.lib.ExyliaLib` | The plugin itself: lifecycle and cleanup, nothing else. |
 | `net.exylia.lib.platform.Platform` | `current()`, `isFolia()`, `isPaper()`. |
+| `net.exylia.lib.practicebot.PracticeBots` | A bridge to the training-bot plugin: `get()` and `available()`. Empty when it is absent. |
 | `net.exylia.lib.internal.*` | Internal. Free to change without notice. |
 
 ## Reloading

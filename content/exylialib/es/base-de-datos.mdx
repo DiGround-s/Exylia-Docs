@@ -125,6 +125,23 @@ public static void registerCodecs() {
 
 `Location`, `ItemStack`, `ItemStack[]` y los enums ya se conocen.
 
+## Una columna que creció
+
+La longitud de un campo puede crecer entre dos versiones de un plugin — una columna de icono declarada
+de 64 caracteres que luego guarda un objeto serializado. La tabla de un servidor que ya existe sigue
+con el ancho viejo, y el primer valor largo se rechaza, o se trunca en algo que ya no se puede volver
+a leer.
+
+Una columna **de texto** más estrecha de lo que declara el record se ensancha en el sitio en el
+arranque que lo detecta, y el cambio se nombra en el resumen de esquema. Sus datos y su nombre no se
+tocan, y una columna `NOT NULL` sigue siendo `NOT NULL`.
+
+Nunca va en el otro sentido: una columna guardada más ancha de lo que declara el record se deja tal
+cual, porque puede ser la vista de otro plugin sobre la misma tabla y estrecharla trunca filas. Las
+columnas numéricas no se tocan — la precisión no es un ancho. Una base de datos que rechace la
+alteración se deja como estaba en vez de impedir el arranque, con un aviso que nombra la tabla y la
+columna.
+
 ## Mover datos
 
 ```text

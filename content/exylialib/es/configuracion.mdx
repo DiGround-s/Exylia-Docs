@@ -100,6 +100,61 @@ sitio — un token renombrado, un número que estaba en ticks y ahora va en segu
 en vez de reemplazarlo con el valor por defecto, así que las palabras y los colores del dueño
 sobreviven.
 
+## Bloques que nombra el dueño
+
+Un componente declarado `Map<String, V>` es una sección cuyas **claves elige el dueño del servidor** —
+mundos, regiones, materiales — en vez de claves que decidió el código:
+
+```java
+public record Limits(
+        @Comment("Multiplicador por mundo. Añade los mundos que tenga este servidor.")
+        Map<String, Double> worlds,
+        Map<String, Item> items) {
+
+    public Limits() {
+        this(Map.of("world", 7.0), Map.of("ender-pearl", new Item()));
+    }
+
+    public record Item(double cooldown, int maxUses) {
+        public Item() { this(14.0, 1); }
+    }
+}
+```
+
+```yaml
+worlds:
+  arena: 2.5
+  survival: 9.0
+items:
+  ender-pearl:
+    cooldown: 14.0
+    max-uses: 1
+```
+
+`V` puede ser una hoja — texto, número, booleano, enum, lista — o un record, que se convierte en un
+bloque por entrada. La clave tiene que ser `String`; un `Map` de `Map` se rechaza, así que anida un
+record y el bloque interior tendrá nombre, comentarios y valores por defecto propios.
+
+| | |
+|---|---|
+| **Nada de dentro se poda** | Las claves son del dueño. Las claves *dentro* de un record siguen siendo del código y se podan normal. |
+| **Las entradas del constructor son ejemplos** | Se escriben una vez, al generar el archivo. Una entrada que el dueño borró se queda borrada, y un bloque vaciado se queda vacío. |
+| **Una entrada inventada hereda los defaults del record** | Para lo que no haya escrito. |
+| **Una entrada ilegible cuesta esa entrada** | Se avisa en su propia ruta; el resto carga. |
+| **Se conserva el orden de inserción** | El archivo no se reordena en cada guardado. |
+
+## Secciones que no hacen nada
+
+Un record que implementa `Sparse` decide por sí mismo si tiene algo que decir. Mientras `isEmpty()`
+responda `true`, la sección **no se escribe en el archivo**, leerla de vuelta no dice nada y no vuelve
+a aparecer en la siguiente carga; un bloque vacío que escribió una versión anterior se elimina en el
+siguiente guardado.
+
+Eso es lo que evita que un efecto con una sola boss bar escriba además un título, una action bar, un
+sonido, una partícula y un firework vacíos, cada uno con un comentario por clave. Solo vale para
+secciones cuyos valores por defecto están vacíos por naturaleza — una con valores reales tiene que
+quedarse en el archivo, o nadie se entera de que existe.
+
 ## Claves desconocidas
 
 Cualquier clave que ningún record declare se elimina al cargar y se reporta una vez como

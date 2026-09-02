@@ -1,0 +1,259 @@
+---
+title: "Sequences"
+description: "Choreographed effects written in configuration: every token, every shape, and the parameters that move a display."
+---
+
+A sequence is choreography written as a list of strings — a ring of flame, a sound, a pause, an
+explosion, in that order. It is compiled once and played many times.
+
+```java
+PluginSequences sequences = Sequences.of(this);
+Sequence onKill = sequences.compile(config.getStringList("effects"), "ember_burst");
+
+sequences.play(onKill, SequenceTarget.at(victim.getLocation()).by(killer));
+```
+
+```yaml
+effects:
+  - '[CIRCLE] FLAME;radius:1.5;points:24'
+  - '[SOUND] ENTITY_BLAZE_DEATH;1.5;0.8'
+  - '[DELAY] 0.15'
+  - '[EXPLOSION]'
+```
+
+## Sequences or effects?
+
+| What you have | Use |
+|---|---|
+| One title, one sound, one particle, declared in a record | [`Effects`](/docs/exylialib/effects) |
+| A list of things in order, with pauses, shapes and objects | this |
+
+A menu's open sound is an `EffectConfig`. A hundred-line firework display is a `Sequence`.
+
+## The syntax
+
+Every line is a token in brackets, then a head, then parameters separated by `;`:
+
+```yaml
+- '[CIRCLE] NETHERITE_SWORD;as:item;radius:3;points:12;from:0,10,0;ease:in'
+```
+
+`(0,0,0)` is the anchor the sequence was played at. Positive Y is up.
+
+### Tokens
+
+| Token | Arguments |
+|---|---|
+| `[DELAY] 0.15` | Seconds to wait before the next line. |
+| `[PARTICLE] FLAME` | `count:` `offset:x,y,z` `speed:` `y:` `color:` `size:` `block:` |
+| `[SOUND] NAME;volume;pitch` | Also `volume:` `pitch:`. A resource pack's own key works. |
+| `[LIGHTNING]` | `volume:` `pitch:` — flash, sparks and thunder. No strike, no fire, no damage. |
+| `[EXPLOSION]` | `count:` `y:` |
+| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
+| `[BLOCK_BREAK] STONE` | `count:` `offset:` `y:` |
+| `[POTION] speed;100;1` | Also `duration:` `amplifier:` |
+| `[TITLE] title;subtitle;in;stay;out` | Times in **seconds**. |
+| `[ACTION_BAR] text` | |
+| `[MESSAGE] text` | A chat line. `<center>` works like anywhere else. |
+| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
+| `[DISPLAY] NETHERITE_SWORD` | One display entity — see [Displays and NPCs](/docs/exylialib/displays-and-npcs). |
+| `[NPC] {victim}` | A body where it happened — same page. |
+
+### Shapes
+
+Twenty-five, and every one of them can be drawn with particles or with displays:
+
+`CIRCLE` `SPHERE` `DOME` `CUBE` `LINE` `RIBBON` `SCATTER` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO`
+`STAR` `CAGE` `DISC` `VORTEX` `WAVE` `CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS`
+`ARCH` `CLAW`
+
+| Shape | Its own parameters |
+|---|---|
+| `CIRCLE`, `SPHERE`, `DOME` | `radius` `points` |
+| `BEAM` | `height` `points` |
+| `SPIRAL` | `height` `radius` `turns` `points` |
+| `DOUBLE_HELIX` | `height` `radius` `turns` `points` `strands` |
+| `TORNADO` | `height` `radius` `top_radius` `turns` `points` |
+| `STAR` | `radius` `spikes` `inner` `points` |
+| `CAGE` | `radius` `height` `columns` `points` |
+| `DISC` | `radius` `rings` `points` |
+| `VORTEX` | `radius` `turns` `points` |
+| `WAVE` | `length` `amplitude` `frequency` `arms` `angle` `points` |
+| `CROSS` | `radius` `arms` `angle` `points` |
+| `GALAXY` | `radius` `turns` `arms` `points` |
+| `TORUS` | `radius` `tube` `segments` `tube_segments` |
+| `BURST` | `radius` `beams` `angle` `points` |
+| `PYRAMID` | `base` `height` `points` |
+| `RING_PULSE` | `radius` `rings` `spacing` `points` |
+| `WINGS` | `span` `arch` `depth` `dir` `points` |
+| `ARCH` | `radius` `arc` `dir` `points` |
+| `CLAW` | `radius` `claws` `spread` `curve` `dir` `drop` `points` |
+| `CUBE` | `width` `points` `edges` |
+| `LINE` | `length` `dir` `climb` `points` |
+| `RIBBON` | `radius` `points` `waves` `amplitude` |
+| `SCATTER` | `radius` `height` `points` `seed` `floor` |
+
+`CUBE` says `width` and `LINE` says `climb` rather than `size` and `rise`, because on a display line
+those two words already mean the model's own scale and where it ends up.
+
+Every shape also takes `y:` `scale:` `color:` `size:` `count:` `ticks:` `interval:` `rotate:`
+`face:`. `ticks:1` draws the whole shape in one frame; anything higher draws it over time, which is
+what makes a spiral look drawn rather than dropped. `SCATTER` takes a `seed`, so its unplanned points
+are the same unplanned points every time.
+
+<Callout type="tip" title="color: takes a palette token">
+`color:{primary}` follows `colors.yml` like everything else a player reads. `#rrggbb` and `R,G,B`
+work too. A `DUST` particle with no colour is drawn white — visible and obviously wrong, rather than
+silently invisible.
+</Callout>
+
+### Drawn with something other than particles
+
+Any shape line becomes a shape of **display entities** by saying what it is made of:
+
+```yaml
+- '[CIRCLE] NETHERITE_SWORD;as:item;radius:2.6;points:12;from:0,9,0;spin:2;axis:x;face_out:true'
+```
+
+| `as:` | The head of the line is |
+|---|---|
+| `item` | An item name, `NETHERITE_SWORD`. |
+| `block` | A block name, or a full state like `oak_stairs[facing=east]`. |
+| `head` | A base64 texture, or `{killer}` / `{victim}` for a face. |
+| `text` | The line itself, in the usual formatting. |
+
+The geometry, the animation, the rotation and who sees it are unchanged, because a shape never knew
+what it was being drawn with. The movement parameters — `life`, `from`, `to`, `ease`, `gravity`,
+`spin`, `orbit`, `pull`, `size_to`, `roll`, `glow`, `light` and the rest — are in
+[Displays and NPCs](/docs/exylialib/displays-and-npcs).
+
+### Repeating a line on a beat
+
+`repeat:` and `every:` work on **any** line; a shape also takes `turn_each:`.
+
+```yaml
+- '[CIRCLE] NETHERITE_SWORD;as:item;radius:3;points:6;repeat:5;every:0.1;turn_each:12'
+```
+
+Five rings a tenth of a second apart, each twelve degrees further round — instead of five copies of a
+line with four delays threaded between them.
+
+### Custom shapes
+
+```java
+sequences.shape("heart", args -> {
+    List<Vector> points = new ArrayList<>();
+    double size = args.number("size", 1.0);
+    for (int i = 0; i < args.atLeastOne("points", 60); i++) {
+        double t = i / 60.0 * Math.PI * 2;
+        points.add(new Vector(size * Math.pow(Math.sin(t), 3),
+                size * (13 * Math.cos(t) - 5 * Math.cos(2 * t)) / 16, 0));
+    }
+    return points;
+});
+```
+
+A shape says **where**, never **what**. Colour, animation, rotation, scaling, `as:` and visibility
+all come for free, which is why a new shape is a loop returning vectors rather than another copy of
+the drawing code. It is called once, at compile time.
+
+## Playing one
+
+```java
+SequenceRun run = sequences.play(sequence, SequenceTarget.at(location)
+        .by(killer)
+        .on(victim)
+        .visibleTo((observer, source) -> settings.seesEffects(observer)));
+
+run.cancel();
+```
+
+| On the target | What it sets |
+|---|---|
+| `at(location)` / `of(player)` | The anchor. |
+| `by(player)` | Who caused it — what `{killer}`, `face:` and `[COMMAND]` read. |
+| `on(entity)` | Who it happened to — what `{victim}` reads. |
+| `onlyTo(player)` | One viewer, which is how a preview is shown. |
+| `visibleTo(predicate)` | Who may perceive it, asked once per frame. |
+
+`durationMillis()` says how long a sequence lasts without playing it, animation included — which is
+how a preview knows when to hand the player back.
+
+## Effects that may or may not play
+
+A sequence says **what** happens. An `EffectEntry` says whether it happens, to whom and when:
+
+```java
+EffectEntry crit = EffectEntry.of(List.of(
+                "[SOUND] ENTITY_PLAYER_ATTACK_CRIT;1;1.4",
+                "[PARTICLE] CRIT;count:20"))
+        .name("Critical hit")
+        .chance(25.0)
+        .condition("%player_level% >= 10")
+        .nearby(12.0)
+        .build();
+```
+
+| Field | Means |
+|---|---|
+| `lines` | What plays. |
+| `name`, `icon` | What an editor shows. |
+| `chance` | The percentage chance of playing at all. |
+| `condition`, `permission` | Who it may play for. |
+| `priority` | Higher plays first; equal priorities keep their written order. |
+| `delayTicks` | How long after the trigger **this entry** starts — the ones beside it still play on time. |
+| `radius` | `0` or less is the player it is about; a number is everyone within that many blocks; `EffectEntry.WHOLE_WORLD` is the whole world. |
+
+Permission and condition run **before** the dice: who may see something does not depend on luck.
+Entries are compiled the first time they play and cached by their own lines, and a broken condition is
+reported once rather than once per play.
+
+`EffectCodec.encode` / `decode` store them, and `decode` also reads ExyliaCommons rows, translating
+their type into the line that plays the same thing.
+
+## Editing them in game
+
+```java
+sequences.editor(mine.breakEffects())
+         .title("{primary}&lBREAK EFFECTS")
+         .onSave(edited -> mines.save(mine, edited))
+         .open(player);
+```
+
+Two levels of the [editor](/docs/exylialib/input-and-editors) screen: the entries, and inside one of
+them its lines as their own list. A line is added by picking what it plays, searching the server's own
+registry for which one, and filling in **only the fields that token reads** — a circle is asked for
+its radius, a pair of wings for its span. Blank fields are left out, so a line built by clicking is
+the same short line somebody would have written by hand.
+
+The gating sits behind the `WHEN IT PLAYS` button, and both halves are saved or dropped together. A
+token the library does not recognise is still drawn, still editable as text, and comes back exactly as
+it was written.
+
+## Contracts
+
+| | |
+|---|---|
+| **Compiled once** | Names, numbers and trigonometry are resolved at compile time. Playing is arithmetic and packets. |
+| **A bad line costs its own line** | It is reported through `Debug` naming the sequence; the rest still plays. |
+| **It never reaches the event** | A kill effect cannot cancel a death. |
+| **Folia-correct** | It runs on the thread that owns the location, through `Tasks`. |
+| **Instant sequences schedule nothing** | No delays and no animation means it plays inline, in the calling tick. |
+| **Cancellable** | `play` returns a `SequenceRun`. |
+| **Nothing survives its plugin** | Disabling a plugin cancels its runs before the scheduler is released. |
+
+<Callout type="note" title="A sound this server does not have is reported">
+A renamed sound used to be handed on as a key that is not a key: nothing played and nothing said why.
+It now costs a console line naming the effect. A name with a dot or a colon in it is left alone,
+because a resource pack's own sound is legitimately not in the registry.
+</Callout>
+
+## Previews
+
+```java
+Previews.of(this).show(player, sequence, () -> menu.open(player));
+```
+
+Lifts one player to an empty patch of sky, plays the sequence for them alone and puts them back
+exactly where they were — the callback runs however it ends. The stage's height, separation, distance
+and safety net are a `PreviewSettings` section a plugin can nest in its own config.

@@ -65,6 +65,24 @@ Effects.bossBar("{primary}Starting in {highlight}%time%").countdown(10).showAll(
 Effects.firework().shape("BALL_LARGE").colours("#8a51c4").at(location).show();
 ```
 
+## The countdown belongs to the caller
+
+**How long a timer runs is not a config key.** A countdown is always the same number something else is
+already counting — the match, the warmup, the combat tag — so a key that could set it to anything else
+could only ever disagree with what is happening. The seconds come from the code, the look from the
+file:
+
+```java
+Effects.play(config.onCountdown(), player, matchSeconds);   // a whole block, counting
+Effects.title(text).countdown(matchSeconds).show(player);   // or one display
+```
+
+A teleport already does this for you: `onStart(effect)` counts over the warmup it was given.
+
+Times are **seconds with decimals**: `countdown(3.3)` is 3.3 real seconds and `%time%` shows `3.3`.
+`%time%` belongs to the effect, never to the global registry — two countdowns on screen must not show
+the same number. `timeStyle` is a `TimeFormats` style name: `auto`, `tenths`, `clock` and the rest.
+
 ## Timers
 
 `Timer` is the clock behind a timed effect — a value, not a task.
@@ -82,6 +100,24 @@ such a timer; give the time through `Cooldowns` and the bar shows it.
 `Ticks` converts: `fromSeconds`, `toSeconds`, `fromMillis`, `toMillis`, and `parse(text, fallback)`
 understanding `s`, `ms`, `t`, `m` and `h` suffixes.
 
+### Time styles
+
+`TimeFormats` is what a `timeStyle` names, and what every duration in the ecosystem is written with:
+
+| Style | Reads as | For |
+|---|---|---|
+| `AUTO` | `3.3`, `47`, `1:35` | Decimals only where they carry information. The default. |
+| `SECONDS` | `3` | Whole seconds, rounded down. |
+| `TENTHS` / `HUNDREDTHS` | `3.3` / `3.34` | A number a player is reacting to. |
+| `CLOCK` | `1:35`, `1:05:03` | Padded, past an hour. |
+| `FULL` | `1h 5m 3s`, `5d` | Every part, days downwards, for a duration read once. |
+| `COMPACT` | `3d`, `2.5h`, `45s` | The largest unit only, up to years, for a duration inside a sentence. |
+
+`FULL` rolls into days rather than counting hours forever, so a five-day cooldown reads `5d` and not
+`120h`. `COMPACT` goes further — a month is thirty days and a year three hundred and sixty-five, which
+is the point: `2mo ago` is not claiming to know which months. Everything these styles write,
+`duration()` input reads back: `30s`, `1h30m`, `2d`, `1w`, `2.5h`.
+
 ## Playing and stopping
 
 | Call | What it does |
@@ -96,23 +132,22 @@ takes it down.
 
 ## Sequences
 
-A sequence is choreography written in configuration — shapes, sounds and delays, compiled once:
+A sequence is choreography written in configuration — shapes, sounds, delays, display entities and
+bodies, compiled once:
 
 ```java
 PluginSequences sequences = Sequences.of(this);
 Sequence intro = sequences.compile(config.onCapture());
 
 sequences.play(intro, SequenceTarget.at(location));
-sequences.play(intro, SequenceTarget.of(player));
 ```
 
-A sequence is compiled from the lines a config holds and played against a location or a player.
-`sequences.shape(name, shape)` adds a shape of your own to the ones it already knows.
+Twenty-five shapes, thirteen other tokens, and every shape drawable with particles **or** with display
+entities that move, spin and fall by themselves. Entries carry odds, conditions and an audience, so
+"one in five times, only if the player is crouching, seen by everyone within twenty blocks" is
+configuration rather than code.
 
-Entries carry odds, conditions and an audience, so "one in five times, only if the player is
-crouching, seen by everyone within twenty blocks" is configuration rather than code. They are edited
-in-game with `Sequences.of(plugin).editor(effects)` — see
-[Input, editors and wizards](/docs/exylialib/input-and-editors#editing-a-list-of-things).
+The whole syntax, the API and the in-game editor are in [Sequences](/docs/exylialib/sequences).
 
 ## Previews
 

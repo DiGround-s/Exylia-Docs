@@ -96,6 +96,60 @@ written there. Rename in the record and migrate in the same commit.
 was renamed, a number that was in ticks and is now in seconds. It rewrites what is there instead of
 replacing it with the shipped default, so an owner's wording and colours survive.
 
+## Blocks the owner names
+
+A component declared `Map<String, V>` is a section whose **keys the server owner chooses** — worlds,
+regions, materials — rather than keys the code decided on:
+
+```java
+public record Limits(
+        @Comment("Per-world multiplier. Add the worlds this server has.")
+        Map<String, Double> worlds,
+        Map<String, Item> items) {
+
+    public Limits() {
+        this(Map.of("world", 7.0), Map.of("ender-pearl", new Item()));
+    }
+
+    public record Item(double cooldown, int maxUses) {
+        public Item() { this(14.0, 1); }
+    }
+}
+```
+
+```yaml
+worlds:
+  arena: 2.5
+  survival: 9.0
+items:
+  ender-pearl:
+    cooldown: 14.0
+    max-uses: 1
+```
+
+`V` may be a leaf — text, a number, a boolean, an enum, a list — or a record, which becomes a block
+per entry. The key type must be `String`; a `Map` of `Map` is rejected, so nest a record instead and
+the inner block gets a name, comments and defaults of its own.
+
+| | |
+|---|---|
+| **Nothing inside is pruned** | The keys belong to the owner. Keys *within* a record entry are still the code's, and are pruned normally. |
+| **The constructor's entries are examples** | Written once, when the file is generated. An entry the owner deleted stays deleted, and an emptied block stays empty. |
+| **An invented entry gets the record's defaults** | For whatever it left out. |
+| **One unreadable entry costs that entry** | Reported at its own path; the rest load. |
+| **Insertion order is kept** | The file does not reshuffle on every save. |
+
+## Sections that do nothing
+
+A record implementing `Sparse` decides for itself whether it has anything to say. While `isEmpty()`
+answers `true` the section is **left out of the file**, reading it back is silent, and it does not
+grow back on the next load; an empty block a previous version wrote is removed the next time the file
+is saved.
+
+That is what stops an effect with one boss bar from also writing an empty title, action bar, sound,
+particle and firework, each with a comment per key. It is only for sections whose defaults are empty
+by nature — one with real defaults must stay in the file, or nobody can find out it exists.
+
 ## Unknown keys
 
 Any key no record declares is removed on load and reported once as `UNKNOWN_KEY`. It is a one-way

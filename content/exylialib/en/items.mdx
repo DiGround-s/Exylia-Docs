@@ -120,6 +120,22 @@ write `id` onto an item without colliding. `Items.parse` without a plugin is fin
 carry no stored values, which is nearly all of them.
 </Callout>
 
+## Items that are not what they look like
+
+A plugin's own items are drawn with whatever material suits them, and the material is what the server
+acts on: a token drawn as an ender pearl **is** a thrown ender pearl, one drawn as food is eaten, one
+drawn as a block is placed. Every one of those spends something the player was meant to keep.
+
+```java
+PluginItems items = Items.of(this);
+items.inert("item");     // the data key this plugin's own items carry
+```
+
+Anything carrying that key is now inert: using it does nothing. It can still be picked up, dropped,
+traded, put in a chest and clicked in a menu — it simply refuses to be spent as the item it is drawn
+as. Asking twice replaces the keys rather than registering a second guard, so a plugin that reloads in
+place does not end up with one per reload.
+
 ## Storing what somebody is holding
 
 The other direction, for an icon picker:
