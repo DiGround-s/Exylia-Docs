@@ -1,0 +1,73 @@
+---
+title: "Permissions"
+description: "The four kinds of node, and how a category is sold as one line."
+---
+
+## The nodes
+
+| Permission | Grants |
+|---|---|
+| `exyliahiteffect.command.hiteffect` | `/hiteffect` and everything under it. |
+| `exyliahiteffect.admin` | Every subcommand of `/hiteffectsadmin`. |
+| `exyliahiteffect.effect.<id>` | One effect, by its id in lowercase. |
+| `exyliahiteffect.effect.*` | Every effect. |
+| `exyliahiteffect.category.<id>` | Every effect in that category. |
+
+An effect is owned if **any** of the three effect nodes applies: its own, the wildcard, or its
+category's.
+
+## The id is the node
+
+There is no `permission` key in `effects.yml`. The node is derived from the key, lowercased:
+
+```text
+CRIT_SPARK  →  exyliahiteffect.effect.crit_spark
+impact      →  exyliahiteffect.category.impact
+```
+
+Case is not part of it, so recapitalising a key changes nothing. Renaming one changes everything: it
+is a different node, and everybody who had the old one loses the effect.
+
+## Selling it
+
+```text
+/lp group default permission set exyliahiteffect.command.hiteffect true
+/lp group vip     permission set exyliahiteffect.category.impact true
+/lp group mvp     permission set exyliahiteffect.effect.crit_spark true
+/lp group legend  permission set exyliahiteffect.effect.* true
+```
+
+Six categories of fifteen is what makes a category node worth selling: "every Impact effect" is one
+line instead of fifteen.
+
+<Callout type="tip" title="Give the menu away">
+Without `exyliahiteffect.command.hiteffect` the catalogue cannot be opened at all. A player who
+cannot see what is for sale cannot want it.
+</Callout>
+
+## What the node is checked for
+
+<Steps>
+  <Step title="Wearing">
+    Choosing an effect in the menu without its node is refused with `no-permission`. Governed by
+    `behaviour.require-permission`.
+  </Step>
+  <Step title="Playing what the menu chose">
+    The choice is re-checked at the moment of the hit. One that no longer holds is taken off there
+    and then, rather than left sitting in the menu until the next relog.
+  </Step>
+  <Step title="Binding a token">
+    Dropping a token onto a weapon without the effect's node is refused, and nothing is consumed.
+  </Step>
+  <Step title="Being drawn">
+    `behaviour.hide-without-permission` decides whether a locked effect is hidden in the menu or shown
+    locked. Either way it can be previewed, and on the favourites tab it is always shown.
+  </Step>
+</Steps>
+
+<Callout type="note" title="A bound weapon is not re-checked">
+The node is asked for when a token is bound, never again. After that the effect belongs to the
+weapon: it plays for whoever is holding it, including a player who never owned the node — which is
+the point of an effect you can trade. What permissions govern on the weapon side is who can put one
+there.
+</Callout>

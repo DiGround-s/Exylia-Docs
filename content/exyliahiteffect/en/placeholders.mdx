@@ -1,9 +1,11 @@
 ---
 title: "Placeholders"
-description: "The seven PlaceholderAPI placeholders, and what they answer when nothing is chosen."
+description: "The player's effect, the weapon's effect, the shortlist and the visibility mode."
 ---
 
 Every placeholder below is written in full, and clicking one copies it.
+
+## What the player chose
 
 | Placeholder | Description |
 |---|---|
@@ -13,25 +15,54 @@ Every placeholder below is written in full, and clicking one copies it.
 | `%exyliahiteffect_effect_material%` | The material it is drawn with. |
 | `%exyliahiteffect_effect_category%` | The category id. |
 | `%exyliahiteffect_effect_category_name%` | The category's display name. |
+| `%exyliahiteffect_effect_weapons%` | What it may be bound to, in words. |
 | `%exyliahiteffect_has_effect%` | `true` or `false`. |
 
-## With nothing chosen
+## What the weapon in hand carries
+
+The same fields, with `weapon_` in front. They answer about the item in the player's main hand, not
+about their menu choice.
 
 | Placeholder | Description |
 |---|---|
+| `%exyliahiteffect_weapon_effect%` | The bound effect's id. |
+| `%exyliahiteffect_weapon_effect_name%` | Its display name. |
+| `%exyliahiteffect_weapon_effect_description%` | Its description, on one line. |
+| `%exyliahiteffect_weapon_effect_material%` | Its material. |
+| `%exyliahiteffect_weapon_effect_category%` | Its category id. |
+| `%exyliahiteffect_weapon_effect_category_name%` | Its category name. |
+| `%exyliahiteffect_weapon_effect_weapons%` | What it fits. |
+| `%exyliahiteffect_weapon_has_effect%` | `true` or `false`. |
+
+## The rest
+
+| Placeholder | Description |
+|---|---|
+| `%exyliahiteffect_visibility%` | The player's visibility mode, named as `particles.name-*` says. |
+| `%exyliahiteffect_favourites%` | How many effects they have starred. |
+| `%exyliahiteffect_favourite_<id>%` | `true` or `false` for one effect — `%exyliahiteffect_favourite_crit_spark%`. |
+
+`favorite` is accepted wherever `favourite` is.
+
+## With nothing chosen
+
+| Placeholder | Answer |
+|---|---|
 | `%exyliahiteffect_has_effect%` | `false` |
 | `%exyliahiteffect_effect_description%` | Empty |
-| `%exyliahiteffect_effect_material%` | A fallback material |
-| Everything else | Whatever `placeholders.none` says in `config.yml` — `None` by default |
+| `%exyliahiteffect_effect_material%` | `BARRIER` |
+| Everything else | Whatever `placeholders.none` says — `None` by default |
 
-Safe to drop into a scoreboard without a fallback of their own:
+The same applies to the `weapon_` family when the weapon carries nothing, which is what makes them
+safe to drop into a scoreboard with no fallback of their own:
 
 ```yaml
 lines:
-  - " {muted}❙ {letters}Hit: {highlight}%exyliahiteffect_effect_name%"
+  - " {muted}❙ {letters}Effect: {highlight}%exyliahiteffect_effect_name%"
+  - " {muted}❙ {letters}Weapon: {highlight}%exyliahiteffect_weapon_effect_name%"
 ```
 
-<Callout type="tip" title="Pairs with the kill plugin">
-If you run ExyliaKillEffect too, both expose the same seven names under their own identifiers — so one
-scoreboard line each, written the same way.
+<Callout type="tip" title="effect_material is for menus">
+It is the icon of whatever they chose, which is what lets another plugin's menu draw their current
+effect without knowing anything about this one.
 </Callout>

@@ -1,0 +1,62 @@
+---
+title: "Primeros pasos"
+description: "De un servidor limpio a un jugador con efecto en sus bajas."
+---
+
+## Por el menú
+
+<Steps>
+  <Step title="Deja que abran el menú">
+    ```text
+    /lp group default permission set exyliakilleffect.command.killeffect true
+    ```
+    Sin esto no se puede abrir el catálogo — y quien no ve lo que hay a la venta no puede quererlo.
+  </Step>
+  <Step title="Vende una categoría">
+    ```text
+    /lp group vip permission set exyliakilleffect.category.siege true
+    ```
+    Veinte efectos, un nodo.
+  </Step>
+  <Step title="Ábrelo">
+    `/killeffect`. Las pestañas a la izquierda, los efectos al lado, y la primera pestaña son los
+    favoritos del propio jugador.
+  </Step>
+  <Step title="Elige uno y mata algo">
+    Clic izquierdo lo pone. El efecto suena donde cae la víctima — siempre que su tipo esté permitido.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="Por defecto solo cuentan tres víctimas">
+`effects.all-mobs` está en `false` y `effects.allowed-mobs` lista `PLAYER`, `MANNEQUIN` y `ZOMBIE`.
+Una prueba matando una vaca no lanza nada, y eso es la configuración, no un fallo.
+</Callout>
+
+## Por el arma
+
+<Steps>
+  <Step title="Da una ficha">
+    ```text
+    /killeffectsadmin give <jugador> blade_storm 1
+    ```
+  </Step>
+  <Step title="Arrástrala sobre un arma">
+    Coge la ficha con el cursor y haz clic sobre un arma **en tu propio inventario**. El arma conserva
+    todo lo que tenía; solo se le escribe un valor.
+  </Step>
+  <Step title="Quítalo">
+    ```text
+    /killeffectsadmin remover <jugador>
+    ```
+    El removedor desata el efecto y devuelve la ficha, así que no se destruye nada.
+  </Step>
+</Steps>
+
+## Comprobar que funciona
+
+| Pregunta | Cómo responderla |
+|---|---|
+| ¿Existe el efecto? | `/killeffect preview <id>` — se lanza contra un cielo vacío. |
+| ¿El arma lleva uno? | Su línea se dibuja bajo el lore propio del arma. |
+| ¿El permiso hizo efecto? | `/killeffectsadmin validate <jugador>` quita ya lo que no pueda usar. |
+| ¿Cargó el archivo? | `/killeffectsadmin list` imprime todos los efectos declarados. |

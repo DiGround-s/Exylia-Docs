@@ -1,95 +1,137 @@
 ---
 title: "Effects and categories"
-description: "The effects.yml format, and the full sequence syntax for writing your own."
+description: "How effects.yml is written, and the 120 effects that ship in it."
 ---
 
 ## The file
 
 `effects.yml` has two sections: the categories, and the effects that belong to them.
 
-```yaml
+```yaml title="effects.yml"
 categories:
-  infernal:
-    material: FIRE_CHARGE
-    name: 'Infernal'
+  siege:
+    material: NETHERITE_SWORD
+    name: 'Siege'
     priority: 1
 
 kill_effects:
-  EMBER_BURST:
-    category: infernal
-    name: "<gradient:#D1693F:#D1523F><bold>EMBER BURST</bold></gradient>"
-    material: BLAZE_POWDER
+  BLADE_STORM:
+    category: siege
+    name: "<gradient:#DCE6F2:#8FA6C4><bold>BLADE STORM</bold></gradient>"
+    material: NETHERITE_SWORD
     description:
-      - 'Flames and lava erupt in a blazing circle.'
-      - 'Closes with an {highlight}explosion{neutral} at the centre.'
+      - 'Twelve blades come down point first, stand'
+      - 'for a beat, then {highlight}close all at once{neutral}.'
     priority: 1
     effects:
-      - '[CIRCLE] FLAME;radius:1.5;points:24;y:0.1'
-      - '[SOUND] ENTITY_BLAZE_DEATH;1.5;0.8'
-      - '[DELAY] 0.15'
-      - '[EXPLOSION]'
+      - '[SOUND] ENTITY_BREEZE_INHALE;1.5;1.7'
+      - '[CIRCLE] NETHERITE_SWORD;as:item;radius:3.4;points:12;from:0,10,0;to:0,1.0,0;ease:in;life:0.55;roll:135;face_out:true;size:1.4;light:15'
+      - '[DELAY] 0.58'
+      - '[NPC] {victim};pose:lying;life:2.2;equip:true;face:false'
 ```
 
 | Key | What it does |
 |---|---|
-| `category` | Which category it appears under. |
-| `name` | What the menu shows. Accepts palette tokens, MiniMessage and gradients. |
-| `material` | The icon in the menu. |
-| `description` | Lore lines. A list is one line per entry; a single string splits on `<nl>`. |
-| `priority` | Ordering inside the category. Lower first. |
-| `effects` | The sequence itself. |
+| `category` | Which tab it appears under. Must be a key declared under `categories`. |
+| `name` | What menus and placeholders call it. Palette tokens, MiniMessage and gradients all work. |
+| `material` | The item the row is drawn with. Defaults to `BARRIER`. |
+| `description` | A list is one line per entry; a single string breaks on `<nl>`. |
+| `priority` | Where it sits in its tab; lower comes first. Defaults to `999`. |
+| `effects` | The steps that are drawn where the victim fell. |
+| `weapons` | Optional. What the effect may be bound to. Omit it and it fits anything. |
 
 A category takes `material`, `name` and `priority`.
 
-<Callout type="note" title="The effect id is the permission">
-`EMBER_BURST` becomes `exyliakilleffect.effect.ember_burst`. Renaming an effect revokes it from
-everyone who had the old permission, so rename with care on a live server.
+<Callout type="note" title="Broken entries are reported, not guessed">
+A missing `categories` section, an effect naming a category that is not declared, an entry with no
+`effects`, and a `weapons` token that is neither an item nor a family are each written to the console
+with the key that caused them. The rest of the file still loads.
 </Callout>
 
-## Sequence syntax
+## `weapons`
 
-Every line is a token in brackets, then its arguments separated by `;`.
-
-### Non-shape tokens
-
-| Token | Arguments |
-|---|---|
-| `[DELAY] 0.15` | Seconds to wait before the next line. |
-| `[PARTICLE] FLAME` | `count:` `offset:x,y,z` `speed:` `y:` `color:` `size:` `block:` |
-| `[SOUND] NAME;volume;pitch` | Also `volume:` `pitch:` |
-| `[LIGHTNING]` | `volume:` `pitch:` — flash, sparks and thunder. No strike, no fire, no damage. |
-| `[EXPLOSION]` | `count:` `y:` |
-| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
-| `[BLOCK_BREAK] STONE` | `count:` `offset:` `y:` |
-| `[POTION] speed;100;1` | Also `duration:` `amplifier:` |
-| `[TITLE] title;subtitle;in;stay;out` | Times in seconds. |
-| `[ACTION_BAR] text` | |
-| `[MESSAGE] text` | A chat line. |
-| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
-
-### Shapes
-
-Twenty of them:
-
-`CIRCLE` `SPHERE` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO` `STAR` `CAGE` `DISC` `VORTEX` `WAVE`
-`CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS` `ARCH` `CLAW`
-
-Every shape accepts `color:` `size:` `count:` `ticks:` `interval:` `y:` on top of its own parameters —
-`radius:`, `points:`, `height:`, `turns:`, `arms:`, `spikes:` and the rest, depending on the shape.
+Only read while `behaviour.mode` reads weapons. It accepts item names and families:
 
 ```yaml
-- '[SPIRAL] FLAME;height:4.0;radius:1.0;turns:3;points:60'
-- '[CIRCLE] DUST;radius:2.0;points:32;color:255,80,0;size:2.0'
+weapons: [ NETHERITE_SWORD, AXE ]
 ```
 
-<Callout type="tip" title="ticks: is the pacing knob">
-`ticks:1` draws the whole shape in one frame. Anything higher draws it over time, which is what makes
-a spiral look like it is being drawn rather than appearing at once.
+| Family | Matches |
+|---|---|
+| `ANY` | Anything at all. |
+| `SWORD` | Every `_SWORD`. |
+| `AXE` | Every `_AXE` — a pickaxe is not one. |
+| `TRIDENT`, `MACE`, `BOW`, `CROSSBOW` | Just that item. |
+| `MELEE` | Swords, axes, tridents and maces. |
+| `RANGED` | Bows, crossbows and tridents. |
+
+Families are matched on the item's name, so a sword added in a future Minecraft version is a sword the
+day it exists. `ANY_SWORD` reads the same as `SWORD`. None of the shipped effects declares `weapons`,
+so out of the box every one of them fits every weapon.
+
+<Callout type="note" title="The effect id is the permission">
+`BLADE_STORM` is `exyliakilleffect.effect.blade_storm`. Renaming the key renames the node, and
+everybody who had the old one loses the effect. Case is not part of it: ids are lowercased on the way
+in.
 </Callout>
 
-### Colours
+## The catalogue
 
-`DUST` is the particle that takes a colour: `color:255,80,0` as RGB, with `size:` for the dot size.
+Twenty effects per category, 120 in total.
+
+### Siege — `NETHERITE_SWORD`
+
+Weapons, engines and the weight of things arriving.
+
+`BLADE_STORM` `JUDGEMENT` `GUILLOTINE` `SIEGE_VOLLEY` `COLOSSUS_FIST` `PHALANX` `TREBUCHET`
+`CROSSFIRE` `WAR_DRUM` `CHAIN_SNARE` `EXECUTIONER` `BALLISTA` `SPEAR_WALL` `IRON_MAIDEN` `CANNONADE`
+`RAMPART` `SHIELD_BREAK` `BLADE_DANCE` `ARTILLERY` `LAST_STAND`
+
+### Cataclysm — `MAGMA_BLOCK`
+
+Fire, rock and weather.
+
+`METEOR_STRIKE` `CINDER_COLLAPSE` `VOLCANIC_VENT` `PYROCLAST` `MAGMA_TIDE` `EMBER_SWARM` `FISSURE`
+`INFERNO_PILLAR` `ASHFALL` `QUAKE` `ROCKSLIDE` `SOLAR_FLARE` `CRATER` `FIREWHIRL` `OBSIDIAN_SPIKE`
+`SCORCH` `THUNDER_ANVIL` `STORMFRONT` `HAILSTORM` `TECTONIC`
+
+### Abyss — `CRYING_OBSIDIAN`
+
+Void and gravity.
+
+`VOID_IMPLOSION` `BLACK_HOLE` `OBSIDIAN_MAUSOLEUM` `SOUL_HARVEST` `EVENT_HORIZON` `NULL_FIELD`
+`WRAITH` `GRAVEWELL` `SHADOW_HANDS` `ENTROPY` `ECHO_CHAMBER` `UNMAKING` `THE_QUIET` `TETHER`
+`ABYSSAL_MAW` `COLD_STAR` `REVENANT` `SINGULARITY_LANCE` `FADE` `OBLIVION_GATE`
+
+### Aurora — `AMETHYST_CLUSTER`
+
+Crystal, starlight and cold.
+
+`CRYSTAL_SHATTER` `FROZEN_TOMB` `STARFALL` `SUPERNOVA` `PRISM` `AURORA_VEIL` `GLACIER` `COMET`
+`CONSTELLATION` `LUMEN` `SHARD_RAIN` `ORBITAL` `FROSTBLOOM` `NORTHERN_LIGHT` `SOLSTICE` `SNOWGLOBE`
+`ZENITH` `REFRACTION` `MOONFALL` `STARLIGHT_CHOIR`
+
+### Verdant — `SPORE_BLOSSOM`
+
+Growth, petals and rot.
+
+`VENOM_BLOOM` `SAKURA_FALL` `OVERGROWTH` `THORNCAGE` `SPORE_BURST` `ROOTGRASP` `MYCELIUM`
+`PETAL_STORM` `WITHER_ROT` `HONEY_TRAP` `BAMBOO_STRIKE` `LOTUS` `SWARM` `TERRARIUM` `AUTUMN`
+`VINE_SNARE` `GARDEN_OF_BONES` `SEEDFALL` `NIGHT_ORCHID` `MOSS_CLAIM`
+
+### Bonk — `ANVIL`
+
+Jokes.
+
+`THE_CLASSIC` `BONK` `ANVIL_CHORUS` `PIANO` `SKILL_ISSUE` `GG_EZ` `YEET` `RUBBER_DUCK` `CAKE`
+`TNT_DELIVERY` `FISH_SLAP` `BIG_BOOT` `FRYING_PAN` `BANANA_PEEL` `CHICKEN_JOCKEY` `SAFE_DELIVERY`
+`TOO_SLOW` `RATIO` `BALLOON_POP` `VENDING_MACHINE`
+
+## The body on the ground
+
+107 of the 120 effects use the `[NPC]` step: a copy of the victim, wearing what they wore, left
+lying — or thrown, or slumping — where they fell for a couple of seconds. It is a display, not an entity anyone can hit — nothing can
+be looted from it and nothing collides with it.
 
 ## Writing your own
 
@@ -97,30 +139,16 @@ a spiral look like it is being drawn rather than appearing at once.
   <Step title="Add the entry">
     A new key under `kill_effects`, with a `category` that exists.
   </Step>
-  <Step title="Write the sequence">
-    Start with a shape, a sound and a delay. Add layers from there.
+  <Step title="Write the steps">
+    A sound, a shape, a delay. The full syntax is in [Sequences](/docs/exyliakilleffect/sequences).
   </Step>
   <Step title="Reload">
-    `/killeffect reload`.
+    `/killeffectsadmin reload`.
+  </Step>
+  <Step title="Look at it">
+    `/killeffect preview <id>` plays it against an empty sky, then puts you back.
   </Step>
   <Step title="Grant it">
     `exyliakilleffect.effect.<id in lowercase>`, or the whole category.
   </Step>
 </Steps>
-
-<Callout type="warning" title="Cost is per line, per kill">
-A sequence of twenty lines with `count:50` particles each is two hundred packets on a busy arena.
-The shipped effects sit around eight lines; that is a deliberate ceiling, not a coincidence.
-</Callout>
-
-## Categories as products
-
-A category permission grants everything inside it:
-
-```text
-exyliakilleffect.category.infernal    every infernal effect
-exyliakilleffect.effect.ember_burst   just that one
-exyliakilleffect.effect.*             all of them
-```
-
-That is what lets a rank be sold as "all celestial effects" without listing eleven nodes.

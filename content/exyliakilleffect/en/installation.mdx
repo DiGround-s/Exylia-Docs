@@ -1,20 +1,22 @@
 ---
 title: "Installation"
-description: "Dependencies, files it writes, and the settings in config.yml."
+description: "The jars, the four files it writes, and the table it creates."
 ---
 
 ## Installing
 
 <Steps>
   <Step title="Drop in the jars">
-    `ExyliaKillEffect.jar`, plus `ExyliaLib` and `packetevents`, into `plugins/`.
+    `ExyliaKillEffect.jar` and `packetevents` into `plugins/`. `ExyliaLib` is a soft depend — the
+    loader installs it on the first start if it is not there.
   </Step>
   <Step title="Start the server">
-    It writes `config.yml`, `effects.yml` and `menus/main.yml`, and creates its table.
+    It writes `config.yml`, `effects.yml`, `menus/effects.yml` and `database.yml`, and creates its
+    table.
   </Step>
   <Step title="Grant the permissions">
     Nothing is usable until players can open the menu and own at least one effect. See
-    [Commands and permissions](/docs/exyliakilleffect/commands).
+    [Permissions](/docs/exyliakilleffect/permissions).
   </Step>
 </Steps>
 
@@ -22,50 +24,37 @@ description: "Dependencies, files it writes, and the settings in config.yml."
 
 | File | Contents |
 |---|---|
-| `config.yml` | Which kills count, the default visibility, and the names of the visibility modes. |
-| `effects.yml` | The 14 categories and 144 effects. |
-| `menus/main.yml` | The menu layout, editable like any ExyliaLib menu. |
+| `config.yml` | Behaviour, the token and remover items, the weapon lines, menu wording, feedback, visibility and every message. |
+| `effects.yml` | The six categories and the 120 effects. Hand-written, not schema-managed: your comments and your layout survive a reload. |
+| `menus/effects.yml` | The one screen: tabs, grid, templates and buttons. |
 | `database.yml` | Where selections are stored. H2 by default. |
 
-Selections live in the `killeffect_players` table: the chosen effect and the visibility mode, per
-player.
-
-## config.yml
-
-```yaml
-placeholders:
-  none: "None"
-
-effects:
-  all-mobs: false
-  allowed-mobs:
-    - PLAYER
-    - MANNEQUIN
-    - ZOMBIE
-
-particles:
-  default-visibility: "ALL"
-  name-all: "All"
-  name-none: "None"
-  name-self-only: "Self Only"
-  name-others-only: "Others Only"
-```
-
-| Key | Default | What it does |
-|---|---|---|
-| `placeholders.none` | `None` | What the placeholders show when a player has no effect chosen. |
-| `effects.all-mobs` | `false` | `true` plays the effect on any kill. `false` limits it to the list below. |
-| `effects.allowed-mobs` | `PLAYER`, `MANNEQUIN`, `ZOMBIE` | Entity types whose death plays an effect. |
-| `particles.default-visibility` | `ALL` | What a player starts with: `ALL`, `NONE`, `SELF_ONLY`, `OTHERS_ONLY`. |
-| `particles.name-*` | see above | How each mode is named in menus and placeholders. |
-
-<Callout type="tip" title="all-mobs on a farming server">
-`all-mobs: true` means every zombie in a grinder fires a full sequence. The default list exists
-because a kill effect is usually meant for PvP: keep it limited unless you want particles on every
-mob death.
+<Callout type="note" title="effects.yml is yours">
+`config.yml` is written from a schema, so an unknown key is dropped and comments are regenerated.
+`effects.yml` is not: it is a catalogue a server owner curates, and it is read exactly as written.
 </Callout>
+
+## The table
+
+`killeffect_players`, one row per player:
+
+| Column | What it holds |
+|---|---|
+| `uuid` | The player. |
+| `name` | Their last known name. |
+| `killEffect` | The effect they chose, or empty. |
+| `particleVisibility` | `ALL`, `NONE`, `SELF_ONLY` or `OTHERS_ONLY`. |
+| `favourites` | The effects they starred, comma-separated, in their own order. |
+| `created_at` / `updated_at` | When the row was made and last written. |
+
+Ids are stored lowercase and read back without regard to case, so a row written by an older version —
+which stored them in upper case — still resolves.
+
+A starred id the catalogue no longer declares is **kept** in the column and dropped where it is drawn,
+so a typo in a reload does not empty anybody's shortlist.
 
 ## Updating
 
-Replace the jar and restart. `/killeffect reload` re-reads the plugin's own files without touching the
-rest of the server.
+Replace the jar and restart. `/killeffectsadmin reload` re-reads `config.yml`, `effects.yml` and the
+menu without touching the rest of the server — it deliberately does not reload the library, which is
+what `/exylialib reload` is for.

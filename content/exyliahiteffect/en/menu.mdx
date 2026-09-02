@@ -1,0 +1,110 @@
+---
+title: "The menu"
+description: "One screen: the tabs, the grid, the favourites, and every template menus/effects.yml declares."
+---
+
+`/hiteffect` opens one window of 54 slots. Nothing in it touches a weapon — an effect gets onto a
+weapon through its token, which is the thing a server sells.
+
+<Callout type="note" title="It refuses to open in weapon mode">
+With `behaviour.mode: weapon` nothing on this screen would ever be read, so the menu answers
+`menu-disabled` instead of opening a window that changes nothing.
+</Callout>
+
+## The two lists
+
+| Section | Slots | What it holds |
+|---|---|---|
+| `categories` | `9,18,27,36` | The tabs down the left, paged with the buttons at slots `0` and `45`. |
+| `grid` | `11-16,20-25,29-34,38-43` | The open category's effects, paged at slots `47` and `52`. |
+
+The fixed buttons: **YOUR EFFECT** at slot `4` (click to take the effect off), **PARTICLE
+VISIBILITY** at `48`, **CLOSE** at `50`.
+
+## The favourites tab
+
+The first tab is always the player's own shortlist — it is not a category in `effects.yml`, because it
+holds different effects for every player. It is named and drawn by `menu.favourites-name` and
+`menu.favourites-icon` in `config.yml`.
+
+| Rule | Detail |
+|---|---|
+| Starring is free | Owning an effect is not required to star it. A star that vanished the day a rank lapsed would lose them the list they built. |
+| Their order, not yours | Starred effects stay in the order they were starred. Nothing is re-sorted. |
+| Locked rows still show | On this tab a locked effect is drawn even on a server that hides locked effects everywhere else. |
+| Emptying it | Shift click the tab while it is open, or `/hiteffect favourites clear`. |
+
+An empty shortlist draws `empty_template` so the tab reads as empty rather than as a screen that
+failed to load.
+
+## What a click does
+
+| Click | On a grid row |
+|---|---|
+| Left | Wears the effect — or takes it off, when it is already the one worn. |
+| Right | Previews it: the player is lifted to an empty patch of sky, the effect plays for them alone, and they are put back where they were. Locked rows can be previewed too. |
+| Shift | Stars it, or unstars it. |
+
+## Ordering and locked rows
+
+Effects the player may use are drawn first, then the locked ones — so what they can use is never
+behind a page of rows they cannot. With `behaviour.hide-without-permission: true` the locked ones are
+dropped from the grid entirely, except on the favourites tab.
+
+## Templates
+
+Each list picks a template per row. `item_template` is the plain state and must stay first.
+
+| Section | Template | Used when |
+|---|---|---|
+| `categories` | `item_template` | Another tab is open. |
+| | `open_template` | This is the tab being looked at. |
+| | `favourites_template` | The shortlist tab, while another tab is open. |
+| | `favourites_open_template` | The shortlist tab while it is open — the only one carrying the "empty the list" action. |
+| `grid` | `item_template` | An effect the player owns. |
+| | `selected_template` | The effect currently worn. |
+| | `locked_template` | An effect they do not own. |
+| | `empty_template` | Drawn on the favourites tab when nothing is starred. |
+
+## Placeholders
+
+| Where | Available |
+|---|---|
+| `categories` | `%category_id%` `%category_name%` `%category_material%` `%category_total%` `%category_owned%` `%category_status%` |
+| `grid` | `%effect_id%` `%effect_name%` `%effect_material%` `%effect_description%` `%effect_weapons%` `%effect_favourite%` |
+| Anywhere | `%current_effect%` `%favourites_count%` `%particle_visibility%` `%visibility_all%` `%visibility_none%` `%visibility_self_only%` `%visibility_others_only%` |
+
+## Actions
+
+| Action | What it does |
+|---|---|
+| `hiteffect:open` | Opens the screen. |
+| `hiteffect:category <id>` | Switches tab. `favourites` is a valid id. |
+| `hiteffect:choose <id>` | Wears an effect, or takes it off when it is already worn. |
+| `hiteffect:clear` | Takes the effect off. |
+| `hiteffect:favourite <id>` | Stars or unstars. |
+| `hiteffect:favourites_clear` | Empties the shortlist. |
+| `hiteffect:preview <id>` | Previews an effect and reopens the menu afterwards. |
+| `hiteffect:visibility` | Steps the viewer's visibility on by one. |
+
+## Wording
+
+The few strings one template draws for every row live in `config.yml`, because no file can spell them
+out row by row:
+
+```yaml title="config.yml"
+menu:
+  empty: "{muted}Nothing"
+  tab-open: "{success}✔ You are here"
+  tab-closed: "{warning}➥ Click to open"
+  weapons-any: "Any weapon"
+  favourites-name: "Favourites"
+  favourites-icon: "AMETHYST_SHARD"
+  favourite-on: "{highlight}★ In your favourites"
+  favourite-off: "{muted}☆ Not in your favourites"
+```
+
+<Callout type="tip" title="The window follows the choice">
+Every way a player's row can change — their own click, a command, an admin, or a rank that ran out
+under them — redraws whatever windows they have open. Nothing has to be closed and reopened.
+</Callout>

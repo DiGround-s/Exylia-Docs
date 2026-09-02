@@ -1,0 +1,63 @@
+---
+title: "Primeros pasos"
+description: "De un servidor limpio a un jugador con efecto en sus golpes."
+---
+
+## Por el menú
+
+<Steps>
+  <Step title="Deja que abran el menú">
+    ```text
+    /lp group default permission set exyliahiteffect.command.hiteffect true
+    ```
+    Sin esto no se puede abrir el catálogo — y quien no ve lo que hay a la venta no puede quererlo.
+  </Step>
+  <Step title="Vende una categoría">
+    ```text
+    /lp group vip permission set exyliahiteffect.category.impact true
+    ```
+    Quince efectos, un nodo.
+  </Step>
+  <Step title="Ábrelo">
+    `/hiteffect`. Las pestañas a la izquierda, los efectos al lado, y la primera pestaña son los
+    favoritos del propio jugador.
+  </Step>
+  <Step title="Elige uno y golpea algo">
+    Clic izquierdo lo pone. El efecto suena sobre el cuerpo de lo que golpee — siempre que su tipo esté
+    permitido.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="Por defecto solo cuentan tres víctimas">
+`effects.all-mobs` está en `false` y `effects.allowed-mobs` lista `PLAYER`, `MANNEQUIN` y `ZOMBIE`.
+Golpear una vaca no lanza nada, y eso es la configuración, no un fallo.
+</Callout>
+
+## Por el arma
+
+<Steps>
+  <Step title="Da una ficha">
+    ```text
+    /hiteffectsadmin give <jugador> crit_spark 1
+    ```
+  </Step>
+  <Step title="Arrástrala sobre un arma">
+    Coge la ficha con el cursor y haz clic sobre un arma **en tu propio inventario**. El arma conserva
+    todo lo que tenía; solo se le escribe un valor.
+  </Step>
+  <Step title="Quítalo">
+    ```text
+    /hiteffectsadmin remover <jugador>
+    ```
+    El removedor desata el efecto y devuelve la ficha, así que no se destruye nada.
+  </Step>
+</Steps>
+
+## Comprobar que funciona
+
+| Pregunta | Cómo responderla |
+|---|---|
+| ¿Existe el efecto? | `/hiteffect preview <id>` — se lanza contra un cielo vacío. |
+| ¿El arma lleva uno? | Su línea se dibuja bajo el lore propio del arma. |
+| ¿El permiso hizo efecto? | `/hiteffectsadmin validate <jugador>` quita ya lo que no pueda usar. |
+| ¿Cargó el archivo? | `/hiteffectsadmin list` imprime todos los efectos declarados. |

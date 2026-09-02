@@ -1,52 +1,71 @@
 ---
 title: "Preguntas frecuentes"
-description: "Lo que más se pregunta."
+description: "Las preguntas que más aparecen."
 ---
-
-## El plugin no arranca
-
-`ExyliaLib` y `packetevents` son obligatorios. Sin cualquiera de ellos, el servidor lo desactiva y lo
-nombra.
-
-## El menú no abre
-
-Necesita `exyliahiteffect.command.hiteffect`. Es un nodo aparte de poseer efectos.
-
-Hasta la versión 1.0.8 este nodo se escribía `exyliahiteffect.command.killeffect`, heredado del plugin
-hermano. Si concediste la grafía antigua, cámbiala — la vieja ya no hace nada.
 
 ## No pasa nada cuando un jugador golpea
 
-1. **¿Está permitida la víctima?** `effects.all-mobs` es `false` por defecto, así que solo cuentan
-   `PLAYER`, `MANNEQUIN` y `ZOMBIE`.
-2. **¿Posee el efecto?** Una selección para la que ya no tiene permiso se borra, no se lanza.
-3. **¿Hay alguien configurado para verlo?** Un jugador en `NONE` no ve nada, ni lo suyo.
+Por orden:
 
-## Los efectos se solapan en una pelea
+1. **¿Está permitida la víctima?** `effects.all-mobs` está en `false` por defecto, así que solo
+   cuentan `PLAYER`, `MANNEQUIN` y `ZOMBIE`.
+2. **¿Se canceló el golpe?** Un impacto que otro plugin rechazó no lanza nada, a propósito.
+3. **¿Hay efecto siquiera?** En `mode: weapon` nunca se lee la elección del menú, y en `mode: player`
+   nunca se lee un arma atada.
+4. **¿Lo tiene?** Una elección de menú sin el nodo se quita en vez de lanzarse.
+5. **¿Alguien está configurado para verlo?** Quien esté en `NONE` no ve nada, ni lo suyo.
 
-Es la naturaleza de un disparador por golpe, y por eso los que vienen son cortos. Un efecto con líneas
-`[DELAY]` seguirá dibujándose cuando llegue el siguiente golpe. Quita los retrasos, baja el `count:`, o
-usa `ticks:1` para que la forma se dibuje en un fotograma en vez de a lo largo del tiempo.
+## El menú dice que está apagado
 
-## El efecto aparece a los pies de la víctima
+`behaviour.mode` es `weapon`. En ese servidor el menú no cambiaría nada, así que se niega a abrir en
+vez de fingir.
 
-No debería — se ancla un bloque más arriba a propósito. Si se ve bajo, revisa el `y:` de las líneas de
-forma de tu propio efecto, que se aplica encima de ese bloque.
+## Una flecha lanzó el efecto equivocado
 
-## ¿Puedo usar aquí efectos de muerte?
+Lanzó el que se resolvió **al dispararla** — y esa es la idea: quien cambió de arma con la flecha en
+el aire no cambia lo que ya salió. Un proyectil que este plugin nunca vio salir cae de vuelta a lo que
+el tirador tenga en la mano al impactar.
 
-La sintaxis es idéntica, así que una secuencia se copia sin más. Otra cosa es que *se lea* bien: una
-espiral de cuatro segundos pensada para una muerte aquí salta en cada golpe.
+## Los efectos se enciman en una pelea
+
+Un efecto de más de seis décimas de segundo sigue sonando cuando llega el siguiente golpe. Por eso los
+de fábrica son cortos. Si escribiste el tuyo, baja `life:` y el número de líneas.
+
+## ¿Puedo usar aquí la secuencia de un efecto de muerte?
+
+La sintaxis es la misma, así que cargará — y sonará en cada golpe. Lee el presupuesto en
+[Efectos](/docs/exyliahiteffect/efectos) antes de pegar una.
 
 ## Un jugador dice que su efecto desapareció
 
-Se le fue el permiso. El plugin borra una selección que ya no puede justificar en vez de lanzar algo a
-lo que el jugador no tiene derecho.
+Se le fue el permiso — normalmente un rango que caducó. Una elección que ya no se puede justificar se
+quita en vez de lanzarse. Cuando vuelve el nodo, la vuelve a elegir.
+
+## ¿Perder un permiso rompe un arma?
+
+No. Un arma atada lanza su efecto para quien la tenga: el nodo se pide al atar la ficha, no en cada
+golpe. Eso es lo que hace que un arma atada valga la pena comerciarla.
+
+## ¿Los jugadores se ven los efectos entre ellos?
+
+Eso lo decide cada uno: `ALL`, `NONE`, `SELF_ONLY` u `OTHERS_ONLY`, con `/hiteffect visibility` o
+desde el menú.
+
+## ¿El lore del arma se escribe en el objeto?
+
+Nunca. Se añade a la copia que sale del servidor. Cualquier plugin que lea esa arma encuentra el lore
+de siempre, y renombrar un efecto actualiza todas las armas del servidor a la vez.
+
+## ¿Puedo escribir mis propios efectos?
+
+Sí, para eso está `effects.yml`. Veinticinco formas, trece tokens más y los parámetros de display
+están en [Secuencias](/docs/exyliahiteffect/secuencias). Una línea ilegible se avisa en consola y se
+salta; el resto del efecto se lanza igual.
 
 ## ¿Funciona en Folia?
 
 Sí, declara soporte de Folia.
 
-## ¿Dónde pido soporte?
+## ¿Dónde consigo soporte?
 
 En el [Discord de Exylia](https://discord.exylia.net).

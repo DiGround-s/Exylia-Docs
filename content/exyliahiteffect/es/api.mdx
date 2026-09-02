@@ -1,0 +1,85 @@
+---
+title: "API"
+description: "Qué puede hacer otro plugin con los efectos de golpe."
+---
+
+```java
+HitEffectAPI api = ExyliaHitEffect.getInstance().api();
+```
+
+Todo trabaja con **ids de efecto** — las claves que declara `effects.yml`, comparadas sin importar
+mayúsculas.
+
+<Callout type="note" title="Aquí no se comprueba ningún permiso">
+Un plugin que llama esto ya decidió que el jugador puede tener el efecto: una caja, una recompensa de
+rango, una tienda. Que lo anule un nodo que el comprador todavía no tiene no es lo que pidió.
+</Callout>
+
+## El catálogo
+
+| Método | Qué hace |
+|---|---|
+| `effects()` | Todos los efectos declarados, en el orden del archivo. |
+| `effect(String id)` | Uno, como `Optional<EffectDefinition>`. |
+| `exists(String id)` | Si el id nombra alguno. |
+
+Un `EffectDefinition` lleva `id()`, `categoryId()`, `name()`, `icon()`, `description()`,
+`priority()`, `steps()` y `weapons()`, además de `permission()`, `mayUse(Player)` y
+`fits(Material)`.
+
+## Lo que lleva un jugador
+
+| Método | Qué hace |
+|---|---|
+| `chosen(Player)` | El efecto que lo sigue, vacío si no eligió ninguno. |
+| `choose(Player, String id)` | Se lo pone. Devuelve `false` si el id no nombra nada. |
+| `clear(Player)` | Se lo quita. |
+
+## La lista de favoritos
+
+| Método | Qué hace |
+|---|---|
+| `favourites(Player)` | Lo que marcó, en su propio orden. Vacío mientras su fila sigue cargando. |
+| `isFavourite(Player, String id)` | Si un efecto está marcado. |
+| `toggleFavourite(Player, String id)` | Lo marca, o lo desmarca. |
+| `clearFavourites(Player)` | Vacía la lista. |
+
+## Armas y objetos
+
+| Método | Qué hace |
+|---|---|
+| `boundTo(ItemStack)` | El efecto atado a un objeto, vacío si no lleva ninguno. |
+| `bind(ItemStack, String id)` | Ata uno; el objeto se modifica en el sitio. |
+| `unbind(ItemStack)` | Lo desata sin devolver nada; también en el sitio. |
+| `token(String id, Player viewer)` | Una ficha lista para entregar. |
+| `remover(Player viewer)` | Un removedor. |
+
+`bind` y `unbind` responden con un `ApplyResult`:
+
+| Valor | Significado |
+|---|---|
+| `BOUND` / `UNBOUND` | Salió bien. `isSuccess()` es cierto solo para estos dos. |
+| `NOT_A_WEAPON` | El objeto no puede llevar un efecto. |
+| `WRONG_WEAPON` | Es un arma, pero no una que encaje con ese efecto. |
+| `UNKNOWN_EFFECT` | El id no nombra nada declarado. |
+| `ALREADY_BOUND` | El arma ya lleva uno. |
+| `NO_EFFECT` | No lleva ninguno. |
+| `INVENTORY_FULL` | La ficha no tenía dónde ir. |
+| `NO_PERMISSION` | El jugador no tiene el efecto. |
+| `INVALID_ITEM` | El objeto usado no era de este plugin. |
+
+## Un ejemplo
+
+```java
+HitEffectAPI api = ExyliaHitEffect.getInstance().api();
+
+// Premio de caja: entregar una ficha en vez de dar un nodo.
+api.token("crit_spark", player).ifPresent(token ->
+        player.getInventory().addItem(token));
+
+// Un kit que ya viene con el efecto en la espada.
+ItemStack sword = kit.sword();
+if (api.bind(sword, "shockwave").isSuccess()) {
+    player.getInventory().addItem(sword);
+}
+```

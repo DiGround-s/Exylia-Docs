@@ -1,69 +1,94 @@
 ---
 title: "Introduction"
-description: "What ExyliaKillEffect is and what it ships with."
+description: "What ExyliaKillEffect is: 120 display-driven kill effects, worn by the player or bound to a weapon."
 ---
 
-ExyliaKillEffect plays a particle effect where a kill happened. Players pick theirs from a menu, and
-which ones they may pick is decided by permissions — which is what makes it something to sell.
+ExyliaKillEffect plays a **kill effect** where a victim fell. An effect is not a puff of particles:
+it is drawn with **display entities** — real items and blocks that fall, turn, slam and settle,
+animated by each player's own client rather than by the server tick. Particles are used the way a film
+uses smoke: for atmosphere around something solid, never as the thing itself.
 
-**144 effects across 14 categories** ship in `effects.yml`: infernal, glacial, storm, void, arcane,
-celestial, cosmic, nature, mythic, shadow, ancient, wind, sakura and primal.
+**120 effects in six categories** ship in `effects.yml`, and most of them leave the victim's body on
+the ground as part of the scene.
 
-## How it works
+## Two ways to own an effect
+
+| Way | Whose it is | Which server it suits |
+|---|---|---|
+| **The menu** | The player's: they pick one in `/killeffect` and it plays whatever they kill with. | Practice, PvP |
+| **A weapon** | The weapon's: an effect token is dropped onto a weapon and travels with it through chests, trades and deaths. | Survival, economy |
+
+`behaviour.mode` decides which is read — `player`, `weapon` or `both` — and is covered in
+[Modes and tokens](/docs/exyliakilleffect/modes-and-tokens).
+
+## The categories
+
+| Category | Icon | What is in it |
+|---|---|---|
+| `siege` | `NETHERITE_SWORD` | Weapons, engines and the weight of things arriving. |
+| `cataclysm` | `MAGMA_BLOCK` | Fire, rock and weather that has had enough. |
+| `abyss` | `CRYING_OBSIDIAN` | Void, gravity and things that take something away. |
+| `aurora` | `AMETHYST_CLUSTER` | Crystal, starlight and cold. |
+| `verdant` | `SPORE_BLOSSOM` | Growth, petals and rot. |
+| `bonk` | `ANVIL` | Jokes. Anvils, rubber ducks and a vending machine. |
+
+Twenty effects each. The whole list is in [Effects](/docs/exyliakilleffect/effects).
+
+## How it plays out
 
 <Steps>
   <Step title="A player opens the menu">
-    `/killeffect` shows the categories, then the effects inside one.
+    `/killeffect` is one screen: the category tabs down the side, that category's effects beside them.
   </Step>
-  <Step title="They pick one">
-    The choice is stored in the database, so it survives a restart.
+  <Step title="They pick one, or preview it">
+    Left click wears it. Right click lifts them to an empty patch of sky, plays it against nothing and
+    puts them back — owning it is not required to look.
   </Step>
   <Step title="They kill something">
-    The effect plays at the victim's location.
+    The effect plays where the victim fell, for everyone who is set to see it.
   </Step>
 </Steps>
 
 Which kills count is configurable: everything, or only the entity types you list.
 
-## What each effect is
-
-An effect is a **sequence** — a list of shapes, particles, sounds and pauses, played in order:
-
-```yaml
-EMBER_BURST:
-  category: infernal
-  name: "<gradient:#D1693F:#D1523F><bold>EMBER BURST</bold></gradient>"
-  material: BLAZE_POWDER
-  priority: 1
-  effects:
-    - '[CIRCLE] FLAME;radius:1.5;points:24;y:0.1'
-    - '[SOUND] ENTITY_BLAZE_DEATH;1.5;0.8'
-    - '[DELAY] 0.15'
-    - '[BEAM] FLAME;height:3.5;points:24'
-    - '[EXPLOSION]'
-```
-
-Everything about them is editable, and you can write your own. The full syntax is in
-[Effects](/docs/exyliakilleffect/effects).
-
-## Visibility
-
-Every player chooses what they see, and the choice is theirs alone:
+## Visibility is the observer's
 
 | Mode | What they see |
 |---|---|
-| `ALL` | Every effect, theirs and everyone else's. |
+| `ALL` | Every effect, theirs and everybody else's. |
 | `NONE` | None at all. |
-| `SELF_ONLY` | Only their own. |
+| `SELF_ONLY` | Only their own kills. |
 | `OTHERS_ONLY` | Only other people's. |
 
-It is a per-observer decision, so somebody on `NONE` stops seeing particles without stopping anyone
-else's.
+Somebody on `NONE` stops seeing effects without stopping anyone else's.
+
+## What a weapon carries
+
+Binding writes **one value** onto the weapon — `exyliakilleffect:effect`, the effect id. The lines a
+player reads under a bound weapon are drawn on the way to the client and are never written to the item,
+so a shop, a crate or any other plugin reading that weapon finds exactly what it had.
 
 ## Requirements
 
 | Requirement | Detail |
 |---|---|
 | Server | Paper 1.21 or newer. Folia supported. |
-| Required | `ExyliaLib`, `packetevents` |
+| Required | `packetevents` |
+| Recommended | `ExyliaLib` (a soft depend: the loader installs it) |
 | Optional | `PlaceholderAPI` |
+| Database | Always. The choice, the visibility and the favourites live in one table. |
+
+<Cards>
+  <Card title="Installation" href="/docs/exyliakilleffect/installation">
+    The jars, the files it writes and the table it creates.
+  </Card>
+  <Card title="First steps" href="/docs/exyliakilleffect/first-steps">
+    From a clean server to a player with an effect on their kills.
+  </Card>
+  <Card title="Effects" href="/docs/exyliakilleffect/effects">
+    The full catalogue and how `effects.yml` is written.
+  </Card>
+  <Card title="Modes and tokens" href="/docs/exyliakilleffect/modes-and-tokens">
+    The token, the remover, and what each mode changes.
+  </Card>
+</Cards>

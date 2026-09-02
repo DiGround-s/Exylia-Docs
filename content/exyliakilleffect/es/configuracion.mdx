@@ -1,0 +1,169 @@
+---
+title: "Configuración"
+description: "Cada bloque de config.yml, con sus valores por defecto."
+---
+
+`config.yml` se escribe desde un esquema: los comentarios se regeneran en cada arranque, las claves
+desconocidas se descartan y una clave que borres vuelve con su valor por defecto.
+
+## `behaviour`
+
+```yaml
+behaviour:
+  mode: both
+  consume-token: true
+  consume-remover: true
+  require-permission: true
+  hide-without-permission: false
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `mode` | `both` | `player`, `weapon` o `both`. Ver [Modos y fichas](/docs/exyliakilleffect/modos-y-fichas). |
+| `consume-token` | `true` | Si la ficha se gasta al atarla. |
+| `consume-remover` | `true` | Si el removedor se gasta al quitar un efecto. |
+| `require-permission` | `true` | Si lanzar un efecto necesita su nodo. Los comandos y la API nunca se limitan por esto. |
+| `hide-without-permission` | `false` | Si los efectos bloqueados se esconden en el menú en vez de mostrarse bloqueados. |
+
+## `effects`
+
+Qué bajas lanzan algo.
+
+```yaml
+effects:
+  all-mobs: false
+  allowed-mobs:
+    - PLAYER
+    - MANNEQUIN
+    - ZOMBIE
+```
+
+<Callout type="tip" title="all-mobs en un servidor de granjas">
+`all-mobs: true` significa que cada zombie de una granja lanza una secuencia entera. Los efectos de
+muerte suelen ser para PvP: deja la lista salvo que quieras una producción en cada mob que cae.
+</Callout>
+
+## `token-item` y `remover-item`
+
+```yaml
+token-item:
+  material: FIREWORK_STAR
+  name: "{primary}&lKILL EFFECT &8» %effect%"
+  lore:
+    - "{secondary}Information:"
+    - " {letters_black}▎ {letters}Drop this onto a weapon to"
+    - " {letters_black}▎ {letters}{highlight}bind the effect {letters}to it. The weapon"
+    - " {letters_black}▎ {letters}keeps everything it had."
+    - ""
+    - "{secondary}Fits:"
+    - " {letters_black}▎ {info}%weapons%"
+    - ""
+    - "{warning}➥ Drop onto a weapon to bind"
+    - ""
+  glow: true
+
+remover-item:
+  material: SCRAPE_POTTERY_SHERD
+  name: "{primary}&lEFFECT REMOVER"
+  glow: true
+```
+
+`%effect%` es el nombre del efecto y `%weapons%` a qué encaja. `material` solo se usa cuando el efecto
+no trae icono propio — normalmente la ficha se dibuja con el material del efecto.
+
+## `weapon-lore`
+
+```yaml
+weapon-lore:
+  enabled: true
+  lines:
+    - "{secondary}Kill Effect:"
+    - " {letters_black}▎ {highlight}%effect%"
+```
+
+Se dibuja bajo el lore propio del arma atada, solo en paquetes. El objeto nunca lleva estas líneas.
+
+## `menu`
+
+```yaml
+menu:
+  empty: "{muted}Nothing"
+  tab-open: "{success}✔ You are here"
+  tab-closed: "{warning}➥ Click to open"
+  weapons-any: "Any weapon"
+  favourites-name: "Favourites"
+  favourites-icon: "AMETHYST_SHARD"
+  favourite-on: "{highlight}★ In your favourites"
+  favourite-off: "{muted}☆ Not in your favourites"
+```
+
+La pantalla en sí es `menus/effects.yml` — ver [El menú](/docs/exyliakilleffect/menu).
+
+## `feedback`
+
+```yaml
+feedback:
+  on-bind:
+    sound:
+      name: BLOCK_ENCHANTMENT_TABLE_USE
+      volume: 1.0
+      pitch: 1.2
+  on-unbind:
+    sound:
+      name: BLOCK_GRINDSTONE_USE
+```
+
+Son bloques de efecto completos de ExyliaLib: título, action bar, boss bar, sonido, partícula y
+firework están disponibles en cada uno. `on-bind` suena al atar un efecto a un arma **o** al elegirlo
+en el menú.
+
+## `particles`
+
+```yaml
+particles:
+  default-visibility: "ALL"
+  name-all: "All"
+  name-none: "None"
+  name-self-only: "Self Only"
+  name-others-only: "Others Only"
+```
+
+`default-visibility` es con lo que empieza un jugador. Los cuatro nombres son cómo llaman los menús y
+los placeholders a cada modo.
+
+## `placeholders`
+
+```yaml
+placeholders:
+  none: "None"
+```
+
+Lo que responde cualquier `%exyliakilleffect_...%` cuando no hay valor.
+
+## `messages`
+
+Todas las líneas que envía el plugin. `prefix` es `{primary}&lE-KILLS &8•&r ` y el resto de mensajes
+empieza con `%prefix%`.
+
+| Clave | Cuándo se envía |
+|---|---|
+| `bound` | Se ató un efecto a un arma. |
+| `unbound` | Se desató y se devolvió. |
+| `chosen` | Se eligió un efecto en el menú. |
+| `cleared` | Se quitó el efecto. |
+| `not-a-weapon` | El objeto no puede llevar un efecto. |
+| `wrong-weapon` | El efecto no encaja en esa arma. |
+| `unknown-effect` | El id no nombra nada declarado. |
+| `already-bound` | El arma ya lleva un efecto. |
+| `no-effect` | El arma no lleva ninguno. |
+| `inventory-full` | Un removedor necesita un hueco libre. |
+| `no-permission` | El jugador no tiene el efecto. |
+| `empty-hand` | Un subcomando de mano con la mano vacía. |
+| `given` / `given-remover` | Se dieron fichas o removedores. |
+| `list-header` / `list-entry` / `list-empty` | `/killeffectsadmin list`. |
+| `visibility-set` | Cambió la visibilidad. |
+| `refreshed` | Terminó `refresh` o `validate`. |
+| `menu-disabled` | Se abrió el menú en un servidor `weapon`. |
+| `favourite-added` / `favourite-removed` / `favourites-cleared` / `favourites-empty` | La lista de favoritos. |
+
+Placeholders en los mensajes: `%effect%`, `%amount%`, `%id%`, `%visibility%` y `%prefix%`.

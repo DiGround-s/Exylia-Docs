@@ -1,0 +1,87 @@
+---
+title: "Modos y fichas"
+description: "De dónde sale el efecto que suena en una baja, y qué hacen la ficha y el removedor."
+---
+
+## Los tres modos
+
+`behaviour.mode` decide de dónde sale el efecto:
+
+| Modo | De dónde sale | Qué implica |
+|---|---|---|
+| `player` | Solo de lo que el jugador eligió en `/killeffect`. | Sigue al jugador y suena con lo que mate. Las fichas no hacen nada. |
+| `weapon` | Solo de lo que está atado al arma. | Se comercia, se cae y se pierde con el arma. El menú se niega a abrir y lo dice. |
+| `both` | El efecto propio del arma y, para un arma sin ninguno, la elección del jugador. | El valor por defecto. |
+
+En `both` **gana el arma**: un arma atada lanza lo suyo, y la elección del menú solo cubre las armas
+que no llevan nada.
+
+```yaml title="config.yml"
+behaviour:
+  mode: both
+  consume-token: true
+  consume-remover: true
+  require-permission: true
+  hide-without-permission: false
+```
+
+## La ficha
+
+Un objeto que lleva un efecto dentro. Se usa **arrastrándola sobre un arma en tu propio inventario**:
+se coge con el cursor y se hace clic sobre el arma.
+
+| Regla | Detalle |
+|---|---|
+| Solo armas | Espadas, hachas, tridentes, mazas, arcos y ballestas. Lo demás se ignora y el clic sigue su curso normal. |
+| Una a la vez | Un arma que ya lleva efecto se rechaza: primero hay que quitárselo con un removedor. |
+| Compatibilidad | Un efecto con `weapons` declarado se rechaza en un arma que no lista. |
+| Permiso | Con `require-permission` activo hace falta el nodo del efecto. |
+| Consumo | `consume-token` decide si se gasta. Apagado, la ficha es reutilizable. |
+
+Lo que se escribe en el arma es **un valor**: `exyliakilleffect:effect`, el id del efecto. Nada más
+del objeto cambia.
+
+<Callout type="note" title="Una ficha no es el objeto que aparenta">
+Las fichas y los removedores son inertes: dibujados como una perla del end no se pueden lanzar,
+dibujados como comida no se pueden comer. Tengan la pinta que tengan, solo sirven para soltarse sobre
+un arma.
+</Callout>
+
+## El removedor
+
+Se arrastra igual, sobre un arma atada. El efecto sale y **vuelve como ficha** al inventario de quien
+lo quita.
+
+| Regla | Detalle |
+|---|---|
+| Primero un hueco | Con el inventario lleno no pasa nada: el arma solo se escribe cuando la ficha ya tiene sitio. |
+| Efectos desconocidos | Un arma con un id que el archivo ya no declara se rechaza en vez de convertirse en nada. |
+| Consumo | `consume-remover` decide si se gasta el removedor. |
+
+## Las líneas bajo un arma atada
+
+```yaml title="config.yml"
+weapon-lore:
+  enabled: true
+  lines:
+    - "{secondary}Kill Effect:"
+    - " {letters_black}▎ {highlight}%effect%"
+```
+
+Viajan **solo en paquetes** y nunca se escriben en el objeto. Consecuencias que conviene saber:
+
+- Una tienda, una caja o cualquier plugin que lea esa arma encuentra exactamente el lore que tenía.
+- Renombrar un efecto actualiza todas las armas del servidor a la vez.
+- Apagar `weapon-lore` esconde las líneas sin tocar un solo objeto.
+
+## El permiso, y qué pasa cuando caduca
+
+| Interruptor | Qué hace |
+|---|---|
+| `require-permission` | Si lanzar un efecto necesita su nodo. Los comandos y la API nunca se limitan por esto. |
+| `hide-without-permission` | Si un efecto que el jugador no puede usar se esconde en el menú en vez de mostrarse bloqueado. |
+
+Una elección que el jugador ya no puede justificar **se quita**, no se ignora en silencio: se retira en
+la siguiente baja, al abrir el menú, al entrar y con `/killeffectsadmin validate`. Un efecto marcado
+como favorito nunca se quita — una lista de deseos es tanto lo que alguien está ahorrando como lo que
+ya tiene.

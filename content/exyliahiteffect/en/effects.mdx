@@ -1,83 +1,126 @@
 ---
 title: "Effects and categories"
-description: "The effects.yml format, and the full sequence syntax for writing your own."
+description: "How effects.yml is written, and the 90 effects that ship in it."
 ---
 
 ## The file
 
 `effects.yml` has two sections: the categories, and the effects that belong to them.
 
-```yaml
+```yaml title="effects.yml"
 categories:
   impact:
-    material: DIAMOND_SWORD
+    material: NETHERITE_SWORD
     name: 'Impact'
     priority: 1
 
 hit_effects:
-  CRIT_BURST:
+  CRIT_SPARK:
     category: impact
-    name: "<gradient:#FFD700:#FF8C00><bold>CRIT BURST</bold></gradient>"
-    material: IRON_SWORD
-    description:
-      - 'A sharp burst of crit particles on impact.'
+    name: "<gradient:#FFE9A8:#D1A53F><bold>CRIT SPARK</bold></gradient>"
+    material: GOLDEN_SWORD
+    description: "Eight splinters of gold, {highlight}gone in a third<nl>of a second{neutral}."
     priority: 1
     effects:
-      - '[BURST] CRIT;radius:1.0;count:30'
-      - '[SOUND] ENTITY_PLAYER_ATTACK_CRIT;1.0;1.4'
+      - '[SOUND] ENTITY_PLAYER_ATTACK_CRIT;0.7;1.4'
+      - '[SPHERE] GOLD_BLOCK;as:block;radius:0.25;points:8;size:0.14;size_to:0.02;pull:-4;ease:out;life:0.32;spin:1,1,1;vary:0.6;light:15;glow:{highlight}'
+      - '[PARTICLE] CRIT;count:12;offset:0.3,0.3,0.3;speed:0.15'
 ```
 
 | Key | What it does |
 |---|---|
-| `category` | Which category it appears under. |
-| `name` | What the menu shows. Palette tokens, MiniMessage and gradients all work. |
-| `material` | The icon in the menu. |
-| `description` | Lore lines. A list is one line per entry; a single string splits on `<nl>`. |
-| `priority` | Ordering inside the category. Lower first. |
-| `effects` | The sequence itself. |
+| `category` | Which tab it appears under. Must be a key declared under `categories`. |
+| `name` | What menus and placeholders call it. Palette tokens, MiniMessage and gradients all work. |
+| `material` | The item the row is drawn with. Defaults to `BARRIER`. |
+| `description` | A list is one line per entry; a single string breaks on `<nl>`. |
+| `priority` | Where it sits in its tab; lower comes first. Defaults to `999`. |
+| `effects` | The steps drawn on whoever was hit. |
+| `weapons` | Optional. What the effect may be bound to. Omit it and it fits anything. |
 
 A category takes `material`, `name` and `priority`.
 
-<Callout type="note" title="The effect id is the permission">
-`CRIT_BURST` becomes `exyliahiteffect.effect.crit_burst`. Renaming an effect renames its node and
-revokes it from everyone who had the old one.
+<Callout type="note" title="Broken entries are reported, not guessed">
+A missing `categories` section, an effect naming a category that is not declared, an entry with no
+`effects`, and a `weapons` token that is neither an item nor a family are each written to the console
+with the key that caused them. The rest of the file still loads.
 </Callout>
 
-## Sequence syntax
+## `weapons`
 
-Every line is a token in brackets, then arguments separated by `;`.
+Only read while `behaviour.mode` reads weapons. It accepts item names and families:
 
-### Non-shape tokens
+```yaml
+weapons: [ NETHERITE_SWORD, AXE ]
+```
 
-| Token | Arguments |
+| Family | Matches |
 |---|---|
-| `[DELAY] 0.15` | Seconds to wait before the next line. |
-| `[PARTICLE] CRIT` | `count:` `offset:x,y,z` `speed:` `y:` `color:` `size:` `block:` |
-| `[SOUND] NAME;volume;pitch` | Also `volume:` `pitch:` |
-| `[LIGHTNING]` | `volume:` `pitch:` — flash, sparks and thunder only. |
-| `[EXPLOSION]` | `count:` `y:` |
-| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
-| `[BLOCK_BREAK] STONE` | `count:` `offset:` `y:` |
-| `[POTION] speed;100;1` | Also `duration:` `amplifier:` |
-| `[TITLE] title;subtitle;in;stay;out` | Times in seconds. |
-| `[ACTION_BAR] text` | |
-| `[MESSAGE] text` | A chat line. |
-| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
+| `ANY` | Anything at all. |
+| `SWORD` | Every `_SWORD`. |
+| `AXE` | Every `_AXE` — a pickaxe is not one. |
+| `TRIDENT`, `MACE`, `BOW`, `CROSSBOW` | Just that item. |
+| `MELEE` | Swords, axes, tridents and maces. |
+| `RANGED` | Bows, crossbows and tridents. |
 
-### Shapes
+Families are matched on the item's name, so a sword added in a future Minecraft version is a sword the
+day it exists. `ANY_SWORD` reads the same as `SWORD`. None of the shipped effects declares `weapons`,
+so out of the box every one of them fits every weapon.
 
-Twenty of them:
-
-`CIRCLE` `SPHERE` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO` `STAR` `CAGE` `DISC` `VORTEX` `WAVE`
-`CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS` `ARCH` `CLAW`
-
-Every shape accepts `color:` `size:` `count:` `ticks:` `interval:` `y:` on top of its own parameters.
-
-<Callout type="tip" title="Keep hit effects short">
-A hit effect fires several times a second in a real fight. `[DELAY]` lines and long shapes that were
-fine on a kill effect will overlap themselves here — the shipped effects are two to five lines for
-that reason, where the kill effects run to eight.
+<Callout type="note" title="The effect id is the permission">
+`CRIT_SPARK` is `exyliahiteffect.effect.crit_spark`. Renaming the key renames the node, and everybody
+who had the old one loses the effect. Case is not part of it: ids are lowercased on the way in.
 </Callout>
+
+## The catalogue
+
+Fifteen effects per category, 90 in total.
+
+### Impact — `NETHERITE_SWORD`
+
+Steel, plate and shock.
+
+`CRIT_SPARK` `SHATTER` `SHOCKWAVE` `CLEAVE` `HAMMERFALL` `RIVET` `PLATE_CRACK` `RECOIL` `SPLINTER`
+`CHIP` `IRON_BURST` `PULSE` `GUARD_BREAK` `PIERCE` `SLAM`
+
+### Crimson — `REDSTONE`
+
+Blood and bone.
+
+`SPLATTER` `ARTERIAL` `DRIP` `RUPTURE` `BONE_SNAP` `CRIMSON_RING` `HAEMORRHAGE` `MEAT_HOOK`
+`BLOOD_MOON` `SCARLET_LACE` `VISCERAL` `CRIMSON_NAIL` `IRON_TASTE` `RED_HARVEST` `CLOT`
+
+### Ember — `BLAZE_POWDER`
+
+Sparks, scald and soot.
+
+`CINDER` `MAGMA_CRACK` `FLASHPOINT` `EMBER_RING` `SCALD` `BLAZE_MARK` `BACKDRAFT` `SOOT` `BRAND`
+`FIREFLY` `PYRE` `QUENCH` `SEAR` `ASH_PUFF` `FORGE`
+
+### Sculk — `SCULK_SHRIEKER`
+
+The deep dark.
+
+`SHRIEK` `SONIC_TAP` `CATALYST` `SENSOR` `DEEP_ECHO` `WARDEN_MARK` `SOUL_TUG` `DARKNESS` `VEIN_CRAWL`
+`RESONATE` `BLIND_SPOT` `DECAY` `ANCIENT_CITY` `SILENCE` `SCULK_BLOOM`
+
+### Prism — `AMETHYST_SHARD`
+
+Crystal, frost and light.
+
+`SHARD` `FROSTBITE` `PRISM_SPLIT` `HALO` `REFRACT` `STARLET` `RUNE` `MIRROR` `SNAP_FREEZE` `LUMEN_TAP`
+`AURORA_TOUCH` `FACET` `ZENITH_TAP` `GLASSFALL` `SOLAR_TICK`
+
+### Goofy — `SLIME_BALL`
+
+Jokes.
+
+`BONK` `SEEING_STARS` `RUBBER_DUCK` `BUBBLE_POP` `SLAPSTICK` `OOF` `CONFETTI` `BANANA` `SQUEAK`
+`ANGRY_BEE` `CARTOON_ANVIL` `PIE` `SAD_TRUMPET` `CHICKEN` `ROLL_CREDITS`
+
+## Where an effect is drawn
+
+The anchor is **a block above the victim**, so the effect lands on the body rather than at its feet.
+`(0,0,0)` in a step is that point.
 
 ## Writing your own
 
@@ -85,24 +128,22 @@ that reason, where the kill effects run to eight.
   <Step title="Add the entry">
     A new key under `hit_effects`, with a `category` that exists.
   </Step>
-  <Step title="Keep it brief">
-    One shape, one sound. Test it in a real fight, not on a stationary dummy.
+  <Step title="Keep it inside the budget">
+    Under six tenths of a second, ten displays at most, quiet, about a block wide. The full syntax is
+    in [Sequences](/docs/exyliahiteffect/sequences).
   </Step>
   <Step title="Reload">
-    `/hiteffect reload`.
+    `/hiteffectsadmin reload`.
+  </Step>
+  <Step title="Look at it">
+    `/hiteffect preview <id>` plays it against an empty sky, then puts you back.
   </Step>
   <Step title="Grant it">
     `exyliahiteffect.effect.<id in lowercase>`, or the whole category.
   </Step>
 </Steps>
 
-## Categories as products
-
-```text
-exyliahiteffect.category.premium    every premium effect
-exyliahiteffect.effect.crit_burst   just that one
-exyliahiteffect.effect.*            all of them
-```
-
-The shipped `premium` category exists for exactly this: a rank that grants one node and unlocks a
-whole tier.
+<Callout type="warning" title="A hit effect is not a kill effect">
+The same syntax draws both, and it is tempting to paste a ten-second production in here. On a busy
+arena that is one of those per blow, per player, on every client in range.
+</Callout>

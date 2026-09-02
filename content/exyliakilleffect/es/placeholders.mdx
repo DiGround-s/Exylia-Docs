@@ -1,37 +1,68 @@
 ---
 title: "Placeholders"
-description: "Los siete placeholders de PlaceholderAPI, y qué responden cuando no hay nada elegido."
+description: "El efecto del jugador, el del arma, la lista de favoritos y el modo de visibilidad."
 ---
 
-Todos los placeholders están escritos enteros, y al hacer clic en uno se copia.
+Cada placeholder está escrito completo, y al hacer clic se copia.
+
+## Lo que eligió el jugador
 
 | Placeholder | Descripción |
 |---|---|
 | `%exyliakilleffect_effect%` | El id del efecto elegido. |
-| `%exyliakilleffect_effect_name%` | Su nombre visible, con sus colores. |
+| `%exyliakilleffect_effect_name%` | Su nombre, con sus colores. |
 | `%exyliakilleffect_effect_description%` | Su descripción, aplanada a una línea. |
 | `%exyliakilleffect_effect_material%` | El material con el que se dibuja. |
 | `%exyliakilleffect_effect_category%` | El id de la categoría. |
-| `%exyliakilleffect_effect_category_name%` | El nombre visible de la categoría. |
+| `%exyliakilleffect_effect_category_name%` | El nombre de la categoría. |
+| `%exyliakilleffect_effect_weapons%` | A qué se puede atar, en palabras. |
 | `%exyliakilleffect_has_effect%` | `true` o `false`. |
 
-## Sin nada elegido
+## Lo que lleva el arma en mano
+
+Los mismos campos con `weapon_` delante. Responden sobre el objeto en la mano principal, no sobre la
+elección del menú.
 
 | Placeholder | Descripción |
 |---|---|
+| `%exyliakilleffect_weapon_effect%` | El id del efecto atado. |
+| `%exyliakilleffect_weapon_effect_name%` | Su nombre. |
+| `%exyliakilleffect_weapon_effect_description%` | Su descripción, en una línea. |
+| `%exyliakilleffect_weapon_effect_material%` | Su material. |
+| `%exyliakilleffect_weapon_effect_category%` | El id de su categoría. |
+| `%exyliakilleffect_weapon_effect_category_name%` | El nombre de su categoría. |
+| `%exyliakilleffect_weapon_effect_weapons%` | A qué encaja. |
+| `%exyliakilleffect_weapon_has_effect%` | `true` o `false`. |
+
+## El resto
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliakilleffect_visibility%` | Su modo de visibilidad, con el nombre que diga `particles.name-*`. |
+| `%exyliakilleffect_favourites%` | Cuántos efectos tiene marcados. |
+| `%exyliakilleffect_favourite_<id>%` | `true` o `false` para un efecto — `%exyliakilleffect_favourite_blade_storm%`. |
+
+`favorite` se acepta donde se acepte `favourite`.
+
+## Sin nada elegido
+
+| Placeholder | Respuesta |
+|---|---|
 | `%exyliakilleffect_has_effect%` | `false` |
 | `%exyliakilleffect_effect_description%` | Vacío |
-| `%exyliakilleffect_effect_material%` | Un material de reserva |
-| Todo lo demás | Lo que diga `placeholders.none` en `config.yml` — `None` por defecto |
+| `%exyliakilleffect_effect_material%` | `BARRIER` |
+| Todo lo demás | Lo que diga `placeholders.none` — `None` por defecto |
 
-Eso es lo que los hace seguros de meter en un scoreboard sin alternativa propia:
+Lo mismo vale para la familia `weapon_` cuando el arma no lleva nada, que es lo que los hace seguros
+para un scoreboard sin fallback propio:
 
 ```yaml
 lines:
   - " {muted}❙ {letters}Efecto: {highlight}%exyliakilleffect_effect_name%"
+  - " {muted}❙ {letters}Arma: {highlight}%exyliakilleffect_weapon_effect_name%"
 ```
 
 <Callout type="tip" title="effect_material es para menús">
-Es el icono de lo que hayan elegido, que es lo que permite que el menú de otro plugin dibuje su efecto
-actual sin saber nada de este.
+Es el icono de lo que eligió, que es lo que permite que el menú de otro plugin dibuje su efecto actual
+sin saber nada de este.
 </Callout>

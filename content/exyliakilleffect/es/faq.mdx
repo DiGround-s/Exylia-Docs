@@ -1,51 +1,70 @@
 ---
 title: "Preguntas frecuentes"
-description: "Lo que más se pregunta."
+description: "Las preguntas que más aparecen."
 ---
-
-## El plugin no arranca
-
-`ExyliaLib` y `packetevents` son obligatorios. Sin cualquiera de ellos, el servidor lo desactiva y lo
-nombra.
 
 ## No pasa nada cuando un jugador mata
 
-Tres cosas que comprobar, en orden:
+Por orden:
 
-1. **¿Está permitida la víctima?** `effects.all-mobs` es `false` por defecto, así que solo cuentan
-   `PLAYER`, `MANNEQUIN` y `ZOMBIE` hasta que añadas más.
-2. **¿Posee el efecto?** Una selección para la que ya no tiene permiso se borra en vez de lanzarse.
-3. **¿Hay alguien configurado para verlo?** Un jugador en `NONE` no ve nada, ni siquiera lo suyo.
+1. **¿Está permitida la víctima?** `effects.all-mobs` está en `false` por defecto, así que solo
+   cuentan `PLAYER`, `MANNEQUIN` y `ZOMBIE`.
+2. **¿Hay efecto siquiera?** En `mode: weapon` nunca se lee la elección del menú, y en `mode: player`
+   nunca se lee un arma atada.
+3. **¿Lo tiene?** Una elección de menú sin el nodo se quita en vez de lanzarse.
+4. **¿Alguien está configurado para verlo?** Quien esté en `NONE` no ve nada, ni lo suyo.
 
-## El menú no abre
+## El menú dice que está apagado
 
-Necesita `exyliakilleffect.command.killeffect`. Es un nodo aparte de poseer efectos.
+`behaviour.mode` es `weapon`. En ese servidor el menú no cambiaría nada, así que se niega a abrir en
+vez de fingir.
+
+## Un efecto que até a un arma desapareció
+
+El arma lleva un id. Si la clave de `effects.yml` se renombró, ese id ya no nombra nada y el efecto no
+suena. Renombrar una clave no es gratis: también es otro nodo de permiso.
 
 ## Un jugador dice que su efecto desapareció
 
-Se le fue el permiso — normalmente un rango que caducó. El plugin borra una selección que ya no puede
-justificar en vez de lanzar algo a lo que el jugador no tiene derecho.
+Se le fue el permiso — normalmente un rango que caducó. Una elección que ya no se puede justificar se
+quita en vez de lanzarse. Cuando vuelve el nodo, la vuelve a elegir.
 
-## Renombré un efecto y todo el mundo lo perdió
+## ¿Perder un permiso rompe un arma?
 
-El id es el permiso: `EMBER_BURST` es `exyliakilleffect.effect.ember_burst`. Renombrar la clave
-renombra el nodo. Renómbralo también en el plugin de permisos, o no lo renombres.
+No. Un arma atada lanza su efecto para quien la tenga: el nodo se pide al atar la ficha, no en cada
+baja. Eso es lo que hace que un arma atada valga la pena comerciarla.
 
-## Los efectos lagean el servidor en peleas grandes
+## ¿Los jugadores se ven los efectos entre ellos?
 
-Cada baja lanza una secuencia entera. Mira el `count:` de las líneas de partículas y cuántas líneas
-tiene el efecto — los que vienen se quedan en unas ocho por eso. `ticks:` reparte una forma en el tiempo
-en vez de mandarla toda en un fotograma.
+Eso lo decide cada uno: `ALL`, `NONE`, `SELF_ONLY` u `OTHERS_ONLY`, con `/killeffect visibility` o
+desde el menú.
+
+## ¿Los cuerpos son entidades reales?
+
+No. `[NPC]` dibuja un display: nadie puede golpearlo, saquearlo ni chocar con él, y desaparece cuando
+se acaba su `life`.
+
+## ¿El lore del arma se escribe en el objeto?
+
+Nunca. Se añade a la copia que sale del servidor. Cualquier plugin que lea esa arma encuentra el lore
+de siempre, y renombrar un efecto actualiza todas las armas del servidor a la vez.
 
 ## ¿Puedo escribir mis propios efectos?
 
-Sí, para eso está `effects.yml`. La sintaxis completa — veinte formas y doce tokens más — está en
-[Efectos](/docs/exyliakilleffect/efectos).
+Sí, para eso está `effects.yml`. Veinticinco formas, trece tokens más y los parámetros de display
+están en [Secuencias](/docs/exyliakilleffect/secuencias). Una línea ilegible se avisa en consola y se
+salta; el resto del efecto se lanza igual.
+
+## Los efectos laguean en peleas grandes
+
+Los displays los anima el cliente, así que moverlos es barato — pero cada línea sigue siendo un
+paquete por espectador. Mira cuántas líneas tiene un efecto y el `count:` de las líneas de partículas.
+`ticks:` reparte una forma en frames en vez de mandarla toda de golpe.
 
 ## ¿Funciona en Folia?
 
 Sí, declara soporte de Folia.
 
-## ¿Dónde pido soporte?
+## ¿Dónde consigo soporte?
 
 En el [Discord de Exylia](https://discord.exylia.net).

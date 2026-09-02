@@ -3,44 +3,64 @@ title: "Frequently asked questions"
 description: "The questions that come up most."
 ---
 
-## The plugin does not start
+## Nothing plays when a player hits somebody
 
-`ExyliaLib` and `packetevents` are both required. Without either, the server disables it by name.
-
-## The menu will not open
-
-That needs `exyliahiteffect.command.hiteffect`. It is separate from owning any effect.
-
-Up to version 1.0.8 this node was spelled `exyliahiteffect.command.killeffect`, inherited from the
-sibling plugin. If you granted the old spelling, switch it — the old one no longer does anything.
-
-## Nothing plays when a player hits
+In order:
 
 1. **Is the victim allowed?** `effects.all-mobs` is `false` by default, so only `PLAYER`,
    `MANNEQUIN` and `ZOMBIE` count.
-2. **Do they own the effect?** A selection they no longer have permission for is cleared, not played.
-3. **Is anyone set to see it?** A player on `NONE` sees nothing, including their own.
+2. **Was the hit cancelled?** A blow another plugin refused plays nothing on purpose.
+3. **Is there an effect at all?** In `mode: weapon` the menu choice is never read, and in
+   `mode: player` a bound weapon is never read.
+4. **Do they own it?** A menu choice they no longer have the node for is taken off instead of played.
+5. **Is anyone set to see it?** A player on `NONE` sees nothing, including their own.
 
-## Effects overlap into a mess during a fight
+## The menu says it is off
 
-That is the nature of a per-hit trigger, and it is why the shipped effects are short. An effect with
-`[DELAY]` lines will still be drawing when the next hit lands. Cut the delays, lower `count:`, or use
-`ticks:1` so a shape is drawn in one frame instead of over time.
+`behaviour.mode` is `weapon`. On that server the menu would change nothing, so it refuses to open
+rather than pretending.
 
-## The effect appears at the victim's feet
+## An arrow played the wrong effect
 
-It should not — it is anchored a block up on purpose. If it looks low, check the `y:` on the shape
-lines in your own effect, which is applied on top of that block.
+It played the one that was resolved **when it was fired** — that is the point: a player who switched
+weapons mid-flight does not change what is already in the air. An arrow this plugin never saw launched
+falls back to whatever the shooter is holding when it lands.
 
-## Can I use kill effects here?
+## Effects stack on top of each other in a fight
 
-The syntax is identical, so a sequence copies across. Whether it *reads* well is another question: a
-four-second spiral designed for a death fires on every swing here.
+An effect longer than six tenths of a second is still playing when the next blow lands. That is why
+the shipped ones are short. If you wrote your own, cut `life:` and the number of lines.
+
+## Can I use a kill effect's sequence here?
+
+The syntax is the same, so it will load — and it will play on every single blow. Read the budget in
+[Effects](/docs/exyliahiteffect/effects) before you paste one in.
 
 ## A player says their effect disappeared
 
-Their permission for it went away. The plugin clears a selection it can no longer justify rather than
-playing something the player is not entitled to.
+Their permission for it went away — a rank expiring, usually. A choice that can no longer be
+justified is taken off rather than played. The node comes back, they pick it again.
+
+## Does losing a permission break a weapon?
+
+No. A bound weapon plays its effect for whoever holds it: the node is asked for when the token is
+bound, not on every hit. That is what makes a bound weapon worth trading.
+
+## Can players see each other's effects?
+
+That is each observer's own choice: `ALL`, `NONE`, `SELF_ONLY` or `OTHERS_ONLY`, set with
+`/hiteffect visibility` or from the menu.
+
+## Does the weapon lore get written to the item?
+
+Never. It is added to the copy that leaves the server. Any plugin reading that weapon finds the lore
+it always had, and renaming an effect updates every weapon on the server at once.
+
+## Can I write my own effects?
+
+Yes — that is what `effects.yml` is for. Twenty-five shapes, thirteen other tokens and the display
+parameters are in [Sequences](/docs/exyliahiteffect/sequences). A line that cannot be read is reported
+on the console and skipped; the rest of the effect still plays.
 
 ## Does it work on Folia?
 

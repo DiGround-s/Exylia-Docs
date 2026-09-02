@@ -1,9 +1,11 @@
 ---
 title: "Placeholders"
-description: "The seven PlaceholderAPI placeholders, and what they answer when nothing is chosen."
+description: "The player's effect, the weapon's effect, the shortlist and the visibility mode."
 ---
 
 Every placeholder below is written in full, and clicking one copies it.
+
+## What the player chose
 
 | Placeholder | Description |
 |---|---|
@@ -13,22 +15,51 @@ Every placeholder below is written in full, and clicking one copies it.
 | `%exyliakilleffect_effect_material%` | The material it is drawn with. |
 | `%exyliakilleffect_effect_category%` | The category id. |
 | `%exyliakilleffect_effect_category_name%` | The category's display name. |
+| `%exyliakilleffect_effect_weapons%` | What it may be bound to, in words. |
 | `%exyliakilleffect_has_effect%` | `true` or `false`. |
 
-## With nothing chosen
+## What the weapon in hand carries
+
+The same fields, with `weapon_` in front. They answer about the item in the player's main hand, not
+about their menu choice.
 
 | Placeholder | Description |
 |---|---|
+| `%exyliakilleffect_weapon_effect%` | The bound effect's id. |
+| `%exyliakilleffect_weapon_effect_name%` | Its display name. |
+| `%exyliakilleffect_weapon_effect_description%` | Its description, on one line. |
+| `%exyliakilleffect_weapon_effect_material%` | Its material. |
+| `%exyliakilleffect_weapon_effect_category%` | Its category id. |
+| `%exyliakilleffect_weapon_effect_category_name%` | Its category name. |
+| `%exyliakilleffect_weapon_effect_weapons%` | What it fits. |
+| `%exyliakilleffect_weapon_has_effect%` | `true` or `false`. |
+
+## The rest
+
+| Placeholder | Description |
+|---|---|
+| `%exyliakilleffect_visibility%` | The player's visibility mode, named as `particles.name-*` says. |
+| `%exyliakilleffect_favourites%` | How many effects they have starred. |
+| `%exyliakilleffect_favourite_<id>%` | `true` or `false` for one effect — `%exyliakilleffect_favourite_blade_storm%`. |
+
+`favorite` is accepted wherever `favourite` is.
+
+## With nothing chosen
+
+| Placeholder | Answer |
+|---|---|
 | `%exyliakilleffect_has_effect%` | `false` |
 | `%exyliakilleffect_effect_description%` | Empty |
-| `%exyliakilleffect_effect_material%` | A fallback material |
-| Everything else | Whatever `placeholders.none` says in `config.yml` — `None` by default |
+| `%exyliakilleffect_effect_material%` | `BARRIER` |
+| Everything else | Whatever `placeholders.none` says — `None` by default |
 
-That is what makes them safe to drop into a scoreboard without a fallback of their own:
+The same applies to the `weapon_` family when the weapon carries nothing, which is what makes them
+safe to drop into a scoreboard with no fallback of their own:
 
 ```yaml
 lines:
   - " {muted}❙ {letters}Effect: {highlight}%exyliakilleffect_effect_name%"
+  - " {muted}❙ {letters}Weapon: {highlight}%exyliakilleffect_weapon_effect_name%"
 ```
 
 <Callout type="tip" title="effect_material is for menus">

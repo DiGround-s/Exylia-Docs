@@ -1,0 +1,85 @@
+---
+title: "Modes and tokens"
+description: "Where the effect a kill plays comes from, and what the token and the remover do."
+---
+
+## The three modes
+
+`behaviour.mode` decides where the effect comes from:
+
+| Mode | Where it comes from | What it implies |
+|---|---|---|
+| `player` | Only what the player picked in `/killeffect`. | It follows the player and plays whatever they kill with. Tokens do nothing. |
+| `weapon` | Only what is bound to the weapon. | It is traded, dropped and lost with the weapon. The menu refuses to open and says so. |
+| `both` | The weapon's own effect, and the player's choice for a weapon carrying none. | The default. |
+
+In `both` the **weapon wins**: a bound weapon plays its own effect, and the menu choice only covers
+weapons carrying none.
+
+```yaml title="config.yml"
+behaviour:
+  mode: both
+  consume-token: true
+  consume-remover: true
+  require-permission: true
+  hide-without-permission: false
+```
+
+## The token
+
+An item that carries one effect. It is used by **dragging it onto a weapon in your own inventory**:
+pick the token up with the cursor and click it onto the weapon.
+
+| Rule | Detail |
+|---|---|
+| Weapons only | Swords, axes, tridents, maces, bows and crossbows. Anything else is ignored and the click carries on normally. |
+| One at a time | A weapon that already carries an effect is refused — take the first one off with a remover. |
+| Fitting | An effect declaring `weapons` is refused on a weapon it does not list. |
+| Permission | With `require-permission` on, the token needs the effect's own node. |
+| Consumed | `consume-token` decides whether it is spent. Off, the token is reusable. |
+
+What is written onto the weapon is **one value**: `exyliakilleffect:effect`, the effect id. Nothing
+else on the item changes.
+
+<Callout type="note" title="A token is not the item it is drawn as">
+Tokens and removers are inert: drawn as an ender pearl one cannot be thrown, drawn as food it cannot
+be eaten. Whatever it looks like, it can only be dropped onto a weapon.
+</Callout>
+
+## The remover
+
+Dragged the same way onto a bound weapon. The effect comes off and **comes back as a token** in the
+inventory of whoever removed it.
+
+| Rule | Detail |
+|---|---|
+| A free slot first | With a full inventory nothing happens at all: the weapon is only written once the token is known to fit. |
+| Unknown effects | A weapon carrying an id the file no longer declares is refused rather than turned into nothing. |
+| Consumed | `consume-remover` decides whether the remover is spent. |
+
+## The lines under a bound weapon
+
+```yaml title="config.yml"
+weapon-lore:
+  enabled: true
+  lines:
+    - "{secondary}Kill Effect:"
+    - " {letters_black}▎ {highlight}%effect%"
+```
+
+They travel **on packets only** and are never written to the item. Consequences worth knowing:
+
+- A shop, a crate or any plugin reading that weapon finds exactly the lore it had.
+- Renaming an effect updates every weapon on the server at once.
+- Turning `weapon-lore` off hides the lines without touching a single item.
+
+## Permission, and what happens when it lapses
+
+| Switch | What it does |
+|---|---|
+| `require-permission` | Whether playing an effect needs its node at all. Commands and the API are never limited by it. |
+| `hide-without-permission` | Whether an effect the player may not use is hidden in the menu instead of shown locked. |
+
+A choice the player can no longer justify is **taken off**, not quietly skipped: it is dropped on the
+next kill, on the next menu open, on join, and on `/killeffectsadmin validate`. A starred effect is
+never dropped — a shortlist is what somebody is saving up for as much as what they already have.

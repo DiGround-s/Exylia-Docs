@@ -3,44 +3,63 @@ title: "Frequently asked questions"
 description: "The questions that come up most."
 ---
 
-## The plugin does not start
-
-`ExyliaLib` and `packetevents` are both required. Without either, the server disables it by name.
-
 ## Nothing plays when a player kills
 
-Three things to check, in order:
+In order:
 
 1. **Is the victim allowed?** `effects.all-mobs` is `false` by default, so only `PLAYER`,
-   `MANNEQUIN` and `ZOMBIE` count until you add more.
-2. **Do they own the effect?** A selection they no longer have permission for is cleared instead of
-   played.
-3. **Is anyone set to see it?** A player on `NONE` sees nothing, including their own.
+   `MANNEQUIN` and `ZOMBIE` count.
+2. **Is there an effect at all?** In `mode: weapon` the menu choice is never read, and in
+   `mode: player` a bound weapon is never read.
+3. **Do they own it?** A menu choice they no longer have the node for is taken off instead of played.
+4. **Is anyone set to see it?** A player on `NONE` sees nothing, including their own.
 
-## The menu will not open
+## The menu says it is off
 
-That needs `exyliakilleffect.command.killeffect`. It is separate from owning any effect.
+`behaviour.mode` is `weapon`. On that server the menu would change nothing, so it refuses to open
+rather than pretending.
+
+## An effect I bound to a weapon vanished
+
+The weapon carries an id. If the key in `effects.yml` was renamed, that id names nothing any more and
+the effect does not play. Renaming a key is not free: it is also a different permission node.
 
 ## A player says their effect disappeared
 
-Their permission for it went away — a rank expiring, usually. The plugin clears a selection it can no
-longer justify rather than playing something the player is not entitled to.
+Their permission for it went away — a rank expiring, usually. A choice that can no longer be
+justified is taken off rather than played. The node comes back, they pick it again.
 
-## I renamed an effect and everybody lost it
+## Does losing a permission break a weapon?
 
-The id is the permission: `EMBER_BURST` is `exyliakilleffect.effect.ember_burst`. Renaming the key
-renames the node. Rename in the permission plugin at the same time, or do not rename at all.
+No. A bound weapon plays its effect for whoever holds it: the node is asked for when the token is
+bound, not on every kill. That is what makes a bound weapon worth trading.
 
-## Effects lag the server during big fights
+## Can players see each other's effects?
 
-Each kill plays a whole sequence. Look at `count:` on the particle lines and at how many lines an
-effect has — the shipped ones stay around eight for that reason. `ticks:` spreads a shape over time
-rather than sending it all in one frame.
+That is each observer's own choice: `ALL`, `NONE`, `SELF_ONLY` or `OTHERS_ONLY`, set with
+`/killeffect visibility` or from the menu.
+
+## Are the bodies real entities?
+
+No. `[NPC]` draws a display: nothing can hit it, loot it or collide with it, and it disappears when
+its `life` runs out.
+
+## Does the weapon lore get written to the item?
+
+Never. It is added to the copy that leaves the server. Any plugin reading that weapon finds the lore
+it always had, and renaming an effect updates every weapon on the server at once.
 
 ## Can I write my own effects?
 
-Yes, that is what `effects.yml` is for. The full syntax — twenty shapes and twelve other tokens — is in
-[Effects](/docs/exyliakilleffect/effects).
+Yes — that is what `effects.yml` is for. Twenty-five shapes, thirteen other tokens and the display
+parameters are in [Sequences](/docs/exyliakilleffect/sequences). A line that cannot be read is
+reported on the console and skipped; the rest of the effect still plays.
+
+## Effects lag during big fights
+
+Displays are animated by the client, so they are cheap to move — but every line is still a packet per
+viewer. Look at how many lines an effect has and at `count:` on any particle lines. `ticks:` spreads a
+shape over frames instead of sending it all at once.
 
 ## Does it work on Folia?
 

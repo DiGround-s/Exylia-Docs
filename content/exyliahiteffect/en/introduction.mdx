@@ -1,70 +1,101 @@
 ---
 title: "Introduction"
-description: "What ExyliaHitEffect is and what it ships with."
+description: "What ExyliaHitEffect is: 90 display-driven hit effects, worn by the player or bound to a weapon."
 ---
 
-ExyliaHitEffect plays a particle effect on whoever you hit, at the moment you hit them. Players pick
-theirs from a menu, and permissions decide which ones they may pick.
+ExyliaHitEffect plays an effect **on whoever was struck**, on every blow. An effect is drawn with
+**display entities** — real items and blocks that fly, turn and settle, animated by each player's own
+client rather than by the server tick. Particles are used for atmosphere around something solid, never
+as the thing itself.
 
-**80 effects across 9 categories** ship in `effects.yml`: impact, elemental, arcane, nature, premium,
-sculk, breeze, spectral and toxic.
+**90 effects in six categories** ship in `effects.yml`.
 
-## How it works
+## Built to a budget
 
-<Steps>
-  <Step title="A player opens the menu">
-    `/hiteffect` shows the categories, then the effects inside one.
-  </Step>
-  <Step title="They pick one">
-    The choice is stored in the database and survives a restart.
-  </Step>
-  <Step title="They hit something">
-    The effect plays on the victim.
-  </Step>
-</Steps>
+A kill effect plays once and can afford to be a production. A hit effect plays on every blow of every
+fight on the server, so the budget is the design:
 
-The trigger is any damage dealt by a player to a living entity. Which victims count is configurable:
-everything, or only the entity types you list.
+| Rule | Why |
+|---|---|
+| Under six tenths of a second | An effect still playing when the next hit lands is two effects on top of each other. |
+| Ten displays at the very most | Three players trading blows is thirty of them on screen at once. |
+| Quiet — volume `0.4` to `0.9` | This is a sound a player hears a thousand times an evening, not once. |
+| Small — about a block | The anchor is the victim's chest, not their feet. Anything larger reads as a kill effect that went off by mistake. |
 
-<Callout type="note" title="It plays a block up">
-The effect is anchored one block above the victim's feet, so it lands on the body rather than in the
-ground — which matters far more for a hit effect than for a kill effect, since the victim is standing
-up when it fires.
-</Callout>
+Every shipped effect is written to those numbers. Anything you add should be too.
 
-## What each effect is
+## Two ways to own an effect
 
-An effect is a **sequence** — shapes, particles, sounds and pauses played in order:
+| Way | Whose it is | Which server it suits |
+|---|---|---|
+| **The menu** | The player's: they pick one in `/hiteffect` and it plays whatever they hit with. | Practice, PvP |
+| **A weapon** | The weapon's: an effect token is dropped onto a weapon and travels with it through chests, trades and deaths. | Survival, economy |
 
-```yaml
-effects:
-  - '[BURST] CRIT;radius:1.0;count:30'
-  - '[SOUND] ENTITY_PLAYER_ATTACK_CRIT;1.0;1.4'
-  - '[DELAY] 0.1'
-  - '[PARTICLE] CRIT;count:20;offset:0.3,0.3,0.3'
-```
+`behaviour.mode` decides which is read — `player`, `weapon` or `both` — and is covered in
+[Modes and tokens](/docs/exyliahiteffect/modes-and-tokens).
 
-Everything is editable and you can write your own. The full syntax is in
-[Effects](/docs/exyliahiteffect/effects).
+## The categories
 
-## Visibility
+| Category | Icon | What is in it |
+|---|---|---|
+| `impact` | `NETHERITE_SWORD` | Steel, plate and shock. |
+| `crimson` | `REDSTONE` | Blood, bone and the red end of a fight. |
+| `ember` | `BLAZE_POWDER` | Sparks, scald and soot. |
+| `sculk` | `SCULK_SHRIEKER` | The deep dark: shriek, echo and decay. |
+| `prism` | `AMETHYST_SHARD` | Crystal, frost and light. |
+| `goofy` | `SLIME_BALL` | Jokes. Rubber ducks, pies and a sad trumpet. |
 
-Every player chooses what they see, and the choice is theirs alone:
+Fifteen effects each. The whole list is in [Effects](/docs/exyliahiteffect/effects).
+
+## Arrows carry their own answer
+
+An arrow outlives the state of the hand that fired it — a player switches to a sword while it is still
+in the air. So the effect is decided and **stamped onto the arrow as it leaves the bow**, and that is
+what plays when it lands. A projectile this plugin never saw launched still belongs to its shooter and
+falls back to whatever they are holding.
+
+## Which hits count
+
+A hit only plays an effect when the victim's type is allowed — `effects.all-mobs`, or the
+`effects.allowed-mobs` list. Cancelled hits play nothing: a blow another plugin refused does not throw
+sparks.
+
+## Visibility is the observer's
 
 | Mode | What they see |
 |---|---|
-| `ALL` | Every effect. |
+| `ALL` | Every effect, theirs and everybody else's. |
 | `NONE` | None at all. |
-| `SELF_ONLY` | Only their own. |
+| `SELF_ONLY` | Only their own hits. |
 | `OTHERS_ONLY` | Only other people's. |
 
-This matters more here than in a kill plugin: a hit effect fires on every swing, so a player who
-finds them distracting in a fight can turn them off without affecting anybody else.
+## What a weapon carries
+
+Binding writes **one value** onto the weapon — `exyliahiteffect:effect`, the effect id. The lines a
+player reads under a bound weapon are drawn on the way to the client and are never written to the item,
+so a shop, a crate or any other plugin reading that weapon finds exactly what it had.
 
 ## Requirements
 
 | Requirement | Detail |
 |---|---|
 | Server | Paper 1.21 or newer. Folia supported. |
-| Required | `ExyliaLib`, `packetevents` |
+| Required | `packetevents` |
+| Recommended | `ExyliaLib` (a soft depend: the loader installs it) |
 | Optional | `PlaceholderAPI` |
+| Database | Always. The choice, the visibility and the favourites live in one table. |
+
+<Cards>
+  <Card title="Installation" href="/docs/exyliahiteffect/installation">
+    The jars, the files it writes and the table it creates.
+  </Card>
+  <Card title="First steps" href="/docs/exyliahiteffect/first-steps">
+    From a clean server to a player with an effect on their hits.
+  </Card>
+  <Card title="Effects" href="/docs/exyliahiteffect/effects">
+    The full catalogue and how `effects.yml` is written.
+  </Card>
+  <Card title="Modes and tokens" href="/docs/exyliahiteffect/modes-and-tokens">
+    The token, the remover, and what each mode changes.
+  </Card>
+</Cards>

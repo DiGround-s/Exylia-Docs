@@ -1,0 +1,175 @@
+---
+title: "Sequences"
+description: "The step syntax: every token, every shape, and the parameters that move a display."
+---
+
+An effect is a list of **steps**, played in order. Every step is a token in brackets, then what it is
+drawn with, then parameters separated by `;`:
+
+```yaml
+- '[CIRCLE] NETHERITE_SWORD;as:item;radius:3;points:12;from:0,10,0;ease:in'
+```
+
+`(0,0,0)` is where the victim fell. Positive Y is up.
+
+## Displays or particles
+
+A shape line draws **displays** when it carries `as:`, and particles when it does not.
+
+| Written | Drawn with |
+|---|---|
+| `as:item` | An item model. |
+| `as:block` | A block model. |
+| `as:head` | A player head: a base64 texture, or `{killer}` / `{victim}` for a face. |
+| `as:text` | A line of text. |
+| *(nothing)* | The particle named at the head of the line. |
+
+```yaml
+- '[CIRCLE] FLAME;radius:2.0;points:32;color:255,80,0'      # particles
+- '[CIRCLE] DEEPSLATE;as:block;radius:3.4;points:12'         # displays
+```
+
+## Shapes
+
+Twenty-five of them, plus `DISPLAY` for a single object at the anchor:
+
+`CIRCLE` `SPHERE` `DOME` `CUBE` `LINE` `RIBBON` `SCATTER` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO`
+`STAR` `CAGE` `DISC` `VORTEX` `WAVE` `CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS`
+`ARCH` `CLAW` `DISPLAY`
+
+Each has its own parameters:
+
+| Shape | Parameters |
+|---|---|
+| `CIRCLE`, `SPHERE`, `DOME` | `radius` `points` |
+| `BEAM` | `height` `points` |
+| `SPIRAL` | `height` `radius` `turns` `points` |
+| `DOUBLE_HELIX` | `height` `radius` `turns` `points` `strands` |
+| `TORNADO` | `height` `radius` `top_radius` `turns` `points` |
+| `STAR` | `radius` `spikes` `inner` `points` |
+| `CAGE` | `radius` `height` `columns` `points` |
+| `DISC` | `radius` `rings` `points` |
+| `VORTEX` | `radius` `turns` `points` |
+| `WAVE` | `length` `amplitude` `frequency` `arms` `angle` `points` |
+| `CROSS` | `radius` `arms` `angle` `points` |
+| `GALAXY` | `radius` `turns` `arms` `points` |
+| `TORUS` | `radius` `tube` `segments` `tube_segments` |
+| `BURST` | `radius` `beams` `angle` `points` |
+| `PYRAMID` | `base` `height` `points` |
+| `RING_PULSE` | `radius` `rings` `spacing` `points` |
+| `WINGS` | `span` `arch` `depth` `dir` `points` |
+| `ARCH` | `radius` `arc` `dir` `points` |
+| `CLAW` | `radius` `claws` `spread` `curve` `dir` `drop` `points` |
+| `CUBE` | `width` `points` `edges` |
+| `LINE` | `length` `dir` `climb` `points` |
+| `RIBBON` | `radius` `points` `waves` `amplitude` |
+| `SCATTER` | `radius` `height` `points` `seed` `floor` |
+| `DISPLAY` | *(none — one object at the anchor)* |
+
+### What every shape understands
+
+`y` `scale` `color` `size` `count` `ticks` `interval` `face` `rotate`
+
+| Parameter | What it does |
+|---|---|
+| `y` | Lifts the whole shape. `SPHERE` and `TORUS` sit a block up by default; everything else at zero. |
+| `scale` | Grows or shrinks the geometry itself. |
+| `ticks` | `1` draws the whole shape in one frame; higher spreads it over time, so a spiral looks drawn rather than dropped. |
+| `interval` | Seconds between those frames. Defaults to `0.05`. |
+| `rotate` | Turns the whole shape, in degrees. |
+| `face` | Turns it to face whoever caused the kill. |
+| `color`, `size`, `count` | Particle lines only: `DUST` takes `color:255,80,0`, `size` is the dot, `count` the particles per point. |
+
+## Moving a display
+
+Everything below works on any shape drawn with `as:`.
+
+| Parameter | What it does |
+|---|---|
+| `life` | Seconds it exists. |
+| `from:x,y,z` | Where it starts, relative to its point. |
+| `to:x,y,z` | Where it ends. `rise:` is shorthand for a vertical `to`. |
+| `ease` | `in`, `out` or `in_out`. `ease:in` aims a slam. |
+| `gravity` | Debris only. It is **added** to the movement rather than replacing it. |
+| `spin` | Turns, or `x,y,z` to tumble. `axis` picks the one axis. |
+| `orbit` | Turns carried around the anchor. |
+| `pull` | `1` reaches the centre; a negative number throws it outwards. |
+| `size` | One number, or `x,y,z` for a plate, a pillar or a blade. |
+| `size_to` | The size it ends at. |
+| `vary` | How much individual pieces differ from one another. |
+| `roll`, `tilt`, `turn` | Fixed rotation in degrees. |
+| `face_out` | Faces away from the centre. |
+| `glow` | An outline colour. |
+| `light` | `0` to `15`. Use `light:15` for anything that must read at night. |
+| `model`, `billboard`, `hold` | The display's own model, billboard mode and how long it is held. |
+
+<Callout type="warning" title="Three rules that save an afternoon">
+`ease:in` aims a slam and `ease:out` settles one. `gravity:` adds to a movement that already
+descends, so a fall of eight blocks plus gravity goes through the floor — half of gravity times the
+life squared is how far it drops. And `roll:` aims a blade, not `tilt:`: an item model is a flat plate
+facing south with its tip up and to the right, so `roll:135` points it down.
+</Callout>
+
+## Repeating a line
+
+`repeat` `every` `turn_each` work on **any** step — a sound, a shape, a ring of blades:
+
+```yaml
+- '[CIRCLE] NETHERITE_SWORD;as:item;radius:2;points:6;repeat:3;every:0.2;turn_each:15'
+```
+
+| Parameter | What it does |
+|---|---|
+| `repeat` | How many times the line plays. |
+| `every` | Seconds between plays. Defaults to `0.15`. |
+| `turn_each` | Degrees added each time, so the copies fan out. |
+
+## The other tokens
+
+| Token | Parameters |
+|---|---|
+| `[DELAY] 0.15` | Seconds to wait before the next line. |
+| `[PARTICLE] FLAME` | `count` `speed` `y` `color` `size` `offset:x,y,z` `block` |
+| `[SOUND] NAME;volume;pitch` | Also `volume:` `pitch:` |
+| `[LIGHTNING]` | `volume:` `pitch:` — flash, sparks and thunder. No strike, no fire, no damage. |
+| `[EXPLOSION]` | `count:` `y:` |
+| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
+| `[BLOCK_BREAK] STONE` | `count:` `y:` `offset:` |
+| `[POTION] speed;100;1` | Also `duration:` `amplifier:` |
+| `[TITLE] title;subtitle;in;stay;out` | Times in seconds. |
+| `[ACTION_BAR] text` | |
+| `[MESSAGE] text` | A chat line. |
+| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
+| `[NPC] {victim}` | The body, below. |
+
+## `[NPC]` — the body
+
+```yaml
+- '[NPC] {victim};pose:lying;life:2.2;equip:true;face:false'
+```
+
+| Parameter | What it does |
+|---|---|
+| *(the head)* | `{victim}`, `{killer}`, or a base64 texture. A player **name** is refused: it would need a lookup an effect cannot wait for. |
+| `pose` | `lying` by default. `pose_to` with `after` collapses into a second pose. |
+| `life` | Seconds it stays. Defaults to `5`. |
+| `equip` | Whether it wears what the victim wore. On by default. |
+| `face` | Whether it turns to face. On by default. |
+| `from`, `to`, `over`, `ease`, `gravity`, `turn` | How it is thrown or how it falls. `over` defaults to `0.7` seconds. |
+| `glow` | An outline colour. |
+| `hurt` | Plays the damage flash. |
+| `y` | Lifts it. |
+
+It is a display, not an entity: nothing can hit it, loot it or walk into it.
+
+## When a line is wrong
+
+A step that cannot be read is dropped and reported to the console with the line that caused it — an
+unknown token, a particle that does not exist, a shape that produced no points, a parameter the token
+does not understand. The rest of the effect still plays, so one typo costs one line rather than the
+whole catalogue.
+
+<Callout type="tip" title="Cost is per line, per kill">
+A display is cheap to animate — the client does it — but every line is still a packet per viewer.
+The shipped effects sit around ten to fifteen lines; that is a deliberate ceiling.
+</Callout>

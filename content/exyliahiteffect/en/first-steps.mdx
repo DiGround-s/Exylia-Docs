@@ -1,0 +1,64 @@
+---
+title: "First steps"
+description: "From a clean server to a player with an effect on their hits."
+---
+
+## The menu path
+
+<Steps>
+  <Step title="Let players open the menu">
+    ```text
+    /lp group default permission set exyliahiteffect.command.hiteffect true
+    ```
+    Without this the catalogue cannot be opened at all — and a player who cannot see it cannot want
+    anything in it.
+  </Step>
+  <Step title="Sell a category">
+    ```text
+    /lp group vip permission set exyliahiteffect.category.impact true
+    ```
+    Fifteen effects, one node.
+  </Step>
+  <Step title="Open it">
+    `/hiteffect`. The tabs are down the left, the effects beside them, and the first tab is the
+    player's own favourites.
+  </Step>
+  <Step title="Pick one and hit something">
+    Left click wears it. The effect plays on the body of whatever they hit — as long as its type is
+    allowed.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="Only three victims count by default">
+`effects.all-mobs` is `false` and `effects.allowed-mobs` lists `PLAYER`, `MANNEQUIN` and `ZOMBIE`.
+Hitting a cow plays nothing, and that is the setting, not a bug.
+</Callout>
+
+## The weapon path
+
+<Steps>
+  <Step title="Give a token">
+    ```text
+    /hiteffectsadmin give <player> crit_spark 1
+    ```
+  </Step>
+  <Step title="Drop it onto a weapon">
+    Pick the token up with the cursor and click it onto a weapon **in your own inventory**. The
+    weapon keeps everything it had; one value is written onto it.
+  </Step>
+  <Step title="Take it off again">
+    ```text
+    /hiteffectsadmin remover <player>
+    ```
+    The remover unbinds the effect and hands the token back, so nothing is destroyed.
+  </Step>
+</Steps>
+
+## Checking it works
+
+| Question | How to answer it |
+|---|---|
+| Is the effect there? | `/hiteffect preview <id>` — it plays against an empty sky. |
+| Does the weapon carry one? | Its line is drawn under the weapon's own lore. |
+| Did a permission take? | `/hiteffectsadmin validate <player>` takes off what they may no longer use, now. |
+| Did the file load? | `/hiteffectsadmin list` prints every effect the catalogue declares. |

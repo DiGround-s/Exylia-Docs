@@ -1,20 +1,21 @@
 ---
 title: "Instalación"
-description: "Dependencias, archivos que escribe, y los ajustes de config.yml."
+description: "Los jars, los cuatro archivos que escribe y la tabla que crea."
 ---
 
 ## Instalar
 
 <Steps>
-  <Step title="Coloca los jars">
-    `ExyliaKillEffect.jar`, más `ExyliaLib` y `packetevents`, en `plugins/`.
+  <Step title="Suelta los jars">
+    `ExyliaKillEffect.jar` y `packetevents` en `plugins/`. `ExyliaLib` es depend suave — el loader la
+    instala en el primer arranque si no está.
   </Step>
   <Step title="Arranca el servidor">
-    Escribe `config.yml`, `effects.yml` y `menus/main.yml`, y crea su tabla.
+    Escribe `config.yml`, `effects.yml`, `menus/effects.yml` y `database.yml`, y crea su tabla.
   </Step>
   <Step title="Da los permisos">
-    Nada es usable hasta que los jugadores puedan abrir el menú y tengan al menos un efecto. Ver
-    [Comandos y permisos](/docs/exyliakilleffect/comandos).
+    Nada sirve hasta que los jugadores puedan abrir el menú y tengan al menos un efecto. Ver
+    [Permisos](/docs/exyliakilleffect/permisos).
   </Step>
 </Steps>
 
@@ -22,50 +23,38 @@ description: "Dependencias, archivos que escribe, y los ajustes de config.yml."
 
 | Archivo | Contenido |
 |---|---|
-| `config.yml` | Qué bajas cuentan, la visibilidad por defecto, y los nombres de los modos. |
-| `effects.yml` | Las 14 categorías y los 144 efectos. |
-| `menus/main.yml` | El diseño del menú, editable como cualquier menú de ExyliaLib. |
-| `database.yml` | Dónde se guardan las selecciones. H2 por defecto. |
+| `config.yml` | Comportamiento, la ficha y el removedor, las líneas del arma, textos del menú, feedback, visibilidad y todos los mensajes. |
+| `effects.yml` | Las seis categorías y los 120 efectos. Escrito a mano, sin esquema: tus comentarios y tu formato sobreviven a un reload. |
+| `menus/effects.yml` | La pantalla: pestañas, rejilla, plantillas y botones. |
+| `database.yml` | Dónde se guardan las elecciones. H2 por defecto. |
 
-Las selecciones viven en la tabla `killeffect_players`: el efecto elegido y el modo de visibilidad, por
-jugador.
-
-## config.yml
-
-```yaml
-placeholders:
-  none: "None"
-
-effects:
-  all-mobs: false
-  allowed-mobs:
-    - PLAYER
-    - MANNEQUIN
-    - ZOMBIE
-
-particles:
-  default-visibility: "ALL"
-  name-all: "All"
-  name-none: "None"
-  name-self-only: "Self Only"
-  name-others-only: "Others Only"
-```
-
-| Clave | Por defecto | Qué hace |
-|---|---|---|
-| `placeholders.none` | `None` | Lo que muestran los placeholders cuando no hay efecto elegido. |
-| `effects.all-mobs` | `false` | `true` lanza el efecto con cualquier baja. `false` lo limita a la lista. |
-| `effects.allowed-mobs` | `PLAYER`, `MANNEQUIN`, `ZOMBIE` | Tipos de entidad cuya muerte lanza un efecto. |
-| `particles.default-visibility` | `ALL` | Con qué empieza un jugador: `ALL`, `NONE`, `SELF_ONLY`, `OTHERS_ONLY`. |
-| `particles.name-*` | ver arriba | Cómo se llama cada modo en menús y placeholders. |
-
-<Callout type="tip" title="all-mobs en un servidor de farmeo">
-`all-mobs: true` significa que cada zombie de una granja dispara una secuencia entera. La lista por
-defecto existe porque un efecto de muerte suele ser para PvP: mantenla limitada salvo que quieras
-partículas en cada muerte de mob.
+<Callout type="note" title="effects.yml es tuyo">
+`config.yml` se escribe desde un esquema, así que una clave desconocida se descarta y los comentarios
+se regeneran. `effects.yml` no: es un catálogo que cura el dueño del servidor y se lee tal como está
+escrito.
 </Callout>
+
+## La tabla
+
+`killeffect_players`, una fila por jugador:
+
+| Columna | Qué guarda |
+|---|---|
+| `uuid` | El jugador. |
+| `name` | Su último nombre conocido. |
+| `killEffect` | El efecto que eligió, o vacío. |
+| `particleVisibility` | `ALL`, `NONE`, `SELF_ONLY` u `OTHERS_ONLY`. |
+| `favourites` | Los efectos marcados, separados por comas, en su propio orden. |
+| `created_at` / `updated_at` | Cuándo se creó la fila y cuándo se escribió por última vez. |
+
+Los ids se guardan en minúscula y se leen sin importar mayúsculas, así que una fila escrita por una
+versión antigua — que los guardaba en mayúscula — sigue resolviendo.
+
+Un id marcado que el catálogo ya no declara **se conserva** en la columna y se descarta al dibujarlo,
+así que una errata en un reload no vacía la lista de nadie.
 
 ## Actualizar
 
-Reemplaza el jar y reinicia. `/killeffect reload` relee los archivos de este plugin sin tocar el resto
-del servidor.
+Reemplaza el jar y reinicia. `/killeffectsadmin reload` relee `config.yml`, `effects.yml` y el menú
+sin tocar el resto del servidor — a propósito no recarga la librería, que es para lo que está
+`/exylialib reload`.

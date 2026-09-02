@@ -1,70 +1,102 @@
 ---
 title: "Introducción"
-description: "Qué es ExyliaHitEffect y con qué viene."
+description: "Qué es ExyliaHitEffect: 90 efectos de golpe hechos con display entities, del jugador o atados a un arma."
 ---
 
-ExyliaHitEffect lanza un efecto de partículas sobre a quien golpeas, en el momento del impacto. Los
-jugadores eligen el suyo desde un menú, y los permisos deciden cuáles pueden elegir.
+ExyliaHitEffect lanza un efecto **sobre quien recibe el golpe**, en cada impacto. El efecto se dibuja
+con **display entities** — objetos y bloques reales que vuelan, giran y se asientan, animados por el
+cliente de cada jugador y no por el tick del servidor. Las partículas son ambiente alrededor de algo
+sólido, nunca la cosa en sí.
 
-Vienen **80 efectos en 9 categorías** en `effects.yml`: impact, elemental, arcane, nature, premium,
-sculk, breeze, spectral y toxic.
+Vienen **90 efectos en seis categorías** en `effects.yml`.
 
-## Cómo funciona
+## Hecho con un presupuesto
 
-<Steps>
-  <Step title="Un jugador abre el menú">
-    `/hiteffect` muestra las categorías, y dentro de una, sus efectos.
-  </Step>
-  <Step title="Elige uno">
-    La elección se guarda en la base de datos y sobrevive a un reinicio.
-  </Step>
-  <Step title="Golpea algo">
-    El efecto se lanza sobre la víctima.
-  </Step>
-</Steps>
+Un efecto de muerte suena una vez y puede permitirse ser una producción. Un efecto de golpe suena en
+cada impacto de cada pelea del servidor, así que el presupuesto es el diseño:
 
-El disparador es cualquier daño hecho por un jugador a una entidad viva. Qué víctimas cuentan es
-configurable: todas, o solo los tipos de entidad que listes.
+| Regla | Por qué |
+|---|---|
+| Menos de seis décimas de segundo | Un efecto que sigue sonando cuando llega el siguiente golpe son dos efectos encimados. |
+| Diez displays como mucho | Tres jugadores intercambiando golpes son treinta en pantalla a la vez. |
+| Bajo — volumen de `0.4` a `0.9` | Es un sonido que un jugador oye mil veces en una tarde, no una. |
+| Pequeño — como un bloque | El ancla es el pecho de la víctima, no sus pies. Más grande se lee como un efecto de muerte disparado por error. |
 
-<Callout type="note" title="Se lanza un bloque más arriba">
-El efecto se ancla un bloque por encima de los pies de la víctima, para que caiga sobre el cuerpo y no
-en el suelo — algo que importa mucho más en un efecto de golpe que en uno de muerte, porque la víctima
-sigue de pie cuando salta.
-</Callout>
+Todos los efectos de fábrica están escritos con esos números. Lo que añadas debería estarlo también.
 
-## Qué es cada efecto
+## Dos formas de tener un efecto
 
-Un efecto es una **secuencia** — formas, partículas, sonidos y pausas en orden:
+| Forma | De quién es | Para qué servidor |
+|---|---|---|
+| **El menú** | Del jugador: elige uno en `/hiteffect` y suena con lo que golpee. | Práctica, PvP |
+| **Un arma** | Del arma: se arrastra una ficha de efecto sobre ella y viaja con el arma por cofres, intercambios y muertes. | Survival, economía |
 
-```yaml
-effects:
-  - '[BURST] CRIT;radius:1.0;count:30'
-  - '[SOUND] ENTITY_PLAYER_ATTACK_CRIT;1.0;1.4'
-  - '[DELAY] 0.1'
-  - '[PARTICLE] CRIT;count:20;offset:0.3,0.3,0.3'
-```
+`behaviour.mode` decide cuál se lee — `player`, `weapon` o `both` — y está en
+[Modos y fichas](/docs/exyliahiteffect/modos-y-fichas).
 
-Todo es editable y puedes escribir los tuyos. La sintaxis completa está en
-[Efectos](/docs/exyliahiteffect/efectos).
+## Las categorías
 
-## Visibilidad
+| Categoría | Icono | Qué hay dentro |
+|---|---|---|
+| `impact` | `NETHERITE_SWORD` | Acero, placa y choque. |
+| `crimson` | `REDSTONE` | Sangre, hueso y el lado rojo de una pelea. |
+| `ember` | `BLAZE_POWDER` | Chispas, quemadura y hollín. |
+| `sculk` | `SCULK_SHRIEKER` | La oscuridad profunda: chillido, eco y podredumbre. |
+| `prism` | `AMETHYST_SHARD` | Cristal, escarcha y luz. |
+| `goofy` | `SLIME_BALL` | Bromas. Patos de goma, tartas y una trompeta triste. |
 
-Cada jugador elige qué ve, y la elección es solo suya:
+Quince efectos cada una. La lista completa está en [Efectos](/docs/exyliahiteffect/efectos).
+
+## Las flechas llevan su propia respuesta
+
+Una flecha sobrevive al estado de la mano que la disparó — el jugador cambia a una espada mientras
+sigue en el aire. Por eso el efecto se decide y se **estampa en la flecha al salir del arco**, y eso
+es lo que suena al impactar. Un proyectil que este plugin nunca vio salir sigue siendo de quien lo
+disparó y cae de vuelta a lo que tenga en la mano.
+
+## Qué golpes cuentan
+
+Un golpe solo lanza efecto cuando el tipo de la víctima está permitido — `effects.all-mobs`, o la
+lista `effects.allowed-mobs`. Los golpes cancelados no lanzan nada: un impacto que otro plugin rechazó
+no suelta chispas.
+
+## La visibilidad es de quien mira
 
 | Modo | Qué ve |
 |---|---|
-| `ALL` | Todos los efectos. |
+| `ALL` | Todos los efectos, los suyos y los de los demás. |
 | `NONE` | Ninguno. |
-| `SELF_ONLY` | Solo los suyos. |
+| `SELF_ONLY` | Solo los de sus propios golpes. |
 | `OTHERS_ONLY` | Solo los de los demás. |
 
-Aquí importa más que en un plugin de muertes: un efecto de golpe salta en cada impacto, así que quien
-los encuentre molestos en una pelea puede apagarlos sin afectar a nadie.
+## Qué lleva un arma
+
+Atar un efecto escribe **un valor** en el arma: `exyliahiteffect:effect`, el id del efecto. Las líneas
+que se leen bajo un arma atada se dibujan en el camino al cliente y nunca se escriben en el objeto,
+así que una tienda, una caja o cualquier otro plugin que lea esa arma encuentra exactamente lo que
+tenía.
 
 ## Requisitos
 
 | Requisito | Detalle |
 |---|---|
 | Servidor | Paper 1.21 o superior. Folia soportado. |
-| Obligatorios | `ExyliaLib`, `packetevents` |
+| Obligatorio | `packetevents` |
+| Recomendado | `ExyliaLib` (depend suave: el loader la instala) |
 | Opcional | `PlaceholderAPI` |
+| Base de datos | Siempre. La elección, la visibilidad y los favoritos viven en una tabla. |
+
+<Cards>
+  <Card title="Instalación" href="/docs/exyliahiteffect/instalacion">
+    Los jars, los archivos que escribe y la tabla que crea.
+  </Card>
+  <Card title="Primeros pasos" href="/docs/exyliahiteffect/primeros-pasos">
+    De un servidor limpio a un jugador con efecto en sus golpes.
+  </Card>
+  <Card title="Efectos" href="/docs/exyliahiteffect/efectos">
+    El catálogo completo y cómo se escribe `effects.yml`.
+  </Card>
+  <Card title="Modos y fichas" href="/docs/exyliahiteffect/modos-y-fichas">
+    La ficha, el removedor y qué cambia cada modo.
+  </Card>
+</Cards>
