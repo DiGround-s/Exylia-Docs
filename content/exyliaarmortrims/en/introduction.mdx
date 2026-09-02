@@ -1,51 +1,75 @@
 ---
 title: "Introduction"
-description: "What ExyliaArmorTrims is and what it ships with."
+description: "What ExyliaArmorTrims is: named presets and free combinations, chosen on one screen or carried as an item, drawn with packets."
 ---
 
-ExyliaArmorTrims lets a player put armour trims on their gear from a menu, with no smithing table and
-no templates consumed. The choice is cosmetic, stored per player and per armour piece, and reapplied
-automatically whenever they equip armour.
+ExyliaArmorTrims puts a **trim** on a piece of armor. A trim is a pattern and a material, and it is
+drawn on the way to the client: the chestplate is still exactly the same chestplate on the server, and
+everybody sees it engraved.
 
-**18 patterns and 11 materials**, which is every vanilla combination — 198 looks per piece.
+The armor is never converted or rebuilt. The visual is a copy of the real item with **one component
+added** — the trim — so material, name, enchantments, attributes, durability, custom model data and
+any other plugin's data stay exactly where they were. The item the server holds never carries a trim.
+
+## Two ways to wear a trim
+
+| Way | Whose it is | Which server it suits |
+|---|---|---|
+| **Item** | The armor's: one value is written onto the item and travels with it through chests, trades and deaths. | Survival, economy |
+| **Menu** | The player's: stored per player and per piece, and it lands on whatever they equip. | Practice, PvP |
+
+`behaviour.mode` decides which is used — `item`, `menu` or `both` — and is covered in
+[Modes and items](/docs/exyliaarmortrims/modes-and-items).
+
+## Presets and combinations
 
 | | |
 |---|---|
-| Patterns | Sentry, Dune, Coast, Wild, Ward, Eye, Vex, Tide, Snout, Rib, Spire, Wayfinder, Shaper, Silence, Raiser, Host, Flow, Bolt |
-| Materials | Quartz, Iron, Netherite, Redstone, Copper, Gold, Emerald, Diamond, Lapis, Amethyst, Resin |
+| **Presets** | Combinations with a name of their own, defined in `trims.yml`. Eighteen ship — SHOGUN, POLTERGEIST, VERDANT… — each with an id, a name and **one permission**. |
+| **Custom** | Any pattern with any material, built by the player on the CUSTOM tab. It has no id: it is permitted by its two halves plus the tab's own node. |
 
-## How it works
+`trims.yml` ships 18 patterns and 11 materials — 198 combinations — but the list is **yours**: a
+pattern the file does not list is not offered, and every one you keep can be renamed and drawn with
+any icon.
 
-<Steps>
-  <Step title="A player opens the menu">
-    `/armortrim` opens the main screen, which leads to a pattern menu and a material menu.
-  </Step>
-  <Step title="They pick per piece">
-    Helmet, chestplate, leggings and boots are chosen separately — a gold-trimmed helmet over
-    diamond-trimmed boots is a valid combination.
-  </Step>
-  <Step title="They equip armour">
-    The trim is applied to whatever they are wearing, every time armour changes.
-  </Step>
-</Steps>
+## What the client sees
 
-<Callout type="note" title="The selection outlives the armour">
-The trim is stored against the player, not against the item. Dying and getting fresh armour, or
-switching sets between matches, reapplies it — which is what makes it a cosmetic rank perk rather than
-a one-time item edit.
-</Callout>
+| Viewer | Sees |
+|---|---|
+| Anyone tracking the wearer | The armor with its trim |
+| The wearer, in their inventory and on their doll | The same |
+| The wearer **in creative** | The real armor — a creative client sends its slots back to the server, so it has to be shown the truth |
+| Anyone looking at a trimmed piece in a chest, the hotbar or on the cursor | The real item, with the trim and the `armor-lore` lines added |
+| Anyone looking at an **elytra** | The elytra. It sits in the chest slot but is not armor, and dressing it as a chestplate would cost the wearer their flight |
+| Everyone, once the wearer no longer holds the permission | Bare armor, while `hide-without-permission` is on. The value stays stored and the look returns with the node |
 
 ## What it costs the player
 
-Nothing in game. No smithing table, no template, no material consumed. What limits it is permissions:
-which patterns and materials a player may choose, optionally down to the individual armour piece.
-
-That is what makes it sellable — see [Commands and permissions](/docs/exyliaarmortrims/commands).
+Nothing in game: no smithing table, no template, no material spent. What limits it is permissions —
+see [Permissions](/docs/exyliaarmortrims/permissions) — and, if you sell trim items, whatever getting
+one costs.
 
 ## Requirements
 
 | Requirement | Detail |
 |---|---|
 | Server | Paper 1.21 or newer. Folia supported. |
-| Required | `ExyliaLib`, `packetevents` |
+| Required | `packetevents` |
+| Recommended | `ExyliaLib` (a soft depend: the loader installs it) |
 | Optional | `PlaceholderAPI` |
+| Database | Only while the menu is on (`mode: menu` or `both`) |
+
+<Cards>
+  <Card title="Installation" href="/docs/exyliaarmortrims/installation">
+    The jars, the files it writes and the table it creates.
+  </Card>
+  <Card title="First steps" href="/docs/exyliaarmortrims/first-steps">
+    From a clean server to a player wearing a trim.
+  </Card>
+  <Card title="Trims" href="/docs/exyliaarmortrims/trims">
+    Presets, patterns and materials, and how `trims.yml` is written.
+  </Card>
+  <Card title="Modes and items" href="/docs/exyliaarmortrims/modes-and-items">
+    The trim item, the remover, and what each mode changes.
+  </Card>
+</Cards>

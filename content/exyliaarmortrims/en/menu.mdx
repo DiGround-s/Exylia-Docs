@@ -1,0 +1,122 @@
+---
+title: "The menu"
+description: "One screen: armor along the top, three faces in the grid, all of it editable in menus/trims.yml."
+---
+
+`/armortrim` opens a single window. What is being engraved sits along the top; what can go on it sits
+below. Nothing is reopened between steps, so the armor never moves and a half-built choice is never
+lost.
+
+## The two lists
+
+| Section | Default slots | What it holds |
+|---|---|---|
+| `targets` | `2,3,4,5,6` | FULL SET and the four pieces. The marked row is what is being engraved. |
+| `grid` | `10-16,19-25,28-34,37-43` | What can go on it: presets, patterns or materials, depending on the tab. |
+
+The grid has **three faces and one section**, because a slot belongs to one list. The tab swaps what
+it holds:
+
+<Steps>
+  <Step title="PRESETS">
+    Every preset from `trims.yml`, each under its own name.
+  </Step>
+  <Step title="CUSTOM → patterns">
+    The tab always lands on the patterns, never on the materials of a pattern chosen minutes ago:
+    switching tabs is how a player starts over.
+  </Step>
+  <Step title="CUSTOM → materials">
+    Once the pattern is picked, the grid moves to the materials, already previewed with that pattern.
+  </Step>
+</Steps>
+
+Presets and materials are drawn **on the armor the player is really wearing**: a netherite chestplate
+previews the trim on netherite. The **patterns** are drawn as their own smithing template instead —
+at that point no material has been picked, and the same shape on a helmet the size of an inventory
+icon is one picture eighteen times over. Swap `%entry_icon%` back to `%preview_material%`, with an
+`armor_trim` block, to preview them on armor too.
+
+## Fixed buttons
+
+| Button | Slot | What it does |
+|---|---|---|
+| PRESETS | `0` | Opens the presets face. |
+| CUSTOM | `8` | Opens the patterns. With `require-permission` on it needs `exyliaarmortrims.custom`. |
+| BARE EVERYTHING | `45` | Takes the trim off all four pieces. |
+| CLOSE | `49` | Closes. |
+| Previous / next | `48` / `50` | Grid pagination. |
+
+The two tabs are **one button each**, not two drawings of the same slot: each shows
+`%presets_status%` or `%custom_status%`, which come from `menu.tab-open` and `menu.tab-closed` in
+`config.yml`.
+
+## What a click does
+
+| Where | Click | Result |
+|---|---|---|
+| A piece along the top | Left | Engraves that piece from now on. |
+| A piece along the top | Right | Takes its trim off. |
+| A row in the grid | Left | Puts that trim on, or takes it off when it was already the one worn. |
+
+Wearing something on FULL SET engraves **only what the player may wear**: a rank holding one piece of
+a preset gets that piece rather than a flat refusal.
+
+## Templates
+
+The first template of a list is what a row in no particular state uses, so `item_template` goes first.
+
+| List | Templates |
+|---|---|
+| `targets` | `item_template`, `focused_template`, `set_template`, `focused_set_template` |
+| `grid` · presets | `preset_template`, `preset_selected_template`, `preset_unsupported_template`, `preset_locked_template` |
+| `grid` · patterns | `pattern_template`, `pattern_selected_template`, `pattern_locked_template` |
+| `grid` · materials | `material_template`, `material_selected_template`, `material_locked_template` |
+
+`unsupported` is a preset that does not fit the focused piece; `locked` is one the player may not use.
+A locked entry **looks locked** rather than simply not being there.
+
+## Placeholders in the file
+
+| Where | Available |
+|---|---|
+| `targets` | `%target%`, `%target_name%`, `%piece%`, `%piece_material%`, `%trim_name%`, `%trim_pattern%`, `%trim_material%`, `%engraved%`, `%pieces%` |
+| `grid` | `%entry_id%`, `%entry_name%`, `%entry_icon%`, `%preview_material%`, `%trim_pattern%`, `%trim_material%`, `%entry_worn%`, `%entry_worn_name%`, plus `%entry_pieces%` on presets |
+| Anywhere | `%tab%`, `%target%`, `%target_name%`, `%pattern%`, `%pattern_name%` |
+
+## Actions
+
+Six verbs, in the `armortrim` namespace:
+
+| Action | What it does |
+|---|---|
+| `armortrim:open` | Opens the menu. |
+| `armortrim:focus <piece\|set>` | Changes what is being engraved. |
+| `armortrim:tab <presets\|custom>` | Swaps the face of the grid. |
+| `armortrim:pattern <id>` | Takes the first half and moves to the materials. |
+| `armortrim:wear <id\|pattern/material>` | Puts that trim on, or takes it off. |
+| `armortrim:clear <piece\|set>` | Takes the trim off one piece or all of them. |
+
+Each acts on the window the click came from, so a player with the menu open twice cannot move the
+wrong one.
+
+## Wording
+
+The few strings a template cannot spell out slot by slot live in `config.yml`:
+
+```yaml title="config.yml"
+menu:
+  full-set: "{primary}&lFULL SET"
+  helmet: "{primary}&lHELMET"
+  chestplate: "{primary}&lCHESTPLATE"
+  leggings: "{primary}&lLEGGINGS"
+  boots: "{primary}&lBOOTS"
+  empty: "{muted}Nothing"
+  custom-name: "{primary}&l%pattern% {letters_black}» {secondary}&l%material%"
+  tab-open: "{success}✔ You are here"
+  tab-closed: "{warning}➥ Click to open"
+```
+
+<Callout type="note" title="No menu, no screen">
+With `mode: item` the menu does not exist: `/armortrim` answers with `menu-disabled` and nothing
+opens.
+</Callout>

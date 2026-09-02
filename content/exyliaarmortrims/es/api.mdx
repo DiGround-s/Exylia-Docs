@@ -1,0 +1,113 @@
+---
+title: "API"
+description: "ArmorTrimAPI: registrar presets, crear objetos, engrabar armadura, cambiar la elección de un jugador y redibujarlo."
+---
+
+Todo está en una clase, `net.exylia.exyliaArmorTrims.api.ArmorTrimAPI`.
+
+```java
+import net.exylia.exyliaArmorTrims.api.ArmorTrimAPI;
+
+ArmorTrimAPI api = ArmorTrimAPI.get();
+```
+
+`get()` lanza `IllegalStateException` mientras el plugin no está activo, así que añade
+`softdepend: [ExyliaArmorTrims]` a tu `plugin.yml` y llámalo desde `onEnable` o después.
+
+## Registrar trims
+
+```java
+import net.exylia.exyliaArmorTrims.trim.TrimDefinition;
+import net.exylia.exyliaArmorTrims.trim.TrimLook;
+
+api.register(TrimDefinition.preset(
+        "ruby",                              // id: permiso y valor guardado
+        "{error}&lRUBY",                     // nombre
+        java.util.Set.of(),                  // piezas: vacío son las cuatro
+        new TrimLook("rib", "redstone"),     // patrón y material
+        null));                              // icono, o null para el de config.yml
+```
+
+| Método | Devuelve | Qué hace |
+|---|---|---|
+| `register(TrimDefinition)` | — | Añade o reemplaza un preset. Sobrevive a un reload. |
+| `unregister(String id)` | `boolean` | Quita uno, venga del código o del archivo. |
+| `trim(String stored)` | `Optional<TrimDefinition>` | Resuelve un id de preset o una pareja `patrón/material`. |
+| `exists(String id)` | `boolean` | Si un id resuelve. |
+| `registry()` | `TrimRegistry` | El registro: `presets()`, `ids()`, `patterns()`, `materials()`, `onChange(listener)`. |
+
+<Callout type="note" title="Código y archivo conviven">
+Una recarga reemplaza solo las entradas que venían de `trims.yml`. Un preset registrado aquí se queda
+hasta que se desregistre o pare el servidor, y `/armortrimsadmin list` lo muestra como a cualquier
+otro.
+</Callout>
+
+## Objetos
+
+| Método | Devuelve | Qué hace |
+|---|---|---|
+| `trimItem(String stored, Player viewer)` | `Optional<ItemStack>` | El objeto de trim de ese trim, dibujado para ese jugador. |
+| `remover(Player viewer)` | `ItemStack` | Un removedor. |
+| `isTrimItem(ItemStack)` | `boolean` | Si un stack es un objeto de trim. |
+| `isRemover(ItemStack)` | `boolean` | Si es un removedor. |
+| `trimId(ItemStack)` | `Optional<String>` | El trim que lleva un objeto de trim, o el que lleva una armadura. |
+| `hasTrim(ItemStack armor)` | `boolean` | Si una pieza lleva trim. |
+
+## Engrabar armadura
+
+```java
+ApplyResult result = api.apply(chestplate, "ruby");
+if (result.success()) { /* ... */ }
+```
+
+| Método | Devuelve | Qué hace |
+|---|---|---|
+| `apply(ItemStack armor, String stored)` | `ApplyResult` | Escribe el trim en la armadura. |
+| `apply(ItemStack armor, ItemStack trimItem)` | `ApplyResult` | Lo mismo, tomando el trim de un objeto. El objeto no se gasta. |
+| `remove(ItemStack armor, Player receiver)` | `ApplyResult` | Lo quita y se lo devuelve al jugador como objeto. |
+| `strip(ItemStack armor)` | `ApplyResult` | Lo quita y no devuelve nada. |
+
+Ninguna comprueba permisos: eso es cosa de quien llame. Todas comprueban antes de escribir, así que
+una llamada que falla deja los dos objetos exactamente como estaban.
+
+### ApplyResult
+
+| Valor | Qué significa |
+|---|---|
+| `APPLIED` · `REMOVED` | Salió bien. `success()` devuelve `true`. |
+| `NOT_ARMOR` | No era una pieza de armadura. |
+| `UNSUPPORTED_PIECE` | El preset no entra en esa pieza. |
+| `UNKNOWN_TRIM` | El valor no resuelve a ningún trim. |
+| `INVALID_ITEM` | El objeto no era un objeto de trim. |
+| `ALREADY_TRIMMED` | La pieza ya llevaba trim. |
+| `NO_TRIM` | No había nada que quitar. |
+| `INVENTORY_FULL` | No cabía el objeto devuelto. |
+| `NO_PERMISSION` | El jugador no puede usar ese trim. |
+
+## La elección del jugador
+
+Existe solo cuando el modo usa el menú; con `mode: item`, `selections()` devuelve `null`.
+
+| Método | Devuelve | Qué hace |
+|---|---|---|
+| `selections()` | `TrimSelections` | La capa por jugador, o `null`. |
+| `wear(Player, ArmorPiece, String stored)` | `ApplyResult` | Pone el trim, o lo quita si ya estaba. `null` en la pieza son todas las que admita. |
+| `bare(Player, ArmorPiece)` | `ApplyResult` | Quita la elección de una pieza, o de todas con `null`. |
+| `chosen(Player, ArmorPiece)` | `Optional<String>` | Lo que eligió para esa ranura, lleve lo que lleve. |
+
+`wear` sí respeta permisos, porque es la misma puerta que usa el menú.
+
+## Redibujar
+
+| Método | Qué hace |
+|---|---|
+| `refresh(Player)` | Recalcula su aspecto y lo reenvía a todo el que lo vea. |
+| `refreshAll()` | Lo mismo para todos los conectados. |
+
+Útil tras cambiar permisos desde código: el aspecto se recalcula al equiparse armadura, y esto lo
+fuerza sin esperar.
+
+## Piezas
+
+`ArmorPiece` es `HELMET`, `CHESTPLATE`, `LEGGINGS` y `BOOTS`. `ArmorPiece.of(ItemStack)` dice de qué
+ranura es una pieza, y `ArmorPiece.parse("helmet")` lee un nombre.

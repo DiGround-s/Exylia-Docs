@@ -1,0 +1,147 @@
+---
+title: "Configuration"
+description: "Every block of config.yml, with what it ships with."
+---
+
+`config.yml` has seven blocks. The trims themselves live in `trims.yml` — see
+[Trims](/docs/exyliaarmortrims/trims).
+
+## behaviour
+
+```yaml
+behaviour:
+  mode: both
+  consume-remover: true
+  consume-trim-item: true
+  require-permission: true
+  hide-without-permission: true
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `mode` | `both` | Where a trim comes from: `item`, `menu` or `both`. |
+| `consume-trim-item` | `true` | Whether the trim item is used up when applied. |
+| `consume-remover` | `true` | Whether the remover is used up when it removes a trim. |
+| `require-permission` | `true` | Whether wearing a trim needs its node. Commands and the API never look at this. |
+| `hide-without-permission` | `true` | Whether armor whose trim the wearer may no longer use is shown as it really is. |
+
+Covered in [Modes and items](/docs/exyliaarmortrims/modes-and-items).
+
+## trim-item and remover-item
+
+How the system's two items are drawn:
+
+```yaml
+trim-item:
+  material: NETHERITE_UPGRADE_SMITHING_TEMPLATE
+  name: "{primary}&lARMOR TRIM &8» %trim%"
+  lore:
+    - "{secondary}Information:"
+    - " {letters_black}▎ {letters}Drop this onto a piece of armor"
+    - " {letters_black}▎ {letters}to {highlight}engrave it{letters}. The armor keeps"
+    - " {letters_black}▎ {letters}everything it had."
+    - ""
+    - "{secondary}Trim:"
+    - " {letters_black}▎ {info}%pattern% {letters_black}» {info}%material%"
+    - ""
+    - "{warning}➥ Drop onto armor to apply"
+    - ""
+  glow: true
+
+remover-item:
+  material: SCRAPE_POTTERY_SHERD
+  name: "{primary}&lTRIM REMOVER"
+  glow: true
+```
+
+| Key | What it does |
+|---|---|
+| `material` | The icon. A preset with its own `icon` wins over this. |
+| `name` | `%trim%` is the trim's name. |
+| `lore` | `%trim%`, `%pattern%` and `%material%`. |
+| `glow` | The enchantment shimmer. |
+
+If the icon is a piece of armor it is painted with the trim it carries, so the item previews itself.
+
+## armor-lore
+
+Lines added under trimmed armor:
+
+```yaml
+armor-lore:
+  enabled: true
+  lines:
+    - "{secondary}Trim:"
+    - " {letters_black}▎ {highlight}%trim%"
+```
+
+Only the client sees them: they travel on the visual and are **never written to the real item**, so a
+plugin reading the armor's lore finds exactly what it had. They come after the piece's own lore,
+separated by a blank line.
+
+## menu
+
+The strings a template cannot spell out slot by slot — see
+[The menu](/docs/exyliaarmortrims/menu#wording).
+
+| Key | Default |
+|---|---|
+| `full-set` | `{primary}&lFULL SET` |
+| `helmet` · `chestplate` · `leggings` · `boots` | Each piece's name |
+| `empty` | `{muted}Nothing` |
+| `custom-name` | `%pattern% » %material%` |
+| `tab-open` | `{success}✔ You are here` |
+| `tab-closed` | `{warning}➥ Click to open` |
+
+## effects
+
+```yaml
+effects:
+  on-apply:
+    sound:
+      name: BLOCK_SMITHING_TABLE_USE
+      volume: 1.0
+      pitch: 1.2
+      category: PLAYERS
+  on-remove:
+    sound:
+      name: BLOCK_GRINDSTONE_USE
+```
+
+ExyliaLib effects: `title`, `actionbar`, `bossbar`, `sound`, `particle` and `firework`. They play to
+whoever put the trim on or took it off, from the menu or with an item.
+
+## placeholders
+
+```yaml
+placeholders:
+  none: "None"
+```
+
+What any `%exyliaarmortrims_...%` with nothing to answer returns.
+
+## messages
+
+Every message the plugin sends, each starting with `%prefix%`:
+
+| Key | When it shows |
+|---|---|
+| `prefix` | The prefix the others use. |
+| `applied` · `removed` | A trim put on or taken off. `%trim%`. |
+| `not-armor` | An item was dropped onto something that is not armor. |
+| `unsupported-piece` | The preset does not fit that piece. |
+| `unknown-trim` | The trim no longer exists. |
+| `already-trimmed` | The piece already carries a trim: use a remover first. |
+| `no-trim` | The piece carries nothing to remove. |
+| `inventory-full` | A free slot is needed to hand the item back. |
+| `no-permission` | The player does not own that trim. |
+| `given` · `given-remover` | `give` and `remover`. `%amount%`, `%trim%`. |
+| `list-header` · `list-entry` · `list-empty` | `list`. `%id%` and `%trim%`. |
+| `refreshed` | `refresh`. |
+| `menu-disabled` | The menu is off because of the mode. |
+| `cleared` | `clear` left the armor bare. |
+
+<Callout type="warning" title="Unknown keys are removed">
+A key the file does not declare is dropped on load and reported once. It keeps the files clean between
+versions, and it is why your own keys do not survive in them.
+</Callout>

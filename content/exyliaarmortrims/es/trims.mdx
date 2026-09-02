@@ -1,97 +1,111 @@
 ---
-title: "Patrones y materiales"
-description: "El catálogo completo, cómo se compone un trim, y cómo se editan los menús."
+title: "Trims"
+description: "Presets, patrones y materiales: qué trae trims.yml y cómo se escribe."
 ---
 
-Un trim es un **patrón** más un **material**: el patrón es la forma estampada en la armadura, el
-material es en qué está estampada. Se eligen por separado, y se permisionan por separado.
+Un trim es un **patrón** más un **material**. Se llevan de dos maneras: como un **preset** con nombre
+propio, o como una combinación que el jugador monta en la pestaña CUSTOM.
 
-## Patrones
+Todo vive en `trims.yml`, que tiene tres secciones: `patterns`, `materials` y `presets`.
 
-Dieciocho, que son todos los de vanilla:
+## Patrones y materiales
 
-| Patrón | Patrón | Patrón |
-|---|---|---|
-| Sentry | Ward | Shaper |
-| Dune | Eye | Silence |
-| Coast | Vex | Raiser |
-| Wild | Tide | Host |
-| Snout | Rib | Flow |
-| Spire | Wayfinder | Bolt |
+Son las dos listas que la pestaña CUSTOM combina. La clave es la clave de registro del juego —
+`sentry`, `netherite` — y `minecraft:sentry` vale igual: el namespace se recorta al leer.
 
-## Materiales
+```yaml title="trims.yml"
+patterns:
+  sentry:
+    name: "{letters}Sentry"
+    icon: "SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE"
 
-Once:
-
-Quartz · Iron · Netherite · Redstone · Copper · Gold · Emerald · Diamond · Lapis · Amethyst · Resin
-
-Son 198 combinaciones, elegidas por pieza de armadura.
-
-## Por pieza
-
-Casco, peto, pantalones y botas conservan cada uno su patrón y su material. Nada obliga a que
-coincidan, y es a propósito — un set descompensado es un aspecto que alguien eligió, y los permisos se
-pueden escribir hasta el nivel de la pieza si prefieres venderlas por separado.
-
-## Nombres e iconos
-
-`trims.yml` decide cómo se llama cada uno y con qué se dibuja en el menú:
-
-```yaml
-trim_patterns:
-  SENTRY:
-    name: "Sentry"
-    material: "SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE"
-  FLOW:
-    name: "Flow"
-    material: "FLOW_ARMOR_TRIM_SMITHING_TEMPLATE"
-
-trim_materials:
-  NETHERITE:
-    name: "Netherite"
-    material: "NETHERITE_INGOT"
-  RESIN:
-    name: "Resin"
-    material: "RESIN_BRICK"
+materials:
+  netherite:
+    name: "{letters_black}Netherite"
+    icon: "NETHERITE_INGOT"
 ```
 
-`name` acepta tokens de paleta, MiniMessage y degradados como cualquier otro texto de Exylia, así que
-un material premium puede ir en dorado en el menú:
+| Clave | Qué hace |
+|---|---|
+| `name` | Lo que se muestra. Acepta tokens de paleta, MiniMessage y degradados. |
+| `icon` | El objeto con el que se dibuja la fila en la pestaña CUSTOM. `BARRIER` si lo dejas vacío. |
 
-```yaml
-  NETHERITE:
-    name: "{highlight}&lNetherite"
-```
-
-<Callout type="warning" title="La clave es el permiso">
-`SENTRY` es `exyliaarmortrims.trim.pattern.sentry`. Las claves son además los ids de trim de vanilla
-que aplica el juego, así que renombrar una rompe tanto el permiso como el propio trim. Cambia `name`,
-nunca la clave.
+<Callout type="note" title="La lista es tuya, no la de vanilla">
+Los patrones y materiales se **listan** a propósito en vez de leerse del registro del servidor. Uno
+listado es uno que decidiste vender: lo puedes renombrar, dibujar con otro icono y quitar. Uno que no
+está en el archivo no se ofrece, y una versión nueva de Minecraft no te añade nada sin querer.
 </Callout>
 
-## Los menús
+Vienen 18 patrones — Sentry, Vex, Wild, Coast, Dune, Wayfinder, Raiser, Shaper, Host, Ward, Silence,
+Tide, Snout, Rib, Eye, Spire, Flow, Bolt — y 11 materiales — Quartz, Iron, Copper, Gold, Lapis,
+Diamond, Emerald, Redstone, Amethyst, Netherite, Resin.
 
-Tres archivos, editables como cualquier menú de ExyliaLib — iconos, slots, títulos, lore, sonidos y
-animaciones:
+## Presets
 
-| Archivo | Pantalla |
+Una combinación con nombre, id y **un solo permiso**. Es lo que se vende sin explicar nada:
+
+```yaml title="trims.yml"
+presets:
+  shogun:
+    name: "{error}&lSHOGUN"
+    pattern: "sentry"
+    material: "netherite"
+    pieces: []
+    icon: "SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE"
+```
+
+| Clave | Qué hace |
 |---|---|
-| `menus/main.yml` | El selector de pieza de armadura. |
-| `menus/pattern.yml` | La lista de patrones. |
-| `menus/material.yml` | La lista de materiales. |
+| `name` | Lo que se muestra en el objeto, el menú y los mensajes. |
+| `pattern` | Clave de patrón. |
+| `material` | Clave de material. |
+| `pieces` | `helmet`, `chestplate`, `leggings`, `boots`. Vacío significa las cuatro. |
+| `icon` | Material del objeto de trim. Vacío usa `trim-item.material` de `config.yml`. |
 
-Las dos listas están paginadas, y un patrón o material para el que el jugador no tiene permiso se
-dibuja con su propia plantilla — así que una entrada bloqueada puede parecer bloqueada en vez de
-limitarse a no estar.
+Los 18 presets que vienen de fábrica:
 
-## Cuándo se aplica el trim
+| Id | Trim | Id | Trim |
+|---|---|---|---|
+| `shogun` | Sentry · Netherite | `bulwark` | Ward · Iron |
+| `poltergeist` | Vex · Quartz | `silence` | Silence · Netherite |
+| `verdant` | Wild · Emerald | `abyss` | Tide · Diamond |
+| `tidewalker` | Coast · Lapis | `bloodsnout` | Snout · Redstone |
+| `mirage` | Dune · Gold | `ossuary` | Rib · Copper |
+| `wayfarer` | Wayfinder · Copper | `oracle` | Eye · Amethyst |
+| `sunrise` | Raiser · Gold | `citadel` | Spire · Quartz |
+| `artisan` | Shaper · Copper | `breeze` | Flow · Diamond |
+| `hearth` | Host · Resin | `voltage` | Bolt · Copper |
 
-En cada cambio de armadura. El plugin escucha el equipamiento y reaplica el trim guardado a lo que haya
-en cada una de las cuatro ranuras.
+<Callout type="warning" title="El id es el permiso y es lo que se guarda">
+`shogun` es `exyliaarmortrims.trim.shogun`, y es también lo que se escribe en la armadura y en la
+fila del jugador. Renombrarlo deja sin efecto el permiso y convierte lo guardado en un valor que ya
+no resuelve. Cambia `name`; el id, nunca.
 
-Eso significa que:
+Un id tampoco puede llevar `/`: esa barra es lo que distingue un preset de una combinación libre.
+</Callout>
 
-- Un set recién sacado de un kit sale con trim en cuanto se pone.
-- Morir y volver a equiparse mantiene el aspecto.
-- Una pieza sin selección guardada se deja tal cual estaba — incluido un trim real que alguien forjara
-  a mano.
+## Combinaciones libres
+
+Lo que el jugador monta en la pestaña CUSTOM no tiene id: se guarda como `patrón/material` —
+`sentry/netherite` — y se llama con la plantilla `menu.custom-name` de `config.yml`, que por defecto
+es `%pattern% » %material%`.
+
+Permite tres nodos a la vez: la pestaña, el patrón y el material. Así, dar un preset no regala sus
+mitades para recombinarlas, y abrir la pestaña no regala un patrón que nadie compró.
+
+## Entradas rotas
+
+Una entrada de `trims.yml` que no se puede leer se **nombra en consola** y se salta; el resto del
+archivo carga igual:
+
+| Problema | Qué se avisa |
+|---|---|
+| Id vacío | `an entry has an empty id` |
+| Id con `/` | `a preset id may not contain '/'` |
+| Falta patrón o material | `a trim needs both a pattern and a material` |
+| Pieza desconocida en `pieces` | `unknown piece "..."` |
+
+## Trims desde código
+
+Otro plugin puede registrar presets propios, y conviven con los del archivo: una recarga reemplaza
+solo las entradas de `trims.yml`. Ver [API](/docs/exyliaarmortrims/api).

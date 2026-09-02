@@ -1,20 +1,25 @@
 ---
 title: "Instalación"
-description: "Dependencias, los archivos que escribe, y el único ajuste de config.yml."
+description: "Dependencias, los archivos que escribe, y cuándo abre base de datos."
 ---
 
 ## Instalar
 
 <Steps>
   <Step title="Coloca los jars">
-    `ExyliaArmorTrims.jar`, más `ExyliaLib` y `packetevents`, en `plugins/`.
+    `ExyliaArmorTrims.jar` y `packetevents` en `plugins/`. `ExyliaLib` es dependencia blanda: si no
+    está, el loader la instala en el primer arranque.
   </Step>
   <Step title="Arranca el servidor">
-    Escribe `config.yml`, `trims.yml` y tres archivos de menú, y crea su tabla.
+    Escribe `config.yml`, `trims.yml` y `menus/trims.yml`.
+  </Step>
+  <Step title="Elige el modo">
+    `behaviour.mode` en `config.yml`: `item`, `menu` o `both`. Ver
+    [Modos y objetos](/docs/exyliaarmortrims/modos-y-objetos).
   </Step>
   <Step title="Da los permisos">
-    No se puede elegir nada hasta que estén concedidos un patrón y un material. Ver
-    [Comandos y permisos](/docs/exyliaarmortrims/comandos).
+    Sin nodos concedidos el menú se abre bloqueado. Ver
+    [Permisos](/docs/exyliaarmortrims/permisos).
   </Step>
 </Steps>
 
@@ -22,55 +27,34 @@ description: "Dependencias, los archivos que escribe, y el único ajuste de conf
 
 | Archivo | Contenido |
 |---|---|
-| `config.yml` | Un ajuste de comportamiento, y el texto de reserva de los placeholders. |
-| `trims.yml` | Los 18 patrones y 11 materiales, con sus nombres visibles e iconos. |
-| `menus/main.yml` | La pantalla principal. |
-| `menus/pattern.yml` | El selector de patrones. |
-| `menus/material.yml` | El selector de materiales. |
-| `database.yml` | Dónde se guardan las selecciones. H2 por defecto. |
+| `config.yml` | Modo, objetos, lore de armadura, efectos, textos del menú y mensajes. |
+| `trims.yml` | Los patrones y materiales que se ofrecen, y los presets con nombre. |
+| `menus/trims.yml` | La pantalla única de trims. |
+| `database.yml` | Solo si el modo usa el menú. H2 por defecto. |
 
-Las selecciones viven en la tabla `player_data`, como un único valor JSON con la elección de cada
-pieza.
+## Base de datos
 
-## config.yml
+Con `mode: item` **no se abre ninguna**: un servidor que solo usa objetos de trim no guarda nada por
+jugador, y no se encuentra un `database.yml` que no pidió. Un `/armortrimsadmin reload` que encienda
+el menú la abre en ese momento.
 
-```yaml
-validate-permissions-on-armor-equip: true
+Con `menu` o `both`, las elecciones viven en la tabla `armortrim_selection`, una fila por jugador y
+una columna por pieza:
 
-placeholders:
-  none: "None"
-```
+| Columna | Qué guarda |
+|---|---|
+| `uuid` | El jugador. |
+| `helmet`, `chestplate`, `leggings`, `boots` | Un id de preset — `shogun` — o una pareja `patrón/material` — `sentry/netherite`. |
 
-| Clave | Por defecto | Qué hace |
-|---|---|---|
-| `validate-permissions-on-armor-equip` | `true` | Borra las selecciones que un jugador ya no puede usar, comprobado al equiparse armadura. |
-| `placeholders.none` | `None` | Lo que muestran los placeholders para una pieza sin nada elegido. |
+Cuatro columnas en vez de un JSON a propósito: se pueden leer, consultar y exportar.
 
-<Callout type="note" title="Los permisos se aplican igualmente">
-Apagar el ajuste no permite que un rango caducado conserve su trim — una selección que el jugador no
-puede usar no se aplica. Lo que cambia es si la selección guardada se **borra**. Déjalo activo y un
-rango caducado pierde la elección; apágalo y la elección queda dormida, lista si el rango vuelve.
+<Callout type="note" title="Una pieza puede guardar algo que ya no existe">
+Un valor que el registro no conoce — un preset borrado de `trims.yml`, un material que quitaste — no
+se dibuja y **no se borra**. Vuelve el día que vuelva la entrada, que es lo que merece una errata en
+una recarga.
 </Callout>
-
-## trims.yml
-
-Nombres visibles e iconos de cada patrón y material:
-
-```yaml
-trim_patterns:
-  SENTRY:
-    name: "Sentry"
-    material: "SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE"
-
-trim_materials:
-  QUARTZ:
-    name: "Quartz"
-    material: "QUARTZ"
-```
-
-Las claves son los ids de trim de vanilla, así que este archivo es donde se **nombran y se dibujan**,
-no donde se definen. Renombrar una clave es renombrar su nodo de permiso.
 
 ## Actualizar
 
-Reemplaza el jar y reinicia. `/armortrim reload` relee los archivos de este plugin.
+Reemplaza el jar y reinicia. `/armortrimsadmin reload` relee `config.yml`, `trims.yml` y el menú, y
+vuelve a dibujar a todo el que esté conectado.

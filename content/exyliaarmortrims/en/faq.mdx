@@ -1,47 +1,64 @@
 ---
-title: "Frequently asked questions"
+title: "FAQ"
 description: "The questions that come up most."
 ---
 
-## The plugin does not start
+## The plugin will not start
 
-`ExyliaLib` and `packetevents` are both required. Without either, the server disables it by name.
+`packetevents` is required. `ExyliaLib` is a soft depend: if it is missing, the loader installs it on
+the first start.
 
 ## The menu opens but everything is locked
 
-Patterns and materials are separate permissions, and a trim needs both. Granting every pattern with no
-material grants nothing usable. See [Commands and permissions](/docs/exyliaarmortrims/commands).
+A preset needs its node; a free combination needs three — the tab, the pattern and the material. See
+[Permissions](/docs/exyliaarmortrims/permissions).
 
-## The trim does not appear on the armour
+## `/armortrim` says the menu is off
 
-It is applied when armour is equipped. Re-equip the piece, or check that the player still has
-permission for both halves of what they chose — a selection they cannot use is not applied.
+You are on `mode: item`. In that mode there is no per-player choice and no screen: trims travel as
+items. Switch to `menu` or `both` and reload.
 
-## A player lost their trim after their rank expired
+## The trim does not show
 
-That is `validate-permissions-on-armor-equip`, on by default: a selection the player can no longer use
-is deleted the next time they equip armour. Turn it off and the choice stays stored and comes back when
-the rank does.
+| Check | Detail |
+|---|---|
+| The mode | `item` ignores the menu choice; `menu` ignores what is engraved on the armor. |
+| The permission | With `hide-without-permission` on, a trim you may no longer use stops being drawn. |
+| Creative | A creative client sees its real armor. Everyone else still sees your trim. |
+| The value | A preset deleted from `trims.yml` is not drawn until the entry comes back. |
 
-## Does it consume smithing templates?
+If it still does not show, `/armortrimsadmin refresh <player>` recomputes and re-sends.
 
-No. Nothing is consumed and no smithing table is involved — the trim is applied to the item directly
-from the stored selection.
+## Can armor be dropped and the trim lost?
 
-## Does it overwrite a trim somebody smithed themselves?
+It depends on the mode. An **item** trim lives on the piece, so it travels with it and is lost with it.
+A **menu** trim belongs to the player and is applied again to whatever they put on next.
 
-Only on a piece where they have chosen something in the menu. A piece with no stored selection is left
-exactly as it is, real vanilla trim included.
+## Is the armor touched?
 
-## Can I translate the menus?
+In menu mode, no: the engraving is drawn on the way to the client and the real item never carries it.
+In item mode **one value** is written — `exyliaarmortrims:trim` — and nothing else: enchantments,
+attributes, durability, custom model data and other plugins' data are untouched.
 
-Yes. `trims.yml` holds the display names and the three files under `menus/` hold every piece of text
-the screens draw. Edit them in place; nothing else needs to know.
+## Does it overwrite a hand-forged trim?
+
+It does not erase it: the vanilla armor keeps its own on the server. What gets drawn is this plugin's
+trim, and vanilla's upgrade line is hidden on the visual.
 
 ## Can I add my own patterns?
 
-No. The keys in `trims.yml` are vanilla trim ids that the game applies; the file names and draws them,
-it does not define them. What you can change is `name` and `material`.
+You can offer any the game has by listing them in `trims.yml`, and rename and draw them however you
+like. What you cannot do is invent a pattern the server's registry does not have.
+
+## Can I translate it?
+
+Yes. `trims.yml` holds pattern, material and preset names; `config.yml` holds the messages and the
+menu wording; `menus/trims.yml` holds every line on the screen.
+
+## Does it use up smithing templates?
+
+No, and there is no smithing table involved. If you want the look to cost something, leave
+`consume-trim-item` on and sell the trim items.
 
 ## Does it work on Folia?
 

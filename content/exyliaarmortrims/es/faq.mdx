@@ -5,44 +5,61 @@ description: "Lo que más se pregunta."
 
 ## El plugin no arranca
 
-`ExyliaLib` y `packetevents` son obligatorios. Sin cualquiera de ellos, el servidor lo desactiva y lo
-nombra.
+`packetevents` es obligatorio. `ExyliaLib` es dependencia blanda: si falta, el loader la instala en el
+primer arranque.
 
 ## El menú abre pero está todo bloqueado
 
-Patrones y materiales son permisos separados, y un trim necesita los dos. Conceder todos los patrones
-sin ningún material no concede nada usable. Ver [Comandos y permisos](/docs/exyliaarmortrims/comandos).
+Un preset necesita su nodo; una combinación libre necesita tres — la pestaña, el patrón y el material.
+Ver [Permisos](/docs/exyliaarmortrims/permisos).
 
-## El trim no aparece en la armadura
+## `/armortrim` dice que el menú está apagado
 
-Se aplica al equiparse. Vuelve a ponerte la pieza, o comprueba que el jugador siga teniendo permiso
-para las dos mitades de lo que eligió — una selección que no puede usar no se aplica.
+Estás en `mode: item`. En ese modo no hay elección por jugador ni pantalla: los trims viajan como
+objetos. Cámbialo a `menu` o `both` y recarga.
 
-## Un jugador perdió su trim al caducar su rango
+## El trim no se ve
 
-Es `validate-permissions-on-armor-equip`, activo por defecto: una selección que el jugador ya no puede
-usar se borra la próxima vez que se equipe armadura. Apágalo y la elección se queda guardada y vuelve
-cuando vuelva el rango.
+| Comprueba | Detalle |
+|---|---|
+| El modo | `item` ignora la elección del menú; `menu` ignora lo engrabado en la armadura. |
+| El permiso | Con `hide-without-permission` activo, un trim que ya no puedes usar se deja de ver. |
+| Creativo | Un cliente en creativo ve su armadura real. Los demás siguen viéndote el trim. |
+| El valor | Un preset borrado de `trims.yml` no se dibuja hasta que la entrada vuelva. |
 
-## ¿Gasta plantillas de forja?
+Si sigue sin verse, `/armortrimsadmin refresh <jugador>` recalcula y reenvía.
 
-No. No se gasta nada y no hay mesa de forja de por medio — el trim se aplica al objeto directamente
-desde la selección guardada.
+## ¿Se puede tirar la armadura y perder el trim?
 
-## ¿Sobrescribe un trim que alguien forjó a mano?
+Depende del modo. Un trim de **objeto** vive en la pieza, así que viaja con ella y se pierde con ella.
+Un trim de **menú** es del jugador y se vuelve a aplicar a lo siguiente que se ponga.
 
-Solo en una pieza donde haya elegido algo en el menú. Una pieza sin selección guardada se deja tal cual,
-con su trim real de vanilla incluido.
+## ¿Se toca la armadura?
 
-## ¿Puedo traducir los menús?
+En modo menú, no: el estampado se dibuja en el camino al cliente y el objeto real nunca lo lleva. En
+modo objeto se escribe **un valor** — `exyliaarmortrims:trim` — y nada más: encantamientos, atributos,
+durabilidad, custom model data y los datos de otros plugins quedan intactos.
 
-Sí. `trims.yml` guarda los nombres visibles y los tres archivos de `menus/` guardan cada texto que
-dibujan las pantallas. Edítalos ahí mismo; nada más necesita enterarse.
+## ¿Sobrescribe un trim forjado a mano?
+
+No lo borra: la armadura de vanilla conserva el suyo en el servidor. Lo que se dibuja es el trim de
+este plugin, y la línea de mejora de vanilla se oculta en el visual.
 
 ## ¿Puedo añadir mis propios patrones?
 
-No. Las claves de `trims.yml` son ids de trim de vanilla que aplica el juego; el archivo los nombra y
-los dibuja, no los define. Lo que sí puedes cambiar es `name` y `material`.
+Puedes ofrecer los que quieras de los que el juego tenga, listándolos en `trims.yml`, y renombrarlos y
+dibujarlos como quieras. Lo que no se puede es inventar un patrón que el servidor no tenga en su
+registro.
+
+## ¿Puedo traducirlo?
+
+Sí. `trims.yml` guarda nombres de patrones, materiales y presets; `config.yml` guarda los mensajes y
+los textos del menú; `menus/trims.yml` guarda cada línea de la pantalla.
+
+## ¿Gasta plantillas de forja?
+
+No, y no hay mesa de forja de por medio. Si quieres que el aspecto cueste algo, deja
+`consume-trim-item` activo y vende los objetos de trim.
 
 ## ¿Funciona en Folia?
 

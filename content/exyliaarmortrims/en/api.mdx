@@ -1,0 +1,112 @@
+---
+title: "API"
+description: "ArmorTrimAPI: registering presets, building items, engraving armor, changing a player's choice and redrawing them."
+---
+
+Everything is on one class, `net.exylia.exyliaArmorTrims.api.ArmorTrimAPI`.
+
+```java
+import net.exylia.exyliaArmorTrims.api.ArmorTrimAPI;
+
+ArmorTrimAPI api = ArmorTrimAPI.get();
+```
+
+`get()` throws `IllegalStateException` while the plugin is not enabled, so add
+`softdepend: [ExyliaArmorTrims]` to your `plugin.yml` and call it from `onEnable` or later.
+
+## Registering trims
+
+```java
+import net.exylia.exyliaArmorTrims.trim.TrimDefinition;
+import net.exylia.exyliaArmorTrims.trim.TrimLook;
+
+api.register(TrimDefinition.preset(
+        "ruby",                              // id: the permission and the stored value
+        "{error}&lRUBY",                     // name
+        java.util.Set.of(),                  // pieces: empty means all four
+        new TrimLook("rib", "redstone"),     // pattern and material
+        null));                              // icon, or null for the config.yml one
+```
+
+| Method | Returns | What it does |
+|---|---|---|
+| `register(TrimDefinition)` | — | Adds or replaces a preset. Survives a reload. |
+| `unregister(String id)` | `boolean` | Removes one, from code or from the file. |
+| `trim(String stored)` | `Optional<TrimDefinition>` | Resolves a preset id or a `pattern/material` pair. |
+| `exists(String id)` | `boolean` | Whether an id resolves. |
+| `registry()` | `TrimRegistry` | The registry itself: `presets()`, `ids()`, `patterns()`, `materials()`, `onChange(listener)`. |
+
+<Callout type="note" title="Code and file live side by side">
+A reload replaces only the entries that came from `trims.yml`. A preset registered here stays until it
+is unregistered or the server stops, and `/armortrimsadmin list` shows it like any other.
+</Callout>
+
+## Items
+
+| Method | Returns | What it does |
+|---|---|---|
+| `trimItem(String stored, Player viewer)` | `Optional<ItemStack>` | That trim's item, drawn for that viewer. |
+| `remover(Player viewer)` | `ItemStack` | A remover. |
+| `isTrimItem(ItemStack)` | `boolean` | Whether a stack is a trim item. |
+| `isRemover(ItemStack)` | `boolean` | Whether it is a remover. |
+| `trimId(ItemStack)` | `Optional<String>` | The trim a trim item offers, or the one a piece of armor carries. |
+| `hasTrim(ItemStack armor)` | `boolean` | Whether a piece carries a trim. |
+
+## Engraving armor
+
+```java
+ApplyResult result = api.apply(chestplate, "ruby");
+if (result.success()) { /* ... */ }
+```
+
+| Method | Returns | What it does |
+|---|---|---|
+| `apply(ItemStack armor, String stored)` | `ApplyResult` | Writes the trim onto the armor. |
+| `apply(ItemStack armor, ItemStack trimItem)` | `ApplyResult` | The same, taking the trim from an item. The item is not consumed. |
+| `remove(ItemStack armor, Player receiver)` | `ApplyResult` | Takes it off and hands it back as an item. |
+| `strip(ItemStack armor)` | `ApplyResult` | Takes it off and gives nothing back. |
+
+None of them check permissions: that is the caller's business. All of them check before writing, so a
+call that fails leaves both items exactly as they were.
+
+### ApplyResult
+
+| Value | What it means |
+|---|---|
+| `APPLIED` · `REMOVED` | It worked. `success()` returns `true`. |
+| `NOT_ARMOR` | It was not a piece of armor. |
+| `UNSUPPORTED_PIECE` | The preset does not fit that piece. |
+| `UNKNOWN_TRIM` | The value resolves to no trim. |
+| `INVALID_ITEM` | The item was not a trim item. |
+| `ALREADY_TRIMMED` | The piece already carried a trim. |
+| `NO_TRIM` | There was nothing to remove. |
+| `INVENTORY_FULL` | The returned item did not fit. |
+| `NO_PERMISSION` | The player may not use that trim. |
+
+## The player's choice
+
+It exists only while the mode uses the menu; with `mode: item`, `selections()` returns `null`.
+
+| Method | Returns | What it does |
+|---|---|---|
+| `selections()` | `TrimSelections` | The per-player layer, or `null`. |
+| `wear(Player, ArmorPiece, String stored)` | `ApplyResult` | Puts the trim on, or takes it off when already worn. A `null` piece means every piece it fits. |
+| `bare(Player, ArmorPiece)` | `ApplyResult` | Clears one piece's choice, or all of them with `null`. |
+| `chosen(Player, ArmorPiece)` | `Optional<String>` | What they chose for that slot, whatever they are wearing. |
+
+`wear` does respect permissions, because it is the same door the menu uses.
+
+## Redrawing
+
+| Method | What it does |
+|---|---|
+| `refresh(Player)` | Recomputes their look and re-sends it to everyone who can see them. |
+| `refreshAll()` | The same for everybody online. |
+
+Useful after changing permissions from code: the look is recomputed whenever armor is equipped, and
+this forces it without waiting.
+
+## Pieces
+
+`ArmorPiece` is `HELMET`, `CHESTPLATE`, `LEGGINGS` and `BOOTS`. `ArmorPiece.of(ItemStack)` says which
+slot a piece belongs to, and `ArmorPiece.parse("helmet")` reads a name.

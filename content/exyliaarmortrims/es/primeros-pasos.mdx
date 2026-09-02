@@ -1,0 +1,57 @@
+---
+title: "Primeros pasos"
+description: "De servidor limpio a un jugador con un trim puesto, por los dos caminos."
+---
+
+Con los valores por defecto el modo es `both`: funcionan los objetos de trim **y** el menú.
+
+## Por el menú
+
+<Steps>
+  <Step title="Concede el nodo del comando">
+    `exyliaarmortrims.command.armortrim` a todo el mundo. Sin él no se abre nada.
+  </Step>
+  <Step title="Concede algún trim">
+    Un preset entero — `exyliaarmortrims.trim.shogun` — o el catálogo completo con
+    `exyliaarmortrims.trim.*`.
+  </Step>
+  <Step title="Abre el menú">
+    `/armortrim`. Arriba está la armadura, abajo lo que se le puede poner, y cada fila se dibuja
+    sobre la pieza que el jugador lleva de verdad.
+  </Step>
+  <Step title="Elige">
+    Clic izquierdo en una pieza para engrabar solo esa; el botón FULL SET engraba las cuatro. Clic en
+    un trim ya puesto para quitarlo.
+  </Step>
+</Steps>
+
+## Por objeto
+
+<Steps>
+  <Step title="Date un objeto de trim">
+    `/armortrimsadmin give <jugador> shogun 1`.
+  </Step>
+  <Step title="Arrástralo sobre una pieza">
+    Coge el objeto con el cursor y haz clic sobre una pieza de armadura **en tu propio inventario**.
+    La armadura conserva todo lo que tenía; solo gana un valor.
+  </Step>
+  <Step title="Para quitarlo">
+    `/armortrimsadmin remover <jugador>` y arrastra el removedor sobre la pieza. El trim sale y vuelve
+    a ti como objeto.
+  </Step>
+</Steps>
+
+## Comprobar que funciona
+
+| Qué mirar | Qué debería pasar |
+|---|---|
+| El jugador con la armadura puesta | Se ve el estampado, a él y a los demás |
+| La misma pieza en un cofre | Se ve el trim y las líneas de `armor-lore` |
+| El jugador en creativo | Ve su armadura **sin** trim, y los demás siguen viéndosela puesta |
+| Tirar la pieza al suelo | Sale pelada, porque el objeto real nunca llevó el trim |
+
+<Callout type="tip" title="Empieza vendiendo presets">
+Un preset es **un permiso** y un nombre que se puede anunciar. La pestaña CUSTOM, que abre las 198
+combinaciones, necesita `exyliaarmortrims.custom` más las dos mitades — déjala para el rango de
+arriba.
+</Callout>

@@ -1,0 +1,122 @@
+---
+title: "El menú"
+description: "Una sola pantalla: la armadura arriba, tres caras en la rejilla, y todo editable en menus/trims.yml."
+---
+
+`/armortrim` abre una única ventana. Arriba está lo que se va a engrabar; debajo, lo que se le puede
+poner. Nada se reabre entre pasos, así que la armadura no se mueve y una elección a medias no se
+pierde.
+
+## Las dos listas
+
+| Sección | Slots por defecto | Qué contiene |
+|---|---|---|
+| `targets` | `2,3,4,5,6` | FULL SET y las cuatro piezas. La fila marcada es la que se está engrabando. |
+| `grid` | `10-16,19-25,28-34,37-43` | Lo que se puede poner: presets, patrones o materiales, según la pestaña. |
+
+La rejilla tiene **tres caras y una sección**, porque un slot pertenece a una lista sola. La pestaña
+cambia lo que contiene:
+
+<Steps>
+  <Step title="PRESETS">
+    Todos los presets de `trims.yml`, cada uno con su nombre.
+  </Step>
+  <Step title="CUSTOM → patrones">
+    La pestaña siempre entra por los patrones, nunca por los materiales de un patrón elegido hace
+    rato: cambiar de pestaña es como se empieza de nuevo.
+  </Step>
+  <Step title="CUSTOM → materiales">
+    Elegido el patrón, la rejilla pasa a los materiales, ya previsualizados con ese patrón.
+  </Step>
+</Steps>
+
+Los presets y los materiales se dibujan **sobre la armadura que el jugador lleva de verdad**: un peto
+de netherita previsualiza el trim sobre netherita. Los **patrones** se dibujan con su propia plantilla
+de forja: en ese punto todavía no hay material elegido, y la misma silueta sobre un casco del tamaño
+de un icono de inventario es la misma imagen dieciocho veces. Cambia `%entry_icon%` por
+`%preview_material%`, con un bloque `armor_trim`, si prefieres verlos sobre la armadura.
+
+## Botones fijos
+
+| Botón | Slot | Qué hace |
+|---|---|---|
+| PRESETS | `0` | Abre la cara de presets. |
+| CUSTOM | `8` | Abre los patrones. Con `require-permission` activo exige `exyliaarmortrims.custom`. |
+| BARE EVERYTHING | `45` | Quita el trim de las cuatro piezas. |
+| CLOSE | `49` | Cierra. |
+| Anterior / siguiente | `48` / `50` | Paginación de la rejilla. |
+
+Las dos pestañas son **un botón cada una**, no dos dibujos del mismo slot: cada una muestra
+`%presets_status%` o `%custom_status%`, que salen de `menu.tab-open` y `menu.tab-closed` en
+`config.yml`.
+
+## Qué hace un clic
+
+| Dónde | Clic | Resultado |
+|---|---|---|
+| Una pieza de arriba | Izquierdo | Pasa a engrabar solo esa pieza. |
+| Una pieza de arriba | Derecho | Le quita el trim. |
+| Una fila de la rejilla | Izquierdo | Pone ese trim, o lo quita si ya era el que llevaba. |
+
+Poner sobre FULL SET engraba **solo lo que el jugador puede llevar**: un rango que tenga un preset
+para el casco recibe el casco, no un rechazo entero.
+
+## Plantillas
+
+La primera plantilla de cada lista es la que usa una fila sin estado, así que `item_template` va
+primero.
+
+| Lista | Plantillas |
+|---|---|
+| `targets` | `item_template`, `focused_template`, `set_template`, `focused_set_template` |
+| `grid` · presets | `preset_template`, `preset_selected_template`, `preset_unsupported_template`, `preset_locked_template` |
+| `grid` · patrones | `pattern_template`, `pattern_selected_template`, `pattern_locked_template` |
+| `grid` · materiales | `material_template`, `material_selected_template`, `material_locked_template` |
+
+`unsupported` es un preset que no entra en la pieza enfocada; `locked` es uno que el jugador no puede
+usar. Así una entrada bloqueada **parece bloqueada** en vez de limitarse a no estar.
+
+## Placeholders del archivo
+
+| Dónde | Disponibles |
+|---|---|
+| `targets` | `%target%`, `%target_name%`, `%piece%`, `%piece_material%`, `%trim_name%`, `%trim_pattern%`, `%trim_material%`, `%engraved%`, `%pieces%` |
+| `grid` | `%entry_id%`, `%entry_name%`, `%entry_icon%`, `%preview_material%`, `%trim_pattern%`, `%trim_material%`, `%entry_worn%`, `%entry_worn_name%`, y en presets `%entry_pieces%` |
+| En cualquier sitio | `%tab%`, `%target%`, `%target_name%`, `%pattern%`, `%pattern_name%` |
+
+## Acciones
+
+Seis verbos, en el namespace `armortrim`:
+
+| Acción | Qué hace |
+|---|---|
+| `armortrim:open` | Abre el menú. |
+| `armortrim:focus <pieza\|set>` | Cambia lo que se está engrabando. |
+| `armortrim:tab <presets\|custom>` | Cambia la cara de la rejilla. |
+| `armortrim:pattern <id>` | Toma la primera mitad y pasa a los materiales. |
+| `armortrim:wear <id\|patrón/material>` | Pone ese trim, o lo quita si ya estaba. |
+| `armortrim:clear <pieza\|set>` | Quita el trim de una pieza o de todas. |
+
+Cada una actúa sobre la ventana desde la que se hizo clic, así que un jugador con el menú abierto dos
+veces no puede mover la que no era.
+
+## Textos
+
+Los pocos textos que una plantilla no puede escribir slot a slot viven en `config.yml`:
+
+```yaml title="config.yml"
+menu:
+  full-set: "{primary}&lFULL SET"
+  helmet: "{primary}&lHELMET"
+  chestplate: "{primary}&lCHESTPLATE"
+  leggings: "{primary}&lLEGGINGS"
+  boots: "{primary}&lBOOTS"
+  empty: "{muted}Nothing"
+  custom-name: "{primary}&l%pattern% {letters_black}» {secondary}&l%material%"
+  tab-open: "{success}✔ You are here"
+  tab-closed: "{warning}➥ Click to open"
+```
+
+<Callout type="note" title="Sin menú no hay pantalla">
+Con `mode: item` el menú no existe: `/armortrim` responde con `menu-disabled` y no se abre nada.
+</Callout>

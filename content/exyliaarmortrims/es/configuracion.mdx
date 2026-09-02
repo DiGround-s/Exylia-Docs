@@ -1,0 +1,148 @@
+---
+title: "Configuración"
+description: "Cada bloque de config.yml, con lo que trae por defecto."
+---
+
+`config.yml` tiene siete bloques. Los trims en sí viven en `trims.yml` — ver
+[Trims](/docs/exyliaarmortrims/trims).
+
+## behaviour
+
+```yaml
+behaviour:
+  mode: both
+  consume-remover: true
+  consume-trim-item: true
+  require-permission: true
+  hide-without-permission: true
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `mode` | `both` | De dónde sale el trim: `item`, `menu` o `both`. |
+| `consume-trim-item` | `true` | Si el objeto de trim se gasta al aplicarse. |
+| `consume-remover` | `true` | Si el removedor se gasta al quitar un trim. |
+| `require-permission` | `true` | Si llevar un trim exige su nodo. Comandos y API nunca miran esto. |
+| `hide-without-permission` | `true` | Si la armadura cuyo trim el portador ya no puede usar se muestra como es. |
+
+Explicados en [Modos y objetos](/docs/exyliaarmortrims/modos-y-objetos).
+
+## trim-item y remover-item
+
+Cómo se dibujan los dos objetos del sistema:
+
+```yaml
+trim-item:
+  material: NETHERITE_UPGRADE_SMITHING_TEMPLATE
+  name: "{primary}&lARMOR TRIM &8» %trim%"
+  lore:
+    - "{secondary}Information:"
+    - " {letters_black}▎ {letters}Drop this onto a piece of armor"
+    - " {letters_black}▎ {letters}to {highlight}engrave it{letters}. The armor keeps"
+    - " {letters_black}▎ {letters}everything it had."
+    - ""
+    - "{secondary}Trim:"
+    - " {letters_black}▎ {info}%pattern% {letters_black}» {info}%material%"
+    - ""
+    - "{warning}➥ Drop onto armor to apply"
+    - ""
+  glow: true
+
+remover-item:
+  material: SCRAPE_POTTERY_SHERD
+  name: "{primary}&lTRIM REMOVER"
+  glow: true
+```
+
+| Clave | Qué hace |
+|---|---|
+| `material` | El icono. Un preset con `icon` propio manda sobre este. |
+| `name` | `%trim%` es el nombre del trim. |
+| `lore` | `%trim%`, `%pattern%` y `%material%`. |
+| `glow` | El brillo de encantamiento. |
+
+Si el icono es una pieza de armadura, se pinta con el trim que lleva dentro, así que el objeto se
+previsualiza a sí mismo.
+
+## armor-lore
+
+Líneas que se añaden bajo la armadura con trim:
+
+```yaml
+armor-lore:
+  enabled: true
+  lines:
+    - "{secondary}Trim:"
+    - " {letters_black}▎ {highlight}%trim%"
+```
+
+Solo las ve el cliente: viajan en el visual y **nunca se escriben en el objeto real**, así que un
+plugin que lea el lore de la armadura encuentra exactamente lo que tenía. Se muestran después del lore
+propio de la pieza, separadas por una línea en blanco.
+
+## menu
+
+Los textos que una plantilla no puede escribir slot a slot — ver
+[El menú](/docs/exyliaarmortrims/menu#textos).
+
+| Clave | Por defecto |
+|---|---|
+| `full-set` | `{primary}&lFULL SET` |
+| `helmet` · `chestplate` · `leggings` · `boots` | El nombre de cada pieza |
+| `empty` | `{muted}Nothing` |
+| `custom-name` | `%pattern% » %material%` |
+| `tab-open` | `{success}✔ You are here` |
+| `tab-closed` | `{warning}➥ Click to open` |
+
+## effects
+
+```yaml
+effects:
+  on-apply:
+    sound:
+      name: BLOCK_SMITHING_TABLE_USE
+      volume: 1.0
+      pitch: 1.2
+      category: PLAYERS
+  on-remove:
+    sound:
+      name: BLOCK_GRINDSTONE_USE
+```
+
+Efectos de ExyliaLib: `title`, `actionbar`, `bossbar`, `sound`, `particle` y `firework`. Se le tocan
+al jugador que pone o quita el trim, venga del menú o de un objeto.
+
+## placeholders
+
+```yaml
+placeholders:
+  none: "None"
+```
+
+Lo que devuelve cualquier `%exyliaarmortrims_...%` que no tiene nada que responder.
+
+## messages
+
+Todos los mensajes del plugin, con `%prefix%` al principio de cada uno:
+
+| Clave | Cuándo sale |
+|---|---|
+| `prefix` | El prefijo que usan los demás. |
+| `applied` · `removed` | Un trim puesto o quitado. `%trim%`. |
+| `not-armor` | Se soltó un objeto sobre algo que no es armadura. |
+| `unsupported-piece` | El preset no entra en esa pieza. |
+| `unknown-trim` | El trim ya no existe. |
+| `already-trimmed` | La pieza ya lleva trim: primero un removedor. |
+| `no-trim` | La pieza no lleva nada que quitar. |
+| `inventory-full` | Hace falta un hueco para devolver el objeto. |
+| `no-permission` | El jugador no tiene ese trim. |
+| `given` · `given-remover` | `give` y `remover`. `%amount%`, `%trim%`. |
+| `list-header` · `list-entry` · `list-empty` | `list`. `%id%` y `%trim%`. |
+| `refreshed` | `refresh`. |
+| `menu-disabled` | El menú está apagado por el modo. |
+| `cleared` | `clear` dejó la armadura pelada. |
+
+<Callout type="warning" title="Las claves desconocidas se eliminan">
+Una clave que el archivo no declara se borra al cargar y se reporta una vez. Mantiene los archivos
+limpios entre versiones, y es por lo que tus propias claves no sobreviven en ellos.
+</Callout>

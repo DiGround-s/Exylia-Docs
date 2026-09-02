@@ -1,51 +1,75 @@
 ---
 title: "Introducción"
-description: "Qué es ExyliaArmorTrims y con qué viene."
+description: "Qué es ExyliaArmorTrims: presets con nombre y combinaciones libres, elegidos en una pantalla o llevados como objeto, y dibujados con paquetes."
 ---
 
-ExyliaArmorTrims permite a un jugador ponerle trims a su armadura desde un menú, sin mesa de forja y
-sin gastar plantillas. La elección es cosmética, se guarda por jugador y por pieza, y se reaplica sola
-cada vez que se equipa armadura.
+ExyliaArmorTrims pone un **trim** sobre una pieza de armadura. Un trim es un patrón y un material, y
+se dibuja en el camino hacia el cliente: el peto sigue siendo exactamente el mismo peto en el
+servidor, y todo el mundo lo ve con su estampado.
 
-**18 patrones y 11 materiales**, que son todas las combinaciones de vanilla — 198 aspectos por pieza.
+La armadura nunca se convierte ni se reconstruye. El visual es una copia del objeto real con **un
+componente añadido** — el trim — así que material, nombre, encantamientos, atributos, durabilidad,
+custom model data y los datos de cualquier otro plugin siguen donde estaban. El objeto que guarda el
+servidor no lleva trim nunca.
+
+## Dos formas de llevar un trim
+
+| Forma | De quién es | Para qué servidor |
+|---|---|---|
+| **Objeto** | De la armadura: se escribe un valor en el objeto, y viaja con él en cofres, intercambios y muertes. | Survival, economía |
+| **Menú** | Del jugador: se guarda por jugador y por pieza, y cae sobre lo que se equipe. | Practice, PvP |
+
+El ajuste `behaviour.mode` decide cuál se usa — `item`, `menu` o `both` — y está explicado en
+[Modos y objetos](/docs/exyliaarmortrims/modos-y-objetos).
+
+## Presets y combinaciones
 
 | | |
 |---|---|
-| Patrones | Sentry, Dune, Coast, Wild, Ward, Eye, Vex, Tide, Snout, Rib, Spire, Wayfinder, Shaper, Silence, Raiser, Host, Flow, Bolt |
-| Materiales | Quartz, Iron, Netherite, Redstone, Copper, Gold, Emerald, Diamond, Lapis, Amethyst, Resin |
+| **Presets** | Combinaciones con nombre propio, definidas en `trims.yml`. Vienen 18 — SHOGUN, POLTERGEIST, VERDANT… — cada una con su id, su nombre y **un solo permiso**. |
+| **Personalizados** | Cualquier patrón con cualquier material, montado por el jugador en la pestaña CUSTOM. No tiene id: lo permiten sus dos mitades más el nodo de la pestaña. |
 
-## Cómo funciona
+`trims.yml` trae 18 patrones y 11 materiales — 198 combinaciones — pero la lista es **tuya**: un
+patrón que no aparezca en el archivo no se ofrece, se renombra y se dibuja con el icono que quieras.
 
-<Steps>
-  <Step title="Un jugador abre el menú">
-    `/armortrim` abre la pantalla principal, que lleva a un menú de patrones y otro de materiales.
-  </Step>
-  <Step title="Elige por pieza">
-    Casco, peto, pantalones y botas se eligen por separado — un casco con trim de oro sobre botas con
-    trim de diamante es una combinación válida.
-  </Step>
-  <Step title="Se equipa armadura">
-    El trim se aplica a lo que lleve puesto, cada vez que la armadura cambia.
-  </Step>
-</Steps>
+## Qué ve el cliente
 
-<Callout type="note" title="La selección sobrevive a la armadura">
-El trim se guarda contra el jugador, no contra el objeto. Morir y conseguir armadura nueva, o cambiar
-de set entre partidas, lo vuelve a aplicar — que es lo que lo convierte en una ventaja cosmética de
-rango y no en una edición puntual de un objeto.
-</Callout>
+| Espectador | Ve |
+|---|---|
+| Todo el que tenga al portador en rango | La armadura con el trim |
+| El portador, en su inventario y en su muñeco | Lo mismo |
+| El portador **en creativo** | La armadura real — un cliente en creativo devuelve sus ranuras al servidor, así que hay que mostrarle la verdad |
+| Cualquiera que mire una pieza con trim en un cofre, la hotbar o el cursor | El objeto real, con el trim y las líneas de `armor-lore` añadidas |
+| Cualquiera que mire una **elytra** | La elytra. Va en la ranura del pecho pero no es armadura, y vestirla de peto le costaría el vuelo al portador |
+| Todos, cuando el portador ya no tiene el permiso | La armadura pelada, si `hide-without-permission` está activo. El valor sigue guardado y el aspecto vuelve con el nodo |
 
 ## Qué le cuesta al jugador
 
-Nada dentro del juego. Ni mesa de forja, ni plantilla, ni material gastado. Lo que lo limita son los
-permisos: qué patrones y materiales puede elegir, opcionalmente hasta el nivel de la pieza concreta.
-
-Eso es lo que lo hace vendible — ver [Comandos y permisos](/docs/exyliaarmortrims/comandos).
+Nada dentro del juego: ni mesa de forja, ni plantilla, ni material gastado. Lo que lo limita son los
+permisos — ver [Permisos](/docs/exyliaarmortrims/permisos) — y, si vendes objetos de trim, lo que
+cueste conseguir uno.
 
 ## Requisitos
 
 | Requisito | Detalle |
 |---|---|
 | Servidor | Paper 1.21 o superior. Folia soportado. |
-| Obligatorios | `ExyliaLib`, `packetevents` |
+| Obligatorio | `packetevents` |
+| Recomendado | `ExyliaLib` (dependencia blanda: el loader la instala) |
 | Opcional | `PlaceholderAPI` |
+| Base de datos | Solo con el menú activo (`mode: menu` o `both`) |
+
+<Cards>
+  <Card title="Instalación" href="/docs/exyliaarmortrims/instalacion">
+    Los jars, los archivos que escribe y la tabla que crea.
+  </Card>
+  <Card title="Primeros pasos" href="/docs/exyliaarmortrims/primeros-pasos">
+    De servidor limpio a un jugador con un trim puesto.
+  </Card>
+  <Card title="Trims" href="/docs/exyliaarmortrims/trims">
+    Presets, patrones y materiales, y cómo se escribe `trims.yml`.
+  </Card>
+  <Card title="Modos y objetos" href="/docs/exyliaarmortrims/modos-y-objetos">
+    Objeto de trim, removedor, y qué cambia cada modo.
+  </Card>
+</Cards>

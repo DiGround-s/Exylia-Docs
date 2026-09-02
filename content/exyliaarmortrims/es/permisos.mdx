@@ -1,0 +1,90 @@
+---
+title: "Permisos"
+description: "Un nodo por preset, uno por mitad, y el que abre la pestaña personalizada."
+---
+
+## Los nodos
+
+| Permiso | Qué concede |
+|---|---|
+| `exyliaarmortrims.command.armortrim` | Abrir el menú. |
+| `exyliaarmortrims.admin` | Todo `/armortrimsadmin`. |
+| `exyliaarmortrims.trim.<preset>` | Ese preset, en cualquier pieza. |
+| `exyliaarmortrims.trim.<preset>.<pieza>` | Ese preset, solo en esa pieza. |
+| `exyliaarmortrims.trim.*` | Todos los presets. |
+| `exyliaarmortrims.custom` | Abrir la pestaña CUSTOM. |
+| `exyliaarmortrims.pattern.<patrón>` | Ese patrón en la pestaña CUSTOM. |
+| `exyliaarmortrims.pattern.*` | Todos los patrones. |
+| `exyliaarmortrims.material.<material>` | Ese material en la pestaña CUSTOM. |
+| `exyliaarmortrims.material.*` | Todos los materiales. |
+
+Piezas: `helmet`, `chestplate`, `leggings`, `boots`. Los ids van en minúsculas.
+
+<Callout type="warning" title="Las mitades no llevan `.trim.` en medio">
+El nodo de un preset es `exyliaarmortrims.trim.shogun`; el de un patrón es
+`exyliaarmortrims.pattern.sentry`, sin `trim`. Son dos esquemas distintos porque son dos cosas
+distintas: un preset es un producto con nombre, y las mitades son el material del que se montan otros.
+</Callout>
+
+## Un preset no es sus mitades
+
+Un preset se permite con **un nodo**. Una combinación libre se permite con **tres**: la pestaña, el
+patrón y el material.
+
+Eso es a propósito:
+
+- Dar SHOGUN no regala `sentry` ni `netherite` para recombinarlos con otra cosa.
+- Dar `exyliaarmortrims.custom` no regala ningún patrón: sin mitades, la pestaña se abre bloqueada.
+
+## Los comodines se preguntan a mano
+
+`exyliaarmortrims.trim.*` funciona aunque los presets no estén declarados en `plugin.yml`. El plugin
+pregunta el nodo y, si no lo tiene, pregunta el comodín de su nivel — porque un comodín de Bukkit solo
+se expande cuando todos sus hijos son permisos registrados, y estos se llaman como entradas de un
+archivo que tú editas.
+
+## Por pieza
+
+Un preset se puede vender por pieza: `exyliaarmortrims.trim.shogun.helmet` deja llevarlo solo en el
+casco. Con FULL SET, el jugador recibe **las piezas que puede** y ninguna más, en vez de un rechazo
+entero.
+
+Las mitades de la pestaña CUSTOM no tienen variante por pieza.
+
+## Cuando el permiso se va
+
+Nada se borra. Lo que cambia es lo que se ve:
+
+| Ajuste | Efecto |
+|---|---|
+| `require-permission: true` | Un trim que el jugador no puede usar no se puede poner, ni por menú ni con un objeto. |
+| `hide-without-permission: true` | Además, la armadura que ya lo llevaba se muestra pelada. |
+
+El valor sigue en la armadura y en la fila del jugador, así que el aspecto vuelve entero el día que
+vuelva el rango. Los comandos y la API nunca miran estos ajustes.
+
+## Ejemplos
+
+```text
+# Todo el mundo puede abrir el menú
+/lp group default permission set exyliaarmortrims.command.armortrim true
+
+# Un preset suelto como recompensa
+/lp group default permission set exyliaarmortrims.trim.bulwark true
+
+# Un rango con todos los presets
+/lp group vip permission set exyliaarmortrims.trim.* true
+
+# El rango de arriba, con la pestaña personalizada entera
+/lp group mvp permission set exyliaarmortrims.custom true
+/lp group mvp permission set exyliaarmortrims.pattern.* true
+/lp group mvp permission set exyliaarmortrims.material.* true
+
+# Un adelanto: solo el casco
+/lp group default permission set exyliaarmortrims.trim.mirage.helmet true
+```
+
+<Callout type="tip" title="Vende presets, guarda CUSTOM para arriba">
+Un preset es un nombre que se puede anunciar y un solo permiso que dar. La pestaña CUSTOM son 198
+combinaciones y tres nodos: es la recompensa del rango más alto, no el punto de entrada.
+</Callout>

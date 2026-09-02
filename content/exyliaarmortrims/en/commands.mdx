@@ -1,68 +1,50 @@
 ---
-title: "Commands and permissions"
-description: "Two commands, and a permission scheme that goes down to the armour piece."
+title: "Commands"
+description: "One command for players and seven admin subcommands."
 ---
 
-## Commands
+## Player
 
-| Command | Permission | What it does |
-|---|---|---|
-| `/armortrim` | `exyliaarmortrims.command.armortrim` | Opens the trim menu. |
-| `/armortrim reload` | `exyliaarmortrims.admin` | Reloads this plugin's files. |
+| Command | Aliases | Permission | What it does |
+|---|---|---|---|
+| `/armortrim` | `/armortrims`, `/trims`, `/trim` | `exyliaarmortrims.command.armortrim` | Opens the trim menu. |
 
-`reload` re-reads `config.yml`, `trims.yml` and the three menus. It does not reload the library — that
-is what `/exylialib reload` is for.
+With `mode: item` the menu is off and the command answers with the `menu-disabled` message.
 
-## Permission scheme
+## Admin
 
-Patterns and materials are granted separately, and each can be granted for **all pieces** or for **one
-piece**:
+Everything under `/armortrimsadmin` — aliased `/armortrimadmin` — needs `exyliaarmortrims.admin`.
 
-| Permission | Description |
+| Command | What it does |
 |---|---|
-| `exyliaarmortrims.trim.pattern.<pattern>` | That pattern, on any piece. |
-| `exyliaarmortrims.trim.pattern.<pattern>.<piece>` | That pattern, on that piece only. |
-| `exyliaarmortrims.trim.pattern.*` | Every pattern. |
-| `exyliaarmortrims.trim.pattern.*.<piece>` | Every pattern, on that piece only. |
-| `exyliaarmortrims.trim.material.<material>` | That material, on any piece. |
-| `exyliaarmortrims.trim.material.<material>.<piece>` | That material, on that piece only. |
-| `exyliaarmortrims.trim.material.*` | Every material. |
-| `exyliaarmortrims.trim.material.*.<piece>` | Every material, on that piece only. |
+| `/armortrimsadmin give <player> <trim> [amount]` | Gives trim items. Amount is 1 to 64. |
+| `/armortrimsadmin remover <player> [amount]` | Gives removers. |
+| `/armortrimsadmin set <player> <trim> [piece]` | Writes that trim into their menu choice. With no piece, every piece it fits. |
+| `/armortrimsadmin clear <player> [piece]` | Clears one piece's choice, or all of them. |
+| `/armortrimsadmin open <player>` | Opens the menu for them. |
+| `/armortrimsadmin list` | Lists the registered presets with their ids. |
+| `/armortrimsadmin refresh [player]` | Recomputes and re-sends the look. With no player, everybody. |
+| `/armortrimsadmin reload` | Re-reads `config.yml`, `trims.yml` and the menu. |
 
-Pieces: `helmet`, `chestplate`, `leggings`, `boots`. Pattern and material names go in lowercase.
+`<trim>` takes either a preset id — `shogun` — or a combination — `sentry/netherite`. Tab completion
+suggests the presets.
 
-A choice is allowed if **any** of the four shapes matches, so the general node and the per-piece node
-coexist without conflicting.
+`[piece]` is `helmet`, `chestplate`, `leggings` or `boots`.
 
-### Examples
+<Callout type="note" title="set does not ask about permissions">
+`set` writes the choice **even when the player does not hold the node**, which is what an
+administrator means by "set": running it twice leaves the same result, where the menu's click would
+put the trim on and take it off again.
 
-```text
-# A rank that unlocks everything
-/lp group vip permission set exyliaarmortrims.trim.pattern.* true
-/lp group vip permission set exyliaarmortrims.trim.material.* true
-
-# One premium material, everywhere
-/lp group mvp permission set exyliaarmortrims.trim.material.netherite true
-
-# A helmet-only teaser for the default group
-/lp group default permission set exyliaarmortrims.trim.pattern.*.helmet true
-/lp group default permission set exyliaarmortrims.trim.material.quartz.helmet true
-```
-
-<Callout type="tip" title="A trim needs both halves">
-Granting every pattern with no material grants nothing usable. Sell them as a pair, or sell patterns
-broadly and materials as the scarce half — that is the split most servers end up with.
+If `hide-without-permission` is also on, the player will not see what you gave them until they have
+the permission.
 </Callout>
 
-## What happens when a permission goes away
+## What reload covers
 
-A selection the player can no longer use is **not applied**, whatever the settings say.
+It re-reads `config.yml` and `trims.yml`, recompiles `menus/trims.yml`, rebuilds every trim's visual
+and refreshes everybody online. A mode changed from `item` to `menu` or `both` brings up the database
+and the menu right then.
 
-With `validate-permissions-on-armor-equip: true` — the default — it is also **deleted** the next time
-they equip armour, so the menu shows nothing chosen. With it off, the selection stays stored and
-starts working again if the rank comes back.
-
-## Opening the menu
-
-`exyliaarmortrims.command.armortrim` is separate from owning any trim. Give it to everyone: somebody
-who cannot see the catalogue cannot want anything in it.
+It does not reload ExyliaLib — that is `/exylialib reload` — and does not reopen the database
+connection.

@@ -1,0 +1,90 @@
+---
+title: "Permissions"
+description: "One node per preset, one per half, and the one that opens the custom tab."
+---
+
+## The nodes
+
+| Permission | What it grants |
+|---|---|
+| `exyliaarmortrims.command.armortrim` | Opening the menu. |
+| `exyliaarmortrims.admin` | All of `/armortrimsadmin`. |
+| `exyliaarmortrims.trim.<preset>` | That preset, on any piece. |
+| `exyliaarmortrims.trim.<preset>.<piece>` | That preset, on that piece only. |
+| `exyliaarmortrims.trim.*` | Every preset. |
+| `exyliaarmortrims.custom` | Opening the CUSTOM tab. |
+| `exyliaarmortrims.pattern.<pattern>` | That pattern on the CUSTOM tab. |
+| `exyliaarmortrims.pattern.*` | Every pattern. |
+| `exyliaarmortrims.material.<material>` | That material on the CUSTOM tab. |
+| `exyliaarmortrims.material.*` | Every material. |
+
+Pieces: `helmet`, `chestplate`, `leggings`, `boots`. Ids are lowercase.
+
+<Callout type="warning" title="The halves have no `.trim.` in the middle">
+A preset's node is `exyliaarmortrims.trim.shogun`; a pattern's is
+`exyliaarmortrims.pattern.sentry`, with no `trim`. Two schemes because they are two different things:
+a preset is a named product, and the halves are the stock other things are built from.
+</Callout>
+
+## A preset is not its halves
+
+A preset is permitted by **one node**. A free combination is permitted by **three**: the tab, the
+pattern and the material.
+
+That is deliberate:
+
+- Handing somebody SHOGUN does not hand them `sentry` and `netherite` to recombine with anything else.
+- Handing somebody `exyliaarmortrims.custom` hands them no pattern: with no halves, the tab opens
+  locked.
+
+## Wildcards are asked explicitly
+
+`exyliaarmortrims.trim.*` works even though the presets are not declared in `plugin.yml`. The plugin
+asks for the node and, failing that, for the wildcard at its level — because a Bukkit wildcard only
+expands on its own when every child is a registered permission, and these are named after entries in a
+file you edit.
+
+## Per piece
+
+A preset can be sold per piece: `exyliaarmortrims.trim.shogun.helmet` allows it on the helmet only.
+On FULL SET the player gets **the pieces they may have** and no others, rather than a flat refusal.
+
+The CUSTOM tab's halves have no per-piece variant.
+
+## When a permission goes away
+
+Nothing is deleted. What changes is what is seen:
+
+| Setting | Effect |
+|---|---|
+| `require-permission: true` | A trim the player may not use cannot be put on, by menu or by item. |
+| `hide-without-permission: true` | On top of that, armor already carrying it is shown bare. |
+
+The value stays on the armor and in the player's row, so the look comes back whole the day the rank
+does. Commands and the API never look at these settings.
+
+## Examples
+
+```text
+# Everybody may open the menu
+/lp group default permission set exyliaarmortrims.command.armortrim true
+
+# A single preset as a reward
+/lp group default permission set exyliaarmortrims.trim.bulwark true
+
+# A rank with every preset
+/lp group vip permission set exyliaarmortrims.trim.* true
+
+# The top rank, with the whole custom tab
+/lp group mvp permission set exyliaarmortrims.custom true
+/lp group mvp permission set exyliaarmortrims.pattern.* true
+/lp group mvp permission set exyliaarmortrims.material.* true
+
+# A taster: the helmet only
+/lp group default permission set exyliaarmortrims.trim.mirage.helmet true
+```
+
+<Callout type="tip" title="Sell presets, keep CUSTOM for the top">
+A preset is a name you can advertise and one permission to grant. The CUSTOM tab is 198 combinations
+and three nodes: it is the top rank's reward, not the entry point.
+</Callout>

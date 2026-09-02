@@ -1,11 +1,11 @@
 ---
 title: "Placeholders"
-description: "Seven placeholders, each asked about one armour piece."
+description: "Seven placeholders, each asked about one piece of armor."
 ---
 
-Every placeholder below is written in full, and clicking one copies it.
+Every placeholder is written out in full, and clicking one copies it.
 
-Every placeholder names an **armour piece** first, then what you want to know:
+Each names a **piece** first and then what you want to know:
 
 ```text
 %exyliaarmortrims_<piece>_<value>%
@@ -15,38 +15,41 @@ Pieces: `helmet`, `chestplate`, `leggings`, `boots`.
 
 | Placeholder | Description |
 |---|---|
-| `%exyliaarmortrims_<piece>_pattern%` | The chosen pattern's id. |
-| `%exyliaarmortrims_<piece>_pattern_name%` | Its display name from `trims.yml`. |
-| `%exyliaarmortrims_<piece>_pattern_material%` | The item the pattern is drawn with. |
-| `%exyliaarmortrims_<piece>_material%` | The chosen material's id. |
-| `%exyliaarmortrims_<piece>_material_name%` | Its display name. |
-| `%exyliaarmortrims_<piece>_material_item%` | The item the material is drawn with. |
+| `%exyliaarmortrims_<piece>_trim%` | The stored value: a preset id, or `pattern/material`. |
+| `%exyliaarmortrims_<piece>_name%` | The trim's display name. |
+| `%exyliaarmortrims_<piece>_pattern%` | The pattern's key. |
+| `%exyliaarmortrims_<piece>_pattern_name%` | The pattern's display name, from `trims.yml`. |
+| `%exyliaarmortrims_<piece>_material%` | The material's key. |
+| `%exyliaarmortrims_<piece>_material_name%` | The material's display name. |
 | `%exyliaarmortrims_<piece>_has_trim%` | `true` or `false`. |
 
 ## Examples
 
 ```text
-%exyliaarmortrims_helmet_pattern_name%
-%exyliaarmortrims_boots_material_name%
+%exyliaarmortrims_helmet_name%
+%exyliaarmortrims_boots_pattern_name%
 %exyliaarmortrims_chestplate_has_trim%
 ```
 
-## With nothing chosen
-
-Anything asked about a piece with no selection returns whatever `placeholders.none` says in
-`config.yml` — `None` by default. `has_trim` returns `false`.
-
-An unknown piece name returns the same fallback rather than an error, so a typo shows as `None`
-instead of leaving the placeholder on screen.
-
 ```yaml
 lines:
-  - " {muted}❙ {letters}Helmet: {highlight}%exyliaarmortrims_helmet_pattern_name%"
-  - " {muted}❙ {letters}Boots: {highlight}%exyliaarmortrims_boots_pattern_name%"
+  - " {muted}❙ {letters}Helmet: {highlight}%exyliaarmortrims_helmet_name%"
+  - " {muted}❙ {letters}Boots: {highlight}%exyliaarmortrims_boots_name%"
 ```
 
-<Callout type="tip" title="The two _material placeholders are different things">
-`material` and `material_name` are about the **trim** material — netherite, quartz. `pattern_material`
-and `material_item` are the **icons** those things are drawn with, for a menu that wants to show the
-current choice.
+## What they actually answer
+
+They answer with what the player **chose in the menu**, not with what they happen to be wearing: a
+scoreboard saying "Helmet » SHOGUN" keeps saying it while its owner swims without a helmet on.
+
+| Situation | Answer |
+|---|---|
+| A piece with no choice | `placeholders.none` from `config.yml` — `None` by default. `has_trim` returns `false`. |
+| A mistyped piece name | The same fallback, rather than leaving the placeholder on screen. |
+| An unknown value after the `_` | The same fallback. |
+| Mode `item` | Always the fallback: in that mode there is no menu choice to ask about. |
+
+<Callout type="note" title="A trim engraved on armor does not show up here">
+These placeholders read the player's choice. The trim a particular piece carries travels on the item,
+and that is what the API is for — see [API](/docs/exyliaarmortrims/api).
 </Callout>
