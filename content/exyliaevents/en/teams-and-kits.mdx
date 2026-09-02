@@ -5,10 +5,11 @@ description: "Team colours and balancing, the kits an event hands out, and chest
 
 ## Teams
 
-Seven types are team games: Top Killer Teams, OITC Teams, Quake Teams, CS:GO Teams, LMS Teams, Gem
-Crawler Teams and Thimble Teams, plus Splatoon and Thimble, which are team games in their own right.
+Thirteen types are team games: the seven `_teams` variants — Top Killer, OITC, Quake, CS:GO, LMS, Gem
+Crawler and Thimble — and six games that are team games in their own right: The Bridge, Capture the
+Flag, Domination, Dodgeball, Sheep Wars and Splatoon.
 
-Four colours are available:
+Eight colours are available, handed out in this order:
 
 | Team | Chat colour | Wool |
 |---|---|---|
@@ -16,6 +17,10 @@ Four colours are available:
 | Blue | `&9` | `BLUE_WOOL` |
 | Green | `&a` | `GREEN_WOOL` |
 | Yellow | `&e` | `YELLOW_WOOL` |
+| Orange | `&6` | `ORANGE_WOOL` |
+| Purple | `&5` | `PURPLE_WOOL` |
+| Cyan | `&b` | `CYAN_WOOL` |
+| Pink | `&d` | `PINK_WOOL` |
 
 Team names come from `messages.yml`, so they translate along with the rest of the plugin.
 
@@ -32,10 +37,23 @@ Setting `team-selector-enabled` to `false` skips the choosing entirely — every
 balancer, which is what you want for a tournament-style event where stacking one team would ruin it.
 </Callout>
 
-### Splatoon
+### How many teams
 
-Splatoon reads `team-count` instead of always using two, so a four-colour ink war is a setting rather
-than a different type.
+Every team type reads `team-count`, defaulting to `2` and never lower, so a four-colour ink war or a
+three-way Domination is a setting rather than a different type.
+
+### How spawn points are shared out
+
+Spawn points keep the order you set them in and are cut into one contiguous block per team:
+twenty-four points and two teams means the first twelve are one side of the map and the last twelve
+the other. A team always starts together and never inside the enemy base.
+
+The remainder of an uneven split goes to the last team, and fewer points than teams falls back to
+teams sharing a point rather than nobody spawning. That is why validation asks for at least one point
+per team.
+
+Per-team markers — The Bridge's goal, CTF's stand, Dodgeball's court — follow the same `team-count`:
+see [Arenas · Markers](/docs/exyliaevents/arenas#markers).
 
 ## Kits
 

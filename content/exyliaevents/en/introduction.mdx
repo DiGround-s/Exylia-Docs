@@ -1,11 +1,11 @@
 ---
 title: "Introduction"
-description: "What ExyliaEvents is, the thirty-four minigames it registers, and how the docs are laid out."
+description: "What ExyliaEvents is, the forty-nine minigames it registers, and how the docs are laid out."
 ---
 
-ExyliaEvents is a minigame event system. It registers **34 event types** — twenty-seven solo games and
-seven team variants — and each one is a real, separate game with its own rules, its own settings
-screen, its own scoreboard and its own messages.
+ExyliaEvents is a minigame event system. It registers **49 event types** — forty-two games and seven
+team variants — and each one is a real, separate game with its own rules, its own settings screen, its
+own scoreboard and its own messages.
 
 An *event configuration* is one arena of one type: its lobby, its spawns, its bounds, its settings,
 its kits and its rewards. You can have as many as you like, and several can run at the same time.
@@ -15,11 +15,15 @@ file.
 ## What it covers
 
 <Cards>
-  <Card title="34 event types" href="/docs/exyliaevents/event-types">
-    From TNT Run and Spleef to CS:GO, Build Battle, Survival Games and Simon Says.
+  <Card title="49 event types" href="/docs/exyliaevents/event-types">
+    From TNT Run and Spleef to CS:GO, Capture the Flag, Murder Mystery, Zombie Horde and Mace
+    Roulette.
   </Card>
-  <Card title="Team variants" href="/docs/exyliaevents/teams-and-kits">
-    Seven games also exist as team games, with four colours and a team selector.
+  <Card title="Team games" href="/docs/exyliaevents/teams-and-kits">
+    Thirteen types split players into teams, with eight colours and a team selector.
+  </Card>
+  <Card title="Gauntlets" href="/docs/exyliaevents/gauntlets">
+    Several events back to back with the same players, points per stage and a champion at the end.
   </Card>
   <Card title="Arena cloning" href="/docs/exyliaevents/arenas#the-auto-world">
     Brackets and Build Battle paste copies of your arena into a generated void world so matches and
@@ -61,6 +65,8 @@ themselves. Without FAWE the plugin does not start.
 | Sidebars, one per event type | `scoreboards.yml` |
 | Every message | `messages.yml` |
 | Build Battle themes | `buildbattle-themes.yml` |
+| Trivia questions | `trivia-questions.yml` |
+| Gauntlet series | Database (`event_gauntlets`) |
 | Menu layouts | `menus/` |
 
 ## How to read this documentation

@@ -53,11 +53,16 @@ auto-world:
 
 Covered in [Arenas · The auto world](/docs/exyliaevents/arenas#the-auto-world).
 
+### gauntlet
+
+Points, timings and champion commands for series of events. Covered in
+[Gauntlets](/docs/exyliaevents/gauntlets#configuration).
+
 ### Per-type visual blocks
 
 `tnttag`, `taggame`, `blockparty`, `buildbattle`, `quake`, `csgo`, `parkour`, `chairs`, `slap`,
-`gemcrawler`, `pillarsoffortune`, `lms`, `simonsays`, `survivalgames` and `tournament` each carry
-their own boss bars, action bars or titles, plus `winner-fireworks`. Covered in
+`gemcrawler`, `pillarsoffortune`, `lms`, `simonsays`, `survivalgames`, `maceroulette` and `tournament`
+each carry their own boss bars, action bars or titles, plus `winner-fireworks`. Covered in
 [On-screen and audio](/docs/exyliaevents/visuals).
 
 ## scoreboards.yml
@@ -70,8 +75,10 @@ One sidebar per event type plus the lobby board. See
 Every message, with a shared `events` section and then one section per event type — `tnttag`,
 `taggame`, `lms`, `topkiller`, `oitc`, `quake`, `csgo`, `tntrun`, `spleef`, `splegg`, `splatoon`,
 `brackets`, `tournament`, `buildbattle`, `blockparty`, `thimble`, `parkour`, `infection`, `kingkong`,
-`slap`, `anvilrunning`, `chairs`, `gemcrawler`, `pillarsoffortune`, `simonsays`, `volcano` — plus
-`teams` and `placeholders`.
+`slap`, `anvilrunning`, `chairs`, `gemcrawler`, `pillarsoffortune`, `simonsays`, `volcano`,
+`survivalgames`, `bridge`, `ctf`, `domination`, `murdermystery`, `hideseek`, `redlight`,
+`glassbridge`, `koth`, `paintball`, `dodgeball`, `sheepwars`, `zombiehorde`, `trivia`, `race`,
+`maceroulette`, the seven team variants and `gauntlet` — plus `teams`, `placeholders` and `admin`.
 
 Team names live in `teams`, which is why translating the file translates the teams as well.
 
@@ -79,6 +86,22 @@ Team names live in `teams`, which is why translating the file translates the tea
 
 Time-of-day scheduling. See
 [Game flow · Scheduled events](/docs/exyliaevents/game-flow#scheduled-events).
+
+## trivia-questions.yml
+
+The questions Trivia asks. Every entry has its text, exactly four answers and `correct`, the index of
+the right one counted from zero — which is what the four answer zones marked on the arena are matched
+against.
+
+```yaml title="trivia-questions.yml"
+questions:
+  - question: "How many blocks tall is an Enderman?"
+    answers: ["2", "3", "4", "5"]
+    correct: 1
+```
+
+It ships with ten example questions and is meant to be rewritten, translated or replaced wholesale. A
+malformed question — not four answers, or a `correct` out of range — is dropped.
 
 ## buildbattle-themes.yml
 
@@ -90,10 +113,12 @@ translate or replace every entry. The settings menu has a button that restores t
 ```text
 menus/
 ├── admin/    the panel, the type selector, the configuration list and setup,
-│             one settings screen per type — CS:GO has one per weapon —
-│             kit list and confirmation dialogs
-└── user/     the main menu, active events, start event, stats,
-    └── es/   kit selection, team selection and spectator menu (Spanish copies)
+│             one settings screen per type — CS:GO has one per weapon and Mace
+│             Roulette one for its modifiers —, kit list, arena markers, the
+│             gauntlet editor and confirmation dialogs
+└── user/     the main menu, active events, start event, stats, kit selection,
+    └── es/   team selection, the gauntlet builder and the spectator menu
+              (Spanish copies)
 ```
 
 ## Migrations

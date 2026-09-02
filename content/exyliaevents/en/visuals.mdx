@@ -17,7 +17,7 @@ scoreboards:
   topkiller_teams: ...
 ```
 
-Every registered type has its own key, team variants included, so a Quake board and a Quake Teams
+Each of the 49 registered types has its own key, team variants included, so a Quake board and a Quake Teams
 board are edited separately.
 
 The values available inside the lines are the ones that type provides — its round, its timer, its
@@ -45,7 +45,20 @@ tnttag:
 
 Types with their own visual blocks include TNT Tag, Tag Game, Block Party, Build Battle, Quake,
 CS:GO, Parkour, Chairs, Slap, Gem Crawler, Pillars of Fortune, LMS, Simon Says, Survival Games and
-Tournament, alongside `winner-fireworks` for the celebration at the end.
+Mace Roulette and Tournament, alongside `winner-fireworks` for the celebration at the end.
+
+Mace Roulette's block carries the bar the hunter races against, the title the chosen player is shown,
+and two sounds written as plain names rather than effects:
+
+```yaml title="config.yml"
+maceroulette:
+  spin-tick-sound: BLOCK_NOTE_BLOCK_HAT
+  spin-stop-sound: "ITEM_MACE_SMASH_GROUND|1.0|1.0"
+```
+
+`spin-tick-sound` is the tick as the mace moves from player to player: it is played at a pitch the
+spin works out as it slows, and an effect carries only one fixed pitch. `spin-stop-sound` is written
+`NAME|volume|pitch`.
 
 Tournament's block is three separate effects rather than a bar: a freeze title before a match, the
 same countdown on the action bar, and an "you're next" title for whoever fights after.

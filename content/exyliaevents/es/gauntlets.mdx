@@ -1,0 +1,101 @@
+---
+title: "Gauntlets"
+description: "Varios eventos seguidos, con puntos por etapa y un campeón al final."
+---
+
+Un **gauntlet** es una serie de eventos jugados uno detrás de otro con la misma gente. Cada etapa
+reparte puntos, y quien más suma al terminar la última es el campeón.
+
+Las series se montan desde los menús con eventos que ya existen, se guardan en la base de datos
+(`event_gauntlets`) y no necesitan tocar ningún archivo.
+
+<Callout type="note" title="Solo corre un gauntlet a la vez">
+Una serie necesita los huecos de evento y a los jugadores, así que empezar una mientras otra corre se
+rechaza con un mensaje.
+</Callout>
+
+## Montar una serie
+
+Desde `/eventsadmin` se llega a la lista de gauntlets: crear una serie, ponerle nombre e icono, y
+añadir etapas eligiéndolas de las configuraciones existentes. Las etapas se reordenan y se quitan sin
+reiniciar nada.
+
+| Campo | Qué es |
+|---|---|
+| `id` | La clave, tal y como la escribiste. |
+| `displayName` | Lo que muestra el menú. Por defecto, el id. |
+| `iconMaterial` | El icono. Por defecto `NETHER_STAR`. |
+| `stages` | Los ids de configuración, en orden de juego. |
+
+Cualquier tipo de evento vale como etapa. Una serie necesita **al menos dos** para poder lanzarse.
+
+## Lanzar una
+
+```text
+/eventsadmin gauntlet start <serie>
+/eventsadmin gauntlet stop
+```
+
+`start` mete en la serie a todos los jugadores conectados que estén libres — los que no están ya en un
+evento — y hacen falta al menos dos. `stop` corta la serie y el evento que estuviera jugando.
+
+También hay un botón de inicio en el menú de la serie, con el mismo efecto.
+
+## La línea que arma un jugador
+
+Un jugador con `exyliaevents.start` puede montar su propia línea desde el menú: cada clic añade uno de
+los eventos que se pueden iniciar, hasta **12 etapas**, y START la lanza. Esa línea **no se guarda**:
+es de esa partida, y el siguiente jugador arma la suya.
+
+Se aplican las mismas reglas que a `/events start`: el cooldown de inicio (salvo
+`exyliaevents.cooldown.bypass`) y el lobby principal configurado.
+
+## Cómo transcurre
+
+<Steps>
+  <Step title="Empieza la etapa">
+    Se lanza el evento de la etapa y se mete a la lista de participantes dentro de él.
+  </Step>
+  <Step title="Arranque forzado">
+    Tras `lobby-seconds` el evento arranca aunque la cuenta atrás no hubiera terminado. Una etapa con
+    menos de dos jugadores se salta y se anuncia.
+  </Step>
+  <Step title="Puntos">
+    Al acabar, los ganadores suman `points-winner` y el resto de participantes `points-participant`.
+    Se anuncia la clasificación con los tres primeros.
+  </Step>
+  <Step title="Siguiente">
+    Tras `between-stages-seconds` empieza la etapa siguiente.
+  </Step>
+  <Step title="Campeón">
+    Terminada la última etapa se corona a quien más puntos tenga — varios si empatan — y se ejecutan
+    los `champion-commands`.
+  </Step>
+</Steps>
+
+Quien entre al lobby de una etapa queda dentro del gauntlet a partir de ahí, así que llegar tarde a la
+serie no impide sumar en lo que queda.
+
+## Configuración
+
+```yaml title="config.yml"
+gauntlet:
+  points-winner: 10
+  points-participant: 2
+  lobby-seconds: 20
+  between-stages-seconds: 8
+  champion-commands: []
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `points-winner` | `10` | Puntos para quien gana una etapa. |
+| `points-participant` | `2` | Puntos para quien la juega sin ganarla. |
+| `lobby-seconds` | `20` | Segundos de lobby antes de forzar el arranque de la etapa. |
+| `between-stages-seconds` | `8` | Pausa entre una etapa y la siguiente. |
+| `champion-commands` | vacío | Comandos de consola para el campeón. `%player%` y `%series%`. |
+
+<Callout type="tip" title="El campeón se premia aparte">
+Las recompensas normales de cada evento se siguen entregando por etapa. `champion-commands` es el
+premio de la serie entera, así que es donde va el gran premio.
+</Callout>

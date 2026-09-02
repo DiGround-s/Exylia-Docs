@@ -1,10 +1,10 @@
 ---
 title: "Tipos de evento"
-description: "Los treinta y cuatro tipos registrados, qué es cada uno, y los ajustes que importan con su valor por defecto."
+description: "Los cuarenta y nueve tipos registrados, qué es cada uno, y los ajustes que importan con su valor por defecto."
 ---
 
-Hay treinta y cuatro tipos registrados: veintisiete juegos individuales y siete variantes por equipos.
-El tipo se elige al crear la configuración y no se puede cambiar después.
+Hay cuarenta y nueve tipos registrados: cuarenta y dos juegos y siete variantes por equipos de otros
+tantos. El tipo se elige al crear la configuración y no se puede cambiar después.
 
 ## El catálogo
 
@@ -13,6 +13,7 @@ El tipo se elige al crear la configuración y no se puede cambiar después.
 | `tnttag` | TNT Tag | Eliminación por rondas | — |
 | `taggame` | Tag Game | Eliminación por rondas | — |
 | `simonsays` | Simon Says | Eliminación por rondas | — |
+| `maceroulette` | Mace Roulette | Eliminación por rondas | — |
 | `blockparty` | Block Party | Supervivencia por rondas | — |
 | `chairs` | Chairs | Supervivencia por rondas | — |
 | `tntrun` | TNT Run | Supervivencia | — |
@@ -20,23 +21,37 @@ El tipo se elige al crear la configuración y no se puede cambiar después.
 | `splegg` | Splegg | Supervivencia | — |
 | `volcano` | Volcano | Supervivencia | — |
 | `anvilrunning` | Anvil Running | Supervivencia / Reflejos | — |
+| `glassbridge` | Glass Bridge | Supervivencia / Suerte | — |
+| `redlight` | Red Light, Green Light | Reflejos | — |
 | `lms` | Last Man Standing | Eliminación PvP | — |
 | `topkiller` | Top Killer | PvP por bajas | — |
+| `paintball` | Paintball | PvP por bajas | — |
 | `oitc` | OITC | PvP de precisión | — |
 | `quake` | Quake | PvP de precisión | — |
 | `csgo` | CS:GO | PvP a muerte | — |
 | `slap` | Slap | PvP de control de zona | — |
+| `koth` | King of the Hill | PvP de control de zona | — |
 | `gemcrawler` | Gem Crawler | PvP de recolección | — |
 | `pillarsoffortune` | Pillars of Fortune | PvP de supervivencia | — |
 | `survivalgames` | Survival Games | PvP de supervivencia | — |
 | `infection` | Infection | Infección | — |
 | `kingkong` | King Kong | Persecución | — |
+| `hideseek` | Hide and Seek | Persecución | — |
+| `murdermystery` | Murder Mystery | Deducción social | — |
+| `bridge` | The Bridge | Objetivo por equipos | Sí |
+| `ctf` | Capture the Flag | Objetivo por equipos | Sí |
+| `domination` | Domination | Objetivo por equipos | Sí |
+| `dodgeball` | Dodgeball | Rondas por equipos | Sí |
+| `sheepwars` | Sheep Wars | Eliminación por equipos | Sí |
+| `splatoon` | Splatoon | Territorial por equipos | Sí |
+| `zombiehorde` | Zombie Horde | PvE cooperativo | — |
+| `trivia` | Trivia | Preguntas | — |
+| `race` | Race | Carreras | — |
 | `brackets` | Brackets | Torneo 1v1 | — |
 | `tournament` | Tournament | 1v1 secuencial | — |
 | `buildbattle` | Build Battle | Construcción creativa | — |
 | `parkour` | Parkour | Parkour | — |
-| `thimble` | Thimble | Parkour / Habilidad | Sí |
-| `splatoon` | Splatoon | Territorial por equipos | Sí |
+| `thimble` | Thimble | Parkour / Habilidad | — |
 | `topkiller_teams` | Top Killer Teams | PvP por equipos | Sí |
 | `oitc_teams` | OITC Teams | PvP por equipos | Sí |
 | `quake_teams` | Quake Teams | PvP por equipos | Sí |
@@ -55,7 +70,13 @@ El tipo se elige al crear la configuración y no se puede cambiar después.
 | `max-players` | `32` | Cuántos caben. |
 | `grace-period` | `5` donde el tipo lo tiene | Segundos iniciales sin daño. |
 
-Los tipos por equipos añaden `team-selector-enabled`, activo por defecto.
+Los tipos por equipos añaden `team-selector-enabled`, activo por defecto, y `team-count`.
+
+<Callout type="note" title="Algunos tipos piden marcadores en la arena">
+Trece tipos necesitan que el admin marque sitios concretos — una meta, un asta de bandera, un punto
+de captura — desde la pantalla de marcadores del setup. Están señalados abajo y explicados en
+[Arenas · Marcadores](/docs/exyliaevents/arenas#marcadores).
+</Callout>
 
 ## Eliminación por rondas
 
@@ -95,6 +116,59 @@ El mismo núcleo que TNT Tag, más construcción: `temporary-blocks` activo con
 
 Se canta una instrucción y quien no la cumple a tiempo queda eliminado. La ventana se acorta con las
 rondas hasta `min-action-time`.
+
+### Mace Roulette
+
+Marcador: **centro de la plataforma** (un bloque). Este tipo **genera sus propios spawns**, así que no
+le pidas puntos de spawn: la plataforma, el anillo donde se coloca la gente y lo que haga un
+modificador se construyen desde ese bloque.
+
+| Ajuste | Por defecto |
+|---|---|
+| `max-players` | `32` |
+| `platform-radius` | `12` |
+| `platform-material` | `SMOOTH_STONE` |
+| `round-duration` | `12` |
+| `round-pause` | `3` |
+| `settle-delay` | `2` |
+| `spin-duration` | `4` |
+| `spin-item` | `MACE` |
+| `spin-glow` | `true` |
+| `wind-charges` | `1` |
+| `wind-burst-level` | `2` |
+| `launch-power` | `1.6` |
+| `miss-kills-macer` | `false` |
+| `mace-hit-eliminates` | `false` |
+| `modifiers-enabled` | `true` |
+| `modifier-chance-single` | `49` |
+| `modifier-chance-double` | `25` |
+| `modifier-chance-triple` | `5` |
+
+Una maza giratoria elige cazador y este tiene `round-duration` segundos para tirar a alguien de la
+plataforma. Salir de los límites de la arena es quedar eliminado, así que la caída no necesita regla
+propia. Cada ronda pasa por cuatro fases: giro, caza, asentamiento — mientras cae quien fue lanzado —
+y pausa.
+
+#### Modificadores
+
+Con `modifiers-enabled` activo, cada ronda sortea uno, dos o tres modificadores según
+`modifier-chance-single`, `-double` y `-triple`. No son ajustes normales: se guardan como
+`modifier.<id>.enabled` y `modifier.<id>.weight` y se editan en su propia pantalla,
+`menus/admin/maceroulette_modifiers.yml`.
+
+| Identificador | Nombre | Qué hace | Peso |
+|---|---|---|---|
+| `double-mace` | Double Mace | Dos jugadores reciben maza | `80` |
+| `triple-mace` | Triple Mace | Tres jugadores reciben maza | `50` |
+| `donut-map` | Donut Map | Se abre un agujero en el centro | `30` |
+| `holes` | Holes | El suelo se va agujereando | `20` |
+| `shrinking-map` | Shrinking Map | El suelo se cierra | `10` |
+| `bouncy-floor` | Bouncy Floor | El suelo es slime | `10` |
+| `icy-floor` | Icy Floor | El suelo es hielo | `10` |
+| `ceiling` | Ceiling | Un techo cubre la arena | `10` |
+| `no-jumping` | No Jumping | Nadie puede saltar | `10` |
+
+Los pesos son relativos entre sí, como en las tablas de loot.
 
 ## Supervivencia por rondas
 
@@ -179,6 +253,42 @@ El suelo sube inundándose, cada vez más rápido.
 Caen yunques, más rápido y en mayor número con el tiempo. Con `target-anvils` activo, algunos apuntan
 a los jugadores en vez de caer al azar.
 
+### Glass Bridge
+
+Marcadores: **cristal del puente** (zona) y **plataforma de meta** (zona).
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `240` |
+| `max-players` | `24` |
+| `grace-period` | `5` |
+| `pvp` | `false` |
+
+Filas de cristal en parejas: de cada pareja, un panel aguanta y el otro se rompe. Los paneles se
+encuentran escaneando el marcador del puente y agrupándolos en filas, así que solo hay que construir
+el puente. Un panel roto se queda roto, y los de atrás aprenden de la caída.
+
+## Reflejos
+
+### Red Light, Green Light
+
+Marcador: **línea de meta** (zona).
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `180` |
+| `max-players` | `40` |
+| `grace-period` | `5` |
+| `green-min` | `3` |
+| `green-max` | `8` |
+| `red-min` | `2` |
+| `red-max` | `5` |
+| `red-grace-ticks` | `8` |
+
+Se corre en verde y se para en rojo. Moverse en rojo elimina; llegar a la meta salva. Cada luz dura un
+tiempo aleatorio dentro de su rango, y el rojo da un margen de `red-grace-ticks` ticks para que un
+paso que llegó tarde por ping no cueste la partida.
+
 ## PvP
 
 ### Last Man Standing
@@ -191,6 +301,18 @@ a los jugadores en vez de caer al azar.
 
 Ambos: `kills-to-win` `20`, `respawn-delay` `3`, `golden-apple-on-kill` activo, `reset-kit-on-kill`
 desactivado. OITC añade `arrow-limit` `1` — una flecha, una baja, y la recoges.
+
+### Paintball
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `300` |
+| `kills-to-win` | `20` |
+| `respawn-delay` | `2` |
+| `grace-period` | `5` |
+
+Todos contra todos con respawn: una bola de nieve mata, la munición no se acaba y nada más hace daño.
+Gana quien llegue al objetivo de bajas o quien vaya primero al agotarse el tiempo.
 
 ### Quake
 
@@ -224,6 +346,26 @@ la escopeta.
 `points-to-win` `100`, `respawn-delay` `3`. Los puntos salen de estar sobre el bloque de captura — ver
 [Arenas](/docs/exyliaevents/arenas#materiales-que-espera-cada-tipo).
 
+### King of the Hill
+
+Marcador: **colina** (zona), de una a cuatro.
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `480` |
+| `points-to-win` | `120` |
+| `points-per-second` | `1` |
+| `grace-period` | `5` |
+| `respawn-delay` | `5` |
+| `default-kit` | `true` |
+| `golden-apple-on-kill` | `true` |
+| `fall-damage` | `true` |
+| `lock-armor` | `true` |
+| `lock-drop` | `true` |
+
+Estar solo en la colina puntúa; compartirla no puntúa para nadie. Si marcas varias colinas, cada una
+paga a su propio rey.
+
 ### Gem Crawler
 
 `gem-spawn-interval` `5`, `win-gems` `10`, `win-countdown` `10`, `respawn-delay` `3`. Aparecen gemas,
@@ -238,7 +380,8 @@ eso este tipo necesita **un punto de spawn por jugador**.
 
 `max-players` `20`, `grace-period` `15`, `chest-refill-interval` `180`, `min-items-per-chest` `3`,
 `max-items-per-chest` `12`. Los cofres se llenan desde la tabla de loot de la configuración — ver
-[Equipos y kits](/docs/exyliaevents/equipos-y-kits#tablas-de-loot).
+[Equipos y kits](/docs/exyliaevents/equipos-y-kits#tablas-de-loot). Como en Pillars of Fortune, cada
+jugador sale de su propio punto de spawn, así que necesita **un spawn por jugador**.
 
 ## Persecución e infección
 
@@ -252,6 +395,255 @@ eso este tipo necesita **un punto de spawn por jugador**.
 
 `min-players` `3`, `runner-respawn` activo, `respawn-delay` `3`, `kong-speed-level` `2`, `kong-glow`
 activo.
+
+### Hide and Seek
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `240` |
+| `min-players` | `3` |
+| `seeker-percentage` | `20` |
+| `hiding-time` | `30` |
+| `seeker-speed` | `2` |
+| `glow-last-seconds` | `45` |
+| `found-become-seekers` | `true` |
+| `allow-interact` | `true` |
+
+Los buscadores esperan cegados en el spawn mientras el resto se esconde. Un golpe convierte al
+escondido en buscador o lo elimina, según `found-become-seekers`. En los últimos `glow-last-seconds`
+segundos los escondidos brillan, así que la partida no se gana en una esquina.
+
+## Deducción social
+
+### Murder Mystery
+
+Marcador: **spawn de oro** (bloque), hasta 32 y ninguno obligatorio.
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `300` |
+| `min-players` | `4` |
+| `max-players` | `24` |
+| `detectives` | `1` |
+| `grace-period` | `10` |
+| `gold-for-bow` | `10` |
+| `gold-spawn-interval` | `3` |
+| `gold-per-spawn` | `1` |
+| `knife-return-seconds` | `5` |
+| `arrow-return-seconds` | `5` |
+| `allow-interact` | `false` |
+
+Un asesino con cuchillo, un detective con arco y el resto inocentes. Los inocentes recogen oro para
+ganarse un arco; disparar a un inocente cuesta la vida al que dispara, y un detective caído deja su
+arco donde murió. El asesino gana matando a todos; los inocentes, matándolo o aguantando el tiempo.
+
+## Objetivo por equipos
+
+### The Bridge
+
+Marcador: **meta** (zona), **una por equipo**.
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `600` |
+| `max-players` | `16` |
+| `team-count` | `2` |
+| `goals-to-win` | `5` |
+| `round-reset-seconds` | `3` |
+| `grace-period` | `5` |
+| `respawn-delay` | `0` |
+| `arrow-refill-seconds` | `5` |
+| `default-kit` | `true` |
+| `regenerate-on-goal` | `true` |
+| `fall-damage` | `true` |
+| `lock-armor` | `true` |
+| `lock-drop` | `true` |
+
+Dos lados, un vacío en medio y un agujero en cada base. Se construye para cruzar y se salta dentro de
+la meta enemiga. Cada gol devuelve a todos a sus jaulas durante `round-reset-seconds` y, con
+`regenerate-on-goal`, regenera el mapa.
+
+### Capture the Flag
+
+Marcador: **asta de bandera** (bloque), **una por equipo**.
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `600` |
+| `max-players` | `20` |
+| `team-count` | `2` |
+| `captures-to-win` | `3` |
+| `flag-return-seconds` | `30` |
+| `grace-period` | `5` |
+| `respawn-delay` | `5` |
+| `carrier-glow` | `true` |
+| `default-kit` | `true` |
+| `fall-damage` | `true` |
+| `lock-armor` | `true` |
+| `lock-drop` | `true` |
+
+Se roba la bandera enemiga y se lleva a la propia asta, que tiene que estar en casa para puntuar. Un
+portador que muere suelta la bandera donde cayó: un compañero de esa bandera la devuelve tocándola, un
+enemigo la recoge, y la que nadie toca vuelve sola tras `flag-return-seconds`.
+
+### Domination
+
+Marcador: **punto de captura** (zona), de uno a ocho.
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `600` |
+| `max-players` | `24` |
+| `team-count` | `2` |
+| `points-to-win` | `300` |
+| `points-per-second` | `1` |
+| `capture-seconds` | `5` |
+| `grace-period` | `5` |
+| `respawn-delay` | `5` |
+| `paint-floor` | `true` |
+| `holograms` | `true` |
+| `default-kit` | `true` |
+| `fall-damage` | `true` |
+| `lock-armor` | `true` |
+| `lock-drop` | `true` |
+
+Un equipo solo dentro de un punto lo captura en `capture-seconds`; con dos equipos dentro el punto
+queda disputado y no se mueve. Cada segundo, cada equipo suma `points-per-second` por punto que tenga.
+
+### Dodgeball
+
+Marcador: **campo** (zona), **uno por equipo**.
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `600` |
+| `max-players` | `24` |
+| `team-count` | `2` |
+| `rounds-to-win` | `3` |
+| `round-delay` | `5` |
+| `grace-period` | `5` |
+
+Cada equipo se queda en su campo y lanza bolas de nieve al otro. Un impacto elimina por esa ronda; el
+equipo que se queda sin nadie la pierde. Cruzar la línea devuelve al jugador a su lado.
+
+### Sheep Wars
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `480` |
+| `max-players` | `20` |
+| `team-count` | `2` |
+| `starting-sheep` | `2` |
+| `sheep-interval` | `8` |
+| `throw-power` | `1.6` |
+| `explosion-power` | `3.0` |
+| `effect-radius` | `4.0` |
+| `grace-period` | `5` |
+| `break-blocks` | `true` |
+| `fall-damage` | `true` |
+
+Equipos en islas lanzándose ovejas. Cada `sheep-interval` segundos todos reciben otra, y cada color
+hace algo distinto al aterrizar:
+
+| Lana | Oveja | Qué hace |
+|---|---|---|
+| `RED_WOOL` | Explosiva | Explota |
+| `ORANGE_WOOL` | Incendiaria | Prende fuego |
+| `LIGHT_BLUE_WOOL` | Congelante | Congela |
+| `PINK_WOOL` | Curativa | Cura |
+| `BLACK_WOOL` | Bombardeo | Lluvia de TNT |
+
+### Splatoon
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `180` |
+| `team-count` | `2` |
+| `weapon-delay` | `0.1` |
+| `weapon-damage` | `2.0` |
+| `paint-radius` | `2` |
+| `ink-trail` | `true` |
+| `respawn-delay` | `3` |
+| `fall-damage` | `false` |
+| `double-jump-enabled` | `true` |
+| `double-jump-cooldown` | `2.0` |
+| `double-jump-limit` | `-1` |
+| `double-jump-power` | `0.8` |
+
+Pinta más suelo que el otro equipo antes de que se agote la duración. `double-jump-limit` en `-1`
+significa ilimitado.
+
+## PvE cooperativo
+
+### Zombie Horde
+
+Marcador: **generador de mobs** (bloque), de uno a dieciséis.
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `900` |
+| `min-players` | `1` |
+| `max-players` | `20` |
+| `waves` | `8` |
+| `base-mobs` | `6` |
+| `mobs-per-wave` | `4` |
+| `mobs-per-player` | `0.35` |
+| `max-mobs` | `60` |
+| `glow-after` | `25` |
+| `wave-delay` | `8` |
+| `mob-health` | `20.0` |
+| `mob-speed` | `1.15` |
+| `mob-damage` | `1.35` |
+| `boss-health` | `200.0` |
+| `grace-period` | `5` |
+| `revive-next-wave` | `true` |
+| `default-kit` | `true` |
+| `mob-leap` | `true` |
+
+El único tipo en el que todos juegan del mismo lado. Las oleadas salen de los generadores marcados,
+cada una mayor que la anterior, y la última la encabeza un jefe. Quien muere espera a la siguiente
+oleada si `revive-next-wave` está activo. Los supervivientes del final ganan, ordenados por el daño
+que hicieron.
+
+## Preguntas y carreras
+
+### Trivia
+
+Marcador: **zona de respuesta** (zona), **exactamente cuatro**.
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `600` |
+| `max-players` | `64` |
+| `rounds` | `10` |
+| `answer-seconds` | `12` |
+| `reveal-seconds` | `4` |
+| `lives` | `1` |
+| `grace-period` | `5` |
+| `spare-last-round` | `true` |
+
+Se lee una pregunta y las cuatro zonas de la arena son las cuatro respuestas. Zona equivocada o
+ninguna zona cuesta una vida. Las preguntas viven en `trivia-questions.yml` y se pueden escribir,
+traducir o reemplazar enteras — ver [Configuración](/docs/exyliaevents/configuracion#trivia-questionsyml).
+
+### Race
+
+Marcadores: **checkpoint** (zona), de uno a treinta y dos, y **línea de meta** (zona).
+
+| Ajuste | Por defecto |
+|---|---|
+| `duration` | `600` |
+| `min-players` | `1` |
+| `max-players` | `40` |
+| `laps` | `1` |
+| `finishers` | `3` |
+| `grace-period` | `5` |
+| `elytra` | `false` |
+| `boat` | `false` |
+
+Los checkpoints se pasan en el orden en que los marcaste, y la meta solo cuenta tras el último
+checkpoint de la vuelta. Caer fuera de la arena devuelve al corredor a su último checkpoint en vez de
+eliminarlo. La carrera acaba cuando `finishers` corredores han terminado.
 
 ## Torneos y construcción
 
@@ -284,28 +676,12 @@ Solo los ajustes comunes. Los checkpoints y la meta son placas de presión en la
 `respawn-delay` `2`. Los jugadores se lanzan a losetas de agua; una loseta llenada es un punto. Existe
 también como `thimble_teams`.
 
-### Splatoon
-
-| Ajuste | Por defecto |
-|---|---|
-| `duration` | `180` |
-| `team-count` | `2` |
-| `weapon-delay` | `0.1` |
-| `weapon-damage` | `2.0` |
-| `paint-radius` | `2` |
-| `ink-trail` | `true` |
-| `respawn-delay` | `3` |
-| `fall-damage` | `false` |
-| `double-jump-enabled` | `true` |
-| `double-jump-cooldown` | `2.0` |
-| `double-jump-limit` | `-1` |
-| `double-jump-power` | `0.8` |
-
-Pinta más suelo que el otro equipo antes de que se agote la duración. `double-jump-limit` en `-1`
-significa ilimitado.
-
 ## Variantes por equipos
 
 Siete tipos existen en versión por equipos: Top Killer, OITC, Quake, CS:GO, LMS, Gem Crawler y
 Thimble. Conservan sus ajustes individuales y añaden la capa de equipos descrita en
 [Equipos y kits](/docs/exyliaevents/equipos-y-kits).
+
+Además, seis juegos son por equipos de por sí y no tienen versión individual: The Bridge, Capture the
+Flag, Domination, Dodgeball, Sheep Wars y Splatoon. En total, trece tipos reparten a la gente en
+equipos.

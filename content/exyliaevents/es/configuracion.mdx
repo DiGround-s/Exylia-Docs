@@ -1,6 +1,6 @@
 ---
 title: "Configuración"
-description: "Los cinco archivos que escribe el plugin y qué va en cada uno."
+description: "Los seis archivos que escribe el plugin y qué va en cada uno."
 ---
 
 Los archivos viven en `plugins/ExyliaEvents/`. Todos se escriben en el primer arranque con sus valores
@@ -55,11 +55,16 @@ auto-world:
 
 Explicado en [Arenas · El mundo automático](/docs/exyliaevents/arenas#el-mundo-automático).
 
+### gauntlet
+
+Puntos, tiempos y comandos de campeón de las series de eventos. Explicado en
+[Gauntlets](/docs/exyliaevents/gauntlets#configuración).
+
 ### Bloques visuales por tipo
 
 `tnttag`, `taggame`, `blockparty`, `buildbattle`, `quake`, `csgo`, `parkour`, `chairs`, `slap`,
-`gemcrawler`, `pillarsoffortune`, `lms`, `simonsays`, `survivalgames` y `tournament` llevan cada uno
-sus boss bars, barras de acción o títulos, además de `winner-fireworks`. Explicados en
+`gemcrawler`, `pillarsoffortune`, `lms`, `simonsays`, `survivalgames`, `maceroulette` y `tournament`
+llevan cada uno sus boss bars, barras de acción o títulos, además de `winner-fireworks`. Explicados en
 [Pantalla y audio](/docs/exyliaevents/visuales).
 
 ## scoreboards.yml
@@ -72,8 +77,10 @@ Un sidebar por tipo de evento más el tablero del lobby. Ver
 Todos los mensajes, con una sección `events` compartida y luego una por tipo de evento — `tnttag`,
 `taggame`, `lms`, `topkiller`, `oitc`, `quake`, `csgo`, `tntrun`, `spleef`, `splegg`, `splatoon`,
 `brackets`, `tournament`, `buildbattle`, `blockparty`, `thimble`, `parkour`, `infection`, `kingkong`,
-`slap`, `anvilrunning`, `chairs`, `gemcrawler`, `pillarsoffortune`, `simonsays`, `volcano` — más
-`teams` y `placeholders`.
+`slap`, `anvilrunning`, `chairs`, `gemcrawler`, `pillarsoffortune`, `simonsays`, `volcano`,
+`survivalgames`, `bridge`, `ctf`, `domination`, `murdermystery`, `hideseek`, `redlight`,
+`glassbridge`, `koth`, `paintball`, `dodgeball`, `sheepwars`, `zombiehorde`, `trivia`, `race`,
+`maceroulette`, las siete variantes por equipos y `gauntlet` — más `teams`, `placeholders` y `admin`.
 
 Los nombres de los equipos viven en `teams`, y por eso traducir el archivo traduce también los
 equipos.
@@ -82,6 +89,23 @@ equipos.
 
 Horarios por día y hora. Ver
 [Flujo de juego · Eventos programados](/docs/exyliaevents/flujo-de-juego#eventos-programados).
+
+## trivia-questions.yml
+
+Las preguntas de Trivia. Cada entrada tiene su enunciado, exactamente cuatro respuestas y `correct`,
+el índice de la correcta contando desde cero — que es lo que se compara con las cuatro zonas de
+respuesta marcadas en la arena.
+
+```yaml title="trivia-questions.yml"
+questions:
+  - question: "How many blocks tall is an Enderman?"
+    answers: ["2", "3", "4", "5"]
+    correct: 1
+```
+
+Trae diez preguntas de ejemplo en inglés y está pensado para reescribirlo, traducirlo o reemplazarlo
+entero. Una pregunta mal formada — sin cuatro respuestas o con un `correct` fuera de rango — se
+descarta.
 
 ## buildbattle-themes.yml
 
@@ -94,10 +118,12 @@ lista original.
 ```text
 menus/
 ├── admin/    el panel, el selector de tipo, la lista y el setup de configuraciones,
-│             una pantalla de ajustes por tipo — CS:GO tiene una por arma —
-│             lista de kits y diálogos de confirmación
+│             una pantalla de ajustes por tipo — CS:GO tiene una por arma y Mace
+│             Roulette otra para sus modificadores —, lista de kits, marcadores de
+│             arena, editor de gauntlets y diálogos de confirmación
 └── user/     el menú principal, eventos activos, iniciar evento, estadísticas,
-    └── es/   selección de kit, selección de equipo y menú de espectador (copias en español)
+    └── es/   selección de kit, selección de equipo, constructor de gauntlets y
+              menú de espectador (copias en español)
 ```
 
 ## Migraciones

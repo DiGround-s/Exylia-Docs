@@ -5,10 +5,11 @@ description: "Colores y balanceo de equipos, los kits que reparte un evento, y l
 
 ## Equipos
 
-Siete tipos son por equipos: Top Killer Teams, OITC Teams, Quake Teams, CS:GO Teams, LMS Teams, Gem
-Crawler Teams y Thimble Teams, más Splatoon y Thimble, que son juegos por equipos de por sí.
+Trece tipos son por equipos: las siete variantes `_teams` — Top Killer, OITC, Quake, CS:GO, LMS, Gem
+Crawler y Thimble — y seis juegos que son por equipos de por sí: The Bridge, Capture the Flag,
+Domination, Dodgeball, Sheep Wars y Splatoon.
 
-Hay cuatro colores disponibles:
+Hay ocho colores disponibles, y se reparten en este orden:
 
 | Equipo | Color de chat | Lana |
 |---|---|---|
@@ -16,6 +17,10 @@ Hay cuatro colores disponibles:
 | Azul | `&9` | `BLUE_WOOL` |
 | Verde | `&a` | `GREEN_WOOL` |
 | Amarillo | `&e` | `YELLOW_WOOL` |
+| Naranja | `&6` | `ORANGE_WOOL` |
+| Morado | `&5` | `PURPLE_WOOL` |
+| Cian | `&b` | `CYAN_WOOL` |
+| Rosa | `&d` | `PINK_WOOL` |
 
 Los nombres de los equipos salen de `messages.yml`, así que se traducen con el resto del plugin.
 
@@ -32,10 +37,23 @@ Poner `team-selector-enabled` en `false` se salta la elección por completo — 
 balanceador, que es lo que quieres en un evento tipo torneo donde apilar un equipo lo arruinaría.
 </Callout>
 
-### Splatoon
+### Cuántos equipos
 
-Splatoon lee `team-count` en vez de usar siempre dos, así que una guerra de tinta a cuatro colores es
-un ajuste y no otro tipo.
+Todo tipo por equipos lee `team-count`, con `2` por defecto y mínimo `2`, así que una guerra de tinta
+a cuatro colores o un Domination a tres bandas es un ajuste y no otro tipo.
+
+### Cómo se reparten los spawns
+
+Los puntos de spawn se guardan en el orden en que los pusiste y se cortan en un bloque contiguo por
+equipo: veinticuatro puntos y dos equipos son los doce primeros para un lado y los doce últimos para
+el otro. Así un equipo siempre sale junto y nunca dentro de la base enemiga.
+
+El resto de una división desigual va al último equipo, y si hay menos puntos que equipos, los equipos
+comparten punto en vez de quedarse alguien sin salir. Por eso la validación pide al menos un punto por
+equipo.
+
+Los marcadores por equipo — la meta de The Bridge, el asta de CTF, el campo de Dodgeball — siguen el
+mismo `team-count`: ver [Arenas · Marcadores](/docs/exyliaevents/arenas#marcadores).
 
 ## Kits
 

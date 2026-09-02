@@ -32,6 +32,11 @@ ningún archivo.
     El cuboide dentro del que ocurre la partida. Salir de él se trata como salir de la arena, y es lo
     que se guarda como esquemática.
   </Step>
+  <Step title="Marca lo que pida el tipo">
+    Trece tipos piden sitios concretos — metas, astas de bandera, puntos de captura, zonas de
+    respuesta — en la pantalla de marcadores. Ver
+    [Arenas · Marcadores](/docs/exyliaevents/arenas#marcadores).
+  </Step>
   <Step title="Guarda la esquemática">
     Desde la pantalla de setup. Es lo que restaura la arena tras la partida, y lo que clonan Brackets
     y Build Battle.
@@ -51,16 +56,20 @@ La pantalla de setup lista lo que falta. Una configuración es jugable cuando ti
 
 - Spawn de lobby.
 - Spawn de espectadores.
-- Al menos un punto de spawn.
+- Al menos un punto de spawn — y al menos uno por equipo en un tipo por equipos.
 - Límites de arena completos.
+- Todos los marcadores obligatorios de su tipo.
 
 Y, comprobado aparte porque solo hace falta para restaurar y clonar, una esquemática guardada como
 `event_bounds_<id>`.
 
-<Callout type="warning" title="Pillars of Fortune necesita un spawn por jugador">
-Casi todos los tipos reparten a la gente entre puntos de spawn al azar. Pillars of Fortune da a cada
-jugador su propio pilar, así que exige **tantos puntos de spawn como `max-players`** — el validador
-dice cuántos tienes y cuántos hacen falta.
+<Callout type="warning" title="Dos tipos necesitan un spawn por jugador">
+Casi todos los tipos reparten a la gente entre puntos de spawn al azar. Pillars of Fortune y Survival
+Games dan a cada jugador su propio sitio, así que exigen **tantos puntos de spawn como `max-players`**
+— el validador dice cuántos tienes y cuántos hacen falta.
+
+Mace Roulette va al revés: coloca a los jugadores él mismo desde el bloque central que marques, y no
+se le piden puntos de spawn.
 </Callout>
 
 ## Lanzarlo

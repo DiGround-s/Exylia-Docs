@@ -12,7 +12,8 @@ las recompensas de un evento, y se edita entera desde `/eventsadmin`.
 |---|---|
 | `id` | La clave. Lo que nombran comandos, menús y placeholders. |
 | `displayName` | Lo que leen los jugadores. Por defecto, el id. |
-| `eventType` | Cuál de los 34 juegos es. Se elige al crearla. |
+| `eventType` | Cuál de los 49 juegos es. Se elige al crearla. |
+| `markers` | Los sitios que el tipo pidió marcar: metas, astas, puntos de captura. |
 | `enabled` | Si se puede lanzar. |
 | `iconMaterial` | El icono en los menús. Por defecto `NETHER_STAR`. |
 | `lobbySpawn` | Donde esperan los jugadores antes de empezar. |
@@ -26,13 +27,59 @@ las recompensas de un evento, y se edita entera desde `/eventsadmin`.
 ## Validación
 
 Una configuración es jugable cuando tiene spawn de lobby, spawn de espectadores, al menos un punto de
-spawn y límites completos. La pantalla de setup nombra lo que falte.
+spawn, límites completos y todos los marcadores obligatorios de su tipo. La pantalla de setup nombra
+lo que falte.
 
-Dos reglas extra:
+Cuatro reglas extra:
 
-- Los tipos marcados como que necesitan un spawn por jugador — **Pillars of Fortune** — exigen al
-  menos `max-players` puntos de spawn, y el validador dice cuántos faltan.
+- Los tipos marcados como que necesitan un spawn por jugador — **Pillars of Fortune** y **Survival
+  Games** — exigen al menos `max-players` puntos de spawn, y el validador dice cuántos faltan.
+- Un tipo por equipos exige al menos tantos puntos de spawn como equipos, para que cada equipo tenga
+  el suyo.
+- Un tipo que **genera sus propios spawns** — **Mace Roulette** — no pide ninguno: coloca a los
+  jugadores él mismo y la pantalla de setup ni siquiera los muestra.
 - La esquemática se comprueba aparte, porque no hace falta para *jugar* pero sí para *restaurar*.
+
+## Marcadores
+
+Trece tipos necesitan sitios concretos de la arena marcados a mano: la meta de The Bridge, el asta de
+Capture the Flag, los puntos de Domination, la colina de KOTH, las zonas de respuesta de Trivia. Antes
+esos sitios se buscaban escaneando materiales; ahora los declara el admin.
+
+Cada tipo declara los marcadores que quiere, y la pantalla **Marcadores** del setup muestra una fila
+por hueco: una fila por equipo cuando el marcador es por equipo, y una fila por cada uno permitido
+cuando admite varios. Las filas obligatorias que faltan salen en rojo y aparecen también en la
+validación.
+
+| Forma | Cómo se marca |
+|---|---|
+| Zona | Se selecciona un cuboide con la varita de región, como los límites de la arena. |
+| Bloque | Se hace clic en un bloque. Lo que cuenta como "estar ahí" es ese bloque más un radio. |
+
+| Tipo | Marcador | Forma | Cuántos |
+|---|---|---|---|
+| The Bridge | Meta | Zona | Una por equipo |
+| Capture the Flag | Asta de bandera | Bloque | Una por equipo |
+| Domination | Punto de captura | Zona | 1 a 8 |
+| Dodgeball | Campo | Zona | Uno por equipo |
+| King of the Hill | Colina | Zona | 1 a 4 |
+| Red Light, Green Light | Línea de meta | Zona | 1 |
+| Glass Bridge | Cristal del puente | Zona | 1 |
+| Glass Bridge | Plataforma de meta | Zona | 1 |
+| Murder Mystery | Spawn de oro | Bloque | 0 a 32 |
+| Zombie Horde | Generador de mobs | Bloque | 1 a 16 |
+| Trivia | Zona de respuesta | Zona | Exactamente 4 |
+| Race | Checkpoint | Zona | 1 a 32 |
+| Race | Línea de meta | Zona | 1 |
+| Mace Roulette | Centro de la plataforma | Bloque | 1 |
+
+Un marcador se puede borrar o teletransportarse a él desde la misma pantalla. Los marcadores por
+equipo siguen a `team-count`: subirlo a cuatro añade dos filas más que hay que marcar.
+
+<Callout type="note" title="Los marcadores viven en la configuración">
+No son regiones de WorldGuard ni bloques mágicos en el mapa: se guardan en la configuración del
+evento, así que reconstruir la arena no los borra — pero moverla sí los deja donde estaban.
+</Callout>
 
 ## Límites y esquemática
 
@@ -99,6 +146,8 @@ Varios juegos buscan bloques concretos. Construye la arena con ellos o el juego 
 | **Parkour** | `HEAVY_WEIGHTED_PRESSURE_PLATE` para los checkpoints, `LIGHT_WEIGHTED_PRESSURE_PLATE` para la meta. |
 | **Thimble** | Los bloques de `WATER` son los objetivos donde saltan los jugadores. |
 | **Anvil Running** | Tocar `WATER` elimina. |
+| **Glass Bridge** | Cristal dentro del marcador del puente, en filas de parejas. El evento decide qué panel es el falso. |
+| **Mace Roulette** | Nada: construye su propia plataforma desde el bloque central con `platform-material`. |
 | **Survival Games** | Cofres dentro de los límites, llenados desde la tabla de loot. |
 
 <Callout type="note" title="El agua es el plano de muerte estándar">

@@ -12,7 +12,8 @@ rewards for one event, and it is edited entirely from `/eventsadmin`.
 |---|---|
 | `id` | The key. What commands, menus and placeholders name. |
 | `displayName` | What players read. Defaults to the id. |
-| `eventType` | Which of the 34 games it is. Chosen at creation. |
+| `eventType` | Which of the 49 games it is. Chosen at creation. |
+| `markers` | The places the type asked to have marked: goals, flag stands, capture points. |
 | `enabled` | Whether it may be started at all. |
 | `iconMaterial` | The menu icon. Defaults to `NETHER_STAR`. |
 | `lobbySpawn` | Where players wait before the game starts. |
@@ -25,15 +26,59 @@ rewards for one event, and it is edited entirely from `/eventsadmin`.
 
 ## Validation
 
-A configuration is playable when it has a lobby spawn, a spectator spawn, at least one spawn point
-and complete bounds. The setup screen lists whatever is missing by name.
+A configuration is playable when it has a lobby spawn, a spectator spawn, at least one spawn point,
+complete bounds and every marker its type requires. The setup screen lists whatever is missing by
+name.
 
-Two extra rules:
+Four extra rules:
 
-- Types marked as needing one spawn per player — **Pillars of Fortune** — require at least
-  `max-players` spawn points, and the validator says how many are missing.
+- Types marked as needing one spawn per player — **Pillars of Fortune** and **Survival Games** —
+  require at least `max-players` spawn points, and the validator says how many are missing.
+- A team type requires at least as many spawn points as it has teams, so every team gets its own.
+- A type that **generates its own spawns** — **Mace Roulette** — is asked for none: it places players
+  itself, and the setup screen does not even show them.
 - An arena schematic is checked separately, because it is not needed to *play* but is needed to
   *restore*.
+
+## Markers
+
+Thirteen types need specific places on the arena marked by hand: The Bridge's goal, Capture the Flag's
+stand, Domination's points, KOTH's hill, Trivia's answer zones. Those places used to be found by
+scanning for materials; now the admin declares them.
+
+Each type declares the markers it wants, and the **Markers** screen in setup shows one row per slot:
+one row per team when the marker is per team, and one row per allowed marker when it accepts several.
+Required rows that are not set show in red and appear in validation too.
+
+| Shape | How it is set |
+|---|---|
+| Area | A cuboid selected with the region wand, like the arena bounds. |
+| Block | A clicked block. What counts as "being there" is that block plus a radius. |
+
+| Type | Marker | Shape | How many |
+|---|---|---|---|
+| The Bridge | Goal | Area | One per team |
+| Capture the Flag | Flag stand | Block | One per team |
+| Domination | Capture point | Area | 1 to 8 |
+| Dodgeball | Court | Area | One per team |
+| King of the Hill | Hill | Area | 1 to 4 |
+| Red Light, Green Light | Finish line | Area | 1 |
+| Glass Bridge | Bridge glass | Area | 1 |
+| Glass Bridge | Finish platform | Area | 1 |
+| Murder Mystery | Gold spawn | Block | 0 to 32 |
+| Zombie Horde | Mob spawner | Block | 1 to 16 |
+| Trivia | Answer zone | Area | Exactly 4 |
+| Race | Checkpoint | Area | 1 to 32 |
+| Race | Finish line | Area | 1 |
+| Mace Roulette | Platform centre | Block | 1 |
+
+A marker can be cleared or teleported to from the same screen. Per-team markers follow `team-count`:
+raising it to four adds two more rows that have to be marked.
+
+<Callout type="note" title="Markers live in the configuration">
+They are not WorldGuard regions or magic blocks in the map: they are stored on the event
+configuration, so rebuilding the arena does not clear them — but moving it leaves them behind.
+</Callout>
 
 ## Bounds and the schematic
 
@@ -101,6 +146,8 @@ Several games look for specific blocks. Build the arena with these or the game w
 | **Parkour** | `HEAVY_WEIGHTED_PRESSURE_PLATE` for checkpoints, `LIGHT_WEIGHTED_PRESSURE_PLATE` for the finish. |
 | **Thimble** | `WATER` blocks are the targets players dive into. |
 | **Anvil Running** | Touching `WATER` eliminates. |
+| **Glass Bridge** | Glass inside the bridge marker, in rows of pairs. The event decides which panel is the fake one. |
+| **Mace Roulette** | Nothing: it builds its own platform from the centre block using `platform-material`. |
 | **Survival Games** | Chests inside the bounds, filled from the loot table. |
 
 <Callout type="note" title="Water is the standard death plane">

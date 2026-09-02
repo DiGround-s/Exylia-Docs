@@ -32,6 +32,10 @@ involves a text editor.
     The cuboid the game happens inside. Leaving it is treated as leaving the arena, and it is what
     gets saved as a schematic.
   </Step>
+  <Step title="Mark whatever the type asks for">
+    Thirteen types ask for specific places — goals, flag stands, capture points, answer zones — on the
+    markers screen. See [Arenas · Markers](/docs/exyliaevents/arenas#markers).
+  </Step>
   <Step title="Save the schematic">
     From the setup screen. It is what restores the arena after a game, and what Brackets and Build
     Battle clone.
@@ -51,16 +55,20 @@ The setup screen lists what is still missing. A configuration is playable once i
 
 - A lobby spawn.
 - A spectator spawn.
-- At least one spawn point.
+- At least one spawn point — and at least one per team on a team type.
 - Complete arena bounds.
+- Every marker its type requires.
 
 And, checked separately because it is only needed for restoring and cloning, an arena schematic
 saved as `event_bounds_<id>`.
 
-<Callout type="warning" title="Pillars of Fortune needs one spawn per player">
-Most types drop everyone at a random spawn point. Pillars of Fortune gives each player their own
-pillar, so it requires **as many spawn points as `max-players`** — the validator says exactly how
-many you have and how many are needed.
+<Callout type="warning" title="Two types need one spawn per player">
+Most types drop everyone at a random spawn point. Pillars of Fortune and Survival Games give each
+player a place of their own, so they require **as many spawn points as `max-players`** — the validator
+says exactly how many you have and how many are needed.
+
+Mace Roulette is the opposite: it places players itself from the centre block you mark, and is never
+asked for spawn points.
 </Callout>
 
 ## Running it

@@ -30,8 +30,13 @@ Everything under `/eventsadmin` needs `exyliaevents.admin`.
 | `/eventsadmin forcejoin <player> <eventId>` | Puts a player into an event. |
 | `/eventsadmin forcestop <eventId>` | Stops and removes a running event. |
 | `/eventsadmin revive <eventId> <player>` | Brings an eliminated player back into a running event. |
+| `/eventsadmin gauntlet start <series>` | Starts a saved series with every free player online. |
+| `/eventsadmin gauntlet stop` | Cuts the running series short, along with the stage it is playing. |
 | `/eventsadmin export` | Dumps every table into `dumps/`. |
 | `/eventsadmin import <filename>` | Reads a dump back. |
+
+Series of events are put together in the menus and covered in
+[Gauntlets](/docs/exyliaevents/gauntlets).
 
 Sign-up commands live under `/eventsadmin inscriptions` and need their own node — see
 [Sign-ups](/docs/exyliaevents/inscriptions).
@@ -42,7 +47,7 @@ Sign-up commands live under `/eventsadmin inscriptions` and need their own node 
 |---|---|
 | `exyliaevents.admin` | The whole `/eventsadmin` command and the setup menus. |
 | `exyliaevents.admin.inscriptions` | The sign-up subcommands. |
-| `exyliaevents.start` | `/events start`, and the start actions in the setup menus. |
+| `exyliaevents.start` | `/events start`, the gauntlet builder in the menus, and the start actions. |
 | `exyliaevents.commands.events` | `/events` |
 | `exyliaevents.commands.join` | `/events join` |
 | `exyliaevents.commands.leave` | `/events leave` |

@@ -1,0 +1,101 @@
+---
+title: "Gauntlets"
+description: "Several events back to back, with points per stage and a champion at the end."
+---
+
+A **gauntlet** is a series of events played one after another with the same players. Every stage hands
+out points, and whoever has the most when the last one ends is the champion.
+
+Series are put together from the menus out of events that already exist, kept in the database
+(`event_gauntlets`), and need no file editing at all.
+
+<Callout type="note" title="One gauntlet runs at a time">
+A series needs the event slots and the players, so starting one while another is running is refused
+with a message.
+</Callout>
+
+## Building a series
+
+`/eventsadmin` leads to the gauntlet list: create a series, give it a name and an icon, and add stages
+by picking them from the existing configurations. Stages can be reordered and removed without a
+reload.
+
+| Field | What it is |
+|---|---|
+| `id` | The key, as you typed it. |
+| `displayName` | What the menu shows. Defaults to the id. |
+| `iconMaterial` | The icon. Defaults to `NETHER_STAR`. |
+| `stages` | The configuration ids, in play order. |
+
+Every event type works as a stage. A series needs **at least two** before it can be started.
+
+## Starting one
+
+```text
+/eventsadmin gauntlet start <series>
+/eventsadmin gauntlet stop
+```
+
+`start` pulls in every online player who is free — not already in an event — and needs at least two of
+them. `stop` cuts the series short along with the stage it is playing.
+
+The series menu has a start button that does the same thing.
+
+## The line a player builds
+
+A player with `exyliaevents.start` can put together their own line from the menu: every click adds one
+of the startable events, up to **12 stages**, and START runs it. That line is **not saved** — it
+belongs to that run, and the next player builds their own.
+
+The same rules as `/events start` apply: the start cooldown (unless they have
+`exyliaevents.cooldown.bypass`) and the configured main lobby.
+
+## How a run goes
+
+<Steps>
+  <Step title="The stage starts">
+    The stage's event is started and the roster is pushed into it.
+  </Step>
+  <Step title="Forced start">
+    After `lobby-seconds` the event starts even if its own countdown had not finished. A stage with
+    fewer than two players is skipped and announced.
+  </Step>
+  <Step title="Points">
+    When it ends, winners earn `points-winner` and everybody else who played earns
+    `points-participant`. The top three standings are broadcast.
+  </Step>
+  <Step title="Next">
+    After `between-stages-seconds` the next stage begins.
+  </Step>
+  <Step title="Champion">
+    Once the last stage ends, whoever has the most points is crowned — several players on a tie — and
+    `champion-commands` run.
+  </Step>
+</Steps>
+
+Whoever joins a stage's lobby is in the gauntlet from then on, so arriving late to the series does not
+stop a player scoring in what is left of it.
+
+## Configuration
+
+```yaml title="config.yml"
+gauntlet:
+  points-winner: 10
+  points-participant: 2
+  lobby-seconds: 20
+  between-stages-seconds: 8
+  champion-commands: []
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `points-winner` | `10` | Points for winning a stage. |
+| `points-participant` | `2` | Points for playing one without winning. |
+| `lobby-seconds` | `20` | Lobby seconds before a stage is force-started. |
+| `between-stages-seconds` | `8` | The pause between one stage and the next. |
+| `champion-commands` | empty | Console commands for the champion. `%player%` and `%series%`. |
+
+<Callout type="tip" title="The champion is rewarded separately">
+Each event's normal rewards still pay out per stage. `champion-commands` is the prize for the whole
+series, so that is where the big one goes.
+</Callout>
