@@ -159,6 +159,19 @@ effects:
 | `turn:` | Grados que gira sobre sí mismo durante el movimiento. | `0` |
 | `pose_to:` / `after:` | Una segunda pose, y cuánto tarda en llegar. | ninguna / `0.4` |
 | `hurt:` | Parpadea en rojo al aparecer. | `false` |
+| `spin:` | Grados por segundo que sigue girando, durante toda su vida. | `0` |
+| `bob:` / `bob_every:` | Bloques que sube y baja en bucle, y cuánto dura una subida y bajada. | `0` / `1.6` |
+| `swing:` | Segundos entre golpes de brazo. | `0` |
+| `scale:` | Cómo de grande se dibuja, siendo `1` el tamaño de un jugador. | `1` |
+| `hold:` / `offhand:` | Un material puesto en cada mano. | el suyo |
+| `pitch:` | Inclinación de la cabeza en grados, negativo hacia arriba. | `0` |
+
+`spin:` es el que se usa cuando un cuerpo no debe asentarse: `turn:` es un giro repartido en el
+movimiento y luego se acaba; `spin:` no para nunca. Un cuerpo atrapado en un vórtice es `spin:220`,
+uno colgando en la luz es `bob:0.3;spin:40`, y uno que sigue golpeando a lo que lo mató es
+`swing:0.5;hold:NETHERITE_SWORD`. `scale:` es el atributo de escala del propio cliente, así que crece
+el modelo entero — `0.4` es un muñeco y `2.5` es algo para lo que la sala se queda pequeña; necesita
+un cliente 1.20.5, y uno más viejo ve un cuerpo de tamaño normal.
 
 ```java
 PluginNpcs npcs = Npcs.of(this);
@@ -199,3 +212,39 @@ listar**, así que nunca aparece en el tab junto a jugadores reales.
 | **El giro se trocea por ti** | El cliente gira por el arco más corto, así que los giros se parten en sextos de vuelta; `spin:3` sale bien sin que nadie lo sepa. |
 | **Trabajo con techo** | Un archivo que pide doscientas vueltas se limita a cuarenta y ocho poses en vez de mandar doscientos paquetes. |
 | **PacketEvents o nada** | No hay respaldo que valga la pena fingir. |
+
+## El techo de lo que pueden costar los displays
+
+`plugins/ExyliaLib/displays.yml` tiene dos números para todo el servidor, porque lo que se le puede
+mandar a un cliente es un hecho del servidor y no del plugin que lo mandó.
+
+```yaml
+max-viewer-displays: 20000
+max-per-effect: 128
+```
+
+| Clave | Qué limita |
+|---|---|
+| `max-viewer-displays` | Pares display-**espectador** a la vez: un display que ven treinta jugadores cuenta como treinta. Los efectos que se pasarían se descartan antes de construir sus paquetes, así que una arena llena pierde la cola de un efecto y no su tick rate. La consola lo dice como mucho una vez por minuto. `0` quita el techo. |
+| `max-per-effect` | Cuántos displays puede dibujar una sola forma — un `points:900` escrito a mano se caza al cargar y no en el cable. |
+
+El presupuesto cuenta espectadores porque es el número que llega a la red: doscientos displays en una
+esquina vacía no son nada, y esos mismos doscientos con treinta jugadores alrededor son seis mil
+entidades en clientes que además tienen una pelea que renderizar. `/exylialib reload` recoge un cambio;
+no hace falta reiniciar.
+
+## Flags de región
+
+Flags de WorldGuard que registra la librería, para que una región pueda rechazar efectos sin que
+ningún plugin dependa de WorldGuard:
+
+| Flag | Negarla impide |
+|---|---|
+| `kill-effects` | Que suenen efectos de muerte donde alguien murió dentro de la región. |
+| `hit-effects` | Que suenen efectos de golpe por un impacto dado dentro de la región. |
+| `arrows-effects` | Los efectos de lanzamiento, estela e impacto de flechas dentro de la región. |
+
+Se registran desde el `onLoad` de la propia librería, porque WorldGuard cierra su registro en cuanto
+arranca. En un servidor sin WorldGuard cada flag permite, y una flag no registrada, un mundo que no
+existe o un registro que se negó responden igual: una puerta que no se puede preguntar nunca quita
+nada.

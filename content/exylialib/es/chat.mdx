@@ -1,0 +1,58 @@
+---
+title: "Reglas de chat"
+description: "Quién lee el chat de quién: una regla por plugin, y la audiencia a la que entrega el servidor."
+---
+
+Un plugin registra una regla y la librería quita de cada mensaje a los receptores que esa regla
+rechaza, **antes de que el servidor lo entregue** — un evento cuyos jugadores solo hablan entre ellos,
+una arena cuyo chat no sale de ella, un espectador que lee una partida sin que le lean a él.
+
+```java
+Chats.rule(this, (listener, speaker) -> {
+    var theirs = events.eventOf(listener);
+    var his = events.eventOf(speaker);
+    if (theirs.isEmpty() && his.isEmpty()) return true;   // los dos fuera
+    if (theirs.isEmpty() || his.isEmpty()) return false;  // nunca cruza
+    return theirs.get() == his.get();
+});
+```
+
+| Método | Qué hace |
+|---|---|
+| `Chats.rule(plugin, rule)` | Registra la regla de este plugin, reemplazando la anterior. |
+| `Chats.clear(plugin)` | La quita. |
+| `Chats.canHear(listener, speaker)` | La respuesta en la que coinciden todas las reglas, para texto que un plugin entrega por su cuenta. |
+
+`ChatRule` es una interfaz funcional: `boolean canHear(Player listener, Player speaker)`.
+
+## Cómo se comporta
+
+| | |
+|---|---|
+| **No se cancela ni se reenvía nada** | El mensaje conserva el formato, el hover y los clics que le dio su plugin de chat; solo la audiencia es menor. La consola conserva la línea completa. |
+| **Todas las reglas tienen que estar de acuerdo** | Se combinan con AND: un mensaje llega a un jugador solo si ningún plugin se opone. Una regla por plugin, que se cae al desactivarlo. |
+| **La pregunta es asimétrica** | `canHear(a, b)` y `canHear(b, a)` son respuestas distintas — que es lo que permite que un espectador lea una partida sin que le lean. |
+| **Quien habla siempre se lee** | A las reglas ni se les pregunta por eso. |
+| **No se recuerda nada entre mensajes** | La regla se pregunta al entregar el mensaje, así que quien entra a mitad de frase ya está dentro para la línea siguiente. |
+| **Una regla rota pierde su voto, no el chat** | Una regla que lanza excepción se ignora en ese mensaje y se avisa una vez, por nombre de plugin. |
+| **Sin reglas no cuesta nada** | Los dos handlers leen un mapa y vuelven. |
+
+## Qué necesita, y qué no cubre
+
+Un plugin de chat que deje entregar el mensaje al servidor: el chat propio de Paper y cualquier plugin
+de chat basado en renderer lo hacen. Se manejan los dos eventos, el moderno `AsyncChatEvent` y el
+antiguo `AsyncPlayerChatEvent`.
+
+Un plugin que en vez de eso cancela el evento y manda cada línea por su cuenta se ha quedado con la
+entrega; esas copias quedan fuera de alcance, y una audiencia entregada como inmutable se avisa una vez
+y se deja en paz. **Los dos casos fallan abiertos**: el chat sigue funcionando y el aislamiento no se
+aplica.
+
+Chat, y solo chat. Los mensajes de entrada y salida, los de muerte, los broadcasts y los privados no
+son eventos de chat y no se tocan — tampoco un mensaje que llega de otro servidor por Redis, que aquí
+nunca fue un evento de chat. Ése se filtra donde se entrega, con `Chats.canHear`.
+
+<Callout type="warning" title="Las reglas se preguntan en el hilo del chat">
+No en el principal. Una regla tiene que ser barata y leer solo estado compartido: sin tocar el mundo,
+sin tocar entidades, sin bloquear. Registrar y quitar una regla es seguro desde cualquier hilo.
+</Callout>

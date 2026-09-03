@@ -81,6 +81,7 @@ El `<mundo>` es un id de `modules/rtp/config.yml`, no el nombre de un mundo de B
 |---|---|
 | `%exyliasurvivalcore_playtime%` | Tiempo jugado total, escrito entero |
 | `%exyliasurvivalcore_playtime_seconds%` | Lo mismo, en segundos |
+| `%exyliasurvivalcore_playtime_millis%` | Lo mismo, en milisegundos — la unidad que muestrea el módulo de stats y que lee su formato `TIME` |
 | `%exyliasurvivalcore_playtime_hours%` | Lo mismo, en horas enteras |
 | `%exyliasurvivalcore_playtime_rewards_claimed%` | Recompensas ya reclamadas |
 | `%exyliasurvivalcore_playtime_next_reward%` | Nombre de la siguiente recompensa, o `—` |
@@ -127,6 +128,9 @@ es la autoridad del tiempo jugado, así que la palabra le pertenece. Todo lo nue
 | `%exyliasurvivalcore_stats_best_streak%` | Su mejor racha |
 | `%exyliasurvivalcore_stats_rank_<stat>%` | Su posición en el ranking de esa estadística, o `N/A` |
 | `%exyliasurvivalcore_stats_value_<stat>%` | Su valor, formateado, o `N/A` |
+
+`<stat>` es una clave de `modules/stats/stats.yml`: `kills`, `deaths`, `kdr`, `streak`, `best_streak`
+y `playtime`, que ahora se rankea junto al resto y se formatea como una duración.
 
 ### Rankings
 

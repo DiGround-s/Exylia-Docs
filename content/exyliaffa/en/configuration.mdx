@@ -116,6 +116,24 @@ hand out money per kill, two accounts on the same IP can fund themselves by kill
 prevent it, gate the reward inside the command itself or in your economy plugin.
 </Callout>
 
+### chat
+
+```yaml
+chat:
+  isolation: true
+```
+
+<Field name="isolation" type="boolean" defaultValue="true">
+Keeps an arena's chat inside that arena: whoever is fighting or watching there reads that arena and
+nothing else, and the rest of the server reads none of it. Two arenas never share a room either. Set
+it to `false` to leave chat exactly as the server's chat plugin delivers it.
+</Field>
+
+The message is never cancelled or re-sent — its format, hover text and click events are whatever the
+chat plugin gave it, and only the audience is smaller. The console keeps the full line. A chat plugin
+that cancels the event and sends each line itself has taken delivery over, and isolation quietly does
+not apply.
+
 ## messages.yml
 
 Every text the plugin sends, grouped by system:

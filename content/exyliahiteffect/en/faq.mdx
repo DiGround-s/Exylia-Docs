@@ -62,6 +62,11 @@ Yes — that is what `effects.yml` is for. Twenty-five shapes, thirteen other to
 parameters are in [Sequences](/docs/exyliahiteffect/sequences). A line that cannot be read is reported
 on the console and skipped; the rest of the effect still plays.
 
+## Can a region turn effects off?
+
+Yes. ExyliaLib registers a WorldGuard flag, `hit-effects`: denying it in a region stops effects
+playing on a blow landed inside it. On a server without WorldGuard the flag simply allows.
+
 ## Does it work on Folia?
 
 Yes, it declares Folia support.

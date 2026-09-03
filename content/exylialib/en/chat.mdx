@@ -1,0 +1,57 @@
+---
+title: "Chat rules"
+description: "Who reads whose chat messages: one rule per plugin, and the audience the server delivers to."
+---
+
+A plugin registers one rule, and the library takes the receivers that rule refuses off every message
+**before the server delivers it** — an event whose players talk only to each other, an arena whose chat
+never leaves it, a spectator who reads a match without being read back.
+
+```java
+Chats.rule(this, (listener, speaker) -> {
+    var theirs = events.eventOf(listener);
+    var his = events.eventOf(speaker);
+    if (theirs.isEmpty() && his.isEmpty()) return true;   // both outside
+    if (theirs.isEmpty() || his.isEmpty()) return false;  // never crosses
+    return theirs.get() == his.get();
+});
+```
+
+| Method | What it does |
+|---|---|
+| `Chats.rule(plugin, rule)` | Registers this plugin's rule, replacing its previous one. |
+| `Chats.clear(plugin)` | Drops it. |
+| `Chats.canHear(listener, speaker)` | The answer every rule agrees on, for text a plugin delivers itself. |
+
+`ChatRule` is a functional interface: `boolean canHear(Player listener, Player speaker)`.
+
+## How it behaves
+
+| | |
+|---|---|
+| **Nothing is cancelled and nothing is re-sent** | The message keeps the format, hover text and click events its chat plugin gave it; only the audience is smaller. The console keeps the full line. |
+| **Every rule has to agree** | Rules are combined with AND: a message reaches a player only when no plugin objects. One rule per plugin, dropped when that plugin is disabled. |
+| **The question is asymmetric** | `canHear(a, b)` and `canHear(b, a)` are separate answers — which is what lets a spectator read a match while the players read nothing back. |
+| **A speaker always reads themselves** | Rules are never asked about that. |
+| **Nothing is remembered between messages** | A rule is asked as the message is delivered, so somebody who joins mid-sentence is inside for the next line. |
+| **A broken rule loses its say, not the chat** | A rule that throws is ignored for that message and reported once, by plugin name. |
+| **No rules costs nothing** | Both handlers read one map and return. |
+
+## What it needs, and what it does not cover
+
+A chat plugin that lets the server deliver the message: Paper's own chat and every renderer-based chat
+plugin do. Both chat events are handled, the modern `AsyncChatEvent` and the legacy
+`AsyncPlayerChatEvent`.
+
+A plugin that instead cancels the event and sends each line itself has taken delivery over; those
+copies are out of reach, and an audience handed over as unmodifiable is reported once and left alone.
+**Both cases fail open**: chat keeps working, isolation does not apply.
+
+Chat, and only chat. Join and quit lines, death messages, broadcasts and private messages are not chat
+events and are not touched — neither is a message arriving from another server through Redis, which
+never was a chat event here. Filter that where it is delivered, with `Chats.canHear`.
+
+<Callout type="warning" title="Rules are asked on the chat thread">
+Not the main thread. A rule must be cheap and read shared state only: no world access, no entity
+access, nothing that blocks. Registering and clearing a rule is safe from any thread.
+</Callout>

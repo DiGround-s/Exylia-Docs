@@ -61,6 +61,11 @@ Displays are animated by the client, so they are cheap to move — but every lin
 viewer. Look at how many lines an effect has and at `count:` on any particle lines. `ticks:` spreads a
 shape over frames instead of sending it all at once.
 
+## Can a region turn effects off?
+
+Yes. ExyliaLib registers a WorldGuard flag, `kill-effects`: denying it in a region stops effects
+playing where somebody died inside it. On a server without WorldGuard the flag simply allows.
+
 ## Does it work on Folia?
 
 Yes, it declares Folia support.

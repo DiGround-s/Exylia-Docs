@@ -117,6 +117,24 @@ estadísticas. Si das dinero por baja, dos cuentas con la misma IP pueden financ
 ellas. Para evitarlo, condiciona la recompensa desde el propio comando o desde tu plugin de economía.
 </Callout>
 
+### chat
+
+```yaml
+chat:
+  isolation: true
+```
+
+<Field name="isolation" type="boolean" defaultValue="true">
+Mantiene el chat de una arena dentro de esa arena: quien pelea o mira ahí lee esa arena y nada más, y
+el resto del servidor no lee nada de ella. Dos arenas tampoco comparten sala. Ponlo en `false` para
+dejar el chat exactamente como lo entregue el plugin de chat del servidor.
+</Field>
+
+El mensaje nunca se cancela ni se reenvía — su formato, su hover y sus clics son los que le dio el
+plugin de chat, y solo la audiencia es menor. La consola conserva la línea completa. Un plugin de chat
+que cancele el evento y mande cada línea por su cuenta se queda con la entrega, y el aislamiento
+simplemente no se aplica.
+
 ## messages.yml
 
 Todos los textos del plugin, agrupados por sistema:

@@ -213,6 +213,7 @@ const LIB_NAV: NavGroup[] = [
       page("actions", "actions", "acciones"),
       page("input", "input-and-editors", "entrada-y-editores"),
       page("overlays", "overlays", "overlays"),
+      page("chat", "chat", "chat"),
     ],
   },
   {
@@ -849,10 +850,10 @@ export const plugins: Plugin[] = [
     name: "ExyliaLib",
     tagline: { en: "The library behind the ecosystem", es: "La librería que sostiene el ecosistema" },
     summary: {
-      en: "Forty-three modules every Exylia plugin builds on: typed configuration with migrations, YAML menus, database, placeholders, sequences drawn with display entities, overlays, timetables, regions, rewards and one scheduler for Spigot, Paper and Folia.",
-      es: "Cuarenta y tres módulos sobre los que se apoya cada plugin de Exylia: configuración tipada con migraciones, menús en YAML, base de datos, placeholders, secuencias dibujadas con display entities, overlays, horarios, regiones, recompensas y un solo scheduler para Spigot, Paper y Folia.",
+      en: "Forty-five modules every Exylia plugin builds on: typed configuration with migrations, YAML menus, database, placeholders, sequences drawn with display entities, overlays, timetables, regions, rewards and one scheduler for Spigot, Paper and Folia.",
+      es: "Cuarenta y cinco módulos sobre los que se apoya cada plugin de Exylia: configuración tipada con migraciones, menús en YAML, base de datos, placeholders, secuencias dibujadas con display entities, overlays, horarios, regiones, recompensas y un solo scheduler para Spigot, Paper y Folia.",
     },
-    version: "1.88.5",
+    version: "1.91.0",
     status: "stable",
     category: { en: "Library", es: "Librería" },
     minecraft: "1.21+",

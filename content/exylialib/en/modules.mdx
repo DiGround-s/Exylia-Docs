@@ -1,6 +1,6 @@
 ---
 title: "Module index"
-description: "All forty-three modules, what each is for, and where its entry point lives."
+description: "All forty-five modules, what each is for, and where its entry point lives."
 ---
 
 Every module is reached the same way: a static class named after it, usually with an `of(plugin)`
@@ -53,6 +53,7 @@ handing back a view that belongs to your plugin.
 | Scoreboard | `Scoreboards.show(plugin, player, config)` | Packet sidebars declared in config. |
 | Hologram | `Holograms.show(plugin, id, location, config)` | Packet holograms declared in config. |
 | Nametags | `Nametags.of(plugin)` | Name colour, glow and collision as one player sees another. |
+| Chat | `Chats.rule(plugin, rule)` | [Who reads whose messages](/docs/exylialib/chat), taken off the audience before delivery. |
 | Client | `Clients.of(plugin)` | Lunar and Feather waypoints, cooldowns and teammate markers. |
 | Skulls | `Skulls.player(name)` | Player heads from base64, a URL or a name — cached, never blocking. |
 
@@ -63,6 +64,7 @@ handing back a view that belongs to your plugin.
 | Regions | `Regions.of(plugin)` | Shapes, a spatial index, overlap policies, enter/exit events, outlines. |
 | Schematics | `Schematics.of(plugin)` | Saving a box of the world and pasting it back. |
 | World | `Worlds.create(key, name)` | Creating and deleting worlds, from any thread. |
+| WorldGuard | `WorldGuardRegions`, `WorldGuardFlags` | Region lookups and the ecosystem's own flags — `kill-effects`, `hit-effects`, `arrows-effects` — with no compile-time dependency. |
 
 ## Players
 
@@ -91,6 +93,7 @@ handing back a view that belongs to your plugin.
 | `net.exylia.lib.platform.Platform` | `current()`, `isFolia()`, `isPaper()`. |
 | `net.exylia.lib.practicebot.PracticeBots` | A bridge to the training-bot plugin: `get()` and `available()`. Empty when it is absent. |
 | `net.exylia.lib.internal.*` | Internal. Free to change without notice. |
+| Cleanup | No API: `plugins/ExyliaLib/cleanup.yml`. The server's `logs/` folder swept of files older than `keep-days`, a minute after startup and every six hours. |
 
 ## Reloading
 

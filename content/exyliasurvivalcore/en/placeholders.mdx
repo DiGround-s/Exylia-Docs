@@ -81,6 +81,7 @@ The `<world>` is an id out of `modules/rtp/config.yml`, not a Bukkit world name.
 |---|---|
 | `%exyliasurvivalcore_playtime%` | Total playtime, written out |
 | `%exyliasurvivalcore_playtime_seconds%` | The same, in seconds |
+| `%exyliasurvivalcore_playtime_millis%` | The same, in milliseconds — the unit the stats module samples and its `TIME` format reads |
 | `%exyliasurvivalcore_playtime_hours%` | The same, in whole hours |
 | `%exyliasurvivalcore_playtime_rewards_claimed%` | Rewards already claimed |
 | `%exyliasurvivalcore_playtime_next_reward%` | The next reward's display name, or `—` |
@@ -126,6 +127,9 @@ playtime authority, so it owns the word. Anything new lives under `playtime_`.
 | `%exyliasurvivalcore_stats_best_streak%` | Their best ever |
 | `%exyliasurvivalcore_stats_rank_<stat>%` | Their position on that stat's board, or `N/A` |
 | `%exyliasurvivalcore_stats_value_<stat>%` | Their value for it, formatted, or `N/A` |
+
+`<stat>` is a key from `modules/stats/stats.yml`: `kills`, `deaths`, `kdr`, `streak`, `best_streak`
+and `playtime`, which is ranked alongside the rest and formatted as a length of time.
 
 ### Leaderboards
 

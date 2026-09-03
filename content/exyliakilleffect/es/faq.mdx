@@ -61,6 +61,11 @@ Los displays los anima el cliente, así que moverlos es barato — pero cada lí
 paquete por espectador. Mira cuántas líneas tiene un efecto y el `count:` de las líneas de partículas.
 `ticks:` reparte una forma en frames en vez de mandarla toda de golpe.
 
+## ¿Puede una región apagar los efectos?
+
+Sí. ExyliaLib registra una flag de WorldGuard, `kill-effects`: negarla en una región impide que suenen
+los efectos de quien muera dentro de ella. En un servidor sin WorldGuard la flag simplemente permite.
+
 ## ¿Funciona en Folia?
 
 Sí, declara soporte de Folia.

@@ -159,6 +159,19 @@ effects:
 | `turn:` | Degrees it turns on the spot over the movement. | `0` |
 | `pose_to:` / `after:` | A second pose, and how long before it. | none / `0.4` |
 | `hurt:` | Flinches red as it appears. | `false` |
+| `spin:` | Degrees a second it keeps turning, for its whole life. | `0` |
+| `bob:` / `bob_every:` | Blocks it rises and falls on a loop, and how long one rise and fall takes. | `0` / `1.6` |
+| `swing:` | Seconds between arm swings. | `0` |
+| `scale:` | How big it is drawn, `1` being player-sized. | `1` |
+| `hold:` / `offhand:` | A material put in each hand. | its own |
+| `pitch:` | Head pitch in degrees, negative being up. | `0` |
+
+`spin:` is the one to reach for when a body should not settle: `turn:` is one turn spread over the
+movement and then finished, `spin:` never stops. A body caught in a vortex is `spin:220`, one hanging
+in the light is `bob:0.3;spin:40`, and one still swinging at whatever killed it is
+`swing:0.5;hold:NETHERITE_SWORD`. `scale:` is the client's own scale attribute, so the whole model
+grows — `0.4` is a doll and `2.5` is something the room is not big enough for; it needs a 1.20.5
+client, and an older one sees a player-sized body.
 
 ```java
 PluginNpcs npcs = Npcs.of(this);
@@ -199,3 +212,37 @@ it never appears in the tab list beside real players.
 | **A spin is cut up for you** | The client turns by the shortest arc, so spins are split into sixths of a turn; `spin:3` is correct without anybody knowing that. |
 | **Capped work** | A file asking for two hundred turns is capped at forty-eight poses rather than sending two hundred packets. |
 | **PacketEvents or nothing** | There is no fallback worth pretending about. |
+
+## The ceiling on what displays may cost
+
+`plugins/ExyliaLib/displays.yml` holds two numbers for the whole server, because what a client can be
+sent is a fact about the server rather than about the plugin that happened to send it.
+
+```yaml
+max-viewer-displays: 20000
+max-per-effect: 128
+```
+
+| Key | What it caps |
+|---|---|
+| `max-viewer-displays` | Display-**viewer pairs** at once: one display seen by thirty players counts as thirty. Effects that would go over are dropped before their packets are built, so a crowded arena loses the tail of an effect instead of its tick rate. The console says so at most once a minute. `0` removes the ceiling. |
+| `max-per-effect` | How many displays one shape may draw — a `points:900` written by hand is caught at load rather than on the wire. |
+
+The budget counts viewers because that is the number that reaches the network: two hundred displays in
+an empty corner are nothing, and the same two hundred with thirty players around them are six thousand
+entities on clients that also have a fight to render. `/exylialib reload` picks up an edit; no restart.
+
+## Region flags
+
+WorldGuard flags the library registers, so a region can refuse effects without any plugin depending on
+WorldGuard:
+
+| Flag | Denying it stops |
+|---|---|
+| `kill-effects` | Kill effects playing where somebody died inside the region. |
+| `hit-effects` | Hit effects playing on a blow landed inside the region. |
+| `arrows-effects` | Arrow launch, trail and impact effects inside the region. |
+
+They are registered from the library's own `onLoad`, because WorldGuard locks its registry the instant
+it enables. On a server without WorldGuard every flag allows, and an unregistered flag, a missing world
+or a refused registry all answer the same way: a gate that cannot be asked never withholds anything.
