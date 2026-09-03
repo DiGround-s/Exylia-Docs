@@ -3,53 +3,86 @@ title: "Frequently asked questions"
 description: "The questions that come up most."
 ---
 
-## The plugin does not start
+## Nothing plays when a player shoots
 
-`ExyliaLib` and `packetevents` are both required. Without either, the server disables it by name.
+In order:
 
-## The permissions do nothing
-
-Check the spelling: it is `exyliarrows`, with one `a`, not `exyliaarrows`. That single letter is the
-most common reason a correctly-written node grants nothing.
-
-## The menu will not open
-
-That needs `exyliarrows.command.arrows`. The same node also covers `reset` and `toggleParticles`, so
-without it a player cannot turn their particles off either.
-
-## Nothing happens when a player shoots
-
-1. **Do they own the effect?** Its `permission` field, or `exyliarrows.effect.*`.
-2. **Does the effect apply to that projectile?** An effect with `projectile-types` only fires on those,
-   and with `projectiles.all-types: false` the config's list applies.
-3. **Do its triggers cover what happened?** An effect written with only `HIT_ENTITY` does nothing when
-   the arrow hits a wall.
+1. **Is the projectile allowed?** `projectiles.all-types` is `true` by default; with it off, only the
+   types in `projectiles.default-allowed-types` — or the ones the effect names — carry anything.
+2. **Is there an effect at all?** In `mode: bow` the menu choice is never read, and in
+   `mode: player` a bound bow is never read.
+3. **Do they own it?** A menu choice they no longer have the node for is taken off instead of played.
 4. **Is anyone set to see it?** A player on `NONE` sees nothing, including their own.
+5. **Is the trail ceiling full?** Past `trail.max-active` a shot still plays its launch and impact and
+   simply leaves no trail.
 
-## The trail keeps drawing after the arrow lands
+## The menu says it is off
 
-It should stop the moment the projectile stops being valid. If it lingers, the arrow probably landed in
-an unloaded chunk and never fired a hit event — which is what `trail.max-duration` catches, ten seconds
-by default. Never set that to zero.
+`behaviour.mode` is `bow`. On that server the menu would change nothing, so it refuses to open
+rather than pretending.
 
-## Trails lag the server
+## An effect I bound to a bow vanished
 
-`trail.default-interval` is the global knob: `2` is a step every tenth of a second, `1` doubles every
-trail at once. Prefer raising an individual effect's `trail-interval`, and keep trails to one or two
-`[PARTICLE]` lines — a shape in a trail is a shape drawn every tick of the flight.
+The bow carries an id. If the key in `effects.yml` was renamed, that id names nothing any more and
+the effect does not play. Renaming a key is not free: it is also a different permission node.
 
-## Can I have an effect only on ender pearls?
+## A player says their effect disappeared
 
-Yes — give that effect a `projectile-types` list with `ENDER_PEARL` in it.
+Their permission for it went away — a rank expiring, usually. A choice that can no longer be
+justified is taken off rather than played. The node comes back, they pick it again.
 
-## Can I sell a whole category?
+## Does losing a permission break a bow?
 
-Not with one node: there is no category permission here. Either grant each effect's node, or give a
-group of effects the same string in their `permission` field and sell that.
+No. A bound bow plays its effect for whoever holds it: the node is asked for when the token is
+bound, not on every kill. That is what makes a bound bow worth trading.
+
+## Can players see each other's effects?
+
+That is each observer's own choice: `ALL`, `NONE`, `SELF_ONLY` or `OTHERS_ONLY`, set with
+`/arrows visibility` or from the menu.
+
+## Are the bodies real entities?
+
+No. `[NPC]` draws a display: nothing can hit it, loot it or collide with it, and it disappears when
+its `life` runs out.
+
+## Does the bow lore get written to the item?
+
+Never. It is added to the copy that leaves the server. Any plugin reading that bow finds the lore
+it always had, and renaming an effect updates every bow on the server at once.
+
+## Can I write my own effects?
+
+Yes — that is what `effects.yml` is for. Twenty-five shapes, thirteen other tokens and the display
+parameters are in [Sequences](/docs/exyliaarrows/sequences). A line that cannot be read is
+reported on the console and skipped; the rest of the effect still plays.
+
+## Effects lag during big fights
+
+Displays are animated by the client, so they are cheap to move — but every line is still a packet per
+viewer. Look at how many lines an effect has and at `count:` on any particle lines. `ticks:` spreads a
+shape over frames instead of sending it all at once.
+
+## Can a region turn effects off?
+
+Yes. ExyliaLib registers a WorldGuard flag, `kill-effects`: denying it in a region stops effects
+playing where somebody died inside it. On a server without WorldGuard the flag simply allows.
+
+## Can a region turn effects off?
+
+Yes. ExyliaLib registers a WorldGuard flag, `arrows-effects`: denying it in a region stops launch,
+trail and impact effects inside it. On a server without WorldGuard the flag simply allows.
+
+## Why is my trail missing but the impact fine?
+
+Either the region flag above, or `trail.max-active` — a full lobby firing crossbows hits the ceiling,
+and losing a trail is far less visible than losing the tick rate. A trail also stops after
+`trail.max-duration` seconds, which is what keeps an arrow lost in an unloaded chunk from drawing
+forever.
 
 ## Does it work on Folia?
 
-Yes. The trail task is tied to the projectile, so it runs on that projectile's region.
+Yes, it declares Folia support.
 
 ## Where do I get support?
 

@@ -1,0 +1,62 @@
+---
+title: "Primeros pasos"
+description: "De un servidor limpio a un jugador con efecto en sus disparos."
+---
+
+## Por el menú
+
+<Steps>
+  <Step title="Deja que abran el menú">
+    ```text
+    /lp group default permission set exyliarrows.command.arrows true
+    ```
+    Sin esto no se puede abrir el catálogo — y quien no ve lo que hay a la venta no puede quererlo.
+  </Step>
+  <Step title="Vende una categoría">
+    ```text
+    /lp group vip permission set exyliarrows.category.siege true
+    ```
+    Veinte efectos, un nodo.
+  </Step>
+  <Step title="Ábrelo">
+    `/arrows`. Las pestañas a la izquierda, los efectos al lado, y la primera pestaña son los
+    favoritos del propio jugador.
+  </Step>
+  <Step title="Elige uno y dispara">
+    Clic izquierdo lo pone. El siguiente disparo sale con su estela y aterriza con su impacto.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Por defecto cuenta cualquier proyectil">
+`projectiles.all-types` está en `true`, así que una bola de nieve, un huevo y una perla del end llevan
+el efecto. Ponlo en `false` y solo lo llevan los de `projectiles.default-allowed-types`.
+</Callout>
+
+## Por el arco
+
+<Steps>
+  <Step title="Da una ficha">
+    ```text
+    /arrowsadmin give <jugador> ember_trail 1
+    ```
+  </Step>
+  <Step title="Arrástrala sobre un arco">
+    Coge la ficha con el cursor y haz clic sobre un arco **en tu propio inventario**. El arco conserva
+    todo lo que tenía; solo se le escribe un valor.
+  </Step>
+  <Step title="Quítalo">
+    ```text
+    /arrowsadmin remover <jugador>
+    ```
+    El removedor desata el efecto y devuelve la ficha, así que no se destruye nada.
+  </Step>
+</Steps>
+
+## Comprobar que funciona
+
+| Pregunta | Cómo responderla |
+|---|---|
+| ¿Existe el efecto? | `/arrows preview <id>` — se lanza contra un cielo vacío. |
+| ¿El arco lleva uno? | Su línea se dibuja bajo el lore propio del arco. |
+| ¿El permiso hizo efecto? | `/arrowsadmin validate <jugador>` quita ya lo que no pueda usar. |
+| ¿Cargó el archivo? | `/arrowsadmin list` imprime todos los efectos declarados. |

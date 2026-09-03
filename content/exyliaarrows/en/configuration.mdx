@@ -1,0 +1,192 @@
+---
+title: "Configuration"
+description: "Every block of config.yml, with its defaults."
+---
+
+`config.yml` is written from a schema: comments are regenerated on every start, unknown keys are
+dropped, and a key you delete comes back with its default.
+
+## `behaviour`
+
+```yaml
+behaviour:
+  mode: both
+  consume-token: true
+  consume-remover: true
+  require-permission: true
+  hide-without-permission: false
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `mode` | `both` | `player`, `bow` or `both`. See [Modes and tokens](/docs/exyliaarrows/modes-and-tokens). |
+| `consume-token` | `true` | Whether the token is spent when it is bound. |
+| `consume-remover` | `true` | Whether the remover is spent when it unbinds. |
+| `require-permission` | `true` | Whether playing an effect needs its node. Commands and the API are never limited by it. |
+| `hide-without-permission` | `false` | Whether locked effects are hidden in the menu instead of shown locked. |
+
+## `projectiles`
+
+Which launched projectiles carry an effect at all.
+
+```yaml
+projectiles:
+  all-types: true
+  default-allowed-types:
+    - ARROW
+    - SPECTRAL_ARROW
+    - TRIDENT
+    - EGG
+    - SNOWBALL
+    - WIND_CHARGE
+    - ENDER_PEARL
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `all-types` | `true` | Every launched projectile carries the effect. |
+| `default-allowed-types` | seven types | Read only while `all-types` is `false` **and** the effect names no `projectiles` of its own. |
+
+## `trail`
+
+```yaml
+trail:
+  default-interval: 1
+  max-duration: 10
+  max-active: 200
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `default-interval` | `1` | Ticks between trail steps for an effect that sets no `trail-interval`. |
+| `max-duration` | `10` | Seconds a trail may live before it is cancelled — an arrow lost in an unloaded chunk would otherwise draw forever. |
+| `max-active` | `200` | How many trails may be drawing at once on the whole server. Shots over the limit still play their launch and impact; they simply leave no trail. `0` removes the limit. |
+
+<Callout type="tip" title="max-active is what a crossbow volley is for">
+A trail is a repeating task and a burst of packets per tick. A full lobby firing crossbows is the case
+the ceiling exists for, and losing a trail is a great deal less visible than losing the tick rate.
+</Callout>
+
+## `token-item` and `remover-item`
+
+```yaml
+token-item:
+  material: FIREWORK_STAR
+  name: "{primary}&lARROW EFFECT &8» %effect%"
+  lore:
+    - "{secondary}Information:"
+    - " {letters_black}▎ {letters}Drop this onto a bow to"
+    - " {letters_black}▎ {letters}{highlight}bind the effect {letters}to it. The bow"
+    - " {letters_black}▎ {letters}keeps everything it had."
+    - ""
+    - "{secondary}Fits:"
+    - " {letters_black}▎ {info}%bows%"
+    - ""
+    - "{warning}➥ Drop onto a bow to bind"
+    - ""
+  glow: true
+
+remover-item:
+  material: SCRAPE_POTTERY_SHERD
+  name: "{primary}&lEFFECT REMOVER"
+  glow: true
+```
+
+`%effect%` is the effect's name, `%bows%` what it fits. `material` is only used when the effect
+sets no icon of its own — a token is normally drawn as the effect's own material.
+
+## `bow-lore`
+
+```yaml
+bow-lore:
+  enabled: true
+  lines:
+    - "{secondary}Arrow Effect:"
+    - " {letters_black}▎ {highlight}%effect%"
+```
+
+Drawn under a bound bow's own lore, on packets only. The item itself never carries these lines.
+
+## `menu`
+
+```yaml
+menu:
+  empty: "{muted}Nothing"
+  tab-open: "{success}✔ You are here"
+  tab-closed: "{warning}➥ Click to open"
+  bows-any: "Any bow"
+  favourites-name: "Favourites"
+  favourites-icon: "AMETHYST_SHARD"
+  favourite-on: "{highlight}★ In your favourites"
+  favourite-off: "{muted}☆ Not in your favourites"
+```
+
+The screen itself is `menus/effects.yml` — see [The menu](/docs/exyliaarrows/menu).
+
+## `feedback`
+
+```yaml
+feedback:
+  on-bind:
+    sound:
+      name: BLOCK_ENCHANTMENT_TABLE_USE
+      volume: 1.0
+      pitch: 1.2
+  on-unbind:
+    sound:
+      name: BLOCK_GRINDSTONE_USE
+```
+
+Full ExyliaLib effect blocks: title, action bar, boss bar, sound, particle and firework are all
+available on each. `on-bind` plays when an effect is bound to a bow **or** chosen in the menu.
+
+## `particles`
+
+```yaml
+particles:
+  default-visibility: "ALL"
+  name-all: "All"
+  name-none: "None"
+  name-self-only: "Self Only"
+  name-others-only: "Others Only"
+```
+
+`default-visibility` is what a player starts with. The four names are what menus and placeholders
+call each mode.
+
+## `placeholders`
+
+```yaml
+placeholders:
+  none: "None"
+```
+
+What every `%exyliarrows_...%` placeholder answers when there is no value.
+
+## `messages`
+
+Every line the plugin sends. `prefix` is `{primary}&lE-ARROWS &8•&r ` and every other message starts
+with `%prefix%`.
+
+| Key | Sent when |
+|---|---|
+| `bound` | An effect is bound to a bow. |
+| `unbound` | An effect is unbound and returned. |
+| `chosen` | An effect is chosen in the menu. |
+| `cleared` | The effect is taken off. |
+| `not-a-bow` | The item is not something an effect can be bound to. |
+| `wrong-bow` | The effect does not fit that bow. |
+| `unknown-effect` | The id names nothing the file declares. |
+| `already-bound` | The bow already carries an effect. |
+| `no-effect` | The bow carries none. |
+| `inventory-full` | A remover needs a free slot. |
+| `no-permission` | The player does not own the effect. |
+| `empty-hand` | A hand-held subcommand with nothing in hand. |
+| `given` / `given-remover` | Tokens or removers were given. |
+| `list-header` / `list-entry` / `list-empty` | `/arrowsadmin list`. |
+| `visibility-set` | Visibility changed. |
+| `refreshed` | `refresh` or `validate` finished. |
+| `menu-disabled` | The menu was opened on a `bow` server. |
+| `favourite-added` / `favourite-removed` / `favourites-cleared` / `favourites-empty` | The shortlist. |
+
+Placeholders in messages: `%effect%`, `%amount%`, `%id%`, `%visibility%`, plus `%prefix%`.

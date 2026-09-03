@@ -1,65 +1,90 @@
 ---
 title: "Introducción"
-description: "Qué es ExyliaArrows y con qué viene."
+description: "Qué es ExyliaArrows: 120 efectos de proyectil con tres momentos cada uno, hechos con display entities."
 ---
 
-ExyliaArrows pone efectos de partículas en los proyectiles: una estela detrás de una flecha en vuelo,
-un estallido donde cae, o las dos cosas. Los jugadores eligen el suyo desde un menú, y los permisos
-deciden cuáles pueden elegir.
+ExyliaArrows dibuja un efecto sobre un **disparo**. No un efecto: un disparo tiene tres momentos y no
+se parecen en nada — el destello en el arco, la estela durante el vuelo y el impacto en el que acaba.
+Cada efecto del catálogo declara los tres, y se compilan por separado porque sus presupuestos no
+tienen nada que ver.
 
-Vienen **65 efectos en 6 categorías** en `effects.yml`: elemental, magic, nature, cosmic, dark y
-special.
+Vienen **120 efectos en seis categorías** en `effects.yml`, hechos con **display entities** — bloques
+y objetos reales que giran, caen y crecen, animados por el cliente de cada espectador — con partículas
+alrededor para la luz y el humo. La regla que se impone el catálogo es que cada momento de cada efecto
+ponga al menos un objeto sólido en pantalla.
 
-## Cinco disparadores
+## Los tres momentos
 
-Un efecto declara en qué momentos salta, y uno puede declarar varios:
+| Disparador | Cuándo suena | Qué se puede permitir |
+|---|---|---|
+| `launch` | El disparo saliendo del arco. | Un destello. Opcional, corto, bajo. |
+| `trail` | Durante el vuelo, cada `trail-interval` ticks. | Uno o dos displays pequeños y una línea de partículas. Sin sonido. Este es el del presupuesto. |
+| `hit` | Donde aterrice, contra lo que sea. | La recompensa: menos de un segundo, una docena de displays como mucho, uno o dos sonidos bajos. |
+| `hit-entity` | Solo cuando aterriza sobre algo vivo. | Si no se declara, cae en `hit`. |
+| `hit-block` | Solo cuando aterriza en un bloque. | Igual. |
 
-| Disparador | Salta |
+Una flecha vive unos cuarenta ticks y cuatro arqueros son cuatro flechas en el aire, así que lo que
+escriba `trail` se dibuja en cada uno de esos ticks, por disparo.
+
+## Dos formas de tener un efecto
+
+| Forma | De quién es | Para qué servidor |
+|---|---|---|
+| **El menú** | Del jugador: elige uno en `/arrows` y suena con lo que dispare. | Práctica, PvP |
+| **Un arco** | Del arco: se arrastra una ficha sobre él y viaja con el arco por cofres, intercambios y muertes. | Survival, economía |
+
+`behaviour.mode` decide cuál se lee — `player`, `bow` o `both` — y está en
+[Modos y fichas](/docs/exyliaarrows/modos-y-fichas).
+
+## Las categorías
+
+| Categoría | Icono | Qué hay dentro |
+|---|---|---|
+| `ember` | `BLAZE_POWDER` | Brasas, fuego y trabajo de fragua. |
+| `frost` | `BLUE_ICE` | Hielo, nieve y cosas que dejan de moverse. |
+| `storm` | `LIGHTNING_ROD` | Viento, lluvia y rayos. |
+| `void` | `ECHO_SHARD` | Sculk, almas y lo que queda después. |
+| `prism` | `AMETHYST_SHARD` | Cristal, luz de estrellas y color. |
+| `goofy` | `SLIME_BALL` | Bromas. Pollos de goma, tartas y una trompeta triste. |
+
+Veinte efectos cada una. La lista completa está en [Efectos](/docs/exyliaarrows/efectos).
+
+## Qué proyectiles cuentan
+
+Por defecto **cualquier** proyectil lanzado lleva el efecto — flechas, tridentes, bolas de nieve,
+huevos, cargas de viento, perlas del end. `projectiles.all-types` lo convierte en una lista, y un
+efecto puede nombrar sus propios proyectiles.
+
+## La visibilidad es de quien mira
+
+| Modo | Qué ve |
 |---|---|
-| `LAUNCH` | En el instante en que el proyectil sale del jugador. |
-| `TRAIL` | Repetidamente mientras vuela. |
-| `HIT` | Donde caiga, contra lo que sea. |
-| `HIT_ENTITY` | Solo al golpear algo vivo. |
-| `HIT_BLOCK` | Solo al golpear un bloque. |
-
-`fire_trail` está escrito con `TRAIL` y `HIT`, que es la pareja habitual: llamas detrás de la flecha y
-un estallido donde cae.
-
-<Callout type="note" title="HIT y los dos específicos se acumulan">
-`HIT` salta con cualquier aterrizaje. Añadir `HIT_ENTITY` encima no lo duplica — el efecto se lanza si
-coincide cualquiera de sus disparadores. Usa `HIT_ENTITY` solo cuando quieras algo que ocurra
-únicamente sobre una persona.
-</Callout>
-
-## No solo flechas
-
-Por defecto cualquier proyectil lanzado lleva el efecto. Apágalo y pasa a una lista — `ARROW`,
-`SPECTRAL_ARROW`, `TIPPED_ARROW`, `EGG`, `SNOWBALL`, `WIND_CHARGE`, `ENDER_PEARL` — y un efecto
-concreto puede declarar su propia lista.
-
-## Cómo funciona
-
-<Steps>
-  <Step title="Un jugador abre el menú">
-    `/arrows` muestra las categorías, y dentro de una, sus efectos.
-  </Step>
-  <Step title="Elige uno">
-    La elección se guarda en la base de datos y sobrevive a un reinicio.
-  </Step>
-  <Step title="Dispara">
-    Ocurre lo que digan los disparadores del efecto.
-  </Step>
-</Steps>
-
-## Visibilidad
-
-Cada jugador elige qué ve, y la elección es solo suya: `ALL`, `NONE`, `SELF_ONLY` u `OTHERS_ONLY`.
-`/arrows toggleParticles` la rota sin abrir nada.
+| `ALL` | Todos los efectos, los suyos y los de los demás. |
+| `NONE` | Ninguno. |
+| `SELF_ONLY` | Solo los de sus propios disparos. |
+| `OTHERS_ONLY` | Solo los de los demás. |
 
 ## Requisitos
 
 | Requisito | Detalle |
 |---|---|
 | Servidor | Paper 1.21 o superior. Folia soportado. |
-| Obligatorios | `ExyliaLib`, `packetevents` |
-| Opcional | `PlaceholderAPI` |
+| Obligatorio | `packetevents` |
+| Recomendado | `ExyliaLib` (depend suave: el loader la instala) |
+| Opcional | `PlaceholderAPI`, y WorldGuard para la flag `arrows-effects` |
+| Base de datos | Siempre. La elección, la visibilidad y los favoritos viven en una tabla. |
+
+<Cards>
+  <Card title="Instalación" href="/docs/exyliaarrows/instalacion">
+    Los jars, los archivos que escribe y la tabla que crea.
+  </Card>
+  <Card title="Primeros pasos" href="/docs/exyliaarrows/primeros-pasos">
+    De un servidor limpio a un jugador con efecto en sus disparos.
+  </Card>
+  <Card title="Efectos" href="/docs/exyliaarrows/efectos">
+    El catálogo completo y cómo se escribe `effects.yml`.
+  </Card>
+  <Card title="Modos y fichas" href="/docs/exyliaarrows/modos-y-fichas">
+    La ficha, el removedor y qué cambia cada modo.
+  </Card>
+</Cards>

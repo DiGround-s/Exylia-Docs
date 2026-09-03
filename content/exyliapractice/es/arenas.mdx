@@ -56,6 +56,26 @@ Ambos se guardan automáticamente en cuanto fijas la región correspondiente, y 
 vuelve a guardar los dos. Vuelve a guardarlos después de cualquier reconstrucción: una regeneración
 restaura el archivo, no los bloques que hay puestos.
 
+## Para qué se usa una arena
+
+Una arena declara qué tipos de partida acepta, desde los botones de **Usage** de su pantalla de
+configuración:
+
+| Uso | Cubre |
+|---|---|
+| `QUEUE` | Matchmaking ranked y unranked, y los duelos 1v1 normales. |
+| `DUEL` | Duelos que un jugador manda a mano. |
+| `PARTY` | FFA de party y peleas por equipos de party. |
+| `BOT` | Peleas contra bots. |
+
+Un mapa hecho para peleas de party nunca se le da a una partida de cola, y en una arena de bots no se
+duela.
+
+<Callout type="note" title="Una arena que no declara ninguno acepta todo">
+Que es justo lo que dice cada fila escrita antes de que esto existiera, así que no hubo nada que
+migrar: una lista vacía significa "cualquier partida", y elegir usos es cómo se acota.
+</Callout>
+
 ## Qué impide activar una arena
 
 El botón **Status** se niega y enumera lo que falta:

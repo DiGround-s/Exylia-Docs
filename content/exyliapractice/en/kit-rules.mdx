@@ -7,6 +7,12 @@ The rules are stored as JSON on the kit row and edited from `/epc` → **Manage 
 rules**. Most of them become policies on the arena's region for the length of the match; the rest are
 enforced by the plugin's own match listener.
 
+<Callout type="tip" title="Times are typed, not clicked">
+Every duration on this screen is asked for as a length of time — `250ms`, `3s`, `1m30s` — instead of
+being clicked up one second at a time. Anything the plugin writes back reads the same way, so `0s`
+means off wherever a rule takes a time.
+</Callout>
+
 ## Building
 
 | Rule | Default | What it does |

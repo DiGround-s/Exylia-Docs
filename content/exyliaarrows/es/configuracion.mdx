@@ -1,0 +1,194 @@
+---
+title: "Configuración"
+description: "Cada bloque de config.yml, con sus valores por defecto."
+---
+
+`config.yml` se escribe desde un esquema: los comentarios se regeneran en cada arranque, las claves
+desconocidas se descartan y una clave que borres vuelve con su valor por defecto.
+
+## `behaviour`
+
+```yaml
+behaviour:
+  mode: both
+  consume-token: true
+  consume-remover: true
+  require-permission: true
+  hide-without-permission: false
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `mode` | `both` | `player`, `bow` o `both`. Ver [Modos y fichas](/docs/exyliaarrows/modos-y-fichas). |
+| `consume-token` | `true` | Si la ficha se gasta al atarla. |
+| `consume-remover` | `true` | Si el removedor se gasta al quitar un efecto. |
+| `require-permission` | `true` | Si lanzar un efecto necesita su nodo. Los comandos y la API nunca se limitan por esto. |
+| `hide-without-permission` | `false` | Si los efectos bloqueados se esconden en el menú en vez de mostrarse bloqueados. |
+
+## `projectiles`
+
+Qué proyectiles lanzados llevan efecto.
+
+```yaml
+projectiles:
+  all-types: true
+  default-allowed-types:
+    - ARROW
+    - SPECTRAL_ARROW
+    - TRIDENT
+    - EGG
+    - SNOWBALL
+    - WIND_CHARGE
+    - ENDER_PEARL
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `all-types` | `true` | Cualquier proyectil lanzado lleva el efecto. |
+| `default-allowed-types` | siete tipos | Solo se lee con `all-types` en `false` **y** cuando el efecto no declara `projectiles` propios. |
+
+## `trail`
+
+```yaml
+trail:
+  default-interval: 1
+  max-duration: 10
+  max-active: 200
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `default-interval` | `1` | Ticks entre pasos de estela para un efecto sin `trail-interval` propio. |
+| `max-duration` | `10` | Segundos que puede vivir una estela antes de cancelarse — una flecha perdida en un chunk descargado dibujaría para siempre. |
+| `max-active` | `200` | Cuántas estelas pueden dibujarse a la vez en todo el servidor. Los disparos que pasen del límite siguen lanzando su launch y su impacto; simplemente no dejan estela. `0` quita el límite. |
+
+<Callout type="tip" title="max-active existe por las ráfagas de ballesta">
+Una estela es una tarea repetida y una ráfaga de paquetes por tick. Un lobby lleno disparando
+ballestas es el caso para el que está el techo, y perder una estela se nota mucho menos que perder el
+tick rate.
+</Callout>
+
+## `token-item` y `remover-item`
+
+```yaml
+token-item:
+  material: FIREWORK_STAR
+  name: "{primary}&lARROW EFFECT &8» %effect%"
+  lore:
+    - "{secondary}Information:"
+    - " {letters_black}▎ {letters}Drop this onto a bow to"
+    - " {letters_black}▎ {letters}{highlight}bind the effect {letters}to it. The bow"
+    - " {letters_black}▎ {letters}keeps everything it had."
+    - ""
+    - "{secondary}Fits:"
+    - " {letters_black}▎ {info}%bows%"
+    - ""
+    - "{warning}➥ Drop onto a bow to bind"
+    - ""
+  glow: true
+
+remover-item:
+  material: SCRAPE_POTTERY_SHERD
+  name: "{primary}&lEFFECT REMOVER"
+  glow: true
+```
+
+`%effect%` es el nombre del efecto y `%bows%` a qué encaja. `material` solo se usa cuando el efecto
+no trae icono propio — normalmente la ficha se dibuja con el material del efecto.
+
+## `bow-lore`
+
+```yaml
+bow-lore:
+  enabled: true
+  lines:
+    - "{secondary}Arrow Effect:"
+    - " {letters_black}▎ {highlight}%effect%"
+```
+
+Se dibuja bajo el lore propio del arco atada, solo en paquetes. El objeto nunca lleva estas líneas.
+
+## `menu`
+
+```yaml
+menu:
+  empty: "{muted}Nothing"
+  tab-open: "{success}✔ You are here"
+  tab-closed: "{warning}➥ Click to open"
+  bows-any: "Any bow"
+  favourites-name: "Favourites"
+  favourites-icon: "AMETHYST_SHARD"
+  favourite-on: "{highlight}★ In your favourites"
+  favourite-off: "{muted}☆ Not in your favourites"
+```
+
+La pantalla en sí es `menus/effects.yml` — ver [El menú](/docs/exyliaarrows/menu).
+
+## `feedback`
+
+```yaml
+feedback:
+  on-bind:
+    sound:
+      name: BLOCK_ENCHANTMENT_TABLE_USE
+      volume: 1.0
+      pitch: 1.2
+  on-unbind:
+    sound:
+      name: BLOCK_GRINDSTONE_USE
+```
+
+Son bloques de efecto completos de ExyliaLib: título, action bar, boss bar, sonido, partícula y
+firework están disponibles en cada uno. `on-bind` suena al atar un efecto a un arco **o** al elegirlo
+en el menú.
+
+## `particles`
+
+```yaml
+particles:
+  default-visibility: "ALL"
+  name-all: "All"
+  name-none: "None"
+  name-self-only: "Self Only"
+  name-others-only: "Others Only"
+```
+
+`default-visibility` es con lo que empieza un jugador. Los cuatro nombres son cómo llaman los menús y
+los placeholders a cada modo.
+
+## `placeholders`
+
+```yaml
+placeholders:
+  none: "None"
+```
+
+Lo que responde cualquier `%exyliarrows_...%` cuando no hay valor.
+
+## `messages`
+
+Todas las líneas que envía el plugin. `prefix` es `{primary}&lE-ARROWS &8•&r ` y el resto de mensajes
+empieza con `%prefix%`.
+
+| Clave | Cuándo se envía |
+|---|---|
+| `bound` | Se ató un efecto a un arco. |
+| `unbound` | Se desató y se devolvió. |
+| `chosen` | Se eligió un efecto en el menú. |
+| `cleared` | Se quitó el efecto. |
+| `not-a-bow` | El objeto no puede llevar un efecto. |
+| `wrong-bow` | El efecto no encaja en esa arco. |
+| `unknown-effect` | El id no nombra nada declarado. |
+| `already-bound` | El arco ya lleva un efecto. |
+| `no-effect` | El arco no lleva ninguno. |
+| `inventory-full` | Un removedor necesita un hueco libre. |
+| `no-permission` | El jugador no tiene el efecto. |
+| `empty-hand` | Un subcomando de mano con la mano vacía. |
+| `given` / `given-remover` | Se dieron fichas o removedores. |
+| `list-header` / `list-entry` / `list-empty` | `/arrowsadmin list`. |
+| `visibility-set` | Cambió la visibilidad. |
+| `refreshed` | Terminó `refresh` o `validate`. |
+| `menu-disabled` | Se abrió el menú en un servidor `bow`. |
+| `favourite-added` / `favourite-removed` / `favourites-cleared` / `favourites-empty` | La lista de favoritos. |
+
+Placeholders en los mensajes: `%effect%`, `%amount%`, `%id%`, `%visibility%` y `%prefix%`.

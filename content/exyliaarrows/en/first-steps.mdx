@@ -1,0 +1,63 @@
+---
+title: "First steps"
+description: "From a clean server to a player with an effect on their shots."
+---
+
+## The menu path
+
+<Steps>
+  <Step title="Let players open the menu">
+    ```text
+    /lp group default permission set exyliarrows.command.arrows true
+    ```
+    Without this the catalogue cannot be opened at all — and a player who cannot see it cannot want
+    anything in it.
+  </Step>
+  <Step title="Sell a category">
+    ```text
+    /lp group vip permission set exyliarrows.category.siege true
+    ```
+    Twenty effects, one node.
+  </Step>
+  <Step title="Open it">
+    `/arrows`. The tabs are down the left, the effects beside them, and the first tab is the
+    player's own favourites.
+  </Step>
+  <Step title="Pick one and shoot something">
+    Left click wears it. The next shot leaves with its trail and lands with its impact.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Every projectile counts by default">
+`projectiles.all-types` is `true`, so a snowball, an egg and an ender pearl all carry the effect. Set
+it to `false` and only `projectiles.default-allowed-types` do.
+</Callout>
+
+## The bow path
+
+<Steps>
+  <Step title="Give a token">
+    ```text
+    /arrowsadmin give <player> ember_trail 1
+    ```
+  </Step>
+  <Step title="Drop it onto a bow">
+    Pick the token up with the cursor and click it onto a bow **in your own inventory**. The
+    bow keeps everything it had; one value is written onto it.
+  </Step>
+  <Step title="Take it off again">
+    ```text
+    /arrowsadmin remover <player>
+    ```
+    The remover unbinds the effect and hands the token back, so nothing is destroyed.
+  </Step>
+</Steps>
+
+## Checking it works
+
+| Question | How to answer it |
+|---|---|
+| Is the effect there? | `/arrows preview <id>` — all three moments play against an empty sky. |
+| Does the bow carry one? | Its line is drawn under the bow's own lore. |
+| Did a permission take? | `/arrowsadmin validate <player>` takes off what they may no longer use, now. |
+| Did the file load? | `/arrowsadmin list` prints every effect the catalogue declares. |

@@ -70,6 +70,26 @@ each carry their own boss bars, action bars or titles, plus `winner-fireworks`. 
 One sidebar per event type plus the lobby board. See
 [On-screen and audio · Sidebars](/docs/exyliaevents/visuals#sidebars).
 
+### Chat
+
+```yaml
+settings:
+  chat-isolation: true
+```
+
+Keeps an event's chat inside that event: its players read each other and nobody else, spectators read
+the players, and the rest of the server reads neither. Spectators are the one asymmetry — the players
+never read them, so a running match is not commentated at.
+
+Set it to `false` to leave chat exactly as the server's chat plugin delivers it. The message is never
+cancelled or re-sent, only its audience is smaller, and a chat plugin that sends each line itself has
+taken delivery over — isolation then quietly does not apply.
+
+<Callout type="tip" title="Times on the admin screens are typed">
+Durations — an event's base length, the CS:GO round clocks, the Mace Roulette timers — are asked for
+as a length of time rather than clicked up a step at a time, and are written back the same way.
+</Callout>
+
 ## messages.yml
 
 Every message, with a shared `events` section and then one section per event type — `tnttag`,

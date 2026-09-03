@@ -1,46 +1,68 @@
 ---
 title: "Placeholders"
-description: "Six PlaceholderAPI placeholders, and what they answer when nothing is chosen."
+description: "The player's effect, the bow's effect, the shortlist and the visibility mode."
 ---
 
 Every placeholder below is written in full, and clicking one copies it.
+
+## What the player chose
 
 | Placeholder | Description |
 |---|---|
 | `%exyliarrows_effect%` | The chosen effect's id. |
 | `%exyliarrows_effect_name%` | Its display name, with its colours. |
+| `%exyliarrows_effect_description%` | Its description, flattened to one line. |
+| `%exyliarrows_effect_material%` | The material it is drawn with. |
 | `%exyliarrows_effect_category%` | The category id. |
 | `%exyliarrows_effect_category_name%` | The category's display name. |
-| `%exyliarrows_effect_icon%` | The item it is drawn with. |
+| `%exyliarrows_effect_bows%` | What it may be bound to, in words. |
 | `%exyliarrows_has_effect%` | `true` or `false`. |
+
+## What the bow in hand carries
+
+The same fields, with `bow_` in front. They answer about the item in the player's main hand, not
+about their menu choice.
+
+| Placeholder | Description |
+|---|---|
+| `%exyliarrows_bow_effect%` | The bound effect's id. |
+| `%exyliarrows_bow_effect_name%` | Its display name. |
+| `%exyliarrows_bow_effect_description%` | Its description, on one line. |
+| `%exyliarrows_bow_effect_material%` | Its material. |
+| `%exyliarrows_bow_effect_category%` | Its category id. |
+| `%exyliarrows_bow_effect_category_name%` | Its category name. |
+| `%exyliarrows_bow_effect_bows%` | What it fits. |
+| `%exyliarrows_bow_has_effect%` | `true` or `false`. |
+
+## The rest
+
+| Placeholder | Description |
+|---|---|
+| `%exyliarrows_visibility%` | The player's visibility mode, named as `particles.name-*` says. |
+| `%exyliarrows_favourites%` | How many effects they have starred. |
+| `%exyliarrows_favourite_<id>%` | `true` or `false` for one effect — `%exyliarrows_favourite_ember_trail%`. |
+
+`favorite` is accepted wherever `favourite` is.
 
 ## With nothing chosen
 
-`has_effect` returns `false`; everything else returns whatever `placeholders.none` says in
-`config.yml` — `None` by default.
+| Placeholder | Answer |
+|---|---|
+| `%exyliarrows_has_effect%` | `false` |
+| `%exyliarrows_effect_description%` | Empty |
+| `%exyliarrows_effect_material%` | `BARRIER` |
+| Everything else | Whatever `placeholders.none` says — `None` by default |
+
+The same applies to the `bow_` family when the bow carries nothing, which is what makes them
+safe to drop into a scoreboard with no fallback of their own:
 
 ```yaml
 lines:
-  - " {muted}❙ {letters}Arrow: {highlight}%exyliarrows_effect_name%"
+  - " {muted}❙ {letters}Effect: {highlight}%exyliarrows_effect_name%"
+  - " {muted}❙ {letters}Bow: {highlight}%exyliarrows_bow_effect_name%"
 ```
 
-<Callout type="note" title="No description placeholder here">
-The kill and hit plugins expose `effect_description`; this one does not. What it has instead is
-`effect_icon`, which is the menu item — useful for a menu in another plugin that wants to draw the
-player's current choice.
+<Callout type="tip" title="effect_material is for menus">
+It is the icon of whatever they chose, which is what lets another plugin's menu draw their current
+effect without knowing anything about this one.
 </Callout>
-
-## Reading it from code
-
-`ArrowsAPI` is the small public surface, for a plugin that wants to set or read a selection:
-
-```java
-ArrowsAPI.getEffect("fire_trail");
-ArrowsAPI.getAllEffects();
-ArrowsAPI.getPlayerData(uuid);
-ArrowsAPI.setPlayerEffect(player, "fire_trail");
-ArrowsAPI.resetPlayerEffect(player);
-```
-
-`setPlayerEffect` is the one worth noting: it is how a crate, a quest reward or a rank plugin hands
-somebody an effect without going through the menu.

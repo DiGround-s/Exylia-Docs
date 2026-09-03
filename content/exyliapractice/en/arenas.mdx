@@ -56,6 +56,24 @@ Both are saved automatically the moment you set the matching region, and the **S
 re-saves both. Re-save after any rebuild: a regeneration restores the file, not the blocks currently
 standing.
 
+## What an arena is used for
+
+An arena declares which kinds of match it accepts, from the **Usage** buttons on its setup screen:
+
+| Usage | Covers |
+|---|---|
+| `QUEUE` | Ranked and unranked matchmaking, and plain 1v1 duels. |
+| `DUEL` | Duels a player sent by hand. |
+| `PARTY` | Party FFA and party team fights. |
+| `BOT` | Fights against bots. |
+
+A map built for party fights is never handed to a queue match, and a bot arena is never duelled in.
+
+<Callout type="note" title="An arena that declares none accepts everything">
+Which is exactly what every row written before this existed says, so nothing had to be migrated: an
+empty list means "any match", and picking usages is how you narrow it.
+</Callout>
+
 ## What blocks an arena from being enabled
 
 The **Status** button refuses and lists what is missing:

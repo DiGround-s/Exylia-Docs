@@ -127,6 +127,7 @@ modificador se construyen desde ese bloque.
 |---|---|
 | `max-players` | `32` |
 | `platform-radius` | `12` |
+| `shrink-every-rounds` | `2` |
 | `platform-material` | `SMOOTH_STONE` |
 | `round-duration` | `12` |
 | `round-pause` | `3` |
@@ -149,6 +150,14 @@ plataforma. Salir de los límites de la arena es quedar eliminado, así que la c
 propia. Cada ronda pasa por cuatro fases: giro, caza, asentamiento — mientras cae quien fue lanzado —
 y pausa.
 
+**Los perseguidos pueden defenderse.** Durante la caza un golpe conserva su empuje y nadie recibe
+daño, así que verse empujado hacia el borde es algo que un jugador puede responder. Fuera de la caza
+cada golpe se cancela entero, empuje incluido.
+
+**El suelo se desgasta.** `shrink-every-rounds` quita un bloque de radio cada tantas rondas, así que
+una partida que nadie gana por su cuenta acaba igual: la arena empieza más ancha que antes y se cierra
+con las rondas.
+
 #### Modificadores
 
 Con `modifiers-enabled` activo, cada ronda sortea uno, dos o tres modificadores según
@@ -161,14 +170,39 @@ Con `modifiers-enabled` activo, cada ronda sortea uno, dos o tres modificadores 
 | `double-mace` | Double Mace | Dos jugadores reciben maza | `80` |
 | `triple-mace` | Triple Mace | Tres jugadores reciben maza | `50` |
 | `donut-map` | Donut Map | Se abre un agujero en el centro | `30` |
-| `holes` | Holes | El suelo se va agujereando | `20` |
-| `shrinking-map` | Shrinking Map | El suelo se cierra | `10` |
+| `holes` | Holes | El suelo se deshace | `20` |
+| `adrenaline` | Adrenaline | Todo el mundo esprinta | `15` |
+| `sudden-death` | Sudden Death | La mitad de tiempo para acertar | `15` |
+| `tiny-arena` | Tiny Arena | Ningún sitio al que huir | `15` |
+| `titan-smash` | Titan Smash | Los golpes mandan a volar | `15` |
+| `galeforce` | Galeforce | Los perseguidos reciben cargas de viento | `12` |
+| `giant-players` | Giant Players | Todo el mundo es enorme | `12` |
+| `mini-players` | Mini Players | Todo el mundo es diminuto | `12` |
+| `moon-gravity` | Moon Gravity | Todo el mundo flota | `12` |
+| `russian-roulette` | Russian Roulette | Si falla, el cazador queda fuera | `12` |
+| `skyfall` | Skyfall | La ronda empieza en el aire | `12` |
 | `bouncy-floor` | Bouncy Floor | El suelo es slime | `10` |
+| `carousel` | Carousel | Todo el mundo se baraja de sitio | `10` |
+| `ceiling` | Ceiling | Un techo cierra la arena | `10` |
+| `giant-macer` | Giant Macer | El cazador es enorme | `10` |
+| `glass-floor` | Glass Floor | Se ve la caída | `10` |
+| `grand-arena` | Grand Arena | El suelo se abre | `10` |
+| `honey-floor` | Honey Floor | El suelo frena a todos | `10` |
 | `icy-floor` | Icy Floor | El suelo es hielo | `10` |
-| `ceiling` | Ceiling | Un techo cubre la arena | `10` |
+| `mini-macer` | Mini Macer | El cazador es diminuto | `10` |
 | `no-jumping` | No Jumping | Nadie puede saltar | `10` |
+| `nuke` | Nuke | Cada golpe es una explosión | `10` |
+| `overtime` | Overtime | Una cacería más larga | `10` |
+| `patchwork-floor` | Patchwork Floor | Hielo y slime, casilla a casilla | `10` |
+| `shrinking-map` | Shrinking Map | El suelo se cierra | `10` |
+| `slow-motion` | Slow Motion | Todo el mundo va lento | `10` |
+| `blackout` | Blackout | Se van las luces | `8` |
+| `invisible-map` | Invisible Map | No se ve el suelo | `8` |
+| `last-refuge` | Last Refuge | Todos cazan a un solo jugador | `8` |
+| `phantom-macer` | Phantom Macer | La maza caza sola | `8` |
 
-Los pesos son relativos entre sí, como en las tablas de loot.
+Treinta y tres. Los pesos son relativos entre sí, como en las tablas de loot, y un peso de `0` deja
+fuera un modifier sin desactivarlo.
 
 ## Supervivencia por rondas
 

@@ -1,47 +1,68 @@
 ---
 title: "Placeholders"
-description: "Seis placeholders de PlaceholderAPI, y qué responden cuando no hay nada elegido."
+description: "El efecto del jugador, el del arco, la lista de favoritos y el modo de visibilidad."
 ---
 
-Todos los placeholders están escritos enteros, y al hacer clic en uno se copia.
+Cada placeholder está escrito completo, y al hacer clic se copia.
+
+## Lo que eligió el jugador
 
 | Placeholder | Descripción |
 |---|---|
 | `%exyliarrows_effect%` | El id del efecto elegido. |
-| `%exyliarrows_effect_name%` | Su nombre visible, con sus colores. |
+| `%exyliarrows_effect_name%` | Su nombre, con sus colores. |
+| `%exyliarrows_effect_description%` | Su descripción, aplanada a una línea. |
+| `%exyliarrows_effect_material%` | El material con el que se dibuja. |
 | `%exyliarrows_effect_category%` | El id de la categoría. |
-| `%exyliarrows_effect_category_name%` | El nombre visible de la categoría. |
-| `%exyliarrows_effect_icon%` | El objeto con el que se dibuja. |
+| `%exyliarrows_effect_category_name%` | El nombre de la categoría. |
+| `%exyliarrows_effect_bows%` | A qué se puede atar, en palabras. |
 | `%exyliarrows_has_effect%` | `true` o `false`. |
+
+## Lo que lleva el arco en mano
+
+Los mismos campos con `bow_` delante. Responden sobre el objeto en la mano principal, no sobre la
+elección del menú.
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliarrows_bow_effect%` | El id del efecto atado. |
+| `%exyliarrows_bow_effect_name%` | Su nombre. |
+| `%exyliarrows_bow_effect_description%` | Su descripción, en una línea. |
+| `%exyliarrows_bow_effect_material%` | Su material. |
+| `%exyliarrows_bow_effect_category%` | El id de su categoría. |
+| `%exyliarrows_bow_effect_category_name%` | El nombre de su categoría. |
+| `%exyliarrows_bow_effect_bows%` | A qué encaja. |
+| `%exyliarrows_bow_has_effect%` | `true` o `false`. |
+
+## El resto
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliarrows_visibility%` | Su modo de visibilidad, con el nombre que diga `particles.name-*`. |
+| `%exyliarrows_favourites%` | Cuántos efectos tiene marcados. |
+| `%exyliarrows_favourite_<id>%` | `true` o `false` para un efecto — `%exyliarrows_favourite_ember_trail%`. |
+
+`favorite` se acepta donde se acepte `favourite`.
 
 ## Sin nada elegido
 
-`has_effect` devuelve `false`; todo lo demás devuelve lo que diga `placeholders.none` en `config.yml` —
-`None` por defecto.
+| Placeholder | Respuesta |
+|---|---|
+| `%exyliarrows_has_effect%` | `false` |
+| `%exyliarrows_effect_description%` | Vacío |
+| `%exyliarrows_effect_material%` | `BARRIER` |
+| Todo lo demás | Lo que diga `placeholders.none` — `None` por defecto |
+
+Lo mismo vale para la familia `bow_` cuando el arco no lleva nada, que es lo que los hace seguros
+para un scoreboard sin fallback propio:
 
 ```yaml
 lines:
-  - " {muted}❙ {letters}Flecha: {highlight}%exyliarrows_effect_name%"
+  - " {muted}❙ {letters}Efecto: {highlight}%exyliarrows_effect_name%"
+  - " {muted}❙ {letters}Arco: {highlight}%exyliarrows_bow_effect_name%"
 ```
 
-<Callout type="note" title="Aquí no hay placeholder de descripción">
-Los plugins de muertes y golpes exponen `effect_description`; este no. Lo que tiene en su lugar es
-`effect_icon`, que es el objeto del menú — útil para que el menú de otro plugin dibuje la elección
-actual del jugador.
+<Callout type="tip" title="effect_material es para menús">
+Es el icono de lo que eligió, que es lo que permite que el menú de otro plugin dibuje su efecto actual
+sin saber nada de este.
 </Callout>
-
-## Leerlo desde código
-
-`ArrowsAPI` es la pequeña superficie pública, para un plugin que quiera fijar o consultar una
-selección:
-
-```java
-ArrowsAPI.getEffect("fire_trail");
-ArrowsAPI.getAllEffects();
-ArrowsAPI.getPlayerData(uuid);
-ArrowsAPI.setPlayerEffect(player, "fire_trail");
-ArrowsAPI.resetPlayerEffect(player);
-```
-
-`setPlayerEffect` es la que merece la pena señalar: es cómo una caja, una recompensa de misión o un
-plugin de rangos le da un efecto a alguien sin pasar por el menú.

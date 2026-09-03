@@ -1,0 +1,37 @@
+---
+title: "Reglas de cosméticos"
+description: "Una pregunta que hace cada plugin cosmético y una respuesta que da cada plugin de modo."
+---
+
+Un servidor va acumulando plugins cosméticos — skins de armadura, trims, efectos de muerte, de golpe,
+estelas de flecha — y todos dibujan lo que el jugador lleve o haga. Eso está bien casi siempre y mal en
+los mismos pocos sitios: un staff de servicio lleva armadura de servicio y no está jugando, y vestir
+esa armadura con la skin de su vestidor le dice a todo el que mire que un moderador es un participante.
+
+```java
+// Un plugin que le presta a alguien otro cuerpo lo dice una vez:
+Cosmetics.rule(this, player -> !staffMode.isActive(player.getUniqueId()));
+
+// Y cada plugin cosmético hace la misma pregunta:
+if (!Cosmetics.shows(player)) return null;
+```
+
+| Método | Qué hace |
+|---|---|
+| `Cosmetics.rule(plugin, rule)` | Registra la regla de este plugin, reemplazando la anterior. |
+| `Cosmetics.clear(plugin)` | La quita. |
+| `Cosmetics.shows(wearer)` | Si los cosméticos de ese jugador deben dibujarse. |
+
+`CosmeticRule` es una interfaz funcional: `boolean shows(Player wearer)`.
+
+## Por qué es una regla y no una integración
+
+Sin esto el arreglo es de dos en dos: cada plugin cosmético aprende el nombre de cada plugin de modo, y
+cada plugin nuevo de cualquiera de los dos lados es otra integración que nadie se acuerda de escribir.
+Una regla del modo y una pregunta del cosmético cubren a un plugin escrito después por los dos lados.
+
+| | |
+|---|---|
+| **Todas las reglas tienen que estar de acuerdo** | Se combinan con AND, como una regla de chat: los cosméticos se dibujan solo mientras ningún plugin se oponga. |
+| **Una regla por plugin** | Registrarla otra vez la reemplaza, y la regla de un plugin se cae al desactivarlo. |
+| **No esconde nada por sí sola** | Nada de aquí toca los paquetes de un plugin cosmético. Cada uno pregunta `shows` donde decide qué dibujar y se salta su propio trabajo; un cosmético que nunca pregunta no se ve afectado. |

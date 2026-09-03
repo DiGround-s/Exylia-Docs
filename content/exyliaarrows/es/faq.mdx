@@ -1,58 +1,88 @@
 ---
 title: "Preguntas frecuentes"
-description: "Lo que más se pregunta."
+description: "Las preguntas que más aparecen."
 ---
 
-## El plugin no arranca
+## No pasa nada cuando un jugador mata
 
-`ExyliaLib` y `packetevents` son obligatorios. Sin cualquiera de ellos, el servidor lo desactiva y lo
-nombra.
+Por orden:
 
-## Los permisos no hacen nada
+1. **¿Está permitida la víctima?** `effects.all-mobs` está en `false` por defecto, así que solo
+   cuentan `PLAYER`, `MANNEQUIN` y `ZOMBIE`.
+2. **¿Hay efecto siquiera?** En `mode: bow` nunca se lee la elección del menú, y en `mode: player`
+   nunca se lee un arco atada.
+3. **¿Lo tiene?** Una elección de menú sin el nodo se quita en vez de lanzarse.
+4. **¿Alguien está configurado para verlo?** Quien esté en `NONE` no ve nada, ni lo suyo.
 
-Mira la escritura: es `exyliarrows`, con una `a`, no `exyliaarrows`. Esa única letra es el motivo más
-común de que un nodo bien escrito no conceda nada.
+## El menú dice que está apagado
 
-## El menú no abre
+`behaviour.mode` es `bow`. En ese servidor el menú no cambiaría nada, así que se niega a abrir en
+vez de fingir.
 
-Necesita `exyliarrows.command.arrows`. Ese mismo nodo cubre `reset` y `toggleParticles`, así que sin él
-un jugador tampoco puede apagarse las partículas.
+## Un efecto que até a un arco desapareció
 
-## No pasa nada cuando un jugador dispara
+El arco lleva un id. Si la clave de `effects.yml` se renombró, ese id ya no nombra nada y el efecto no
+suena. Renombrar una clave no es gratis: también es otro nodo de permiso.
 
-1. **¿Posee el efecto?** Su campo `permission`, o `exyliarrows.effect.*`.
-2. **¿Aplica el efecto a ese proyectil?** Un efecto con `projectile-types` solo salta con esos, y con
-   `projectiles.all-types: false` manda la lista de la config.
-3. **¿Cubren sus disparadores lo que pasó?** Un efecto escrito solo con `HIT_ENTITY` no hace nada
-   cuando la flecha da en una pared.
-4. **¿Hay alguien configurado para verlo?** Un jugador en `NONE` no ve nada, ni lo suyo.
+## Un jugador dice que su efecto desapareció
 
-## La estela sigue dibujándose después de caer la flecha
+Se le fue el permiso — normalmente un rango que caducó. Una elección que ya no se puede justificar se
+quita en vez de lanzarse. Cuando vuelve el nodo, la vuelve a elegir.
 
-Debería parar en cuanto el proyectil deja de ser válido. Si se queda, lo más probable es que la flecha
-cayera en un chunk descargado y nunca disparara el evento de impacto — que es justo lo que caza
-`trail.max-duration`, diez segundos por defecto. No lo pongas nunca a cero.
+## ¿Perder un permiso rompe un arco?
 
-## Las estelas lagean el servidor
+No. Un arco atada lanza su efecto para quien la tenga: el nodo se pide al atar la ficha, no en cada
+baja. Eso es lo que hace que un arco atada valga la pena comerciarla.
 
-`trail.default-interval` es la palanca global: `2` es un paso cada décima de segundo, `1` duplica todas
-las estelas a la vez. Es mejor subir el `trail-interval` de un efecto concreto, y mantener las estelas
-en una o dos líneas `[PARTICLE]` — una forma en una estela es una forma dibujada en cada tick del
-vuelo.
+## ¿Los jugadores se ven los efectos entre ellos?
 
-## ¿Puedo tener un efecto solo en perlas de ender?
+Eso lo decide cada uno: `ALL`, `NONE`, `SELF_ONLY` u `OTHERS_ONLY`, con `/arrows visibility` o
+desde el menú.
 
-Sí — dale a ese efecto una lista `projectile-types` con `ENDER_PEARL` dentro.
+## ¿Los cuerpos son entidades reales?
 
-## ¿Puedo vender una categoría entera?
+No. `[NPC]` dibuja un display: nadie puede golpearlo, saquearlo ni chocar con él, y desaparece cuando
+se acaba su `life`.
 
-No con un solo nodo: aquí no hay permiso de categoría. O concedes el nodo de cada efecto, o le pones a
-un grupo de efectos la misma cadena en su campo `permission` y vendes esa.
+## ¿El lore del arco se escribe en el objeto?
+
+Nunca. Se añade a la copia que sale del servidor. Cualquier plugin que lea esa arco encuentra el lore
+de siempre, y renombrar un efecto actualiza todas los arcos del servidor a la vez.
+
+## ¿Puedo escribir mis propios efectos?
+
+Sí, para eso está `effects.yml`. Veinticinco formas, trece tokens más y los parámetros de display
+están en [Secuencias](/docs/exyliaarrows/secuencias). Una línea ilegible se avisa en consola y se
+salta; el resto del efecto se lanza igual.
+
+## Los efectos laguean en peleas grandes
+
+Los displays los anima el cliente, así que moverlos es barato — pero cada línea sigue siendo un
+paquete por espectador. Mira cuántas líneas tiene un efecto y el `count:` de las líneas de partículas.
+`ticks:` reparte una forma en frames en vez de mandarla toda de golpe.
+
+## ¿Puede una región apagar los efectos?
+
+Sí. ExyliaLib registra una flag de WorldGuard, `kill-effects`: negarla en una región impide que suenen
+los efectos de quien muera dentro de ella. En un servidor sin WorldGuard la flag simplemente permite.
+
+## ¿Puede una región apagar los efectos?
+
+Sí. ExyliaLib registra una flag de WorldGuard, `arrows-effects`: negarla en una región impide los
+efectos de lanzamiento, estela e impacto dentro de ella. En un servidor sin WorldGuard la flag
+simplemente permite.
+
+## ¿Por qué falta la estela pero el impacto sí sale?
+
+O la flag de arriba, o `trail.max-active` — un lobby lleno disparando ballestas llega al techo, y
+perder una estela se nota mucho menos que perder el tick rate. Una estela también se corta a los
+`trail.max-duration` segundos, que es lo que evita que una flecha perdida en un chunk descargado
+dibuje para siempre.
 
 ## ¿Funciona en Folia?
 
-Sí. La tarea de la estela va atada al proyectil, así que corre en la región de ese proyectil.
+Sí, declara soporte de Folia.
 
-## ¿Dónde pido soporte?
+## ¿Dónde consigo soporte?
 
 En el [Discord de Exylia](https://discord.exylia.net).

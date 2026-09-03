@@ -1,6 +1,6 @@
 ---
 title: "Module index"
-description: "All forty-five modules, what each is for, and where its entry point lives."
+description: "All forty-six modules, what each is for, and where its entry point lives."
 ---
 
 Every module is reached the same way: a static class named after it, usually with an `of(plugin)`
@@ -54,6 +54,7 @@ handing back a view that belongs to your plugin.
 | Hologram | `Holograms.show(plugin, id, location, config)` | Packet holograms declared in config. |
 | Nametags | `Nametags.of(plugin)` | Name colour, glow and collision as one player sees another. |
 | Chat | `Chats.rule(plugin, rule)` | [Who reads whose messages](/docs/exylialib/chat), taken off the audience before delivery. |
+| Cosmetics | `Cosmetics.rule(plugin, rule)` | [Whether a player's cosmetics are drawn](/docs/exylialib/cosmetics) — one question every cosmetic plugin asks. |
 | Client | `Clients.of(plugin)` | Lunar and Feather waypoints, cooldowns and teammate markers. |
 | Skulls | `Skulls.player(name)` | Player heads from base64, a URL or a name — cached, never blocking. |
 

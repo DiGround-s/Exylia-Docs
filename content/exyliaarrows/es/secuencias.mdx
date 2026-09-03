@@ -1,0 +1,182 @@
+---
+title: "Secuencias"
+description: "La sintaxis de los pasos: cada token, cada forma y los parámetros que mueven un display."
+---
+
+Un efecto es una lista de **pasos**, en orden. Cada paso es un token entre corchetes, con qué se
+dibuja, y parámetros separados por `;`:
+
+```yaml
+- '[CIRCLE] NETHERITE_SWORD;as:item;radius:3;points:12;from:0,10,0;ease:in'
+```
+
+`(0,0,0)` es el ancla del propio momento: el arco en un launch, el proyectil en un paso de estela, el
+punto de impacto en un hit. La Y positiva es arriba.
+
+## Displays o partículas
+
+Una línea de forma dibuja **displays** cuando lleva `as:`, y partículas cuando no.
+
+| Escrito | Se dibuja con |
+|---|---|
+| `as:item` | El modelo de un objeto. |
+| `as:block` | El modelo de un bloque. |
+| `as:head` | Una cabeza: una textura en base64, o `{killer}` / `{victim}` para una cara. |
+| `as:text` | Una línea de texto. |
+| *(nada)* | La partícula nombrada al principio de la línea. |
+
+```yaml
+- '[CIRCLE] FLAME;radius:2.0;points:32;color:255,80,0'      # partículas
+- '[CIRCLE] DEEPSLATE;as:block;radius:3.4;points:12'         # displays
+```
+
+## Formas
+
+Veinticinco, más `DISPLAY` para un solo objeto en el ancla:
+
+`CIRCLE` `SPHERE` `DOME` `CUBE` `LINE` `RIBBON` `SCATTER` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO`
+`STAR` `CAGE` `DISC` `VORTEX` `WAVE` `CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS`
+`ARCH` `CLAW` `DISPLAY`
+
+Cada una tiene sus parámetros:
+
+| Forma | Parámetros |
+|---|---|
+| `CIRCLE`, `SPHERE`, `DOME` | `radius` `points` |
+| `BEAM` | `height` `points` |
+| `SPIRAL` | `height` `radius` `turns` `points` |
+| `DOUBLE_HELIX` | `height` `radius` `turns` `points` `strands` |
+| `TORNADO` | `height` `radius` `top_radius` `turns` `points` |
+| `STAR` | `radius` `spikes` `inner` `points` |
+| `CAGE` | `radius` `height` `columns` `points` |
+| `DISC` | `radius` `rings` `points` |
+| `VORTEX` | `radius` `turns` `points` |
+| `WAVE` | `length` `amplitude` `frequency` `arms` `angle` `points` |
+| `CROSS` | `radius` `arms` `angle` `points` |
+| `GALAXY` | `radius` `turns` `arms` `points` |
+| `TORUS` | `radius` `tube` `segments` `tube_segments` |
+| `BURST` | `radius` `beams` `angle` `points` |
+| `PYRAMID` | `base` `height` `points` |
+| `RING_PULSE` | `radius` `rings` `spacing` `points` |
+| `WINGS` | `span` `arch` `depth` `dir` `points` |
+| `ARCH` | `radius` `arc` `dir` `points` |
+| `CLAW` | `radius` `claws` `spread` `curve` `dir` `drop` `points` |
+| `CUBE` | `width` `points` `edges` |
+| `LINE` | `length` `dir` `climb` `points` |
+| `RIBBON` | `radius` `points` `waves` `amplitude` |
+| `SCATTER` | `radius` `height` `points` `seed` `floor` |
+| `DISPLAY` | *(ninguno — un objeto en el ancla)* |
+
+### Lo que entiende cualquier forma
+
+`y` `scale` `color` `size` `count` `ticks` `interval` `face` `rotate`
+
+| Parámetro | Qué hace |
+|---|---|
+| `y` | Sube la forma entera. `SPHERE` y `TORUS` van un bloque arriba por defecto; el resto, a cero. |
+| `scale` | Agranda o encoge la geometría. |
+| `ticks` | `1` dibuja toda la forma en un frame; más la reparte en el tiempo, que es lo que hace que una espiral parezca trazarse. |
+| `interval` | Segundos entre esos frames. Por defecto `0.05`. |
+| `rotate` | Gira la forma entera, en grados. |
+| `face` | La orienta hacia quien disparó. |
+| `color`, `size`, `count` | Solo en líneas de partículas: `DUST` acepta `color:255,80,0`, `size` es el punto y `count` las partículas por punto. |
+
+## Mover un display
+
+Todo lo de abajo funciona en cualquier forma dibujada con `as:`.
+
+| Parámetro | Qué hace |
+|---|---|
+| `life` | Segundos que existe. |
+| `from:x,y,z` | Dónde empieza, relativo a su punto. |
+| `to:x,y,z` | Dónde termina. `rise:` es el atajo para un `to` vertical. |
+| `ease` | `in`, `out` o `in_out`. `ease:in` apunta un golpe hacia abajo. |
+| `gravity` | Solo para escombros. Se **suma** al movimiento en lugar de reemplazarlo. |
+| `spin` | Vueltas, o `x,y,z` para voltear. `axis` elige un solo eje. |
+| `orbit` | Vueltas alrededor del ancla. |
+| `pull` | `1` llega al centro; un número negativo lo lanza hacia fuera. |
+| `size` | Un número, o `x,y,z` para una placa, un pilar o una hoja. |
+| `size_to` | El tamaño con el que acaba. |
+| `vary` | Cuánto se diferencian las piezas entre sí. |
+| `roll`, `tilt`, `turn` | Rotación fija en grados. |
+| `face_out` | Mira hacia fuera del centro. |
+| `glow` | Un color de contorno. |
+| `light` | De `0` a `15`. Usa `light:15` para lo que deba verse de noche. |
+| `model`, `billboard`, `hold` | El modelo del display, su modo billboard y cuánto se sostiene. |
+
+<Callout type="warning" title="Tres reglas que ahorran una tarde">
+`ease:in` apunta un impacto y `ease:out` lo asienta. `gravity:` se suma a un movimiento que ya baja,
+así que una caída de ocho bloques más gravedad atraviesa el suelo — la mitad de la gravedad por el
+cuadrado de `life` es cuánto cae. Y `roll:` apunta una hoja, no `tilt:`: el modelo de un objeto es una
+placa plana mirando al sur con la punta arriba y a la derecha, así que `roll:135` la baja.
+</Callout>
+
+## Repetir una línea
+
+`repeat` `every` `turn_each` funcionan en **cualquier** paso — un sonido, una forma, un anillo de
+espadas:
+
+```yaml
+- '[CIRCLE] NETHERITE_SWORD;as:item;radius:2;points:6;repeat:3;every:0.2;turn_each:15'
+```
+
+| Parámetro | Qué hace |
+|---|---|
+| `repeat` | Cuántas veces se lanza la línea. |
+| `every` | Segundos entre lanzamientos. Por defecto `0.15`. |
+| `turn_each` | Grados que se suman cada vez, para abrir las copias en abanico. |
+
+## Los demás tokens
+
+| Token | Parámetros |
+|---|---|
+| `[DELAY] 0.15` | Segundos de espera antes de la línea siguiente. |
+| `[PARTICLE] FLAME` | `count` `speed` `y` `color` `size` `offset:x,y,z` `block` |
+| `[SOUND] NOMBRE;volumen;tono` | También `volume:` `pitch:` |
+| `[LIGHTNING]` | `volume:` `pitch:` — destello, chispas y trueno. Sin rayo real, sin fuego, sin daño. |
+| `[EXPLOSION]` | `count:` `y:` |
+| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
+| `[BLOCK_BREAK] STONE` | `count:` `y:` `offset:` |
+| `[POTION] speed;100;1` | También `duration:` `amplifier:` |
+| `[TITLE] título;subtítulo;in;stay;out` | Tiempos en segundos. |
+| `[ACTION_BAR] texto` | |
+| `[MESSAGE] texto` | Una línea de chat. |
+| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
+| `[NPC] {victim}` | El cuerpo, abajo. |
+
+## `[NPC]` — el cuerpo
+
+```yaml
+- '[NPC] {victim};pose:lying;life:2.2;equip:true;face:false'
+```
+
+| Parámetro | Qué hace |
+|---|---|
+| *(la cabecera)* | `{victim}`, `{killer}`, o una textura en base64. Un **nombre** de jugador se rechaza: necesitaría una consulta que un efecto no puede esperar. |
+| `pose` | `lying` por defecto. `pose_to` con `after` lo hace desplomarse a una segunda pose. |
+| `life` | Segundos que se queda. Por defecto `5`. |
+| `equip` | Si lleva lo que llevaba la víctima. Activado por defecto. |
+| `face` | Si se orienta. Activado por defecto. |
+| `from`, `to`, `over`, `ease`, `gravity`, `turn` | Cómo sale despedido o cómo cae. `over` por defecto `0.7` segundos. |
+| `glow` | Un color de contorno. |
+| `hurt` | Lanza el destello de daño. |
+| `y` | Lo sube. |
+| `spin` | Grados por segundo que sigue girando toda su vida — `turn` se acaba, `spin` no. |
+| `bob`, `bob_every` | Bloques que sube y baja en bucle, y cuánto dura una subida y bajada. |
+| `swing` | Segundos entre golpes de brazo. |
+| `scale` | Cómo de grande se dibuja, siendo `1` el tamaño de un jugador. Necesita cliente 1.20.5. |
+| `hold`, `offhand` | Un material en cada mano. |
+| `pitch` | Inclinación de la cabeza en grados, negativo hacia arriba. |
+
+Es un display, no una entidad: nadie puede golpearlo, saquearlo ni chocar con él.
+
+## Cuando una línea está mal
+
+Un paso que no se puede leer se descarta y se avisa en consola con la línea que lo causó — un token
+desconocido, una partícula que no existe, una forma que no produjo puntos, un parámetro que el token
+no entiende. El resto del efecto se lanza igual, así que una errata cuesta una línea y no el catálogo.
+
+<Callout type="tip" title="El coste es por línea y por baja">
+Un display es barato de animar — lo hace el cliente — pero cada línea sigue siendo un paquete por
+espectador. Los efectos de fábrica rondan las diez o quince líneas; ese techo es deliberado.
+</Callout>

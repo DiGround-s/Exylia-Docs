@@ -1,0 +1,74 @@
+---
+title: "Permisos"
+description: "Los cuatro tipos de nodo, y cómo se vende una categoría en una línea."
+---
+
+## Los nodos
+
+| Permiso | Concede |
+|---|---|
+| `exyliarrows.command.arrows` | `/arrows` y todo lo que cuelga de él. |
+| `exyliarrows.admin` | Todos los subcomandos de `/arrowsadmin`. |
+| `exyliarrows.effect.<id>` | Un efecto, por su id en minúscula. |
+| `exyliarrows.effect.*` | Todos los efectos. |
+| `exyliarrows.category.<id>` | Todos los efectos de esa categoría. |
+
+Un efecto se tiene si aplica **cualquiera** de los tres nodos de efecto: el suyo, el comodín o el de su
+categoría.
+
+## El id es el nodo
+
+No hay clave `permission` en `effects.yml`. El nodo sale de la clave, en minúscula:
+
+```text
+EMBER_TRAIL  →  exyliarrows.effect.ember_trail
+ember        →  exyliarrows.category.ember
+```
+
+Las mayúsculas no cuentan, así que recapitalizar una clave no cambia nada. Renombrarla lo cambia todo:
+es otro nodo, y quien tuviera el viejo pierde el efecto.
+
+## Venderlo
+
+```text
+/lp group default permission set exyliarrows.command.arrows true
+/lp group vip     permission set exyliarrows.category.ember true
+/lp group mvp     permission set exyliarrows.effect.ember_trail true
+/lp group legend  permission set exyliarrows.effect.* true
+```
+
+Seis categorías de veinte es lo que hace que valga la pena vender el nodo de categoría: "todos los
+efectos de Ember" es una línea en vez de veinte.
+
+<Callout type="tip" title="Regala el menú">
+Sin `exyliarrows.command.arrows` no se puede abrir el catálogo. Quien no ve lo que hay a la
+venta no puede quererlo.
+</Callout>
+
+## Para qué se comprueba el nodo
+
+<Steps>
+  <Step title="Ponérselo">
+    Elegir un efecto en el menú sin su nodo se rechaza con `no-permission`. Lo gobierna
+    `behaviour.require-permission`.
+  </Step>
+  <Step title="Lanzar lo que eligió el menú">
+    La elección se vuelve a comprobar en el momento del disparo. La que ya no se sostiene se quita ahí
+    mismo, en vez de quedarse en el menú hasta la próxima reconexión.
+  </Step>
+  <Step title="Atar una ficha">
+    Soltar una ficha sobre un arco sin el nodo del efecto se rechaza, y no se consume nada.
+  </Step>
+  <Step title="Que se dibuje">
+    `behaviour.hide-without-permission` decide si un efecto bloqueado se esconde en el menú o se
+    muestra bloqueado. En ambos casos se puede previsualizar, y en la pestaña de favoritos siempre se
+    muestra.
+  </Step>
+</Steps>
+
+<Callout type="note" title="Un arco atada no se vuelve a comprobar">
+El nodo se pide cuando se ata la ficha, nunca después. A partir de ahí el efecto es del arco: suena
+para quien la tenga en la mano, incluso para alguien que nunca tuvo el nodo — que es justamente la
+gracia de un efecto que se puede comerciar. Lo que gobiernan los permisos del lado del arco es quién
+puede ponerlo ahí.
+</Callout>

@@ -1,0 +1,38 @@
+---
+title: "Cosmetic rules"
+description: "One question every cosmetic plugin asks, and one answer every mode plugin gives."
+---
+
+A server accumulates cosmetic plugins — armour skins, armour trims, kill effects, hit effects, arrow
+trails — and every one of them draws whatever the player happens to be wearing or doing. That is right
+almost always and wrong in the same few places: a staff member on duty is wearing issued armour and is
+not playing, and dressing that armour in their wardrobe skin tells everybody watching that a moderator
+is a participant.
+
+```java
+// A plugin that lends a player somebody else's body says so once:
+Cosmetics.rule(this, player -> !staffMode.isActive(player.getUniqueId()));
+
+// And every cosmetic plugin asks the same question:
+if (!Cosmetics.shows(player)) return null;
+```
+
+| Method | What it does |
+|---|---|
+| `Cosmetics.rule(plugin, rule)` | Registers this plugin's rule, replacing its previous one. |
+| `Cosmetics.clear(plugin)` | Drops it. |
+| `Cosmetics.shows(wearer)` | Whether this player's cosmetics should be drawn at all. |
+
+`CosmeticRule` is a functional interface: `boolean shows(Player wearer)`.
+
+## Why it is a rule and not an integration
+
+Without it the fix is pairwise: every cosmetic plugin learns the name of every mode plugin, and each
+new plugin on either side is another integration nobody remembers to write. One rule from the mode and
+one question from the cosmetic covers a plugin written later on both sides.
+
+| | |
+|---|---|
+| **Every rule has to agree** | Combined with AND, like a chat rule: cosmetics are shown only while no plugin objects. |
+| **One rule per plugin** | Registering again replaces it, and a plugin's rule is dropped when it is disabled. |
+| **It hides nothing by itself** | Nothing here reaches into a cosmetic plugin's packets. Each one asks `shows` where it decides what to draw and skips its own work; a cosmetic plugin that never asks is unaffected. |

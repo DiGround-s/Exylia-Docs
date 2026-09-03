@@ -15,18 +15,18 @@ scripts/doc-drift.sh exyliaevents # just one
 
 | Docs | Repository | Version documented | Reviewed through | State |
 |---|---|---|---|---|
-| `exyliaarmorskin` | `ExyliaArmorSkin` | 1.0.0 | `83c2996` 2026-09-02 | Wardrobe, per-piece permissions, twenty animated skins. **Pending:** `6a50e32` — a skin that travels up the body and turns the metal in its trim. |
-| `exyliaarmortrims` | `ExyliaArmorTrims` | 1.1.0 | `5996c38` 2026-09-02 | Current. |
-| `exyliaarrows` | `ExyliaArrows` | 1.0.5 | `5d0f7d1` 2026-08-27 | **Stale.** Rebuilt on the new effect system: 120 effects, display entities, the `arrows-effects` region flag. The pages still describe 65 effects in 6 categories. |
-| `exyliacapture` | `ExyliaCapture` | 1.1.0 | `911387c` 2026-08-28 | **Stale (small).** Times are written as durations rather than clicked, composite leaderboard indexes, reworked admin menu layout. |
+| `exyliaarmorskin` | `ExyliaArmorSkin` | 1.0.0 | `c608783` 2026-09-03 | Current — wardrobe, per-piece permissions, twenty animated skins, the four body-aware animation types and the trim-metal cycle. |
+| `exyliaarmortrims` | `ExyliaArmorTrims` | 1.1.0 | `1d83e8f` 2026-09-03 | Current — the cosmetic gate is a library contract, documented in the library’s Cosmetic rules page rather than per plugin. |
+| `exyliaarrows` | `ExyliaArrows` | 1.0.5 | `2a7335b` 2026-09-03 | Current — rewritten for the 120 display-driven effects, the three triggers, tokens, the menu and the `arrows-effects` flag. |
+| `exyliacapture` | `ExyliaCapture` | 1.1.0 | `c8c2ec7` 2026-09-02 | Current — typed durations noted. The database indexes and the admin menu layout were not worth a page. |
 | `exyliaclans` | `ExyliaClans` | 1.0.1 | `94c78fe` 2026-08-31 | Current. |
 | `exyliaclasses` | `ExyliaClasses` | 1.0.0 | `d48bfe0` 2026-08-31 | Current — the only change since was a database index. |
-| `exyliaevents` | `ExyliaEvents` | 1.2.0 | `445108e` 2026-09-01 | 49 types and gauntlets documented. **Pending:** `3c6b6aa` — 24 more Mace Roulette modifiers, PvP during the hunt, a wider map that shrinks by rounds, and event chat isolation. |
-| `exyliaffa` | `ExyliaFFA` | 1.1.1 | `df86d3b` 2026-09-02 | Current — arena chat isolation and duration inputs documented. |
-| `exyliahiteffect` | `ExyliaHitEffect` | 1.0.10 | `1106410` 2026-09-02 | Current. |
-| `exyliakilleffect` | `ExyliaKillEffect` | 1.0.10 | `934c15e` 2026-09-02 | Current. |
-| `exylialib` | `ExyliaLib` | 1.91.0 | `d1d7790` 2026-09-02 | Current — chat rules, display ceiling, region flags, log cleanup and the extra NPC motion documented. |
-| `exyliapractice` | `ExyliaPracticeCore` | 1.0.0 | `8b95c7f` 2026-08-28 | **Stale.** 32 commits: arenas choose what they are for (queue, duel, party, bot), bot difficulties written in config, kit rule durations, the short `practice` placeholder identifier, `total_bot_players`. |
+| `exyliaevents` | `ExyliaEvents` | 1.2.0 | `3c6b6aa` 2026-09-02 | Current — 49 types, gauntlets, the 33 Mace Roulette modifiers, PvP during the hunt, the shrinking floor and event chat isolation. |
+| `exyliaffa` | `ExyliaFFA` | 1.1.1 | `569a4f1` 2026-09-02 | Current — arena chat isolation and duration inputs documented. |
+| `exyliahiteffect` | `ExyliaHitEffect` | 1.0.10 | `1fe222a` 2026-09-03 | Current. |
+| `exyliakilleffect` | `ExyliaKillEffect` | 1.0.10 | `31b0a76` 2026-09-03 | Current. |
+| `exylialib` | `ExyliaLib` | 1.95.0 | `e4cf0b7` 2026-09-03 | Current — chat rules, cosmetic rules, the display ceiling, region flags, log cleanup and the extra NPC motion. |
+| `exyliapractice` | `ExyliaPracticeCore` | 1.0.0 | `a8b3bf6` 2026-09-03 | Arena usages, the short `practice` identifier, `total_bot_players` and typed kit-rule durations documented. **Gap:** the Bot PvP module has no page at all — difficulties, its menus and `bot-name`/`bot-skin` are undocumented. |
 | `exyliashields` | `ExyliaShields` | 1.0.4 | `83a54f9` 2026-09-01 | Current — the only change since was a database index. |
 | `exyliasurvivalcore` | `ExyliaSurvivalCore` | 1.0.6 | `1e1dc33` 2026-09-02 | Current for the two pages that exist (placeholders, permissions). The plugin is not finished, and the rest of its documentation is deliberately unwritten. |
 
@@ -38,6 +38,13 @@ scripts/doc-drift.sh exyliaevents # just one
    tagline, summary or navigation changes.
 4. `pnpm build`, then check the generated `out/` for broken links and anchors.
 5. Move the row's **reviewed through** to the repository's `HEAD` and note what is left.
+
+## What is deliberately left out
+
+Not every commit is documentation. Database indexes, refactors, internal fixes and packet-level
+performance work change nothing a server owner reads or writes, and a page that lists them is a page
+nobody trusts. What earns a change: a new file, key, command, permission or placeholder; a default
+that moved; a rule a player can feel; a limit an owner can hit.
 
 ## Conventions worth keeping
 

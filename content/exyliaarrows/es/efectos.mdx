@@ -1,139 +1,155 @@
 ---
 title: "Efectos y categorías"
-description: "El formato de effects.yml, los cinco disparadores, y la sintaxis de secuencias para escribir los tuyos."
+description: "Cómo se escribe effects.yml, los tres momentos de un disparo y los 120 efectos que trae."
 ---
 
 ## El archivo
 
-Dos secciones: las categorías, y los efectos que pertenecen a ellas.
+Dos secciones: las categorías y los efectos que les pertenecen. El bloque `effects` de un efecto es un
+mapa de **disparadores**, no una lista.
 
-```yaml
+```yaml title="effects.yml"
 categories:
-  elemental:
-    name: 'Elemental'
-    material: FIRE_CHARGE
+  ember:
+    material: BLAZE_POWDER
+    name: 'Ember'
     priority: 1
 
-effects:
-  fire_trail:
-    category: elemental
+arrow_effects:
+  EMBER_TRAIL:
+    category: ember
+    name: "<gradient:#FFD08A:#C43A10><bold>EMBER TRAIL</bold></gradient>"
+    material: BLAZE_ROD
+    description: "Coals come off the shaft, {highlight}tumble, and burn out{neutral} behind it."
     priority: 1
-    icon: BLAZE_ROD
-    name: '&c🔥 &lFire Trail'
-    permission: 'exyliarrows.effect.fire_trail'
-    lore:
-      - '&7Las llamas persiguen cada disparo.'
-    triggers:
-      - TRAIL
-      - HIT
     trail-interval: 1
     effects:
-      - '[PARTICLE] FLAME;count:6;offset:0.1,0.1,0.1;speed:0.02'
-      - '[PARTICLE] SMALL_FLAME;count:4;offset:0.05,0.05,0.05'
+      trail:
+        - '[DISPLAY] MAGMA_BLOCK;as:block;size:0.09;size_to:0.01;life:0.45;spin:1,1,1;gravity:2;light:15;glow:{warning}'
+        - '[PARTICLE] FLAME;count:2;offset:0.04,0.04,0.04;speed:0.01'
+      hit:
+        - '[SOUND] BLOCK_FIRE_EXTINGUISH;0.7;1.3'
+        - '[CIRCLE] MAGMA_BLOCK;as:block;radius:0.2;points:10;size:0.1,0.05,0.1;size_to:0.5,0.04,0.5;pull:-2;ease:out;life:0.45;y:0.05;light:15;glow:{warning}'
+        - '[PARTICLE] FLAME;count:14;offset:0.4,0.2,0.4;speed:0.05'
 ```
 
 | Clave | Qué hace |
 |---|---|
-| `category` | Bajo qué categoría aparece. |
-| `priority` | Orden dentro de la categoría. Menor primero. |
-| `icon` | El objeto en el menú. `material` también vale. |
-| `name` | Lo que muestra el menú. Tokens de paleta, MiniMessage y códigos legacy funcionan. |
-| `permission` | El nodo que lo posee. **Se escribe explícitamente, no se deriva de la clave.** |
-| `lore` | Las líneas del tooltip. `description` también vale. |
-| `triggers` | Cuándo salta. Uno o más de los cinco. |
-| `trail-interval` | Ticks entre pasos de estela. Si falta, usa `trail.default-interval`. |
-| `trail-max-duration` | Segundos que puede vivir esta estela. Si falta, usa `trail.max-duration`. |
-| `projectile-types` | Limita este efecto a ciertos proyectiles. Vacío significa lo que permita la config. |
-| `effects` | La secuencia en sí. |
-| `actions` | Acciones que se ejecutan junto con él. |
+| `category` | En qué pestaña aparece. Tiene que ser una clave declarada en `categories`. |
+| `name` | Cómo lo llaman menús y placeholders. |
+| `material` | El objeto con el que se dibuja la fila. |
+| `description` | Una lista es una línea por entrada; un solo texto se parte con `<nl>`. |
+| `priority` | Dónde se sitúa dentro de su pestaña; menor va primero. |
+| `trail-interval` | Ticks entre pasos de estela. `1` es cada tick, `2` uno sí y uno no. Por defecto, `trail.default-interval`. |
+| `effects` | Los disparadores, abajo. |
+| `bows` | Opcional. A qué se puede atar. |
+| `projectiles` | Opcional. Sobre qué proyectiles suena; sin él lo decide `config.yml`. |
 
-<Callout type="note" title="Aquí el permiso es un campo, no el id">
-A diferencia de los plugins hermanos de muertes y golpes, el nodo se escribe dentro de la entrada.
-Renombrar la clave `fire_trail` **no** cambia quién lo posee — eso lo decide la línea `permission`. Es
-escribir un poco más y una sorpresa menos.
+## Los disparadores
+
+| Disparador | Cuándo |
+|---|---|
+| `launch` | El disparo saliendo del arco. |
+| `trail` | Durante el vuelo, cada `trail-interval` ticks. |
+| `hit` | Donde aterrice, contra lo que sea. |
+| `hit-entity` | Solo sobre algo vivo — si no está, cae en `hit`. |
+| `hit-block` | Solo sobre un bloque — igual. |
+
+`hit-entity` y `hit-block` son el mismo momento contado aparte: decláralos cuando aterrizar sobre un
+jugador y aterrizar en el suelo merezcan dibujos distintos. Se escriben de las dos formas —
+`hit-entity` o `hit_entity` — porque el guion es lo que escribe cualquier otro archivo de Exylia.
+
+<Callout type="warning" title="La estela es la del presupuesto">
+Una flecha vive unos cuarenta ticks, y cuatro arqueros son cuatro flechas en el aire. Lo que escriba
+`trail` se dibuja en **cada uno de esos ticks, por disparo**: uno o dos displays pequeños más una
+línea de partículas para el brillo, y sin sonido. El impacto es la recompensa y puede serlo — menos de
+un segundo, una docena de displays como mucho.
 </Callout>
 
-## Los cinco disparadores
+## `bows`
 
-| Disparador | Salta |
+Solo se lee cuando `behaviour.mode` lee arcos. Acepta nombres de objeto y familias:
+
+```yaml
+bows: [ CROSSBOW, TRIDENT ]
+```
+
+| Familia | Qué acepta |
 |---|---|
-| `LAUNCH` | Una vez, cuando el proyectil sale del jugador. |
-| `TRAIL` | Cada `trail-interval` ticks mientras vuela. |
-| `HIT` | Donde caiga, contra lo que sea. |
-| `HIT_ENTITY` | Solo al golpear algo vivo. |
-| `HIT_BLOCK` | Solo al golpear un bloque. |
+| `ANY` | Cualquier cosa. |
+| `BOW`, `CROSSBOW`, `TRIDENT` | Solo ese objeto. |
+| `RANGED` | Arcos, ballestas y tridentes. |
 
-Un efecto se lanza si coincide **cualquiera** de sus disparadores, así que `HIT` más `HIT_ENTITY` es lo
-mismo que `HIT` a secas. Usa los específicos por su cuenta cuando la gracia sea distinguir una persona
-de una pared.
+Ningún efecto de fábrica declara `bows`, así que de entrada todos encajan en todo.
 
-## La estela
+<Callout type="note" title="El id del efecto es el permiso">
+`EMBER_TRAIL` es `exyliarrows.effect.ember_trail`. Renombrar la clave renombra el nodo. Las mayúsculas
+no cuentan: los ids se pasan a minúscula al leerlos.
+</Callout>
 
-La estela es una tarea repetitiva atada al propio proyectil, así que en Folia corre en la región de ese
-proyectil. Se detiene cuando:
+## El catálogo
 
-- El proyectil deja de ser válido — cayó, desapareció o lo recogieron.
-- Pasan los segundos de `trail-max-duration`, lo que ocurra antes.
+Veinte efectos por categoría, 120 en total.
 
-Lo segundo es la red de seguridad para una flecha que cae en un chunk descargado y nunca dispara el
-evento de impacto.
+### Ember — `BLAZE_POWDER`
 
-## Sintaxis de secuencias
+`EMBER_TRAIL` `INFERNO` `CINDERFALL` `MAGMA_CORE` `FIREBRAND` `SCORCH` `PYRE` `ASHFALL` `FORGE_STRIKE`
+`METEOR` `MOLTEN_RAIN` `EMBER_WINGS` `COALFALL` `FLINT_SPARK` `SUNFIRE` `CRIMSON_BLOOM` `TORCHLIGHT`
+`FURNACE_BLAST` `WILDFIRE` `PHOENIX`
 
-Cada línea es un token entre corchetes y luego argumentos separados por `;`.
+### Frost — `BLUE_ICE`
 
-| Token | Argumentos |
-|---|---|
-| `[PARTICLE] FLAME` | `count:` `offset:x,y,z` `speed:` `y:` `color:` `size:` `block:` |
-| `[SOUND] NOMBRE;volumen;tono` | También `volume:` `pitch:` |
-| `[DELAY] 0.15` | Segundos. |
-| `[LIGHTNING]` | `volume:` `pitch:` — solo destello, chispas y trueno. |
-| `[EXPLOSION]` | `count:` `y:` |
-| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
-| `[BLOCK_BREAK] STONE` | `count:` `offset:` `y:` |
-| `[POTION] speed;100;1` | También `duration:` `amplifier:` |
-| `[TITLE] título;subtítulo;in;stay;out` | Tiempos en segundos. |
-| `[ACTION_BAR] texto` | |
-| `[MESSAGE] texto` | Una línea de chat. |
-| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
+`FROSTBITE` `SNOWFALL` `ICE_SHARD` `BLIZZARD` `GLACIER` `HAILSTORM` `PERMAFROST` `FROZEN_CORE` `SLEET`
+`ICICLE` `FROST_NOVA` `DEEP_FREEZE` `AURORA` `DIAMOND_DUST` `COLD_SNAP` `FROSTED_GLASS` `CRYO_SHOT`
+`AVALANCHE` `WINTER_BLOOM` `ABSOLUTE_ZERO`
 
-### Formas
+### Storm — `LIGHTNING_ROD`
 
-`CIRCLE` `SPHERE` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO` `STAR` `CAGE` `DISC` `VORTEX` `WAVE`
-`CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS` `ARCH` `CLAW`
+`THUNDERBOLT` `STATIC_CHARGE` `WIND_GUST` `SQUALL` `TEMPEST` `CHAIN_LIGHTNING` `SKYFALL` `CLOUDBURST`
+`DOWNPOUR` `CYCLONE` `THUNDERHEAD` `WIND_SHEAR` `STORM_SURGE` `IONISE` `GALE` `BREEZE_SHOT` `MONSOON`
+`STATIC_WEB` `UPDRAFT` `SKYBREAKER`
 
-Todas aceptan `color:` `size:` `count:` `ticks:` `interval:` `y:` además de sus propios parámetros.
+### Void — `ECHO_SHARD`
 
-<Callout type="warning" title="Una estela no es sitio para una forma">
-Las estelas que vienen son una o dos líneas `[PARTICLE]`, y es a propósito: una línea de estela salta
-cada uno o dos ticks durante todo el vuelo. Un `[SPIRAL]` ahí es una espiral por tick. Guarda las formas
-para `HIT`, que salta una sola vez.
+`SOULBOUND` `VOID_TEAR` `SCULK_BLOOM` `WITHERING` `ENDER_RIFT` `SHADOW_STEP` `NECROTIC` `SHRIEKER`
+`ABYSS` `GRAVE_DUST` `WRAITH` `OBSIDIAN_TEAR` `DARK_MATTER` `SOUL_FIRE` `CATACOMB` `NULL` `REAPER`
+`PHANTASM` `DECAY` `EVENT_HORIZON`
+
+### Prism — `AMETHYST_SHARD`
+
+`STARLIGHT` `AMETHYST` `ARCANE_BOLT` `SPECTRUM` `BEACON` `GILDED` `REFRACTION` `NOVA` `SANCTUM`
+`GLIMMER` `ECHO_CRYSTAL` `STARFALL` `LUMEN` `KALEIDOSCOPE` `SOLAR_FLARE` `CRYSTALLINE` `PRISM_ARROW`
+`HALO` `MIRROR` `CELESTIAL`
+
+### Goofy — `SLIME_BALL`
+
+`BONK` `RUBBER_CHICKEN` `PIE` `CONFETTI` `BUBBLE` `SLIME_TIME` `CAKE_DROP` `DUCK` `ANGRY_BEE` `BOING`
+`SQUEAK` `TOAST` `BANANA` `TNT_PRANK` `SNOWBALL_FIGHT` `ANVIL_DROP` `OOF` `SAD_TRUMPET` `DISCO`
+`ROLL_CREDITS`
+
+<Callout type="tip" title="NULL es un efecto, no una errata">
+La categoría void tiene uno llamado `NULL`. YAML lee esa clave como nada si no va entrecomillada, así
+que déjala exactamente como la escribe el archivo si editas a su alrededor.
 </Callout>
 
 ## Escribir los tuyos
 
 <Steps>
   <Step title="Añade la entrada">
-    Una clave nueva bajo `effects`, con una `category` que exista y un `permission` que elijas tú.
+    Una clave nueva bajo `arrow_effects`, con una `category` que exista y un bloque `effects` que
+    nombre al menos un disparador.
   </Step>
-  <Step title="Elige disparadores">
-    `TRAIL` más `HIT` es la pareja habitual. Mantén la estela en una o dos líneas de partículas.
+  <Step title="Gasta donde se ve">
+    Deja la estela en un display o dos; pon el trabajo en `hit`. La sintaxis completa está en
+    [Secuencias](/docs/exyliaarrows/secuencias).
   </Step>
   <Step title="Recarga">
-    `/arrows reload`.
+    `/arrowsadmin reload`.
   </Step>
-  <Step title="Concédelo">
-    Lo que hayas escrito en `permission`.
+  <Step title="Míralo">
+    `/arrows preview <id>` lo lanza contra un cielo vacío y te devuelve.
+  </Step>
+  <Step title="Dalo">
+    `exyliarrows.effect.<id en minúscula>`, o la categoría entera.
   </Step>
 </Steps>
-
-## Limitar un proyectil
-
-```yaml
-  ender_flash:
-    projectile-types:
-      - ENDER_PEARL
-```
-
-Un efecto con `projectile-types` solo salta con esos. Vacío — el caso normal — significa que sigue lo
-que permita `config.yml`.

@@ -1,0 +1,84 @@
+---
+title: "API"
+description: "What another plugin can do with arrow effects."
+---
+
+```java
+ArrowsAPI api = ExyliaArrows.getInstance().api();
+```
+
+Everything works in **effect ids** — the keys `effects.yml` declares, matched without regard to case.
+
+<Callout type="note" title="Nothing here checks permissions">
+A plugin calling this has already decided the player may have the effect: a crate, a rank reward, a
+shop. Being overruled by a node the buyer does not have yet is not what it asked for.
+</Callout>
+
+## The catalogue
+
+| Method | What it does |
+|---|---|
+| `effects()` | Every effect the server declares, in file order. |
+| `effect(String id)` | One effect, as an `Optional<EffectDefinition>`. |
+| `exists(String id)` | Whether the id names one. |
+
+An `EffectDefinition` carries `id()`, `categoryId()`, `name()`, `icon()`, `description()`,
+`priority()`, `steps()` and `bows()`, plus `permission()`, `mayUse(Player)` and
+`fits(Material)`.
+
+## What a player wears
+
+| Method | What it does |
+|---|---|
+| `chosen(Player)` | The effect that follows them, empty when they chose none. |
+| `choose(Player, String id)` | Sets it. Returns `false` when the id names nothing. |
+| `clear(Player)` | Takes it off. |
+
+## The shortlist
+
+| Method | What it does |
+|---|---|
+| `favourites(Player)` | What they starred, in their own order. Empty while their row is still loading. |
+| `isFavourite(Player, String id)` | Whether one effect is starred. |
+| `toggleFavourite(Player, String id)` | Stars it, or unstars it. |
+| `clearFavourites(Player)` | Empties the list. |
+
+## Bows and items
+
+| Method | What it does |
+|---|---|
+| `boundTo(ItemStack)` | The effect bound to an item, empty when it carries none. |
+| `bind(ItemStack, String id)` | Binds one; the item is changed in place. |
+| `unbind(ItemStack)` | Unbinds and gives nothing back; changed in place. |
+| `token(String id, Player viewer)` | A token ready to be given away. |
+| `remover(Player viewer)` | A remover item. |
+
+`bind` and `unbind` answer with an `ApplyResult`:
+
+| Value | Meaning |
+|---|---|
+| `BOUND` / `UNBOUND` | It worked. `isSuccess()` is true for these two only. |
+| `NOT_A_WEAPON` | The item cannot carry an effect at all. |
+| `WRONG_WEAPON` | A bow, but not one this effect fits. |
+| `UNKNOWN_EFFECT` | The id names nothing the file declares. |
+| `ALREADY_BOUND` | The bow already carries one. |
+| `NO_EFFECT` | It carries none. |
+| `INVENTORY_FULL` | The token had nowhere to go. |
+| `NO_PERMISSION` | The player does not own it. |
+| `INVALID_ITEM` | The item used was not one of this plugin's own. |
+
+## An example
+
+```java
+ArrowsAPI api = ExyliaArrows.getInstance().api();
+
+// A crate reward: hand out a token rather than granting a node.
+api.token("ember_trail", player).ifPresent(token ->
+        player.getInventory().addItem(token));
+
+// A kit that comes with the effect already on the sword.
+ItemStack bow = kit.bow();
+if (api.bind(bow, "phoenix").isSuccess()) {
+    player.getInventory().addItem(bow);
+}
+```

@@ -1,63 +1,90 @@
 ---
 title: "Introduction"
-description: "What ExyliaArrows is and what it ships with."
+description: "What ExyliaArrows is: 120 projectile effects with three moments each, drawn with display entities."
 ---
 
-ExyliaArrows puts particle effects on projectiles: a trail behind an arrow in flight, a burst where it
-lands, or both. Players pick theirs from a menu, and permissions decide which ones they may pick.
+ExyliaArrows draws an effect on a **shot**. Not one effect: a shot has three moments and they are
+nothing alike — the flash at the bow, the trail along the flight, and the impact it ends in. Every
+effect in the catalogue declares all three and they are compiled apart, because their budgets have
+nothing in common.
 
-**65 effects across 6 categories** ship in `effects.yml`: elemental, magic, nature, cosmic, dark and
-special.
+**120 effects in six categories** ship in `effects.yml`, built out of **display entities** — real
+blocks and items that turn, fall and grow, animated by each viewer's own client — with particles
+around them for light and smoke. The rule the catalogue holds itself to is that every moment of every
+effect puts at least one solid object on screen.
 
-## Five triggers
+## The three moments
 
-An effect names which moments it fires at, and one effect can name several:
+| Trigger | When it plays | What it can afford |
+|---|---|---|
+| `launch` | The shot leaving the bow. | One flash. Optional, short, quiet. |
+| `trail` | Along the flight, every `trail-interval` ticks. | One or two small displays plus a particle line. No sound. This is the one with a budget. |
+| `hit` | Wherever it lands, whatever it hit. | The payoff: under a second, a dozen displays at most, one or two quiet sounds. |
+| `hit-entity` | Only when it lands on something alive. | Falls back to `hit` when it is not declared. |
+| `hit-block` | Only when it lands on a block. | The same. |
 
-| Trigger | Fires |
+An arrow lives about forty ticks and four archers are four arrows in the air, so whatever `trail`
+writes is drawn on every one of those ticks, for every shot.
+
+## Two ways to own an effect
+
+| Way | Whose it is | Which server it suits |
+|---|---|---|
+| **The menu** | The player's: they pick one in `/arrows` and it plays on whatever they shoot. | Practice, PvP |
+| **A bow** | The bow's: an effect token is dropped onto a bow and travels with it through chests, trades and deaths. | Survival, economy |
+
+`behaviour.mode` decides which is read — `player`, `bow` or `both` — and is covered in
+[Modes and tokens](/docs/exyliaarrows/modes-and-tokens).
+
+## The categories
+
+| Category | Icon | What is in it |
+|---|---|---|
+| `ember` | `BLAZE_POWDER` | Coals, fire and forge work. |
+| `frost` | `BLUE_ICE` | Ice, snow and things that stop moving. |
+| `storm` | `LIGHTNING_ROD` | Wind, rain and lightning. |
+| `void` | `ECHO_SHARD` | Sculk, souls and what is left after. |
+| `prism` | `AMETHYST_SHARD` | Crystal, starlight and colour. |
+| `goofy` | `SLIME_BALL` | Jokes. Rubber chickens, pies and a sad trumpet. |
+
+Twenty effects each. The whole list is in [Effects](/docs/exyliaarrows/effects).
+
+## Which projectiles count
+
+By default **every** launched projectile carries the effect — arrows, tridents, snowballs, eggs, wind
+charges, ender pearls. `projectiles.all-types` turns that into a list, and an effect may name
+projectiles of its own.
+
+## Visibility is the observer's
+
+| Mode | What they see |
 |---|---|
-| `LAUNCH` | The instant the projectile leaves the player. |
-| `TRAIL` | Repeatedly while it flies. |
-| `HIT` | Wherever it lands, whatever it hit. |
-| `HIT_ENTITY` | Only when it hits a living thing. |
-| `HIT_BLOCK` | Only when it hits a block. |
-
-`fire_trail` is written with `TRAIL` and `HIT`, which is the common pair: flames behind the arrow, a
-burst where it lands.
-
-<Callout type="note" title="HIT and the two specific ones stack">
-`HIT` fires on any landing. Adding `HIT_ENTITY` on top does not double it — the effect plays if any of
-its triggers matches. Use `HIT_ENTITY` alone when you want something that only happens on a person.
-</Callout>
-
-## Not only arrows
-
-By default any launched projectile carries the effect. Turn that off and it falls back to a list —
-`ARROW`, `SPECTRAL_ARROW`, `TIPPED_ARROW`, `EGG`, `SNOWBALL`, `WIND_CHARGE`, `ENDER_PEARL` — and an
-individual effect can name its own list instead.
-
-## How it works
-
-<Steps>
-  <Step title="A player opens the menu">
-    `/arrows` shows the categories, then the effects inside one.
-  </Step>
-  <Step title="They pick one">
-    The choice is stored in the database and survives a restart.
-  </Step>
-  <Step title="They shoot">
-    Whatever the effect's triggers say happens, happens.
-  </Step>
-</Steps>
-
-## Visibility
-
-Every player chooses what they see, and the choice is theirs alone: `ALL`, `NONE`, `SELF_ONLY` or
-`OTHERS_ONLY`. `/arrows toggleParticles` cycles it without opening anything.
+| `ALL` | Every effect, theirs and everybody else's. |
+| `NONE` | None at all. |
+| `SELF_ONLY` | Only their own shots. |
+| `OTHERS_ONLY` | Only other people's. |
 
 ## Requirements
 
 | Requirement | Detail |
 |---|---|
 | Server | Paper 1.21 or newer. Folia supported. |
-| Required | `ExyliaLib`, `packetevents` |
-| Optional | `PlaceholderAPI` |
+| Required | `packetevents` |
+| Recommended | `ExyliaLib` (a soft depend: the loader installs it) |
+| Optional | `PlaceholderAPI`, WorldGuard for the `arrows-effects` flag |
+| Database | Always. The choice, the visibility and the favourites live in one table. |
+
+<Cards>
+  <Card title="Installation" href="/docs/exyliaarrows/installation">
+    The jars, the files it writes and the table it creates.
+  </Card>
+  <Card title="First steps" href="/docs/exyliaarrows/first-steps">
+    From a clean server to a player with an effect on their shots.
+  </Card>
+  <Card title="Effects" href="/docs/exyliaarrows/effects">
+    The full catalogue and how `effects.yml` is written.
+  </Card>
+  <Card title="Modes and tokens" href="/docs/exyliaarrows/modes-and-tokens">
+    The token, the remover, and what each mode changes.
+  </Card>
+</Cards>

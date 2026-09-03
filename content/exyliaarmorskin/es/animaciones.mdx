@@ -1,6 +1,6 @@
 ---
 title: "Animaciones"
-description: "Los tres tipos de animación, las opciones que lee cada uno, los veintiún presets de animations.yml y cómo se mantienen sincronizados los fotogramas."
+description: "Los siete tipos de animación, las opciones que lee cada uno, los veintiún presets de animations.yml y cómo se mantienen sincronizados los fotogramas."
 ---
 
 Una animación mueve el **color** de una skin. El trim, el nombre, el lore y la durabilidad nunca
@@ -37,7 +37,7 @@ ticks de intervalo, sin colores y sin opciones. Por eso `rainbow` funciona antes
 abierto `animations.yml`.
 </Callout>
 
-## Los tres tipos
+## Los siete tipos
 
 ### `rainbow`
 
@@ -71,6 +71,47 @@ Recorre `colors` en orden.
 
 Con `smooth: 'false'` cada fotograma es un color de la lista. Con un solo color lo mantiene; sin
 ninguno deja el color propio de la skin tal cual.
+
+## Los cuatro que leen el cuerpo
+
+`wave`, `sweep`, `bloom` y `flicker` saben **qué pieza están pintando**, así que la animación viaja por
+el conjunto en vez de dibujar el mismo fotograma en las cuatro. Una skin que solo encaja en una pieza
+se ve igual que siempre; donde se notan es en un set completo.
+
+| Tipo | Qué hace | Opciones |
+|---|---|---|
+| `wave` | El color recorre el cuerpo hacia arriba o hacia abajo, una pieza detrás de otra. | `length` (`40` fotogramas), `spread` (`0.25`), `direction` (`up` / `down`) |
+| `sweep` | Una banda de luz cruza el cuerpo una vez por pasada y el set se queda apagado. | `length` (`40`), `width` (`0.45`), `hold` (`0`), `direction` |
+| `bloom` | Un pulso se abre desde una pieza; las vecinas van un tiempo después. | `origin` (`chestplate`), `length` (`40`), `delay` (`6`), `width` (`14`) |
+| `flicker` | Las chispas prenden pieza a pieza. `sync: true` las enciende las cuatro a la vez. | `chance` (`0.18`), `hold` (`2`), `sync` (`false`) |
+
+`pulse`, `sweep`, `bloom` y `flicker` leen el **primer** color como el de reposo y el segundo como el
+que buscan; `frames` y `wave` recorren todos.
+
+## Girar el metal de un trim
+
+Cualquier tipo puede además ciclar el **material** del trim mientras el cuero sigue con su propia
+animación. El patrón no cambia nunca — solo el metal.
+
+```yaml
+prismatic:
+  type: sweep
+  colors: ['#1b1035', '#c77dff']
+  options:
+    materials: 'amethyst,diamond,gold,netherite'
+    trim-hold: 10
+    trim-spread: 3
+```
+
+| Opción | Por defecto | Qué hace |
+|---|---|---|
+| `materials` | — | Los materiales de trim por los que pasa, en orden. Sin esto no se mueve nada del trim. |
+| `trim-hold` | `10` | Fotogramas que se mantiene cada material. |
+| `trim-spread` | `0` | Fotogramas de desfase entre una pieza y la siguiente, para que el metal llegue al casco después que a las botas. |
+
+Necesita una skin con `trim-pattern` y `trim-material`. En una skin sin trim el cuero sigue animando,
+no aparece ningún trim y no se avisa de nada: un ciclo de trim en una skin sin trim es un ajuste sin
+trabajo, no un error.
 
 ## Los veintiún presets
 

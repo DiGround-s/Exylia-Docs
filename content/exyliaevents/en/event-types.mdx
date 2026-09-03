@@ -125,6 +125,7 @@ built from that block.
 |---|---|
 | `max-players` | `32` |
 | `platform-radius` | `12` |
+| `shrink-every-rounds` | `2` |
 | `platform-material` | `SMOOTH_STONE` |
 | `round-duration` | `12` |
 | `round-pause` | `3` |
@@ -146,6 +147,14 @@ A spinning mace picks a hunter, who has `round-duration` seconds to smash somebo
 Leaving the arena bounds is being eliminated, so the fall needs no rule of its own. Every round runs
 through four phases: spinning, hunting, settling — while whoever was launched comes down — and paused.
 
+**The hunted may fight back.** During the hunt a blow lands with its knockback and nobody takes damage
+from it, so being pushed towards the edge is something a player can answer. Outside the hunt every hit
+is cancelled outright, knockback included.
+
+**The floor wears down.** `shrink-every-rounds` takes a block off the radius every so many rounds, so
+a match that nobody wins on their own still ends: the arena starts wider than it used to and closes as
+the rounds go by.
+
 #### Modifiers
 
 With `modifiers-enabled` on, every round draws one, two or three modifiers according to
@@ -159,13 +168,38 @@ With `modifiers-enabled` on, every round draws one, two or three modifiers accor
 | `triple-mace` | Triple Mace | Three players get a mace | `50` |
 | `donut-map` | Donut Map | A hole opens in the centre | `30` |
 | `holes` | Holes | The floor falls apart | `20` |
-| `shrinking-map` | Shrinking Map | The floor closes in | `10` |
+| `adrenaline` | Adrenaline | Everybody sprints | `15` |
+| `sudden-death` | Sudden Death | Half the time to land a hit | `15` |
+| `tiny-arena` | Tiny Arena | Nowhere to run | `15` |
+| `titan-smash` | Titan Smash | Hits send players flying | `15` |
+| `galeforce` | Galeforce | The hunted get wind charges | `12` |
+| `giant-players` | Giant Players | Everybody is huge | `12` |
+| `mini-players` | Mini Players | Everybody is tiny | `12` |
+| `moon-gravity` | Moon Gravity | Everybody floats | `12` |
+| `russian-roulette` | Russian Roulette | Miss and the hunter is out | `12` |
+| `skyfall` | Skyfall | The round starts in the air | `12` |
 | `bouncy-floor` | Bouncy Floor | The floor is slime | `10` |
-| `icy-floor` | Icy Floor | The floor is ice | `10` |
+| `carousel` | Carousel | Everybody is shuffled around | `10` |
 | `ceiling` | Ceiling | A roof caps the arena | `10` |
+| `giant-macer` | Giant Macer | The hunter is huge | `10` |
+| `glass-floor` | Glass Floor | You can see the drop | `10` |
+| `grand-arena` | Grand Arena | The floor opens out | `10` |
+| `honey-floor` | Honey Floor | The floor drags everybody down | `10` |
+| `icy-floor` | Icy Floor | The floor is ice | `10` |
+| `mini-macer` | Mini Macer | The hunter is tiny | `10` |
 | `no-jumping` | No Jumping | Nobody can jump | `10` |
+| `nuke` | Nuke | Every hit is a blast | `10` |
+| `overtime` | Overtime | A longer hunt | `10` |
+| `patchwork-floor` | Patchwork Floor | Ice and slime, square by square | `10` |
+| `shrinking-map` | Shrinking Map | The floor closes in | `10` |
+| `slow-motion` | Slow Motion | Everybody crawls | `10` |
+| `blackout` | Blackout | The lights go out | `8` |
+| `invisible-map` | Invisible Map | The floor cannot be seen | `8` |
+| `last-refuge` | Last Refuge | Everybody hunts one player | `8` |
+| `phantom-macer` | Phantom Macer | The mace hunts on its own | `8` |
 
-Weights are relative to each other, like loot table weights.
+Thirty-three of them. Weights are relative to each other, like loot table weights, and a weight of `0`
+takes a modifier out without disabling it.
 
 ## Round survival
 

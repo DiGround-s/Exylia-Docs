@@ -1,138 +1,155 @@
 ---
 title: "Effects and categories"
-description: "The effects.yml format, the five triggers, and the sequence syntax for writing your own."
+description: "How effects.yml is written, the three triggers of a shot, and the 120 effects that ship."
 ---
 
 ## The file
 
-Two sections: the categories, and the effects that belong to them.
+Two sections: the categories, and the effects that belong to them. An effect's `effects` block is a
+map of **triggers**, not a list.
 
-```yaml
+```yaml title="effects.yml"
 categories:
-  elemental:
-    name: 'Elemental'
-    material: FIRE_CHARGE
+  ember:
+    material: BLAZE_POWDER
+    name: 'Ember'
     priority: 1
 
-effects:
-  fire_trail:
-    category: elemental
+arrow_effects:
+  EMBER_TRAIL:
+    category: ember
+    name: "<gradient:#FFD08A:#C43A10><bold>EMBER TRAIL</bold></gradient>"
+    material: BLAZE_ROD
+    description: "Coals come off the shaft, {highlight}tumble, and burn out{neutral} behind it."
     priority: 1
-    icon: BLAZE_ROD
-    name: '&c🔥 &lFire Trail'
-    permission: 'exyliarrows.effect.fire_trail'
-    lore:
-      - '&7Blazing flames chase your every shot.'
-    triggers:
-      - TRAIL
-      - HIT
     trail-interval: 1
     effects:
-      - '[PARTICLE] FLAME;count:6;offset:0.1,0.1,0.1;speed:0.02'
-      - '[PARTICLE] SMALL_FLAME;count:4;offset:0.05,0.05,0.05'
+      trail:
+        - '[DISPLAY] MAGMA_BLOCK;as:block;size:0.09;size_to:0.01;life:0.45;spin:1,1,1;gravity:2;light:15;glow:{warning}'
+        - '[PARTICLE] FLAME;count:2;offset:0.04,0.04,0.04;speed:0.01'
+      hit:
+        - '[SOUND] BLOCK_FIRE_EXTINGUISH;0.7;1.3'
+        - '[CIRCLE] MAGMA_BLOCK;as:block;radius:0.2;points:10;size:0.1,0.05,0.1;size_to:0.5,0.04,0.5;pull:-2;ease:out;life:0.45;y:0.05;light:15;glow:{warning}'
+        - '[PARTICLE] FLAME;count:14;offset:0.4,0.2,0.4;speed:0.05'
 ```
 
 | Key | What it does |
 |---|---|
-| `category` | Which category it appears under. |
-| `priority` | Ordering inside the category. Lower first. |
-| `icon` | The item in the menu. `material` also works. |
-| `name` | What the menu shows. Palette tokens, MiniMessage and legacy codes all work. |
-| `permission` | The node that owns it. **Written explicitly, not derived from the key.** |
-| `lore` | The tooltip lines. `description` also works. |
-| `triggers` | When it fires. One or more of the five. |
-| `trail-interval` | Ticks between trail steps. Falls back to `trail.default-interval`. |
-| `trail-max-duration` | Seconds this trail may live. Falls back to `trail.max-duration`. |
-| `projectile-types` | Restrict this effect to certain projectiles. Empty means whatever the config allows. |
-| `effects` | The sequence itself. |
-| `actions` | Actions to run alongside it. |
+| `category` | Which tab it appears under. Must be a key declared under `categories`. |
+| `name` | What menus and placeholders call it. |
+| `material` | The item the row is drawn with. |
+| `description` | A list is one line per entry; a single string breaks on `<nl>`. |
+| `priority` | Where it sits in its tab; lower comes first. |
+| `trail-interval` | Ticks between trail steps. `1` is every tick, `2` every other. Defaults to `trail.default-interval`. |
+| `effects` | The triggers, below. |
+| `bows` | Optional. What it may be bound to. |
+| `projectiles` | Optional. Which projectiles it plays on; without it `config.yml` decides. |
 
-<Callout type="note" title="The permission is a field here, not the id">
-Unlike the sibling kill and hit plugins, the node is written into the entry. Renaming the key
-`fire_trail` does **not** change who owns it — the `permission` line does. That is more typing and one
-less surprise.
+## The triggers
+
+| Trigger | When |
+|---|---|
+| `launch` | The shot leaving the bow. |
+| `trail` | Along the flight, every `trail-interval` ticks. |
+| `hit` | Wherever it lands, whatever it hit. |
+| `hit-entity` | Only on something alive — falls back to `hit`. |
+| `hit-block` | Only on a block — falls back to `hit`. |
+
+`hit-entity` and `hit-block` are the same moment told apart: declare them when landing on a player and
+landing on the ground deserve different pictures. Written either way — `hit-entity` or `hit_entity` —
+because a hyphen is what every other Exylia file writes.
+
+<Callout type="warning" title="The trail is the one with a budget">
+An arrow lives about forty ticks, and four archers are four arrows in the air. Whatever `trail` writes
+is drawn on **every one of those ticks, per shot**: one or two small displays plus a particle line for
+the glow, and no sound. The impact is the payoff and is allowed to be one — under a second, a dozen
+displays at the very most.
 </Callout>
 
-## The five triggers
+## `bows`
 
-| Trigger | Fires |
+Only read while `behaviour.mode` reads bows. It accepts item names and families:
+
+```yaml
+bows: [ CROSSBOW, TRIDENT ]
+```
+
+| Family | Matches |
 |---|---|
-| `LAUNCH` | Once, as the projectile leaves the player. |
-| `TRAIL` | Every `trail-interval` ticks while it flies. |
-| `HIT` | Wherever it lands, whatever it hit. |
-| `HIT_ENTITY` | Only on hitting a living thing. |
-| `HIT_BLOCK` | Only on hitting a block. |
+| `ANY` | Anything at all. |
+| `BOW`, `CROSSBOW`, `TRIDENT` | Just that item. |
+| `RANGED` | Bows, crossbows and tridents. |
 
-An effect plays if **any** of its triggers matches, so `HIT` plus `HIT_ENTITY` is the same as `HIT`
-alone. Use the specific ones on their own when the point is to distinguish a person from a wall.
+None of the shipped effects declares `bows`, so out of the box every one of them fits everything.
 
-## The trail
+<Callout type="note" title="The effect id is the permission">
+`EMBER_TRAIL` is `exyliarrows.effect.ember_trail`. Renaming the key renames the node. Case is not part
+of it: ids are lowercased on the way in.
+</Callout>
 
-The trail is a repeating task tied to the projectile itself, so on Folia it runs on that projectile's
-region. It stops when:
+## The catalogue
 
-- The projectile is no longer valid — it landed, despawned or was picked up.
-- `trail-max-duration` seconds pass, whichever comes first.
+Twenty effects per category, 120 in total.
 
-That second one is the safety net for an arrow that lands in an unloaded chunk and never fires a hit
-event.
+### Ember — `BLAZE_POWDER`
 
-## Sequence syntax
+`EMBER_TRAIL` `INFERNO` `CINDERFALL` `MAGMA_CORE` `FIREBRAND` `SCORCH` `PYRE` `ASHFALL` `FORGE_STRIKE`
+`METEOR` `MOLTEN_RAIN` `EMBER_WINGS` `COALFALL` `FLINT_SPARK` `SUNFIRE` `CRIMSON_BLOOM` `TORCHLIGHT`
+`FURNACE_BLAST` `WILDFIRE` `PHOENIX`
 
-Every line is a token in brackets, then arguments separated by `;`.
+### Frost — `BLUE_ICE`
 
-| Token | Arguments |
-|---|---|
-| `[PARTICLE] FLAME` | `count:` `offset:x,y,z` `speed:` `y:` `color:` `size:` `block:` |
-| `[SOUND] NAME;volume;pitch` | Also `volume:` `pitch:` |
-| `[DELAY] 0.15` | Seconds. |
-| `[LIGHTNING]` | `volume:` `pitch:` — flash, sparks and thunder only. |
-| `[EXPLOSION]` | `count:` `y:` |
-| `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
-| `[BLOCK_BREAK] STONE` | `count:` `offset:` `y:` |
-| `[POTION] speed;100;1` | Also `duration:` `amplifier:` |
-| `[TITLE] title;subtitle;in;stay;out` | Times in seconds. |
-| `[ACTION_BAR] text` | |
-| `[MESSAGE] text` | A chat line. |
-| `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
+`FROSTBITE` `SNOWFALL` `ICE_SHARD` `BLIZZARD` `GLACIER` `HAILSTORM` `PERMAFROST` `FROZEN_CORE` `SLEET`
+`ICICLE` `FROST_NOVA` `DEEP_FREEZE` `AURORA` `DIAMOND_DUST` `COLD_SNAP` `FROSTED_GLASS` `CRYO_SHOT`
+`AVALANCHE` `WINTER_BLOOM` `ABSOLUTE_ZERO`
 
-### Shapes
+### Storm — `LIGHTNING_ROD`
 
-`CIRCLE` `SPHERE` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO` `STAR` `CAGE` `DISC` `VORTEX` `WAVE`
-`CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS` `ARCH` `CLAW`
+`THUNDERBOLT` `STATIC_CHARGE` `WIND_GUST` `SQUALL` `TEMPEST` `CHAIN_LIGHTNING` `SKYFALL` `CLOUDBURST`
+`DOWNPOUR` `CYCLONE` `THUNDERHEAD` `WIND_SHEAR` `STORM_SURGE` `IONISE` `GALE` `BREEZE_SHOT` `MONSOON`
+`STATIC_WEB` `UPDRAFT` `SKYBREAKER`
 
-All take `color:` `size:` `count:` `ticks:` `interval:` `y:` on top of their own parameters.
+### Void — `ECHO_SHARD`
 
-<Callout type="warning" title="A trail is not the place for a shape">
-The shipped trails are one or two `[PARTICLE]` lines, and that is deliberate: a trail line fires every
-one or two ticks for the whole flight. A `[SPIRAL]` there is a spiral per tick. Save the shapes for
-`HIT`, which fires once.
+`SOULBOUND` `VOID_TEAR` `SCULK_BLOOM` `WITHERING` `ENDER_RIFT` `SHADOW_STEP` `NECROTIC` `SHRIEKER`
+`ABYSS` `GRAVE_DUST` `WRAITH` `OBSIDIAN_TEAR` `DARK_MATTER` `SOUL_FIRE` `CATACOMB` `NULL` `REAPER`
+`PHANTASM` `DECAY` `EVENT_HORIZON`
+
+### Prism — `AMETHYST_SHARD`
+
+`STARLIGHT` `AMETHYST` `ARCANE_BOLT` `SPECTRUM` `BEACON` `GILDED` `REFRACTION` `NOVA` `SANCTUM`
+`GLIMMER` `ECHO_CRYSTAL` `STARFALL` `LUMEN` `KALEIDOSCOPE` `SOLAR_FLARE` `CRYSTALLINE` `PRISM_ARROW`
+`HALO` `MIRROR` `CELESTIAL`
+
+### Goofy — `SLIME_BALL`
+
+`BONK` `RUBBER_CHICKEN` `PIE` `CONFETTI` `BUBBLE` `SLIME_TIME` `CAKE_DROP` `DUCK` `ANGRY_BEE` `BOING`
+`SQUEAK` `TOAST` `BANANA` `TNT_PRANK` `SNOWBALL_FIGHT` `ANVIL_DROP` `OOF` `SAD_TRUMPET` `DISCO`
+`ROLL_CREDITS`
+
+<Callout type="tip" title="NULL is an effect, not a mistake">
+The void category has one called `NULL`. YAML reads that key as nothing at all unless it is quoted, so
+leave it exactly as the file writes it if you are editing around it.
 </Callout>
 
 ## Writing your own
 
 <Steps>
   <Step title="Add the entry">
-    A new key under `effects`, with a `category` that exists and a `permission` you choose.
+    A new key under `arrow_effects`, with a `category` that exists and an `effects` block naming at
+    least one trigger.
   </Step>
-  <Step title="Pick triggers">
-    `TRAIL` plus `HIT` is the usual pair. Keep the trail to a particle line or two.
+  <Step title="Spend where it shows">
+    Keep the trail to a display or two; put the work in `hit`. The full step syntax is in
+    [Sequences](/docs/exyliaarrows/sequences).
   </Step>
   <Step title="Reload">
-    `/arrows reload`.
+    `/arrowsadmin reload`.
+  </Step>
+  <Step title="Look at it">
+    `/arrows preview <id>` plays it against an empty sky, then puts you back.
   </Step>
   <Step title="Grant it">
-    Whatever you wrote in `permission`.
+    `exyliarrows.effect.<id in lowercase>`, or the whole category.
   </Step>
 </Steps>
-
-## Restricting a projectile
-
-```yaml
-  ender_flash:
-    projectile-types:
-      - ENDER_PEARL
-```
-
-An effect with `projectile-types` only fires on those. Empty — the usual case — means it follows what
-`config.yml` allows.

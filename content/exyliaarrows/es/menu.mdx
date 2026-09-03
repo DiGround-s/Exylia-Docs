@@ -1,0 +1,111 @@
+---
+title: "El menú"
+description: "Una pantalla: las pestañas, la rejilla, los favoritos y todas las plantillas de menus/effects.yml."
+---
+
+`/arrows` abre una sola ventana de 54 huecos. Nada de aquí toca un arco — un efecto llega a un
+arco por su ficha, que es lo que un servidor vende.
+
+<Callout type="note" title="En modo bow se niega a abrir">
+Con `behaviour.mode: bow` nada de esta pantalla se leería nunca, así que el menú responde
+`menu-disabled` en vez de abrir una ventana que no cambia nada.
+</Callout>
+
+## Las dos listas
+
+| Sección | Huecos | Qué contiene |
+|---|---|---|
+| `categories` | `9,18,27,36` | Las pestañas a la izquierda, paginadas con los botones de los huecos `0` y `45`. |
+| `grid` | `11-16,20-25,29-34,38-43` | Los efectos de la categoría abierta, paginados en `47` y `52`. |
+
+Los botones fijos: **YOUR EFFECT** en el hueco `4` (clic para quitarse el efecto), **PARTICLE
+VISIBILITY** en `48` y **CLOSE** en `50`.
+
+## La pestaña de favoritos
+
+La primera pestaña es siempre la lista del propio jugador — no es una categoría de `effects.yml`,
+porque contiene efectos distintos para cada uno. Se nombra y se dibuja con `menu.favourites-name` y
+`menu.favourites-icon` de `config.yml`.
+
+| Regla | Detalle |
+|---|---|
+| Marcar es gratis | No hace falta tener el efecto para marcarlo. Una estrella que desaparece el día que caduca un rango le quitaría al jugador la lista que armó. |
+| Su orden, no el tuyo | Los marcados quedan en el orden en que se marcaron. No se reordena nada. |
+| Los bloqueados se ven | En esta pestaña un efecto bloqueado se dibuja incluso en un servidor que los esconde en todas las demás. |
+| Vaciarla | Shift clic en la pestaña mientras está abierta, o `/arrows favourites clear`. |
+
+Una lista vacía dibuja `empty_template`, para que la pestaña se lea como vacía y no como una pantalla
+que falló al cargar.
+
+## Qué hace un clic
+
+| Clic | Sobre una fila de la rejilla |
+|---|---|
+| Izquierdo | Pone el efecto — o lo quita, si ya es el que lleva. |
+| Derecho | Lo previsualiza: el jugador sube a un trozo de cielo vacío, el efecto se lanza solo para él y vuelve donde estaba. También se pueden previsualizar los bloqueados. |
+| Shift | Lo marca o lo desmarca. |
+
+## Orden y filas bloqueadas
+
+Primero se dibujan los efectos que el jugador puede usar y después los bloqueados — así lo que puede
+usar nunca queda detrás de una página de filas que no. Con
+`behaviour.hide-without-permission: true` los bloqueados desaparecen de la rejilla, salvo en la
+pestaña de favoritos.
+
+## Plantillas
+
+Cada lista elige una plantilla por fila. `item_template` es el estado normal y debe ir primera.
+
+| Sección | Plantilla | Cuándo se usa |
+|---|---|---|
+| `categories` | `item_template` | Hay otra pestaña abierta. |
+| | `open_template` | Es la pestaña que se está mirando. |
+| | `favourites_template` | La pestaña de favoritos, con otra abierta. |
+| | `favourites_open_template` | La de favoritos mientras está abierta — la única que lleva la acción de vaciar la lista. |
+| `grid` | `item_template` | Un efecto que el jugador tiene. |
+| | `selected_template` | El efecto que lleva puesto. |
+| | `locked_template` | Un efecto que no tiene. |
+| | `empty_template` | En la pestaña de favoritos cuando no hay nada marcado. |
+
+## Placeholders
+
+| Dónde | Disponibles |
+|---|---|
+| `categories` | `%category_id%` `%category_name%` `%category_material%` `%category_total%` `%category_owned%` `%category_status%` |
+| `grid` | `%effect_id%` `%effect_name%` `%effect_material%` `%effect_description%` `%effect_bows%` `%effect_favourite%` |
+| En cualquier sitio | `%current_effect%` `%favourites_count%` `%particle_visibility%` `%visibility_all%` `%visibility_none%` `%visibility_self_only%` `%visibility_others_only%` |
+
+## Acciones
+
+| Acción | Qué hace |
+|---|---|
+| `arrows:open` | Abre la pantalla. |
+| `arrows:category <id>` | Cambia de pestaña. `favourites` es un id válido. |
+| `arrows:choose <id>` | Pone un efecto, o lo quita si ya lo lleva. |
+| `arrows:clear` | Quita el efecto. |
+| `arrows:favourite <id>` | Marca o desmarca. |
+| `arrows:favourites_clear` | Vacía la lista. |
+| `arrows:preview <id>` | Previsualiza un efecto y reabre el menú después. |
+| `arrows:visibility` | Avanza un paso en la visibilidad de quien mira. |
+
+## Textos
+
+Las pocas cadenas que una plantilla dibuja para todas las filas viven en `config.yml`, porque ningún
+archivo puede escribirlas fila por fila:
+
+```yaml title="config.yml"
+menu:
+  empty: "{muted}Nothing"
+  tab-open: "{success}✔ You are here"
+  tab-closed: "{warning}➥ Click to open"
+  bows-any: "Any bow"
+  favourites-name: "Favourites"
+  favourites-icon: "AMETHYST_SHARD"
+  favourite-on: "{highlight}★ In your favourites"
+  favourite-off: "{muted}☆ Not in your favourites"
+```
+
+<Callout type="tip" title="La ventana sigue a la elección">
+Cualquier forma en que la fila de un jugador puede cambiar — su propio clic, un comando, un admin o un
+rango que se le acabó — redibuja las ventanas que tenga abiertas. No hay que cerrar y reabrir nada.
+</Callout>

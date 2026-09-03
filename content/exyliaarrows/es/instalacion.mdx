@@ -1,19 +1,21 @@
 ---
 title: "Instalación"
-description: "Dependencias, archivos que escribe, y los ajustes de config.yml."
+description: "Los jars, los cuatro archivos que escribe y la tabla que crea."
 ---
 
 ## Instalar
 
 <Steps>
-  <Step title="Coloca los jars">
-    `ExyliaArrows.jar`, más `ExyliaLib` y `packetevents`, en `plugins/`.
+  <Step title="Suelta los jars">
+    `ExyliaArrows.jar` y `packetevents` en `plugins/`. `ExyliaLib` es depend suave — el loader la
+    instala en el primer arranque si no está.
   </Step>
   <Step title="Arranca el servidor">
-    Escribe `config.yml`, `effects.yml` y `menus/main.yml`, y crea su tabla.
+    Escribe `config.yml`, `effects.yml`, `menus/effects.yml` y `database.yml`, y crea su tabla.
   </Step>
   <Step title="Da los permisos">
-    Ver [Comandos y permisos](/docs/exyliaarrows/comandos).
+    Nada sirve hasta que los jugadores puedan abrir el menú y tengan al menos un efecto. Ver
+    [Permisos](/docs/exyliaarrows/permisos).
   </Step>
 </Steps>
 
@@ -21,65 +23,38 @@ description: "Dependencias, archivos que escribe, y los ajustes de config.yml."
 
 | Archivo | Contenido |
 |---|---|
-| `config.yml` | Qué proyectiles cuentan, el ritmo y el tope de las estelas, y los modos de visibilidad. |
-| `effects.yml` | Las 6 categorías y los 65 efectos. |
-| `menus/main.yml` | El diseño del menú, editable como cualquier menú de ExyliaLib. |
-| `database.yml` | Dónde se guardan las selecciones. H2 por defecto. |
+| `config.yml` | Comportamiento, la ficha y el removedor, las líneas del arco, textos del menú, feedback, visibilidad y todos los mensajes. |
+| `effects.yml` | Las seis categorías y los 120 efectos. Escrito a mano, sin esquema: tus comentarios y tu formato sobreviven a un reload. |
+| `menus/effects.yml` | La pantalla: pestañas, rejilla, plantillas y botones. |
+| `database.yml` | Dónde se guardan las elecciones. H2 por defecto. |
 
-Las selecciones viven en la tabla `arrows_players`: el efecto elegido y el modo de visibilidad, por
-jugador.
-
-## config.yml
-
-```yaml
-placeholders:
-  none: "None"
-
-projectiles:
-  all-types: true
-  default-allowed-types:
-    - ARROW
-    - SPECTRAL_ARROW
-    - TIPPED_ARROW
-    - EGG
-    - SNOWBALL
-    - WIND_CHARGE
-    - ENDER_PEARL
-
-trail:
-  default-interval: 2
-  max-duration: 10
-
-particles:
-  default-visibility: "ALL"
-  name-all: "All"
-  name-none: "None"
-  name-self-only: "Self Only"
-  name-others-only: "Others Only"
-```
-
-| Clave | Por defecto | Qué hace |
-|---|---|---|
-| `placeholders.none` | `None` | Lo que muestran los placeholders sin nada elegido. |
-| `projectiles.all-types` | `true` | `true` aplica los efectos a cualquier proyectil lanzado. |
-| `projectiles.default-allowed-types` | 7 tipos | Solo se usa si `all-types` está apagado **y** el efecto no declara tipos propios. |
-| `trail.default-interval` | `2` | Ticks entre pasos de estela cuando el efecto no marca el suyo. |
-| `trail.max-duration` | `10` | Segundos que puede vivir una estela antes de cancelarse. |
-| `particles.default-visibility` | `ALL` | Con qué empieza un jugador. |
-| `particles.name-*` | ver arriba | Cómo se llama cada modo en menús y placeholders. |
-
-<Callout type="warning" title="max-duration no es decoración">
-Una flecha que cae en un chunk descargado nunca dispara el evento de impacto. Sin el tope, su estela
-dibujaría partículas hasta que parara el servidor. Diez segundos es generoso para un arco; bájalo si
-tus efectos son pesados, pero nunca lo pongas a cero.
+<Callout type="note" title="effects.yml es tuyo">
+`config.yml` se escribe desde un esquema, así que una clave desconocida se descarta y los comentarios
+se regeneran. `effects.yml` no: es un catálogo que cura el dueño del servidor y se lee tal como está
+escrito.
 </Callout>
 
-<Callout type="tip" title="default-interval es la palanca del coste">
-`2` es un paso de estela cada décima de segundo. `1` duplica de golpe el volumen de partículas de todas
-las estelas del servidor — mejor ajusta el `trail-interval` del efecto concreto si solo uno necesita ir
-más denso.
-</Callout>
+## La tabla
+
+`arrows_players`, una fila por jugador:
+
+| Columna | Qué guarda |
+|---|---|
+| `uuid` | El jugador. |
+| `name` | Su último nombre conocido. |
+| `effectId` | El efecto que eligió, o vacío. |
+| `particleVisibility` | `ALL`, `NONE`, `SELF_ONLY` u `OTHERS_ONLY`. |
+| `favourites` | Los efectos marcados, separados por comas, en su propio orden. |
+| `created_at` / `updated_at` | Cuándo se creó la fila y cuándo se escribió por última vez. |
+
+Los ids se guardan en minúscula y se leen sin importar mayúsculas, así que una fila escrita por una
+versión antigua — que los guardaba en mayúscula — sigue resolviendo.
+
+Un id marcado que el catálogo ya no declara **se conserva** en la columna y se descarta al dibujarlo,
+así que una errata en un reload no vacía la lista de nadie.
 
 ## Actualizar
 
-Reemplaza el jar y reinicia. `/arrows reload` relee los archivos de este plugin.
+Reemplaza el jar y reinicia. `/arrowsadmin reload` relee `config.yml`, `effects.yml` y el menú
+sin tocar el resto del servidor — a propósito no recarga la librería, que es para lo que está
+`/exylialib reload`.
