@@ -1,0 +1,76 @@
+---
+title: "First steps"
+description: "The permissions a first staff group needs, a first shift in staff mode, and what to check afterwards."
+badge: "guide"
+---
+
+## Two nodes to begin
+
+Every module asks the same question first: does this player hold `exyliastaff.staff`? That node is
+what makes somebody staff: it lets them see vanished players when they also hold `exyliastaff.vanish.see`,
+receive alerts, be listed in `/stafflist`, and is required together with `exyliastaff.staffmode` to
+enter staff mode. Losing it while online ends the session within five seconds.
+
+A helper group that can do a shift needs, at least:
+
+```text
+exyliastaff.staff
+exyliastaff.staffmode
+exyliastaff.vanish
+exyliastaff.vanish.see
+exyliastaff.freeze
+exyliastaff.inspect
+exyliastaff.teleport
+exyliastaff.reports.manage
+exyliastaff.helpop.manage
+```
+
+The full list, module by module, is on the [Permissions](/docs/exyliastaff/permissions) page.
+
+## A first shift
+
+<Steps>
+  <Step title="Enter staff mode">
+    `/staff`. Your inventory is saved, the hotbar of tools appears, you are set to adventure mode,
+    flying and invulnerable, and you vanish. The staff sidebar shows the session time, your vanish
+    state and the open reports and help requests.
+  </Step>
+  <Step title="Use the hotbar">
+    The clock in the first slot: left click jumps to the block you look at, right click phases
+    through the wall in front of you. The dye toggles vanish, the music disc visits a random player,
+    the book inspects the player you look at, the axe opens the punishment menu on them and the ice
+    freezes them. Open your inventory: the barrier leaves staff mode.
+  </Step>
+  <Step title="Answer a report">
+    A report arrives as a chat alert on every server with an **Open** button. `/reports` lists them by
+    priority; left click a row to see everything open against that player, right click resolves,
+    shift right click dismisses.
+  </Step>
+  <Step title="Leave staff mode">
+    `/staff` again, or the barrier. Your inventory, armour, game mode, flight, health and hunger come
+    back, you are teleported to where you entered, and vanish is turned off if you were visible before.
+    Staff chat, x-ray and mining alerts are switched off with the session.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Nothing you pick up goes into your inventory">
+While in staff mode, items on the ground stay on the ground and every slot is locked. Your own items
+are not shown; the hotbar is an overlay drawn on the client. The four leather pieces are the one
+exception: they are really worn, so other staff see the uniform.
+</Callout>
+
+## What to check afterwards
+
+- `/stafflog` opens your sessions of the last seven days: duration, AFK time, server and the actions
+  counted in each one.
+- `/staffadmin`, with `exyliastaff.admin.panel`, opens the hub: who is on duty, the team board, the
+  audit feed, the flagged rows, coverage by weekday and the module switches.
+- `/exyliastaff modules` from the console lists the sixteen modules and their state.
+
+## The command gate
+
+`config.yml` ships a list of commands that a staff member may only run while in staff mode: `tp`,
+`gamemode`, `fly`, `give`, `vanish`, `freeze`, `xray` and their aliases among them. Out of staff mode
+the command is refused with "Enable staff mode before using /tp" and hidden from tab completion. The
+point is a paper trail, not a lock: every use then happens inside a logged session. Players with
+`exyliastaff.gate.bypass` are never gated. See [Configuration](/docs/exyliastaff/configuration#command-gate).

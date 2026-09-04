@@ -1,0 +1,45 @@
+---
+title: "Inspección"
+description: "Espejos silenciosos del inventario, el cofre de ender y cualquier contenedor de un jugador, editables o de solo lectura según el permiso."
+---
+
+Una inspección abre un espejo en vivo del inventario de alguien: sin tapa de cofre, sin sonido, el
+espejo sigue a la fuente mientras está abierto, y con el permiso de edición lo que mueves se escribe
+de vuelta. Solo se puede inspeccionar a jugadores conectados.
+
+Id de módulo `inspect`, interruptor `modules.inspect`, archivos en `modules/inspect/`. Necesita PacketEvents.
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/inspect <player>` | `exyliastaff.inspect` | El inventario del jugador. `/invsee` y `/examine` son alias. |
+| `/echest <player>` | `exyliastaff.inspect.enderchest` | Su cofre de ender. `/enderchest` es un alias. |
+
+El libro de la hotbar hace lo mismo con el jugador al que miras, a menos de cinco bloques: clic
+derecho para el inventario, clic izquierdo para el cofre de ender. Hacer clic derecho en un cofre, un
+barril o cualquier otro contenedor con la mano vacía lo abre en silencio, con
+`exyliastaff.inspect.containers`.
+
+## Solo lectura o editable
+
+Con `exyliastaff.inspect.edit` los espejos del inventario y del cofre de ender son editables y el
+título lo indica; sin él son de solo lectura. Los espejos de contenedores son siempre de solo lectura.
+
+Un espejo se cierra solo cuando quien lo mira sale del modo staff, pierde `exyliastaff.inspect` o el
+módulo se desactiva.
+
+## Configuración
+
+```yaml title="plugins/ExyliaStaff/modules/inspect/config.yml"
+inventory-title: '{primary}&lINVENTORY {letters_black}» {letters}%target%'
+enderchest-title: '{primary}&lENDER CHEST {letters_black}» {letters}%target%'
+container-title: '{primary}&lCONTAINER {letters_black}» {letters}%target%'
+```
+
+`%target%` es el nombre del jugador o, en los contenedores, el nombre del bloque del contenedor.
+
+## Mensajes
+
+`modules/inspect/messages.yml`: `opened` y `opened-enderchest` con `%target%` y `%mode%`, que se lee
+`(editable)` o `(read-only)`; `no-target`; `open-failed`.

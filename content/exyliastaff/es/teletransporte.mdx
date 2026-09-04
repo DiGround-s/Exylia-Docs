@@ -1,0 +1,62 @@
+---
+title: "Teletransporte"
+description: "Teletransportarse a un jugador en cualquier punto de la red, traer a uno, visitar a un jugador al azar, saltar a lo que miras y atravesar paredes."
+---
+
+Id de módulo `teleport`, interruptor `modules.teleport`, archivos en `modules/teleport/`.
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/tp <player>` | `exyliastaff.teleport` | A ese jugador, siguiéndolo a su servidor si está en otro. `/teleport`, `/stafftp` y `/tpto` son alias. |
+| `/tp <player> <destination>` | `exyliastaff.teleport.here` | Mueve al primer jugador hasta el segundo. Ambos tienen que estar en este servidor. |
+| `/stafftphere <player>` | `exyliastaff.teleport.here` | Trae al jugador, desde otro servidor si hace falta. `/tphere` es un alias. |
+| `/staffrtp` | `exyliastaff.teleport.random` | A un jugador al azar que aún no hayas visitado. `/staffrandomtp` es un alias. |
+| `/staffrtp reset` | `exyliastaff.teleport.random` | Vacía tu lista de visitados. |
+| `/phase` | `exyliastaff.teleport.phase` | A través de la pared que miras. `/staffphase` es un alias. |
+| `/jumpto` | `exyliastaff.teleport.phase` | Encima del bloque que miras. `/staffjump` es un alias. |
+
+<Callout type="warning" title="/tp y /teleport están ocupados">
+El módulo registra las etiquetas `tp` y `teleport` a secas, sin coordenadas. Si otro plugin también
+las registra, la prioridad de comandos del servidor decide cuál responde; desactiva el módulo o
+renombra el otro. `/rtp` y `/randomtp` no se registran a propósito, para que un teletransporte
+aleatorio de survival conserve su comando.
+</Callout>
+
+Cada comando nombra a un jugador que el servidor conoce: conectado aquí, o visto aquí antes. Los
+teletransportes no tienen cooldown ni tiempo de espera; la confirmación se envía una vez que el
+teletransporte ha aterrizado.
+
+## Aleatorio
+
+Los candidatos son todos los jugadores conectados menos tú, fuera de `exclude-worlds` y, cuando
+`random-skip-staff` está activado, que no estén en vanish ni tengan `exyliastaff.staff`. Cada miembro
+del staff tiene su propia lista de visitados; cuando se ha visitado a todos los candidatos la lista se
+vacía y la ronda empieza de nuevo. El mensaje dice cuántos quedan. La lista también se vacía al
+desconectarse.
+
+## Salto y phase
+
+**Salto** traza hasta `jump-max-distance` bloques a lo largo de tu vista, ignorando bloques
+atravesables y fluidos, y te deja sobre los dos primeros bloques libres por encima de lo que golpeó,
+conservando tu vista. Si no golpea nada, y no hay nada sólido bajo ese punto, es "Nothing to land on".
+
+**Phase** recorre hasta `phase-max-distance` bloques a lo largo de tu vista desde la altura de los
+ojos y se detiene en el primer hueco abierto, de dos bloques libres de alto, tras al menos uno
+bloqueado. Sin pared al alcance es "No wall within 10 blocks".
+
+## Configuración
+
+```yaml title="plugins/ExyliaStaff/modules/teleport/config.yml"
+exclude-worlds: []
+random-skip-staff: true
+phase-max-distance: 10
+jump-max-distance: 300
+```
+
+## Mensajes
+
+`modules/teleport/messages.yml`: `teleported`, `brought`, `following` y `summoning` con `%target%`;
+`random` con `%target%` y `%remaining%`; `random-none`, `random-reset`; `phased`, `phase-none` y
+`jump-none` con `%distance%`; `jumped`; `target-offline`, `target-elsewhere`.

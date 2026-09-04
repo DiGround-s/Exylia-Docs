@@ -1,0 +1,73 @@
+---
+title: "Preguntas frecuentes"
+description: "Las preguntas que más se repiten."
+---
+
+## El plugin no arranca
+
+`packetevents` es una dependencia obligatoria: sin él el servidor nunca carga el plugin. `ExyliaLib` está
+listada solo como soft para que el loader pueda instalarla, pero el plugin la necesita para funcionar.
+Comprueba que ambas están en `plugins/`.
+
+## Un módulo aparece como failed
+
+Vanish, freeze, inspección, visión x-ray y modo staff lanzan una excepción al activarse cuando falta
+PacketEvents; cualquier módulo la lanza cuando no puede crear su tabla. La consola tiene el motivo, el
+módulo mantiene sus comandos apagados y el siguiente arranque lo reintenta. `/exyliastaff modules`
+muestra el estado de cada uno.
+
+## /tp ha dejado de funcionar para mi otro plugin
+
+El módulo de teletransporte registra las etiquetas `tp` y `teleport` a secas. Desactiva el módulo, o
+ejecuta el comando del otro plugin con su grafía `plugin:tp`.
+
+## El staff no se ve entre sí en vanish
+
+Necesitan `exyliastaff.vanish.see`, y un nivel al menos igual al del jugador en vanish. Sin ningún nodo
+`exyliastaff.vanish.level.<n>` todo el mundo es nivel 0 y ve a todo el mundo; da a un admin
+`exyliastaff.vanish.level.3` y solo el staff de nivel 3 o superior lo verá.
+
+## Un jugador fue congelado y luego se desconectó
+
+El freeze se conserva. Se le congela de nuevo en cuanto vuelve a entrar, en cualquier servidor, se avisa
+al staff de todos los servidores, y `quit-commands` en `modules/freeze/config.yml` puede haberle
+baneado ya.
+
+## La escalera se saltó un paso, o no escaló
+
+La escalera cuenta las sanciones que **este plugin** registró para el **mismo id de razón** dentro de
+`ladder-reset-days`. Un ban escrito directamente en el plugin de bans, o una razón distinta, no cuenta.
+
+## El comando de sanción no hizo nada
+
+La plantilla se ejecuta como la consola con `%player%`, `%duration%`, `%reason%` y `%staff%`, y la
+duración se pasa tal como está escrita en la escalera. Comprueba que el comando existe para tu plugin de
+bans y que lee `7d` tal como lo escribiste. "The punishment command failed » no command for TEMPBAN"
+significa que el tipo no tiene plantilla en `commands`.
+
+## Las alertas no llegan al staff de otro servidor
+
+La entrega entre servidores necesita Redis en el `database.yml` de ExyliaLib, con un `server-id` distinto
+por servidor. `/exyliastaff redis` dice si este servidor está conectado. Sin Redis cada canal sigue
+entregando en local.
+
+## Las alertas de minería están calladas aunque un jugador es sospechoso
+
+Un miembro del staff las recibe solo con `exyliastaff.mining.alerts` **y** las alertas encendidas, que
+salir del modo staff apaga. `/mining on` las vuelve a encender. Los avisos se anuncian una vez y nunca se
+repiten en el temporizador; sospechoso y superiores se repiten cada `alerts.interval-seconds`.
+
+## Un miembro del staff perdió el modo staff con "You lost permission"
+
+Se le quitó `exyliastaff.staff` o `exyliastaff.staffmode` mientras estaba conectado. El plugin comprueba
+a cada jugador conectado cada cinco segundos.
+
+## Mi edición de un menú desapareció
+
+`menus/` se refresca desde el jar cada vez que un módulo se activa. La hotbar,
+`modules/staffmode/hotbar.yml`, es el archivo pensado para editarse: se copia una vez y después es tuyo.
+
+## Dónde están el carácter de prefijo del chat de staff y el botón de reclamar de los reportes
+
+No existe ninguno de los dos. El chat de staff es un interruptor o `/sc <message>`; los reportes se
+resuelven o se descartan, y varios miembros del staff pueden mirar el mismo.

@@ -1,0 +1,44 @@
+---
+title: "Lista de staff"
+description: "Quién está conectado en toda la red, agrupado por servidor, con marcas de vanish y modo staff para quienes pueden verlas."
+---
+
+`/stafflist`, o `/slist`, con `exyliastaff.stafflist`, imprime a todos los jugadores conectados con
+`exyliastaff.staff` en todos los servidores, un bloque por servidor en orden alfabético. La cabeza de
+la hotbar lo ejecuta, y la consola también puede.
+
+Id de módulo `stafflist`, interruptor `modules.staff-list`, archivos en `modules/stafflist/`.
+
+## Presencia
+
+Aparecer en la lista significa estar conectado con `exyliastaff.staff`. Nada más: el AFK no se
+controla aquí. Cada servidor publica su lista en el canal `presence` cuando un miembro del staff entra
+o sale y cada `heartbeat-seconds`; un servidor del que no se sabe nada durante `expire-seconds` se
+descarta. La desactivación del módulo envía una lista vacía para que los demás descarten el servidor
+al momento.
+
+## Qué ve quien mira
+
+Un miembro en vanish solo se muestra a quien tenga `exyliastaff.staff` y cuyo nivel de vanish sea al
+menos el del miembro; la consola ve a todos. Quienes miran desde el staff reciben las marcas, `[V]`
+para vanish y `[S]` para modo staff, tras el nombre; el resto recibe nombres a secas y ningún miembro
+en vanish. La cabecera cuenta lo que quien mira puede ver.
+
+## Configuración
+
+```yaml title="plugins/ExyliaStaff/modules/stafflist/config.yml"
+heartbeat-seconds: 30
+expire-seconds: 90
+```
+
+## Mensajes
+
+`modules/stafflist/messages.yml`: `header` con `%total%`, `server` con `%server%`, `entry` con
+`%player%` y `%markers%`, `vanished-marker`, `staff-mode-marker`, `empty`, `footer`.
+
+## Placeholders
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_stafflist_total%` | Staff conectado en todos los servidores, vanish incluidos. |
+| `%staff_online%` | Jugadores con `exyliastaff.staff` en este servidor, desde el núcleo. |

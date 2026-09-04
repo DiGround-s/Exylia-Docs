@@ -1,6 +1,6 @@
 ---
 title: "Placeholders"
-description: "Los ocho placeholders de PlaceholderAPI que responde el plugin."
+description: "Los contadores, estadísticas y clasificaciones que responde el plugin por PlaceholderAPI."
 ---
 
 Todos los placeholders están escritos enteros, y al hacer clic en uno se copia.
@@ -41,9 +41,69 @@ El código de color del equipo al que pertenece quien lo lee — `&c`, `&9`, `&a
 por equipos. Vacío para quien no esté en uno, que es lo que permite meterlo directamente en un formato
 de chat o de tab sin necesidad de alternativa.
 
-<Callout type="note" title="No hay placeholders de estadísticas por jugador">
-Bajas, muertes, victorias y partidas se ven en `/events stats` y se exponen por la API, pero no están
-registradas como placeholders. Ver [Estadísticas](/docs/exyliaevents/estadisticas).
+## Las estadísticas de quien lo lee
+
+Los cuatro contadores del jugador que los lee, sumados en todos los eventos.
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliaevents_stats_kills%` | Bajas de siempre. |
+| `%exyliaevents_stats_deaths%` | Muertes de siempre. |
+| `%exyliaevents_stats_wins%` | Victorias de siempre. |
+| `%exyliaevents_stats_games%` | Partidas jugadas de siempre. |
+| `%exyliaevents_stats_kdr%` | Bajas entre muertes, con dos decimales — `1.75`. |
+| `%exyliaevents_stats_winrate%` | Victorias entre partidas, un decimal y el signo de porcentaje — `42.0%`. |
+
+Los mismos contadores para una sola configuración de evento:
+
+```text
+%exyliaevents_event_stats_<stat>_<eventId>%
+```
+
+`<stat>` es `kills`, `deaths`, `wins`, `games`, `kdr` o `winrate`, y el id es todo lo que va después,
+así que un id con guiones bajos se lee entero:
+
+```text
+%exyliaevents_event_stats_kills_koth%
+%exyliaevents_event_stats_winrate_block_party%
+```
+
+Las dos formas necesitan un jugador que las lea, y las dos son las de quien las lee — no hay
+placeholder para las estadísticas de otro jugador.
+
+## Clasificaciones
+
+El top diez de un contador, un placeholder por posición, para hologramas y tableros.
+
+```text
+%exyliaevents_top_name_<stat>_<position>%
+%exyliaevents_top_value_<stat>_<position>%
+```
+
+`<stat>` es `kills`, `deaths`, `wins` o `games` — `kdr` y `winrate` se calculan por jugador en vez de
+guardarse, así que no se puede ordenar por ellos. `<position>` va de `1` a `10`.
+
+```text
+%exyliaevents_top_name_kills_1%    Steve
+%exyliaevents_top_value_kills_1%   482
+```
+
+La clasificación de un solo evento en lugar de la de todos juntos, con el id al final:
+
+```text
+%exyliaevents_event_top_name_<stat>_<position>_<eventId>%
+%exyliaevents_event_top_value_<stat>_<position>_<eventId>%
+```
+
+```text
+%exyliaevents_event_top_name_wins_3_koth%
+```
+
+<Callout type="note" title="Qué responde una clasificación antes de tener respuesta">
+Una clasificación se lee como mucho una vez por minuto y entre medias se responde desde memoria, así
+que un holograma que se refresca cada segundo no cuesta nada extra. Mientras la primera lectura sigue
+en camino el placeholder devuelve `-`, y una posición a la que no ha llegado nadie devuelve `---`. Un
+placeholder de estadísticas cuya fila aún no se ha leído devuelve `-` igual.
 </Callout>
 
 ## Usarlos en los archivos del propio plugin

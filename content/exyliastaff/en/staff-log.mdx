@@ -1,0 +1,68 @@
+---
+title: "Staff log"
+description: "Sessions of staff mode with their AFK time and their counted actions, per staff member, with a ranking and a summary."
+---
+
+Every stretch of staff mode is a session: when it started, when it ended, on which server, how much
+of it was AFK, and how many of each action happened in it. `/stafflog` shows them; the
+[admin panel](/docs/exyliastaff/staff-admin) builds its team board from them.
+
+Module id `stafflog`, switch `modules.staff-log`, files under `modules/stafflog/`.
+
+## Sessions
+
+A session opens when a player enters staff mode, or when the module enables while somebody already
+is, and closes when they leave it, quit, or the module disables. A quit closes the row and the next
+join opens a new one, so rows are per connection and the summaries add them up.
+
+## AFK
+
+Time counts as AFK once the player has been idle for `afk-after-seconds`: that first stretch of an
+idle spell is free, everything after it is AFK. Moving to another block, clicking, chatting, running
+a command and every counted action reset the idle clock. The clock ticks every thirty seconds.
+
+## Actions
+
+Modules announce what a staff member did and the log counts it while their session is open on this
+server: `freeze`, `unfreeze`, `inspect`, `enderchest`, `container`, `teleport`, `report_resolve`,
+`report_dismiss`, `helpop_reply`, `helpop_close`, `punish`, `mining_reset` and `xray_toggle`.
+
+## Commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/stafflog [player] [days]` | `exyliastaff.stafflog` | Sessions of the last `days`, default 7: one clock per session with duration, AFK, server and actions. |
+| `/stafflog summary [player]` | `exyliastaff.stafflog` | Totals over 7 and over 30 days. |
+| `/stafflog top [days]` | `exyliastaff.stafflog.others` | Every staff member with a session in the window, ranked by active time. |
+
+Naming somebody else needs `exyliastaff.stafflog.others`. `/stafflog 30` reads the number as days
+for your own log. The written book in the hotbar opens yours.
+
+The ranking shows, per member, active time, total time, AFK time and its percentage, sessions, and
+actions with an hourly rate. Idle time does not count as working.
+
+## Configuration
+
+```yaml title="plugins/ExyliaStaff/modules/stafflog/config.yml"
+afk-after-seconds: 300
+keep-days: 90
+```
+
+Sessions older than `keep-days` are deleted once a day; `0` keeps everything.
+
+## Messages
+
+`modules/stafflog/messages.yml`: `no-sessions` with `%target%` and `%days%`, `never-played`,
+`action-line` with `%action%` and `%count%`, `no-actions`, `no-staff` with `%days%`.
+
+## Placeholders
+
+| Placeholder | Value |
+|---|---|
+| `%staff_stafflog_today%` | Minutes in staff mode today, live session included. |
+| `%staff_stafflog_week%` | Minutes over the last seven days. |
+
+## Storage
+
+`staff_log_sessions` holds one row per session, `staff_log_daily` one total per player and day.
+Both need the staff mode module to have anything to record.

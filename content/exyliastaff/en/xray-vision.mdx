@@ -1,0 +1,73 @@
+---
+title: "X-ray vision"
+description: "Ores outlined through the stone for a staff member: which ones, how far, how many, and when it turns itself off."
+---
+
+X-ray vision outlines the ores around a staff member so they can see what a suspect is digging
+towards. Each ore is an invisible, glowing, client-only display entity shaped like the block; nothing
+is spawned on the server and nobody else sees it.
+
+Module id `xrayvision`, switch `modules.xray-vision`, files under `modules/xrayvision/`. Needs
+PacketEvents.
+
+## Commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/xray` | `exyliastaff.xrayvision` | Toggles. `/xrayvision` is an alias. |
+| `/xray on`, `/xray off` | `exyliastaff.xrayvision` | Sets it. |
+| `/xray <player>`, `/xray on <player>` | `exyliastaff.xrayvision.others` | For somebody else. They are told who did it. |
+
+The glowstone in the hotbar toggles it.
+
+## What is scanned
+
+The square of chunks within `radius` of the viewer's chunk, so `3` is a 7 by 7 square, from `y-radius`
+blocks below the feet to as many above, clamped to the world's height. Only loaded chunks are read;
+the scan takes a chunk snapshot on the region thread and searches it on a worker. Moving into a new
+chunk drops the outlines of chunks that left the range and scans the ones that entered; a world
+change rescans everything. With `refresh-seconds` at `0` nothing is rescanned until the viewer changes
+chunk, so an ore mined in the meantime keeps its outline until then.
+
+`max-blocks-per-player` is a budget over every outline the viewer has: once it is spent, further
+chunks add nothing.
+
+## When it turns off
+
+Leaving staff mode turns x-ray off and remembers it off. Losing the permission does the same, within
+five seconds. A quit or a module disable turns it off without forgetting it, so it comes back on the
+next session with "X-ray is still on from your last session".
+
+## Configuration
+
+```yaml title="plugins/ExyliaStaff/modules/xrayvision/config.yml"
+radius: 3
+y-radius: 24
+refresh-seconds: 0
+max-blocks-per-player: 2000
+outlines:
+  DIAMOND_ORE: '#5DE5E5'
+  DEEPSLATE_DIAMOND_ORE: '#5DE5E5'
+  EMERALD_ORE: '#3FE05B'
+  DEEPSLATE_EMERALD_ORE: '#3FE05B'
+  ANCIENT_DEBRIS: '#FF5555'
+  GOLD_ORE: '#FFD24A'
+  DEEPSLATE_GOLD_ORE: '#FFD24A'
+  IRON_ORE: '#E8E8E8'
+  DEEPSLATE_IRON_ORE: '#E8E8E8'
+```
+
+`outlines` maps a block material to its colour, as `#RRGGBB` or a colour name such as `AQUA`. Add or
+remove entries freely; an entry that is not a block or not a colour is dropped silently.
+
+## Messages
+
+`modules/xrayvision/messages.yml`: `enabled`, `disabled`, `enabled-other`, `disabled-other`,
+`enabled-by` and `disabled-by`, `permission-lost`, `restored`, `status-on`, `status-off`.
+
+## Placeholders
+
+| Placeholder | Value |
+|---|---|
+| `%staff_xrayvision_status%` | `status-on` or `status-off` for the viewer. |
+| `%staff_xrayvision_active%` | `true` or `false`. |

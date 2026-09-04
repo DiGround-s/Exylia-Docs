@@ -1,0 +1,110 @@
+---
+title: "Commands"
+description: "Every command of every module, with its aliases, its arguments and its permission."
+---
+
+Commands belong to modules. A module that is off has none of its commands on the server: `/freeze`
+with freeze disabled is an unknown command, not a refusal. Toggling a module with `/exyliastaff module`
+re-registers the set and refreshes every client's command list.
+
+`<player>` is required, `[player]` optional. A player argument is an online player by exact name,
+except where a page says the server only needs to have seen them.
+
+## Core
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/exyliastaff` | `exyliastaff.admin` | Lists the modules and their state. `/es` is an alias. |
+| `/exyliastaff reload` | `exyliastaff.admin.reload` | Reloads every file, the modules and the command gate. |
+| `/exyliastaff modules` | `exyliastaff.admin.modules` | The same list. |
+| `/exyliastaff module enable <id>` | `exyliastaff.admin.modules` | Switches a module on, and its commands with it. |
+| `/exyliastaff module disable <id>` | `exyliastaff.admin.modules` | Off, together with every module that depends on it. |
+| `/exyliastaff redis` | `exyliastaff.admin` | This server's id, whether Redis is connected, and its stats. |
+
+The root itself needs `exyliastaff.admin`. All of it works from the console.
+
+## Staff mode
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/staff [player]` | `exyliastaff.staffmode` | Toggles staff mode. `/staffmode` and `/mod` are aliases; `toggle`, `on` and `off` are subcommands. |
+| `/staff spectator` | `exyliastaff.staffmode` | Spectator view. `/staff spec` is the same. |
+
+Another player needs `exyliastaff.staffmode.others`.
+
+## Vanish
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/vanish [player]` | `exyliastaff.vanish` | Toggles. `/v` is an alias; `on` and `off` set it. |
+
+Another player needs `exyliastaff.vanish.others` and a level at least theirs.
+
+## Freeze
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/freeze <player>` | `exyliastaff.freeze` | `/ss` is an alias. |
+| `/unfreeze <player>` | `exyliastaff.freeze` | `/unss` is an alias. |
+| `/freezetoggle <player>` | `exyliastaff.freeze` | `/sstoggle` is an alias. |
+
+## Inspect
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/inspect <player>` | `exyliastaff.inspect` | Inventory mirror. `/invsee` and `/examine` are aliases. |
+| `/echest <player>` | `exyliastaff.inspect.enderchest` | Ender chest mirror. `/enderchest` is an alias. |
+
+## Teleport
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/tp <player> [destination]` | `exyliastaff.teleport` | To a player anywhere on the network, or one player to another here. `/teleport`, `/stafftp`, `/tpto`. |
+| `/stafftphere <player>` | `exyliastaff.teleport.here` | Brings them. `/tphere`. |
+| `/staffrtp [reset]` | `exyliastaff.teleport.random` | Random player, or clear the visited list. `/staffrandomtp`. |
+| `/phase` | `exyliastaff.teleport.phase` | Through the wall. `/staffphase`. |
+| `/jumpto` | `exyliastaff.teleport.phase` | On top of what you look at. `/staffjump`. |
+
+## Chat
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/sc [message]` | `exyliastaff.staffchat` | Toggles staff chat, or sends one line. `/staffchat`. |
+| `/globalchat` | `exyliastaff.globalchat` | Cycles off, global, network. `/chatbypass`. |
+| `/stafflist` | `exyliastaff.stafflist` | Staff online, by server. `/slist`. |
+
+## Reports and helpop
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/report <player> [reason]` | `exyliastaff.report` | Opens the reasons, or sends with one. |
+| `/reports [player]` | `exyliastaff.reports.manage` | The open reports, or one player's. |
+| `/helpop <message>` | `exyliastaff.helpop` | Asks, or replies once claimed. |
+| `/hs` | `exyliastaff.helpop.manage` | The requests menu. `/helpop-staff`. |
+| `/hs list` | `exyliastaff.helpop.manage` | As text, also from the console. |
+| `/hs claim <id>` | `exyliastaff.helpop.manage` | |
+| `/hs reply <id> <message>` | `exyliastaff.helpop.manage` | |
+| `/hs close <id> [reason]` | `exyliastaff.helpop.manage` | |
+
+## Punishments and mining
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/punish <player> [reason-id]` | `exyliastaff.punish` | The menu, or an immediate punishment. A player the server has seen. |
+| `/history <player>` | `exyliastaff.punish.history` | `/phistory`. |
+| `/mining [on\|off]` | `exyliastaff.mining.alerts` | Toggles or sets alerts. `/notifications`, `/xraynotify`. |
+| `/mining top` | `exyliastaff.mining.view` | Most suspicious miners. |
+| `/mining view <player>` | `exyliastaff.mining.view` | One record, online or not. |
+| `/mining reset <player>` | `exyliastaff.mining.reset` | |
+| `/xray [on\|off] [player]` | `exyliastaff.xrayvision` | `/xrayvision`. Another player needs `.others`. |
+
+## Log and panel
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/stafflog [player] [days]` | `exyliastaff.stafflog` | Sessions. Somebody else needs `.others`. |
+| `/stafflog summary [player]` | `exyliastaff.stafflog` | 7 and 30 day totals. |
+| `/stafflog top [days]` | `exyliastaff.stafflog.others` | The ranking. |
+| `/staffadmin [player]` | `exyliastaff.admin.panel` | The hub, or a file. `/sadmin`. |
+| `/staffadmin online`, `team`, `audit`, `coverage` | `exyliastaff.admin.panel` | Straight to a screen. |
+| `/staffadmin modules` | `exyliastaff.admin.modules` | The switches. |

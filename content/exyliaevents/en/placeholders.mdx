@@ -1,6 +1,6 @@
 ---
 title: "Placeholders"
-description: "The eight PlaceholderAPI placeholders the plugin answers."
+description: "The counters, statistics and leaderboards the plugin answers through PlaceholderAPI."
 ---
 
 Every placeholder below is written in full, and clicking one copies it.
@@ -42,9 +42,69 @@ The colour code of the team the player who reads it belongs to — `&c`, `&9`, `
 event. Empty for a player who is not in one, which is what lets it be dropped straight into a chat or
 tab format without a fallback.
 
-<Callout type="note" title="No per-player statistic placeholders">
-Kills, deaths, wins and games played are shown in `/events stats` and exposed through the API, but
-they are not registered as placeholders. See [Statistics](/docs/exyliaevents/stats).
+## The reader's statistics
+
+The four counters of the player who reads them, added up across every event.
+
+| Placeholder | Description |
+|---|---|
+| `%exyliaevents_stats_kills%` | All-time kills. |
+| `%exyliaevents_stats_deaths%` | All-time deaths. |
+| `%exyliaevents_stats_wins%` | All-time wins. |
+| `%exyliaevents_stats_games%` | All-time games played. |
+| `%exyliaevents_stats_kdr%` | Kills over deaths, two decimals — `1.75`. |
+| `%exyliaevents_stats_winrate%` | Wins over games played, one decimal and a percent sign — `42.0%`. |
+
+The same counters for a single event configuration:
+
+```text
+%exyliaevents_event_stats_<stat>_<eventId>%
+```
+
+`<stat>` is `kills`, `deaths`, `wins`, `games`, `kdr` or `winrate`, and the id is everything after
+it, so an id with underscores in it is read whole:
+
+```text
+%exyliaevents_event_stats_kills_koth%
+%exyliaevents_event_stats_winrate_block_party%
+```
+
+Both forms need a player to read them, and both are the reader's own — there is no placeholder for
+another player's statistics.
+
+## Leaderboards
+
+The top ten of a counter, one placeholder per position, for holograms and boards.
+
+```text
+%exyliaevents_top_name_<stat>_<position>%
+%exyliaevents_top_value_<stat>_<position>%
+```
+
+`<stat>` is `kills`, `deaths`, `wins` or `games` — `kdr` and `winrate` are worked out per player
+rather than stored, so nothing can be sorted on them. `<position>` is `1` to `10`.
+
+```text
+%exyliaevents_top_name_kills_1%    Steve
+%exyliaevents_top_value_kills_1%   482
+```
+
+One event's board instead of every event at once, with the id last:
+
+```text
+%exyliaevents_event_top_name_<stat>_<position>_<eventId>%
+%exyliaevents_event_top_value_<stat>_<position>_<eventId>%
+```
+
+```text
+%exyliaevents_event_top_name_wins_3_koth%
+```
+
+<Callout type="note" title="What a board answers before it has an answer">
+A board is read at most once a minute and kept in memory in between, so a hologram that refreshes
+every second costs nothing extra. While the first read is still in flight the placeholder reads `-`,
+and a position nobody has reached yet reads `---`. A statistic placeholder whose row has not been
+read yet reads `-` the same way.
 </Callout>
 
 ## Using them in the plugin's own files

@@ -1,0 +1,43 @@
+---
+title: "Staff list"
+description: "Who is online across the network, grouped by server, with vanish and staff-mode markers for those who may see them."
+---
+
+`/stafflist`, or `/slist`, with `exyliastaff.stafflist`, prints every online player holding
+`exyliastaff.staff` on every server, one block per server in alphabetical order. The head in the
+hotbar runs it, and so can the console.
+
+Module id `stafflist`, switch `modules.staff-list`, files under `modules/stafflist/`.
+
+## Presence
+
+Being listed means being online with `exyliastaff.staff`. Nothing else: AFK is not tracked here.
+Each server publishes its list on the `presence` channel when a staff member joins or quits and every
+`heartbeat-seconds`; a server not heard from for `expire-seconds` is dropped. A module disable sends
+an empty list so the others drop the server at once.
+
+## What a viewer sees
+
+A vanished member is only shown to a viewer who holds `exyliastaff.staff` and whose vanish level is
+at least the member's; the console sees everyone. Staff viewers get the markers, `[V]` for vanished
+and `[S]` for staff mode, after the name; other viewers get plain names and no vanished members at
+all. The header counts what the viewer can see.
+
+## Configuration
+
+```yaml title="plugins/ExyliaStaff/modules/stafflist/config.yml"
+heartbeat-seconds: 30
+expire-seconds: 90
+```
+
+## Messages
+
+`modules/stafflist/messages.yml`: `header` with `%total%`, `server` with `%server%`, `entry` with
+`%player%` and `%markers%`, `vanished-marker`, `staff-mode-marker`, `empty`, `footer`.
+
+## Placeholders
+
+| Placeholder | Value |
+|---|---|
+| `%staff_stafflist_total%` | Staff online on every server, vanished included. |
+| `%staff_online%` | Players with `exyliastaff.staff` on this server, from the core. |

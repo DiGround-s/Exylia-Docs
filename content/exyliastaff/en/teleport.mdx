@@ -1,0 +1,60 @@
+---
+title: "Teleport"
+description: "Teleport to a player anywhere on the network, bring one, visit a random player, jump to what you look at and phase through walls."
+---
+
+Module id `teleport`, switch `modules.teleport`, files under `modules/teleport/`.
+
+## Commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/tp <player>` | `exyliastaff.teleport` | To that player, following them to their server if they are elsewhere. `/teleport`, `/stafftp` and `/tpto` are aliases. |
+| `/tp <player> <destination>` | `exyliastaff.teleport.here` | Moves the first player to the second. Both must be on this server. |
+| `/stafftphere <player>` | `exyliastaff.teleport.here` | Brings the player, from another server if needed. `/tphere` is an alias. |
+| `/staffrtp` | `exyliastaff.teleport.random` | To a random player you have not visited yet. `/staffrandomtp` is an alias. |
+| `/staffrtp reset` | `exyliastaff.teleport.random` | Clears your visited list. |
+| `/phase` | `exyliastaff.teleport.phase` | Through the wall you look at. `/staffphase` is an alias. |
+| `/jumpto` | `exyliastaff.teleport.phase` | On top of the block you look at. `/staffjump` is an alias. |
+
+<Callout type="warning" title="/tp and /teleport are taken">
+The module registers the bare `tp` and `teleport` labels, with no coordinates. If another plugin
+also registers them, the server's command priority decides which one answers; disable the module or
+rename the other. `/rtp` and `/randomtp` are deliberately not registered, so a survival random
+teleport keeps its command.
+</Callout>
+
+Every command names a player the server knows: online here, or seen here before. Teleports have no
+cooldown and no warm-up; the confirmation is sent once the teleport has landed.
+
+## Random
+
+The candidates are every online player except you, outside `exclude-worlds`, and, when
+`random-skip-staff` is on, neither vanished nor holding `exyliastaff.staff`. Each staff member has
+their own visited list; when every candidate has been visited the list clears and the round starts
+over. The message says how many are left. The list is also cleared on quit.
+
+## Jump and phase
+
+**Jump** traces up to `jump-max-distance` blocks along your view, ignoring passable blocks and fluids,
+and lands you on the first two free blocks above what it hit, keeping your view. Nothing hit, and
+nothing solid under that point, is "Nothing to land on".
+
+**Phase** walks up to `phase-max-distance` blocks along your view from eye level and stops at the
+first open spot, two free blocks tall, after at least one blocked one. No wall in range is
+"No wall within 10 blocks".
+
+## Configuration
+
+```yaml title="plugins/ExyliaStaff/modules/teleport/config.yml"
+exclude-worlds: []
+random-skip-staff: true
+phase-max-distance: 10
+jump-max-distance: 300
+```
+
+## Messages
+
+`modules/teleport/messages.yml`: `teleported`, `brought`, `following` and `summoning` with `%target%`;
+`random` with `%target%` and `%remaining%`; `random-none`, `random-reset`; `phased`, `phase-none` and
+`jump-none` with `%distance%`; `jumped`; `target-offline`, `target-elsewhere`.

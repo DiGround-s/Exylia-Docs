@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { LanguageRedirect } from "@/components/LanguageRedirect";
+import { DEFAULT_LANG } from "@/content/registry";
+
+/** nginx redirects the root before this renders; the canonical covers any other host. */
+export const metadata: Metadata = {
+  alternates: { canonical: `/${DEFAULT_LANG}` },
+};
 
 /**
  * The root, which belongs to no language.

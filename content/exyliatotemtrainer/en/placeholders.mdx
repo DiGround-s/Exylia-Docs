@@ -1,0 +1,110 @@
+---
+title: "Placeholders"
+description: "Every placeholder the plugin answers, in both spellings, written in full."
+---
+
+Every placeholder below is written in full, and clicking one copies it.
+
+## Two spellings
+
+Inside this plugin's own files — `scoreboards.yml`, `menus/`, `messages.yml` — a placeholder is written
+with the group `totem` and nothing in front of it:
+
+```text
+%totem_wins%
+```
+
+Through PlaceholderAPI the plugin name goes in front, or the short alias `exyliatotem`. The group stays
+in the name either way:
+
+```text
+%exyliatotemtrainer_totem_wins%
+%exyliatotem_totem_wins%
+```
+
+<Callout type="danger" title="The word totem is part of the name">
+`%exyliatotem_wins%` does **not** resolve. PlaceholderAPI hands the plugin `wins`, the plugin registered
+`totem_wins`, and nothing matches. Every PlaceholderAPI form of these placeholders reads
+`..._totem_<name>%`.
+</Callout>
+
+Every placeholder resolves for the player looking at it. One that has no value — no viewer, no profile
+loaded yet, no running session — leaves the text unchanged rather than writing an empty string.
+
+## Duel record
+
+| Placeholder | Description |
+|---|---|
+| `%exyliatotemtrainer_totem_wins%` | Duels won. |
+| `%exyliatotemtrainer_totem_losses%` | Duels lost. |
+| `%exyliatotemtrainer_totem_winrate%` | Wins over duels played, as a percentage: `50%`. |
+| `%exyliatotemtrainer_totem_best_streak%` | Best run of duel wins in a row. |
+
+## Pops
+
+| Placeholder | Description |
+|---|---|
+| `%exyliatotemtrainer_totem_total_pops%` | Lifetime pops, training and duels together. |
+| `%exyliatotemtrainer_totem_pops%` | Pops of the running session; lifetime pops outside one. |
+| `%exyliatotemtrainer_totem_streak%` | Pops in a row of the running session; the current duel win streak outside one. |
+| `%exyliatotemtrainer_totem_best%` | Fastest reaction of the running session, or the lifetime best: `0.72s`. `—` when none. |
+| `%exyliatotemtrainer_totem_average%` | Average reaction of the running session, or the lifetime average: `0.72s`. `—` when none. |
+
+These four are the ones a sidebar line and a lobby lore can share: the same name means the live session
+while one is running and the lifetime profile otherwise.
+
+## The running session
+
+Training and duels both count as a session here.
+
+| Placeholder | Description |
+|---|---|
+| `%exyliatotemtrainer_totem_state%` | `none`, `training` or `match`. |
+| `%exyliatotemtrainer_totem_state_label%` | The same, in the words of `menu.state-none`, `state-training` and `state-match`: `None`, `Training`, `Duel`. |
+| `%exyliatotemtrainer_totem_mode%` | The display name of the mode being played. |
+| `%exyliatotemtrainer_totem_ticks%` | The interval the player picked, in ticks. |
+| `%exyliatotemtrainer_totem_interval%` | The interval the session is running at right now, which an accelerating mode keeps moving. Falls back to `ticks`. |
+| `%exyliatotemtrainer_totem_grade%` | The grade of the last pop: `Perfect`, `Excellent`, `Good`, `Ok` or `Slow`. `—` before the first pop; nothing outside a session. |
+| `%exyliatotemtrainer_totem_session_time%` | How long the session has been running. |
+
+## The running duel
+
+| Placeholder | Description |
+|---|---|
+| `%exyliatotemtrainer_totem_format%` | The series length: `BO3`. |
+| `%exyliatotemtrainer_totem_opponent%` | The opponent's name. |
+| `%exyliatotemtrainer_totem_opponent_pops%` | The opponent's pops in the current round. |
+| `%exyliatotemtrainer_totem_round%` | The round being played. A replayed draw keeps its number. |
+| `%exyliatotemtrainer_totem_score%` | Rounds won, yours first: `2 - 1`. |
+| `%exyliatotemtrainer_totem_match_state%` | `waiting`, `starting`, `active`, `round_end`, `ending` or `finished`. |
+
+## Leaderboards
+
+A board is about one mode and sorted by one category. The general form is:
+
+```text
+%exyliatotemtrainer_totem_top_<mode>_<category>_<n>%
+%exyliatotemtrainer_totem_top_<mode>_<category>_<n>_value%
+```
+
+The first is the player's name at position `n`, the second the number that put them there.
+
+| Category | Sorted by | Value reads as |
+|---|---|---|
+| `best_score` | Best session score, highest first | `87` |
+| `best_pops` | Most pops in one session | `112` |
+| `fastest_average` | Best average reaction, lowest first | `0.41s` |
+| `best_streak` | Longest run of pops without a fail | `64` |
+| `longest_run` | Longest session | `95.30s` |
+
+```text
+%exyliatotemtrainer_totem_top_chaos_best_score_1%
+%exyliatotemtrainer_totem_top_chaos_best_score_1_value%
+%exyliatotemtrainer_totem_top_acceleration_fastest_average_3%
+```
+
+A mode id or a category with underscores in it is matched whole: `top_my_mode_best_score_1` finds the
+mode `my_mode`. Until the board has been read once, both forms answer the `menu.loading` text,
+`Loading…`, and kick the read off. A position past the end of the board, an unknown mode or an unknown
+category leaves the text unchanged. See [Stats](/docs/exyliatotemtrainer/stats) for how a board is
+built.

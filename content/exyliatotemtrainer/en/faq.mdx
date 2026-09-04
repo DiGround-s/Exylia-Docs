@@ -1,0 +1,95 @@
+---
+title: "Frequently asked questions"
+description: "The questions that come up most."
+---
+
+## The plugin does not start
+
+`packetevents` is a hard dependency: without it the server never loads the plugin. `ExyliaLib` is listed
+as soft only so the loader can install it, but the plugin needs it to run. Check both are in `plugins/`.
+
+## "No arena is ready. Ask an administrator."
+
+A duel needs an arena that is **enabled** and has **both spawns** set, in worlds that are loaded. Open
+`/totemtraineradmin`, Arenas: a row marked incomplete is missing one of those. Duels also cannot start in
+the first moments after boot, before the arenas have been read from the database.
+
+## A player cannot duel somebody
+
+Two different refusals. "`<name>` is busy right now" means another Exylia plugin holds that player: they
+are in an FFA arena, an event, a practice match. "`<name>` is `<reason>`" means nobody holds them but a
+plugin advises against it, in its own words — "in a party", or this plugin's own "answering a duel request"
+while a request sits open on either side of them.
+
+## Duels never start in the arena I want
+
+There is no choosing. Every duel goes to the ready arena hosting the fewest duels and solo sessions at that
+moment, so two arenas share the load. `arena.max-matches-per-arena` caps what one arena takes; `0` is
+unlimited.
+
+## Can players train without an arena?
+
+Yes. With no ready arena, solo training happens where the player stands. Duels do need one.
+
+## The countdown is too long
+
+`training.countdown` in `config.yml`, three seconds by default, used before every training session and
+every duel round. Players can also punch the air to skip it: alone in training, and in a duel the round
+starts as soon as both have punched.
+
+## Fast speeds are graded too gently
+
+Thresholds resolve per tick interval before anything else. Add a block under `performance.by-ticks` keyed
+by the interval as text — the default file already ships one for `"10"` — and that speed grades against
+its own numbers. `by-mode` does the same per mode, and is checked after `by-ticks`. See
+[Grading](/docs/exyliatotemtrainer/grading).
+
+## How do I add a mode?
+
+Write a new block under `training.modes` and reload. A mode is its numbers: `totems` (how many are kept in
+random slots, `0` for a full inventory), `refill`, an optional `random-interval` window and an optional
+`speed-up`. Nothing in the code knows the five shipped modes by name, so a sixth gets the same menus,
+records and leaderboard. See [Modes](/docs/exyliatotemtrainer/modes).
+
+## A short session scores far lower than its grades suggest
+
+That is `performance.full-credit-pops`, twenty by default. Below that many pops the mean of the grade
+points is scaled by how far the session fell short, so one lucky perfect pop cannot outscore a long clean
+run on a board sorted by score. Set it to `0` to score the mean alone.
+
+## What is a draw, and why was a duel cancelled?
+
+Both engines hit on the same cadence, so both players can drop their totem in the same tick. That round
+is a draw: nobody scores, and it is replayed under the same number. Three draws in a row means neither
+side is swapping at all, and the duel is cancelled with nothing stored.
+
+## Can I offer a best-of-2 or best-of-4?
+
+List the length in `match.formats` and set `match.allow-even-formats: true`. An even series can end
+level; when it does, the winner of its last round takes the duel.
+
+## A player is not on the leaderboard
+
+A board never places a zero: a session that ended before a single pop sets no best. And the board is
+cached for `leaderboard.cache-seconds`, five minutes by default — though storing a new record drops the
+cache, so a player who just set one sees themselves on the board they set it on.
+
+## My PlaceholderAPI placeholders show up unresolved
+
+The group name is part of the placeholder. It is `%exyliatotemtrainer_totem_wins%` or
+`%exyliatotem_totem_wins%`, never `%exyliatotem_wins%`. See
+[Placeholders](/docs/exyliatotemtrainer/placeholders).
+
+## Where are the arenas and the statistics?
+
+In the database, not in YAML: `totem_arenas`, `totem_profiles`, `totem_training_records` and
+`totem_matches`. H2 by default; point `database.yml` at MySQL, MariaDB, PostgreSQL or MongoDB to share
+them between servers. Reload does not touch them.
+
+## Does it work on Folia?
+
+Yes, it declares Folia support, and every event it fires runs on the thread that owns the player.
+
+## Where do I get support?
+
+On the [Exylia Discord](https://discord.exylia.net).

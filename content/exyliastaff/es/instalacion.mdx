@@ -1,0 +1,103 @@
+---
+title: "Instalación"
+description: "Dependencias, primer arranque, los archivos que genera el plugin y dónde se configura la base de datos."
+---
+
+## Antes de empezar
+
+ExyliaStaff necesita dos plugins en `plugins/` **antes** del primer arranque.
+
+| Plugin | Para qué |
+|---|---|
+| `ExyliaLib` | Configuración, menús, base de datos, placeholders, efectos, sidebars, snapshots de inventario, reglas de chat, canales de Redis. |
+| `packetevents` | El vanish, el freeze, los espejos de inventario silenciosos, la hotbar de staff y la visión x-ray funcionan todos a nivel de paquetes. Declarado como dependencia obligatoria; sin él el plugin no carga. |
+
+Opcionales:
+
+- **PlaceholderAPI** para usar los placeholders del plugin fuera de él.
+- **LuckPerms**, o cualquier plugin de permisos, para los nodos de rango `exyliastaff.vanish.level.<n>`.
+- **LiteBans** o **AdvancedBan**. El módulo de sanciones ejecuta comandos; los valores por defecto son
+  los nombres de comando que usan ambos plugins. No se lee nada más de ellos.
+- **Redis**, configurado en el `database.yml` de ExyliaLib, para las partes entre servidores: chat de
+  staff, chat de red, alertas, la lista de staff y el estado de vanish en el siguiente servidor. Sin
+  Redis cada canal sigue entregando en el servidor local.
+
+<Callout type="note" title="ExyliaLib figura como soft">
+`plugin.yml` nombra a ExyliaLib bajo `softdepend` a propósito: el loader que instala ExyliaLib es el que
+tiene que cargar primero para que esa instalación ocurra. El plugin sigue necesitándola para funcionar.
+</Callout>
+
+## Instalar
+
+<Steps>
+  <Step title="Copia los jars">
+    Copia `ExyliaStaff.jar` y sus dependencias en la carpeta `plugins/` del servidor.
+  </Step>
+  <Step title="Arranca el servidor">
+    El primer arranque genera `config.yml`, `messages.yml`, una carpeta por módulo bajo `modules/`,
+    los menús y las tablas de la base de datos.
+  </Step>
+  <Step title="Revisa la consola">
+    Deberías ver una línea `Module enabled: <id>` por módulo y después
+    `ExyliaStaff enabled with 16/16 modules`. Un módulo que lanzó un error al activarse se informa ahí
+    con su motivo y aparece como `failed` en `/exyliastaff modules`.
+  </Step>
+  <Step title="Concede el nodo de staff">
+    `exyliastaff.staff` es lo que convierte a un jugador en staff para todos los módulos. Sin él nadie
+    ve a los jugadores en vanish, recibe alertas ni puede entrar en modo staff. Ver
+    [Primeros pasos](/docs/exyliastaff/primeros-pasos).
+  </Step>
+</Steps>
+
+## Archivos generados
+
+Todos viven en `plugins/ExyliaStaff/`.
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | Los dieciséis interruptores de módulos y la puerta de comandos. Nada más. |
+| `messages.yml` | Las líneas del núcleo: prefijo, sin permiso, recarga, lista de módulos, puerta, Redis. |
+| `modules/<id>/config.yml` | Uno por módulo, solo sus ajustes. |
+| `modules/<id>/messages.yml` | Uno por cada módulo que envía mensajes. |
+| `modules/staffmode/hotbar.yml` | La hotbar de staff. Se copia una vez, después es tuya. |
+| `modules/scoreboard/config.yml` | Los tres sidebars: modo staff, congelado, congelando. |
+| `menus/<id>/` | Las pantallas de staff de cada módulo. |
+| `database.yml` | Motor de base de datos y Redis, escrito por ExyliaLib. |
+
+<Callout type="warning" title="menus/ se reescribe en cada arranque">
+Cada pantalla bajo `menus/` se refresca desde el jar cada vez que un módulo se activa, para que un botón
+añadido en una versión llegue a los servidores que ya tienen la carpeta. Una edición ahí se deshace en el
+siguiente reinicio. El archivo de la hotbar es la excepción: `modules/staffmode/hotbar.yml` se copia solo
+si no existe.
+</Callout>
+
+## Base de datos
+
+Por defecto el plugin usa **H2**: un archivo dentro de la carpeta del plugin, sin servidor, sin
+instalación y sin mantenimiento. Para compartir sesiones, reportes, sanciones y el registro entre
+servidores, apunta todos los servidores a la misma base de datos:
+
+```yaml title="plugins/ExyliaStaff/database.yml"
+database:
+  type: mysql
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Motores soportados: `h2`, `mysql`, `mariadb`, `postgresql` y `mongodb`. El archivo es de ExyliaLib; su
+referencia completa, incluido el bloque `redis`, está en la
+[página de base de datos de la librería](/docs/exylialib/base-de-datos).
+
+Las tablas, todas con el prefijo `staff_`: `staff_prefs`, `staff_sessions`, `staff_vanish`, `staff_freeze`,
+`staff_reports`, `staff_helpop`, `staff_mining`, `staff_punishments`, `staff_log_sessions`,
+`staff_log_daily`, `staff_audit` y `staff_notes`. Los snapshots de inventario del modo staff y del freeze
+usan la tabla `exylia_snapshots` de la librería.
+
+## Actualizar
+
+Sustituye el jar y reinicia. Tus ediciones en `config.yml`, `messages.yml`, todos los archivos de
+`modules/` y la hotbar se conservan; solo `menus/` se refresca desde el jar.

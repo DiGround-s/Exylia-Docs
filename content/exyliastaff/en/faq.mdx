@@ -1,0 +1,71 @@
+---
+title: "Frequently asked questions"
+description: "The questions that come up most."
+---
+
+## The plugin does not start
+
+`packetevents` is a hard dependency: without it the server never loads the plugin. `ExyliaLib` is
+listed as soft only so the loader can install it, but the plugin needs it to run. Check both are in
+`plugins/`.
+
+## A module shows as failed
+
+Vanish, freeze, inspect, x-ray vision and staff mode throw on enable when PacketEvents is missing;
+any module throws when its table cannot be created. The console has the reason, the module keeps its
+commands off, and the next start retries. `/exyliastaff modules` shows the state of each.
+
+## /tp stopped working for my other plugin
+
+The teleport module registers the bare `tp` and `teleport` labels. Disable the module, or run the
+other plugin's command through its `plugin:tp` spelling.
+
+## Staff cannot see each other while vanished
+
+They need `exyliastaff.vanish.see`, and a level at least the vanished player's. Without any
+`exyliastaff.vanish.level.<n>` node everybody is level 0 and sees everybody; give an admin
+`exyliastaff.vanish.level.3` and only staff at 3 or above see them.
+
+## A player was frozen and then logged out
+
+The freeze is kept. They are frozen again the moment they rejoin, on any server, staff on every server
+are told, and `quit-commands` in `modules/freeze/config.yml` may already have banned them.
+
+## The ladder skipped a step, or did not escalate
+
+The ladder counts punishments **this plugin** recorded for the **same reason id** within
+`ladder-reset-days`. A ban typed straight into the ban plugin, or a different reason, does not count.
+
+## The punishment command did nothing
+
+The template runs as the console with `%player%`, `%duration%`, `%reason%` and `%staff%`, and the
+duration is passed as written in the ladder. Check that the command exists for your ban plugin and
+that it reads `7d` the way you wrote it. "The punishment command failed » no command for TEMPBAN"
+means the type has no template in `commands`.
+
+## Alerts do not reach staff on another server
+
+Cross-server delivery needs Redis in ExyliaLib's `database.yml`, with a distinct `server-id` per
+server. `/exyliastaff redis` says whether this server is connected. Without Redis every channel still
+delivers locally.
+
+## Mining alerts are quiet even though a player is suspicious
+
+A staff member receives them only with `exyliastaff.mining.alerts` **and** alerts on, which leaving
+staff mode turns off. `/mining on` turns them back on. Warnings are announced once and never repeated
+on the timer; suspicious and above are repeated every `alerts.interval-seconds`.
+
+## A staff member lost staff mode with "You lost permission"
+
+`exyliastaff.staff` or `exyliastaff.staffmode` was removed while they were online. The plugin checks
+every online player every five seconds.
+
+## My edit to a menu vanished
+
+`menus/` is refreshed from the jar every time a module enables. The hotbar,
+`modules/staffmode/hotbar.yml`, is the file meant to be edited: it is copied once and then yours.
+
+## Where are the staff chat prefix character and the claim button for reports
+
+Neither exists. Staff chat is a toggle or `/sc <message>`; reports are resolved or dismissed, and
+several staff may look at the same one.

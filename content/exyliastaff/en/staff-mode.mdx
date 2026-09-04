@@ -1,0 +1,166 @@
+---
+title: "Staff mode"
+description: "The session, the snapshot, the hotbar of tools, the spectator view, and what a staff member cannot do on duty."
+---
+
+Staff mode is a session. Entering it saves a snapshot of the player, applies the staff state and
+shows a hotbar of tools; leaving restores the snapshot. The session is a row in the database, so it
+survives a relog and follows the player to another server sharing the same database, and it is what
+the [staff log](/docs/exyliastaff/staff-log) counts.
+
+Module id `staffmode`, switch `modules.staff-mode`, files under `modules/staffmode/`. Needs
+PacketEvents: the hotbar is a client-side overlay.
+
+## Entering
+
+`/staff`, or `/staffmode` and `/mod`, with `exyliastaff.staff` and `exyliastaff.staffmode`. In order:
+
+1. The player is refused with "Finish what you are doing first" if another plugin holds them in an
+   activity, for instance a match or an event.
+2. Whether they were already vanished is remembered.
+3. A snapshot is saved and the `staff_sessions` row written. Only then is the player touched.
+4. Game mode, flight and invulnerability are applied, health and food are filled, the hotbar and the
+   uniform are shown, the nametag is coloured for other staff, and the `staff-mode` sidebar appears.
+5. If `auto-vanish` is on and they were visible, they vanish silently.
+6. The enter effect plays and the session starts.
+
+While on duty the player is excluded from every cosmetic plugin built on the library and counted as
+a watcher for every isolating mode, so a match or an event does not hide the server from them.
+
+## Leaving
+
+`/staff` again, the barrier in the hotbar, `/staff off`, losing a permission, or an admin. The row is
+deleted first, then the snapshot is restored: armour, game mode, flight, health and hunger, plus a
+teleport back to where the session began when `restore-location` is on. Vanish is turned off if the
+player was visible before entering and `restore-vanish` is on. Every module is told the shift ended:
+staff chat, x-ray vision, mining alerts and open inventory mirrors close with it.
+
+Losing `exyliastaff.staff` or `exyliastaff.staffmode` while online is noticed within five seconds and
+ends the session with "You lost permission for staff mode".
+
+## Relogs and servers
+
+`exit-on-quit` is off by default: a quit keeps the row, and the next join on any server with the same
+database resumes the session, with "Staff session resumed" and the elapsed time. A `/stop` keeps every
+session for the same reason. A row whose snapshot is gone is deleted; a snapshot with no row is
+restored silently, so a crash never leaves a staff member in the uniform.
+
+## The hotbar
+
+`modules/staffmode/hotbar.yml` is copied out of the jar once and then left alone. Every entry names a
+slot, an item and what a click runs; an entry tagged `module: <id>` only shows while that module is
+enabled, and an entry with `permission:` only shows to players holding it.
+
+| Slot | Item | Left click | Right click |
+|---|---|---|---|
+| 0 | Clock | Jump to the block you look at | Phase through the wall |
+| 1 | Lime or gray dye | Toggle vanish | |
+| 3 | Music disc | Random player | |
+| 5 | Book | Ender chest of the player you look at | Inventory of the player you look at |
+| 7 | Netherite axe | Punish the player you look at | |
+| 8 | Packed ice | Freeze or unfreeze the player you look at | |
+| 9 | Ender eye or pearl | Spectator view | |
+| 12 | Blaze powder | Open reports | |
+| 14 | Turtle helmet | Open help requests | |
+| 17 | Barrier | Leave staff mode | |
+| 27 | Diamond or iron pickaxe | Suspicious miners | Toggle mining alerts |
+| 28 | Writable book or book | Toggle staff chat | |
+| 29 | Glowstone or gray glass | Toggle x-ray vision | |
+| 30 | Bell or chain | Cycle global chat | |
+| 34 | Your head | Staff list | |
+| 35 | Written book | Your staff log | |
+
+The two-item entries show one item or the other by reading a placeholder such as `%staff_vanished%`,
+so the hotbar redraws itself when the state flips. Right clicking with an empty hand on a chest opens
+it silently. Slots go from `0` to `35`, plus `offhand`, `helmet`, `chestplate`, `leggings` and `boots`.
+The four armour pieces are really worn, so other players see them; everything else is drawn on the
+client and never enters the inventory.
+
+Actions are written as `staff:<name>`; commands as `player: <cmd>`, `console: <cmd>` or
+`player-proxy: <cmd>`. Clicks can be `left`, `right`, `shift_left`, `shift_right`, `drop`, `swap`,
+`middle` and more. The bundled file has a commented CoreProtect example.
+
+## Spectator view
+
+`/staff spectator`, or `/staff spec`, or the ender eye: real spectator game mode, to fly through walls
+and follow a player. Toggling it off puts the configured staff game mode back. The panel's **Follow**
+button uses it.
+
+## What staff cannot do
+
+| Always | Configurable in `block` |
+|---|---|
+| Damage anything, including with projectiles | Pick up items (`pickup`) |
+| Drop, move or swap items; write creative slots | Break blocks (`block-break`), place them (`block-place`) |
+| | Wear items down (`item-damage`), lose hunger (`hunger`) |
+
+Mobs never target a staff member while `invulnerable` is on.
+
+## Configuration
+
+```yaml title="plugins/ExyliaStaff/modules/staffmode/config.yml"
+gamemode: ADVENTURE
+fly: true
+invulnerable: true
+auto-vanish: true
+restore-vanish: true
+exit-on-quit: false
+restore-location: true
+block:
+  pickup: true
+  block-break: true
+  block-place: true
+  item-damage: true
+  hunger: true
+nametag-color: AQUA
+scoreboard: true
+effects:
+  enter:
+    title:
+      text: '{primary}&lSTAFF MODE'
+      subtitle: '{letters}Enabled'
+      stay: 2.0
+      fade-out: 0.5
+    sound:
+      name: BLOCK_NOTE_BLOCK_PLING
+      pitch: 1.5
+  exit:
+    title:
+      text: '{primary}&lSTAFF MODE'
+      subtitle: '{letters}Disabled'
+      stay: 2.0
+      fade-out: 0.5
+    sound:
+      name: BLOCK_NOTE_BLOCK_PLING
+      pitch: 0.8
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `gamemode` | `ADVENTURE` | Game mode on duty. An unknown value falls back to adventure. Creative always allows flight. |
+| `fly` | `true` | Allow flight. |
+| `invulnerable` | `true` | No damage taken, no mob targeting. |
+| `auto-vanish` | `true` | Vanish on enter. Needs the vanish module. |
+| `restore-vanish` | `true` | Unvanish on exit when the player was visible before entering. |
+| `exit-on-quit` | `false` | End the session on quit instead of resuming it on the next join. |
+| `restore-location` | `true` | Teleport back to where the session began. |
+| `nametag-color` | `AQUA` | Colour of the name as seen by other staff. Empty or unknown for none. |
+| `scoreboard` | `true` | Show the `staff-mode` sidebar. Needs the scoreboard module. |
+| `effects.enter`, `effects.exit` | | Library effects: title, action bar, boss bar, sound, particle, firework. |
+
+## Messages
+
+`modules/staffmode/messages.yml`: `enabled`, `disabled`, `already-enabled`, `already-disabled`,
+`enabled-other` and `disabled-other` with `%target%`, `permission-lost`, `session-removed`,
+`session-resumed` with `%time%`, `disabled-by-module`, `spectator-on`, `spectator-off`, and `busy`
+with `%activity%` and `%plugin%`.
+
+## Placeholders
+
+| Placeholder | Value |
+|---|---|
+| `%staff_staffmode_status%` | `true` while the viewer has a session. |
+| `%staff_staffmode_time%` | Session time as a clock, empty out of staff mode. |
+| `%staff_staffmode_spectator%` | `true` in spectator view. |
+| `%staff_mode%` | `true` while in staff mode, from the core. |
+| `%staff_in_mode%` | Players in staff mode on this server. |

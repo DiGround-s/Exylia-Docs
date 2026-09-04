@@ -1,0 +1,95 @@
+---
+title: "Scoreboard"
+description: "Los dos sidebars de scoreboards.yml: cuándo se muestra cada uno, sus líneas por defecto y el bloque de refresco."
+---
+
+`scoreboards.yml` define dos sidebars: `training`, que ve un jugador en una sesión en solitario, y
+`match`, que ve un duelista. Fuera de ambos el plugin no muestra nada, y la tabla que un plugin de
+lobby tuviera debajo vuelve por sí sola.
+
+## El archivo
+
+```yaml title="plugins/ExyliaTotemTrainer/scoreboards.yml"
+training:
+  enabled: true
+  title:
+    - "{primary}&lTOTEM TRAINER"
+  lines:
+    - ""
+    - "{secondary}Session:"
+    - " {letters_black}▎ {letters}%totem_mode% {muted}· {letters}%totem_interval% ticks"
+    - " {letters_black}▎ {letters}Time {letters_black}» {info}%totem_session_time%"
+    - ""
+    - "{secondary}Performance:"
+    - " {letters_black}▎ {letters}Pops {letters_black}» {info}%totem_pops%"
+    - " {letters_black}▎ {letters}Best {letters_black}» {success}%totem_best%"
+    - " {letters_black}▎ {letters}Average {letters_black}» {info}%totem_average%"
+    - " {letters_black}▎ {letters}Streak {letters_black}» {highlight}%totem_streak%"
+    - " {letters_black}▎ {letters}Last {letters_black}» %totem_grade%"
+    - ""
+    - "{muted}exylia.net"
+  update:
+    interval: 10
+    smart: true
+    cache: true
+match:
+  enabled: true
+  title:
+    - "{primary}&lTOTEM TRAINER"
+  lines:
+    - ""
+    - "{secondary}Duel: {muted}· {letters}%totem_format%"
+    - " {letters_black}▎ {letters}vs {highlight}%totem_opponent%"
+    - " {letters_black}▎ {letters}Round {letters_black}» {info}%totem_round%"
+    - " {letters_black}▎ {letters}Score {letters_black}» {success}%totem_score%"
+    - " {letters_black}▎ {letters}%totem_match_state%"
+    - ""
+    - "{secondary}Round:"
+    - " {letters_black}▎ {letters}Pops {letters_black}» {info}%totem_pops% {muted}· {letters}%totem_opponent_pops%"
+    - " {letters_black}▎ {letters}Best {letters_black}» {success}%totem_best%"
+    - " {letters_black}▎ {letters}Average {letters_black}» {info}%totem_average%"
+    - " {letters_black}▎ {letters}Streak {letters_black}» {highlight}%totem_streak%"
+    - ""
+    - "{muted}exylia.net"
+  update:
+    interval: 10
+    smart: true
+    cache: true
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | `false` mantiene la sección escrita pero no muestra tabla en ese contexto. |
+| `title` | una línea | Una lista. Con varias entradas se anima: cada refresco muestra la siguiente. |
+| `lines` | ver arriba | Las líneas, de arriba abajo. Como mucho 15; las sobrantes se descartan. |
+| `update.interval` | `10` | **Ticks** entre refrescos. 20 ticks son un segundo. |
+| `update.smart` | `true` | Envía solo las líneas que cambiaron en lugar de toda la tabla. |
+| `update.cache` | `true` | Se lee por compatibilidad con archivos antiguos: ExyliaLib cachea el texto ya interpretado para todos los plugins a la vez. |
+
+## Qué pueden decir las líneas
+
+No se empuja nada a la tabla. La librería la dibuja en su propio intervalo y pregunta a los
+placeholders, así que una línea es cualquier texto con placeholders `%totem_*%`, y cualquier otro
+placeholder que ExyliaLib resuelva también funciona. La lista completa está en
+[Placeholders](/docs/exyliatotemtrainer/placeholders); los que usan los valores por defecto:
+
+| Placeholder | Tabla | Valor |
+|---|---|---|
+| `%totem_mode%` | training | El nombre visible del modo |
+| `%totem_interval%` | training | El intervalo actual en ticks, que un modo con aceleración va moviendo |
+| `%totem_session_time%` | training | Tiempo desde que empezó el ejercicio |
+| `%totem_pops%`, `%totem_best%`, `%totem_average%`, `%totem_streak%` | ambas | Los números de la sesión en curso, los de esta ronda en un duelo |
+| `%totem_grade%` | training | La calificación del último pop, `—` antes del primero |
+| `%totem_format%` | match | `BO3` |
+| `%totem_opponent%`, `%totem_opponent_pops%` | match | El rival y sus pops en esta ronda |
+| `%totem_round%`, `%totem_score%`, `%totem_match_state%` | match | Número de ronda, `2 - 1`, y `starting`, `active`, `round_end`… |
+
+<Callout type="note" title="La línea de calificación nunca queda vacía">
+`%totem_grade%` responde `—` entre el inicio de una sesión y su primer pop, así que la línea dice
+"Last » —" en lugar de mostrar el nombre del propio placeholder.
+</Callout>
+
+## Recargar
+
+`/totemtraineradmin reload` vuelve a leer el archivo y reconstruye la tabla de todos los jugadores que
+estén en una sesión o un duelo en ese momento.

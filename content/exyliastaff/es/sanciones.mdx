@@ -1,0 +1,171 @@
+---
+title: "Sanciones"
+description: "Categorías, motivos y una escalera de escalado, ejecutadas mediante los comandos de tu plugin de baneos, con un historial por jugador."
+---
+
+El módulo de sanciones no banea a nadie por sí mismo. Guarda los motivos y, para cada uno, una escalera:
+primera falta, segunda falta, y así sucesivamente. Cuando un miembro del staff elige un motivo, el módulo
+cuenta cuántas veces ese jugador fue sancionado antes por él, toma el peldaño correspondiente y ejecuta
+el comando que configuraste para el tipo de ese peldaño. LiteBans, AdvancedBan o cualquier otro con un
+`/ban` responde.
+
+Id de módulo `punishments`, interruptor `modules.punishments`, archivos en `modules/punishments/`.
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/punish <player>` | `exyliastaff.punish` | Abre el menú de categorías. El jugador puede estar desconectado si el servidor lo ha visto. |
+| `/punish <player> <reason-id>` | `exyliastaff.punish` | Ejecuta al instante, sin pantalla de confirmación. |
+| `/history <player>` | `exyliastaff.punish.history` | Sus sanciones, la más reciente primero. `/phistory` es un alias. |
+
+El hacha de netherite de la hotbar abre el menú sobre el jugador al que miras. Un jugador no puede
+sancionarse a sí mismo.
+
+## El menú
+
+Categorías, luego motivos. Cada motivo muestra su escalera con los peldaños ya usados, el actual
+marcado, y el peldaño que se aplicará ahora. Al hacer clic se abre una pantalla de confirmación cuando
+`require-confirmation` está activado; si no, ejecuta. Cancelar vuelve a los motivos.
+
+## La escalera
+
+Una línea de la escalera es `TYPE duration`, o solo `TYPE`, con los tipos `BAN`, `TEMPBAN`, `MUTE`, `TEMPMUTE`,
+`KICK`, `WARN` e `IPBAN`. El peldaño es el número de sanciones anteriores de ese jugador con el
+**mismo id de motivo** dentro de `ladder-reset-days`; cuando la escalera se acaba, el último peldaño se
+repite. Motivos distintos no se hacen avanzar entre sí, y `ladder-reset-days: 0` cuenta todo lo que haya
+habido nunca.
+
+<Callout type="warning" title="Solo cuenta lo que emitió este plugin">
+El historial es `staff_punishments`, escrito únicamente por este módulo. Un baneo escrito directamente
+en LiteBans no es un peldaño de la escalera. Sanciona a través del menú y la escalera siempre estará
+bien.
+</Callout>
+
+## Ejecución
+
+La plantilla del tipo del peldaño en `commands` se ejecuta con `%player%`, `%duration%`, `%reason%` y
+`%staff%`. La duración se pasa **tal como está escrita** en la escalera, `7d` o `1h30m`, así que
+escríbela como la lee tu plugin de baneos; un tipo sin duración pasa `perm`. `console:` se ejecuta
+aquí, `console-proxy:` en el proxy a través del puente de la librería. Un tipo de peldaño sin plantilla
+se rechaza con "no command for TEMPBAN" y no se registra nada.
+
+La fila se registra, se avisa a quien la emitió y la sanción se publica en el canal `punishments`:
+cada servidor la anuncia al staff con `exyliastaff.punish`, o a todo el mundo cuando
+`broadcast.to-staff-only` está desactivado.
+
+## Configuración
+
+```yaml title="plugins/ExyliaStaff/modules/punishments/config.yml"
+categories:
+  cheating:
+    name: Cheating
+    icon: DIAMOND_SWORD
+    reasons:
+      hacks:
+        name: Hacked client
+        description:
+          - Killaura, fly, speed or any unfair modification.
+        icon: DIAMOND_SWORD
+        ladder:
+          - TEMPBAN 7d
+          - BAN
+      xray:
+        name: X-Ray
+        description:
+          - Ore tracing or resource pack x-ray.
+        icon: DIAMOND_ORE
+        ladder:
+          - TEMPBAN 3d
+          - TEMPBAN 14d
+          - BAN
+  chat:
+    name: Chat
+    icon: WRITABLE_BOOK
+    reasons:
+      spam:
+        name: Spam
+        description:
+          - Flooding or repeating messages.
+        icon: PAPER
+        ladder:
+          - MUTE 1h
+          - TEMPMUTE 1d
+          - TEMPBAN 3d
+      toxicity:
+        name: Toxicity
+        description:
+          - Insults, harassment or hate speech.
+        icon: TNT
+        ladder:
+          - TEMPMUTE 6h
+          - TEMPMUTE 3d
+          - TEMPBAN 7d
+          - BAN
+      advertising:
+        name: Advertising
+        description:
+          - Promoting other servers or links.
+        icon: OAK_SIGN
+        ladder:
+          - TEMPMUTE 1d
+          - BAN
+  griefing:
+    name: Griefing
+    icon: TNT
+    reasons:
+      grief:
+        name: Griefing
+        description:
+          - Destroying or stealing from other players.
+        icon: TNT
+        ladder:
+          - WARN
+          - TEMPBAN 3d
+          - BAN
+  other:
+    name: Other
+    icon: BOOK
+    reasons:
+      staff-disrespect:
+        name: Staff disrespect
+        description:
+          - Ignoring or insulting staff.
+        icon: BARRIER
+        ladder:
+          - WARN
+          - KICK
+          - TEMPBAN 1d
+commands:
+  BAN: 'console:ban %player% %reason%'
+  TEMPBAN: 'console:tempban %player% %duration% %reason%'
+  MUTE: 'console:mute %player% %reason%'
+  TEMPMUTE: 'console:tempmute %player% %duration% %reason%'
+  KICK: 'console:kick %player% %reason%'
+  WARN: 'console:warn %player% %reason%'
+  IPBAN: 'console:ipban %player% %reason%'
+ladder-reset-days: 30
+require-confirmation: true
+broadcast:
+  enabled: true
+  to-staff-only: true
+```
+
+Los ids de motivo deben ser únicos entre categorías; los menús listan las categorías y los motivos en
+el orden del archivo. `%reason%` en una plantilla es el nombre visible del motivo, no su id. `alert` es
+un efecto de la librería que se reproduce al staff en cada anuncio; está vacío por defecto.
+
+## Mensajes
+
+`modules/punishments/messages.yml`: `executed` con `%type%`, `%target%` y `%reason%`; `alert` y
+`broadcast` con `%staff%`, `%target%`, `%type%`, `%duration%`, `%server%` y `%reason%`;
+`never-played`, `unknown-reason`, `command-failed` con `%detail%`, `history-empty`, `self`,
+`no-target`; las tres líneas de la escalera `ladder-current`, `ladder-step` y `ladder-done` con `%index%`,
+`%type%` y `%duration%`; `duration-permanent`.
+
+## Placeholders
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_punishments_total%` | Sanciones que ha emitido quien lo ve. |
+| `%staff_punishments_today%` | De esas, las emitidas hoy. |

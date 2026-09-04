@@ -1,0 +1,125 @@
+---
+title: "Statistics"
+description: "The profile, the training records and the duel history: what each stores, what moves it, and the leaderboards built on top."
+---
+
+Three tables hold what a player has done. Each answers a different question, and nothing is derived
+from one that another could lose.
+
+| Table | One row per | Answers |
+|---|---|---|
+| `totem_profiles` | Player | The duel record and the lifetime pop numbers |
+| `totem_training_records` | Player, mode **and** tick speed | The bests, which is what the leaderboards rank |
+| `totem_matches` | Participant per duel | The history a player scrolls through |
+
+## The profile
+
+The row is loaded when the player joins, written on every change and again when they quit.
+
+| Field | Moved by |
+|---|---|
+| Matches, wins, losses, win rate | A decided duel. The win rate is stored, as a percentage. |
+| Rounds, round wins, round losses | A decided duel, from the final score. |
+| Total pops, best pop, total pop time | **Every** session: duels and solo training alike. The average pop is derived from the last two. |
+| Current streak, best streak | Duel win streak: up by one on a win, back to zero on a loss. Training never touches it. |
+| Preferred ticks, preferred format | The last speed and best-of picked in a menu, so the pickers open where the player left them. |
+
+A forfeited duel counts as a decided one: the opponent's win, the quitter's loss.
+
+`/totem profile`, or `/totem stats`, opens the profile screen: matches, wins, losses, win rate, round
+wins and losses, current and best streak, total pops, best pop and average pop.
+`/totem profile <player>` reads another player's row, from the database if they are offline.
+
+## Training records
+
+One row per player, mode and speed, keyed `uuid:mode:ticks`. A finished session is merged into its
+row when it had **at least one pop or one fail**; a session that ended during the countdown stores
+nothing.
+
+| Field | Merge rule |
+|---|---|
+| `sessions` | Plus one |
+| `bestPops` | The higher |
+| `bestAverageMillis` | The lower, ignoring a session with no pops |
+| `bestStreak` | The higher |
+| `longestSurvivalMillis` | The longer session duration |
+| `bestScore` | The higher 0 to 100 score |
+
+The **Records** screen, reached from the profile, lists every row the player holds in the order the
+modes appear in `config.yml`, slowest speed first within a mode.
+
+## Leaderboards
+
+There is one board per **mode**, sorted by one of five categories. Boards are read from the training
+records, not the duel record: the numbers a mode produces are the ones worth comparing.
+
+| Category | Sorts by | Default name |
+|---|---|---|
+| `best_score` | `bestScore`, highest first | Best score |
+| `best_pops` | `bestPops`, highest first | Most pops |
+| `fastest_average` | `bestAverageMillis`, **lowest** first | Fastest average |
+| `best_streak` | `bestStreak`, highest first | Best streak |
+| `longest_run` | `longestSurvivalMillis`, highest first | Longest run |
+
+Names and icons live in `messages.yml` under `menu.categories`.
+
+A player appears **once** per board, with their best at any speed, and the row names the speed it was
+set at: a 5-tick chaos best is not outranked by a 25-tick session that popped more totems. A zero
+never takes a place, so an unplayed speed or a session that ended before a single pop is invisible.
+
+```yaml title="plugins/ExyliaTotemTrainer/config.yml"
+leaderboard:
+  entries: 10
+  cache-seconds: 300
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `entries` | `10` | Rows per board. |
+| `cache-seconds` | `300` | How long a board is kept before the database is asked again. Anything below 5 is treated as 5. |
+
+The cache is dropped as soon as a record is stored or a player is reset, so somebody who just set a
+best sees themselves on the board they set it on.
+
+### Opening a board
+
+`/totem leaderboard` opens the mode picker; `/totem leaderboard <mode>` opens that mode's board sorted
+by `best_score`; `/totem leaderboard <mode> <category>` sorts it by that category. An unknown mode
+opens the picker instead of an empty board. Inside, the row of category buttons re-sorts the open
+board in place, and the top three rows wear medals.
+
+The same board is readable as placeholders: `%totem_top_<mode>_<category>_<n>%` and its `_value`
+twin. See [Placeholders](/docs/exyliatotemtrainer/placeholders).
+
+## Duel history
+
+Every decided duel writes **two rows** to `totem_matches`, one per participant, so "my duels" is a
+single-column query. Each row carries the opponent, whether the player won, the mode, the speed, the
+best-of, the score for and against, the duration, the pops, the best and average pop, and when it
+ended.
+
+`/totem history` shows the newest rows, victories and defeats drawn differently.
+
+```yaml title="plugins/ExyliaTotemTrainer/config.yml"
+history:
+  entries: 20
+  retention-days: 30
+  prune-interval-minutes: 60
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `entries` | `20` | Duels shown to a player. |
+| `retention-days` | `30` | Rows older than this are deleted. `0` keeps everything. |
+| `prune-interval-minutes` | `60` | How often the prune runs. The first sweep is one minute after start. |
+
+A sweep looks at the oldest 500 rows at most and deletes the ones past the cutoff, so a backlog
+drains over several sweeps rather than one long transaction. Statistics are never derived from
+history, which is what makes pruning it safe.
+
+## Resetting a player
+
+From `/totemtraineradmin` → **Players**, behind a confirmation. A reset puts the profile back to zero
+**and** deletes every training record the player holds, then drops the leaderboard cache. Both halves
+on purpose: the boards are read from the records, so a reset that left them would keep the player on
+every board they were on.

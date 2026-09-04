@@ -288,6 +288,46 @@ const SHIELDS_NAV: NavGroup[] = [
   },
 ];
 
+const TOTEMTRAINER_NAV: NavGroup[] = [
+  {
+    label: { en: "Getting started", es: "Empezar" },
+    pages: [
+      page("introduction", "introduction", "introduccion"),
+      page("installation", "installation", "instalacion"),
+      page("first-steps", "first-steps", "primeros-pasos"),
+    ],
+  },
+  {
+    label: { en: "Configuring", es: "Configurar" },
+    pages: [
+      page("modes", "modes", "modos"),
+      page("grading", "grading", "calificacion"),
+      page("duels", "duels", "duelos"),
+      page("arenas", "arenas", "arenas"),
+    ],
+  },
+  {
+    label: { en: "Systems", es: "Sistemas" },
+    pages: [
+      page("training", "training", "entrenamiento"),
+      page("stats", "stats", "estadisticas"),
+      page("scoreboard", "scoreboard", "scoreboard"),
+      page("compatibility", "compatibility", "compatibilidad"),
+    ],
+  },
+  {
+    label: { en: "Reference", es: "Referencia" },
+    pages: [
+      page("commands", "commands", "comandos"),
+      page("permissions", "permissions", "permisos"),
+      page("placeholders", "placeholders", "placeholders"),
+      page("configuration", "configuration", "configuracion"),
+      page("api", "api", "api"),
+      page("faq", "faq", "faq"),
+    ],
+  },
+];
+
 const CLANS_NAV: NavGroup[] = [
   {
     label: { en: "Getting started", es: "Empezar" },
@@ -525,6 +565,47 @@ const SURVIVALCORE_NAV: NavGroup[] = [
     pages: [
       page("permissions", "permissions", "permisos"),
       page("placeholders", "placeholders", "placeholders"),
+    ],
+  },
+];
+
+const STAFF_NAV: NavGroup[] = [
+  {
+    label: { en: "Getting started", es: "Empezar" },
+    pages: [
+      page("introduction", "introduction", "introduccion"),
+      page("installation", "installation", "instalacion"),
+      page("first-steps", "first-steps", "primeros-pasos"),
+    ],
+  },
+  {
+    label: { en: "Modules", es: "Módulos" },
+    pages: [
+      page("staff-mode", "staff-mode", "modo-staff"),
+      page("vanish", "vanish", "vanish"),
+      page("freeze", "freeze", "freeze"),
+      page("inspect", "inspect", "inspeccion"),
+      page("teleport", "teleport", "teletransporte"),
+      page("xray-vision", "xray-vision", "vision-xray"),
+      page("staff-chat", "staff-chat", "chat-staff"),
+      page("staff-list", "staff-list", "lista-staff"),
+      page("reports", "reports", "reportes"),
+      page("helpop", "helpop", "helpop"),
+      page("punishments", "punishments", "sanciones"),
+      page("mining", "mining", "mineria"),
+      page("staff-log", "staff-log", "registro-staff"),
+      page("staff-admin", "staff-admin", "panel-admin"),
+    ],
+  },
+  {
+    label: { en: "Reference", es: "Referencia" },
+    pages: [
+      page("commands", "commands", "comandos"),
+      page("permissions", "permissions", "permisos"),
+      page("placeholders", "placeholders", "placeholders"),
+      page("configuration", "configuration", "configuracion"),
+      page("api", "api", "api"),
+      page("faq", "faq", "faq"),
     ],
   },
 ];
@@ -870,23 +951,51 @@ export const plugins: Plugin[] = [
     ],
   },
   {
+    id: "exyliatotemtrainer",
+    name: "ExyliaTotemTrainer",
+    tagline: { en: "Totem training and best-of duels", es: "Entrenamiento de tótems y duelos al mejor de" },
+    summary: {
+      en: "Solo totem-pop drills at five tick speeds in five configurable modes, best-of duels against a chosen opponent, reactions graded PERFECT to SLOW, a leaderboard per mode, duel history and an admin surface that is only menus.",
+      es: "Entrenamiento de pops de tótem en solitario a cinco velocidades en cinco modos configurables, duelos al mejor de contra un rival elegido, reacciones calificadas de PERFECT a SLOW, una tabla por modo, historial de duelos y una administración que es solo menús.",
+    },
+    version: "1.0.0",
+    status: "stable",
+    category: { en: "Gamemode", es: "Modo de juego" },
+    minecraft: "1.21+",
+    tags: [
+      { en: "Totems", es: "Tótems" },
+      { en: "Duels", es: "Duelos" },
+      { en: "Leaderboards", es: "Tablas" },
+      { en: "Folia", es: "Folia" },
+    ],
+    nav: TOTEMTRAINER_NAV,
+    links: [
+      { label: "BuiltByBit", href: "https://builtbybit.com/resources/exylia-totemtrainer.124009/" },
+      { label: "Discord", href: "https://discord.exylia.net" },
+    ],
+  },
+  {
     id: "exyliastaff",
     name: "ExyliaStaff",
-    tagline: { en: "Moderation tooling", es: "Herramientas de moderación" },
+    tagline: { en: "Sixteen moderation modules, one paper trail", es: "Dieciséis módulos de moderación, un solo rastro" },
     summary: {
-      en: "Staff mode, vanish, inventory inspection, freeze, reports and a punishment log.",
-      es: "Modo staff, vanish, inspección de inventarios, freeze, reportes y registro de sanciones.",
+      en: "Staff mode with a hotbar of tools, packet-level vanish with rank levels, freeze for screenshares, silent inventory mirrors, staff and network chat, reports and help requests with alerts on every server, a punishment ladder run through your ban plugin, an x-ray suspicion detector, a staff log and an admin panel that audits the team.",
+      es: "Modo staff con una hotbar de herramientas, vanish a nivel de paquetes con niveles de rango, freeze para screenshares, espejos silenciosos de inventarios, chat de staff y de red, reportes y peticiones de ayuda con alertas en todos los servidores, una escalera de sanciones ejecutada por tu plugin de baneos, un detector de sospecha de x-ray, un registro del staff y un panel de administración que audita al equipo.",
     },
-    version: "—",
-    status: "soon",
+    version: "1.1.0",
+    status: "stable",
     category: { en: "Moderation", es: "Moderación" },
     minecraft: "1.21+",
     tags: [
-      { en: "Staff", es: "Staff" },
+      { en: "Staff mode", es: "Modo staff" },
       { en: "Vanish", es: "Vanish" },
       { en: "Reports", es: "Reportes" },
+      { en: "Punishments", es: "Sanciones" },
+      { en: "Network", es: "Red" },
+      { en: "Folia", es: "Folia" },
     ],
-    nav: [],
+    nav: STAFF_NAV,
+    links: [{ label: "Discord", href: "https://discord.exylia.net" }],
   },
 ];
 

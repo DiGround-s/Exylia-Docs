@@ -1,0 +1,75 @@
+---
+title: "Permissions"
+description: "Every node, module by module, and the one that makes a player staff for all of them."
+---
+
+Nodes follow `exyliastaff.<module>.<action>`. None is granted by default; give them through your
+permission plugin.
+
+## The one that matters
+
+`exyliastaff.staff` marks a player as staff for every module. It decides who is listed in
+`/stafflist`, whose commands the audit records, who may enter staff mode, who is skipped by the random
+teleport, who cannot be reported, and, with `exyliastaff.vanish.see`, who sees vanished players.
+Losing it while online ends a staff session within five seconds.
+
+## Core
+
+| Permission | What it gates |
+|---|---|
+| `exyliastaff.admin` | The `/exyliastaff` root and `/exyliastaff redis`. |
+| `exyliastaff.admin.reload` | `/exyliastaff reload`. |
+| `exyliastaff.admin.modules` | Listing and switching modules, from the command and from the panel. |
+| `exyliastaff.gate.bypass` | Never gated by the command gate. Configurable in `config.yml`. |
+
+## Modules
+
+| Permission | What it gates |
+|---|---|
+| `exyliastaff.staffmode` | `/staff`. Needs `exyliastaff.staff` too. |
+| `exyliastaff.staffmode.others` | Staff mode for another player. |
+| `exyliastaff.vanish` | `/vanish` and the hotbar toggle. Lost while vanished, the player becomes visible. |
+| `exyliastaff.vanish.others` | Vanish for another player. |
+| `exyliastaff.vanish.see` | Seeing vanished players of your level or below, and their fake join and quit lines. |
+| `exyliastaff.vanish.level.<n>` | Your vanish level, `1` to `levels.max`. The highest held counts. |
+| `exyliastaff.freeze` | The three freeze commands, the freeze alerts, and hearing a frozen player. |
+| `exyliastaff.freeze.bypass` | Cannot be frozen. |
+| `exyliastaff.inspect` | `/inspect`. Lost, open mirrors close. |
+| `exyliastaff.inspect.edit` | Mirrors of inventories and ender chests are editable. |
+| `exyliastaff.inspect.enderchest` | `/echest`. |
+| `exyliastaff.inspect.containers` | Opening containers silently. |
+| `exyliastaff.teleport` | `/tp`. |
+| `exyliastaff.teleport.here` | `/stafftphere` and `/tp <a> <b>`. |
+| `exyliastaff.teleport.random` | `/staffrtp`. |
+| `exyliastaff.teleport.phase` | `/phase` and `/jumpto`. |
+| `exyliastaff.xrayvision` | `/xray` and the hotbar toggle. |
+| `exyliastaff.xrayvision.others` | X-ray for another player. |
+| `exyliastaff.staffchat` | `/sc`, and reading staff chat. |
+| `exyliastaff.globalchat` | `/globalchat`, and receiving network lines. |
+| `exyliastaff.stafflist` | `/stafflist`. |
+| `exyliastaff.report` | `/report`. |
+| `exyliastaff.reports.manage` | `/reports`, and receiving report alerts. |
+| `exyliastaff.helpop` | `/helpop`. |
+| `exyliastaff.helpop.manage` | `/hs`, and receiving helpop alerts. |
+| `exyliastaff.punish` | `/punish`, and the punishment announcements when they are staff only. |
+| `exyliastaff.punish.history` | `/history`. |
+| `exyliastaff.mining.alerts` | `/mining`, and receiving mining alerts. |
+| `exyliastaff.mining.view` | `/mining top` and `/mining view`. |
+| `exyliastaff.mining.reset` | `/mining reset`. |
+| `exyliastaff.stafflog` | `/stafflog` for yourself. |
+| `exyliastaff.stafflog.others` | Somebody else's log, and `/stafflog top`. |
+| `exyliastaff.admin.panel` | `/staffadmin` and every screen behind it. |
+| `exyliastaff.admin.notes` | Writing and removing notes and strikes. |
+
+<Callout type="warning" title="The checks live on the commands">
+The menus and the hotbar do not repeat every check. The reset button in a mining record does not ask
+for `exyliastaff.mining.reset`, the hotbar's ender chest click does not ask for
+`exyliastaff.inspect.enderchest`, and the report and helpop screens only require the permission that
+opened them. Grant a group the module's manage node or keep them out of it; do not count on a
+sub-node alone to hold a button back.
+</Callout>
+
+## Hotbar items
+
+An entry in `modules/staffmode/hotbar.yml` may carry its own `permission:`; the item only shows to
+players holding it. The bundled file sets none.

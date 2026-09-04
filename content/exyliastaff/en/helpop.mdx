@@ -1,0 +1,70 @@
+---
+title: "Helpop"
+description: "A player asks, staff on every server are alerted, one claims it and the two talk through the request until it is closed."
+---
+
+`/helpop <message>` opens a request. Every staff member on every server gets an alert with a **Claim**
+button; the one who claims it answers with `/hs reply`, and from then on whatever the player types
+into `/helpop` goes to that staff member, wherever they are. The request closes when staff close it,
+or on its own if nobody claimed it in time.
+
+Module id `helpop`, switch `modules.helpop`, files under `modules/helpop/`.
+
+## For players
+
+`/helpop <message>` with `exyliastaff.helpop`. A player has one live request at a time: a second
+`/helpop` while it is still unclaimed answers "You already have request #12 waiting", and there is a
+`cooldown-seconds` wait between two requests. Once it is claimed, `/helpop <message>` is the reply
+channel, with no cooldown, and the player is told if their handler is not online right now.
+
+## For staff
+
+Everything below needs `exyliastaff.helpop.manage`. `/helpop-staff` is the long form of `/hs`.
+
+| Command | What it does |
+|---|---|
+| `/hs` | Opens the list. The turtle helmet in the hotbar does too. |
+| `/hs list` | Prints the open and claimed requests, oldest first. Also from the console. |
+| `/hs claim <id>` | Claims it. The player is told who is on it. |
+| `/hs reply <id> <message>` | Answers. An unclaimed request is claimed by replying; one claimed by somebody else refuses. |
+| `/hs close <id> [reason]` | Closes it, with `default-close-reason` when none is given. Any staff member can close any request. |
+
+In the list, left click claims, right click teleports to the player, following them to their server,
+shift right click closes.
+
+## Timeout
+
+Every thirty seconds, requests that are still unclaimed after `timeout-minutes` are closed with
+`timeout-reason`, and the player is told nobody was available. A claimed request never times out.
+`0` disables the timeout.
+
+## Configuration
+
+```yaml title="plugins/ExyliaStaff/modules/helpop/config.yml"
+cooldown-seconds: 30
+timeout-minutes: 15
+alert:
+  sound:
+    name: BLOCK_NOTE_BLOCK_BELL
+    pitch: 1.2
+```
+
+A cooldown under five minutes is not kept across a restart. `alert` is a library effect played for staff on every
+server; a title or an action bar can be added to it.
+
+## Messages
+
+`modules/helpop/messages.yml`: `sent` and `already-open` with `%id%`; `cooldown` with `%time%`;
+`alert-header`, `alert-line` and `alert-actions` with `%id%`, `%player%`, `%server%` and
+`%message%`, the last one a clickable row you may empty; `list-header`, `list-line`, `list-empty`;
+`not-found`, `already-claimed`; `claimed`, `claimed-notice`; `transcript-staff` and
+`transcript-player`; `handler-offline`; `closed`, `closed-notice`, `timed-out`;
+`default-close-reason`, `timeout-reason`; `player-offline`, `player-not-here`, `teleported`,
+`following`.
+
+## Placeholders
+
+| Placeholder | Value |
+|---|---|
+| `%staff_helpop_open%` | Unclaimed requests on the network. |
+| `%staff_helpop_claimed_by_me%` | Live requests the viewer has claimed. |

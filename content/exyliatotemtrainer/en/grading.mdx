@@ -1,0 +1,148 @@
+---
+title: "Grading"
+description: "The five grades, the thresholds per speed and per mode, the 0–100 score, and what a player sees and hears on every pop."
+---
+
+Every re-equip is timed from the hit to the moment a totem is back in a hand, and graded against
+thresholds in `performance`. A session's grades and fails become a score from 0 to 100, which is what
+the `best_score` leaderboard sorts by. What each grade looks and sounds like is `feedback`.
+
+## The grades
+
+| Grade | Default threshold | Points |
+|---|---|---|
+| `PERFECT` | 0.25 s | 100 |
+| `EXCELLENT` | 0.40 s | 85 |
+| `GOOD` | 0.60 s | 70 |
+| `OK` | 0.90 s | 50 |
+| `SLOW` | anything slower than `ok` | 25 |
+
+A threshold is the **slowest** reaction, in seconds, that still earns the grade, inclusive: a
+reaction of exactly 0.25 s is `PERFECT`.
+
+```yaml title="plugins/ExyliaTotemTrainer/config.yml"
+performance:
+  defaults:
+    perfect: 0.25
+    excellent: 0.40
+    good: 0.60
+    ok: 0.90
+  by-ticks:
+    "10":
+      perfect: 0.15
+      excellent: 0.25
+      good: 0.35
+      ok: 0.45
+  by-mode: {}
+  points:
+    perfect: 100
+    excellent: 85
+    good: 70
+    ok: 50
+    slow: 25
+  fail-penalty: 15
+  full-credit-pops: 20
+```
+
+## Thresholds per speed and per mode
+
+The thresholds a session uses are resolved once when it starts, most specific first:
+
+1. `by-ticks.<ticks>` — the tick interval, written as a string key such as `"10"`.
+2. `by-mode.<modeId>` — the mode id.
+3. `defaults`.
+
+The shipped file grades a 10-tick session harder than a 25-tick one: at half a second between hits,
+0.45 s is the slowest reaction that still counts as `OK`. A mode entry is checked only when no entry
+matches the speed, so a `by-ticks` block always wins over a `by-mode` block.
+
+## The score
+
+The score of a session, a round or a whole duel is:
+
+1. The **mean** of the points of every pop's grade.
+2. While the session has fewer pops than `full-credit-pops`, the mean is **scaled** by
+   `pops / full-credit-pops`. A full session is untouched; `full-credit-pops: 0` turns the scaling off.
+3. Rounded, minus `fail-penalty` per fail, clamped to 0..100. No pops at all is 0.
+
+Five pops, all `GOOD`, no fail, with the defaults: a mean of 70, scaled by 5/20 to 17.5, rounded to
+**18**. The same five pops ending in a miss: 18 − 15 = **3**. Twenty pops all `GOOD` ending in a
+miss: 70 − 15 = **55**.
+
+<Callout type="note" title="Why the scaling exists">
+A mean on its own rates one lucky pop as highly as a long clean run: a single `GOOD` pop would sit at
+70 above a twenty-two pop session on a leaderboard sorted by score. Scaling below `full-credit-pops`
+makes a short session score like a short session.
+</Callout>
+
+In a duel, each round is scored on its own and the match score is the average of the round scores.
+Pops, fails and the best reaction are summed across rounds.
+
+## Feedback
+
+Everything a player sees and hears is an ExyliaLib effect under `feedback`: a title, an action bar,
+a sound, and optionally a boss bar, particles or a firework. Remove a channel to keep it quiet; remove
+a whole section and nothing plays. The full shape of an effect block is documented in the
+[library's effects page](/docs/exylialib/effects).
+
+### Per grade
+
+Each grade has an `effect` and a `chat` line, empty for none. Both know four placeholders:
+
+| Placeholder | Value |
+|---|---|
+| `%grade%` | The grade name, `PERFECT` to `SLOW`. |
+| `%reaction%` | The reaction in seconds, two decimals, no unit. |
+| `%pops%` | Pops so far in this session or round. |
+| `%streak%` | Pops in a row since the last fail. |
+
+By default a grade shows no title, plays `ENTITY_EXPERIENCE_ORB_PICKUP` at volume 0.8 and a pitch
+that drops with the grade, and writes the action bar:
+
+| Grade | Action bar | Pitch |
+|---|---|---|
+| `perfect` | `{success}⚡ PERFECT {muted}· {letters}%reaction%s` | 1.8 |
+| `excellent` | `{success_light}✦ EXCELLENT {muted}· {letters}%reaction%s` | 1.5 |
+| `good` | `{info}✔ GOOD {muted}· {letters}%reaction%s` | 1.2 |
+| `ok` | `{warning}• OK {muted}· {letters}%reaction%s` | 1.0 |
+| `slow` | `{error}▼ SLOW {muted}· {letters}%reaction%s` | 0.7 |
+
+Only `perfect` has a chat line by default: `%prefix% {success}Perfect pop! {highlight}%reaction%s`.
+
+```yaml title="plugins/ExyliaTotemTrainer/config.yml"
+feedback:
+  perfect:
+    effect:
+      action-bar:
+        text: "{success}⚡ PERFECT {muted}· {letters}%reaction%s"
+        duration: 2.0
+      sound:
+        name: ENTITY_EXPERIENCE_ORB_PICKUP
+        volume: 0.8
+        pitch: 1.8
+        category: MASTER
+    chat: "%prefix% {success}Perfect pop! {highlight}%reaction%s"
+```
+
+### The other moments
+
+| Section | When | Default |
+|---|---|---|
+| `fail` | No totem in hand when a hit landed | Title `{error}&lPOPPED OUT` / `{letters}You did not swap in time`, sound `ENTITY_ITEM_BREAK` 1.0 · 0.8 |
+| `countdown` | Before the first hit of a session or round | Title `{primary}&l%time%` / `{letters}Press {highlight}E {letters}and swap totems from your inventory`, action bar `{secondary}Starting in {highlight}%time%s`, sound `BLOCK_NOTE_BLOCK_HAT` 1.0 · 1.4. `%time%` is the seconds left. |
+| `match-found` | Both duellists arrived in the arena | Title `{primary}&lMATCH FOUND` / `{letters}Teleporting…`, sound `ENTITY_EXPERIENCE_ORB_PICKUP` 1.0 · 1.2 |
+| `round-won` | A round went to you | Title `{success}&lROUND WON`, sound `ENTITY_PLAYER_LEVELUP` 1.0 · 1.4 |
+| `round-lost` | A round went to your opponent | Title `{error}&lROUND LOST`, sound `BLOCK_NOTE_BLOCK_BASS` 1.0 · 0.7 |
+| `round-draw` | Both dropped the totem in the same tick | Title `{warning}&lDRAW` / `{letters}Both of you dropped it — replaying`, action bar `{warning}Round replayed`, sound `BLOCK_NOTE_BLOCK_SNARE` 1.0 · 0.8 |
+| `match-won` | The series is yours | Title `{success}&lVICTORY` / `{letters}Match won`, sound `UI_TOAST_CHALLENGE_COMPLETE` |
+| `match-lost` | The series is theirs | Title `{error}&lDEFEAT` / `{letters}Match lost`, sound `ENTITY_WITHER_HURT` 0.6 · 0.8 |
+| `training-complete` | A full-inventory mode without refill ran out | Title `{success}&lCOMPLETE` / `{letters}Every totem used`, sound `UI_TOAST_CHALLENGE_COMPLETE` |
+
+Sound values are `volume · pitch`. The countdown's title and action bar count the same seconds and
+stop together, whether the timer ran out or a punch cut it short.
+
+<Callout type="tip" title="Per-grade chat lines">
+The chat line accepts the same placeholders as the effect. A server that wants a quieter screen can
+empty the action bars and write one chat line per grade instead; a server that wants none of it
+removes the `chat` values and keeps the sounds.
+</Callout>

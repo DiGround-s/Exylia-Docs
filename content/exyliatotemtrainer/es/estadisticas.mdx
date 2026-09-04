@@ -1,0 +1,127 @@
+---
+title: "Estadísticas"
+description: "El perfil, los récords de entrenamiento y el historial de duelos: qué guarda cada uno, qué lo mueve, y los leaderboards construidos encima."
+---
+
+Tres tablas guardan lo que un jugador ha hecho. Cada una responde a una pregunta distinta, y nada se
+deriva de una que otra pueda perder.
+
+| Tabla | Una fila por | Responde |
+|---|---|---|
+| `totem_profiles` | Jugador | El registro de duelos y los números de pops de por vida |
+| `totem_training_records` | Jugador, modo **y** velocidad en ticks | Los mejores resultados, que es lo que ordenan los leaderboards |
+| `totem_matches` | Participante por duelo | El historial que un jugador recorre |
+
+## El perfil
+
+La fila se carga cuando el jugador entra, se escribe en cada cambio y otra vez cuando sale.
+
+| Campo | Lo mueve |
+|---|---|
+| Partidas, victorias, derrotas, porcentaje de victorias | Un duelo decidido. El porcentaje se guarda, como porcentaje. |
+| Rondas, rondas ganadas, rondas perdidas | Un duelo decidido, desde el marcador final. |
+| Pops totales, mejor pop, tiempo total de pops | **Todas** las sesiones: duelos y entrenamiento en solitario por igual. El pop medio se deriva de los dos últimos. |
+| Racha actual, mejor racha | Racha de victorias en duelo: sube uno con una victoria, vuelve a cero con una derrota. El entrenamiento nunca la toca. |
+| Ticks preferidos, formato preferido | La última velocidad y el último best-of elegidos en un menú, para que los selectores abran donde el jugador los dejó. |
+
+Un duelo rendido cuenta como decidido: victoria del rival, derrota de quien se fue.
+
+`/totem profile`, o `/totem stats`, abre la pantalla de perfil: partidas, victorias, derrotas,
+porcentaje, rondas ganadas y perdidas, racha actual y mejor racha, pops totales, mejor pop y pop medio.
+`/totem profile <jugador>` lee la fila de otro jugador, desde la base de datos si está desconectado.
+
+## Récords de entrenamiento
+
+Una fila por jugador, modo y velocidad, con clave `uuid:mode:ticks`. Una sesión terminada se fusiona
+en su fila cuando tuvo **al menos un pop o un fallo**; una sesión que terminó durante la cuenta atrás no
+guarda nada.
+
+| Campo | Regla de fusión |
+|---|---|
+| `sessions` | Más uno |
+| `bestPops` | El mayor |
+| `bestAverageMillis` | El menor, ignorando una sesión sin pops |
+| `bestStreak` | El mayor |
+| `longestSurvivalMillis` | La duración de sesión más larga |
+| `bestScore` | La puntuación de 0 a 100 más alta |
+
+La pantalla **Records**, a la que se llega desde el perfil, lista todas las filas del jugador en el
+orden en que los modos aparecen en `config.yml`, la velocidad más lenta primero dentro de cada modo.
+
+## Leaderboards
+
+Hay una tabla por **modo**, ordenada por una de cinco categorías. Las tablas se leen de los récords de
+entrenamiento, no del registro de duelos: los números que produce un modo son los que merece la pena
+comparar.
+
+| Categoría | Ordena por | Nombre por defecto |
+|---|---|---|
+| `best_score` | `bestScore`, el mayor primero | Best score |
+| `best_pops` | `bestPops`, el mayor primero | Most pops |
+| `fastest_average` | `bestAverageMillis`, el **menor** primero | Fastest average |
+| `best_streak` | `bestStreak`, el mayor primero | Best streak |
+| `longest_run` | `longestSurvivalMillis`, el mayor primero | Longest run |
+
+Los nombres e iconos viven en `messages.yml`, bajo `menu.categories`.
+
+Un jugador aparece **una vez** por tabla, con su mejor resultado a cualquier velocidad, y la fila
+indica la velocidad a la que lo logró: un récord de chaos a 5 ticks no queda por debajo de una sesión
+a 25 ticks que consumió más tótems. Un cero nunca ocupa un puesto, así que una velocidad no jugada o
+una sesión que terminó antes del primer pop es invisible.
+
+```yaml title="plugins/ExyliaTotemTrainer/config.yml"
+leaderboard:
+  entries: 10
+  cache-seconds: 300
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `entries` | `10` | Filas por tabla. |
+| `cache-seconds` | `300` | Cuánto se conserva una tabla antes de volver a preguntar a la base de datos. Menos de 5 se trata como 5. |
+
+La caché se descarta en cuanto se guarda un récord o se reinicia a un jugador, así que quien acaba de
+lograr un mejor resultado se ve en la tabla en la que lo logró.
+
+### Abrir una tabla
+
+`/totem leaderboard` abre el selector de modo; `/totem leaderboard <modo>` abre la tabla de ese modo
+ordenada por `best_score`; `/totem leaderboard <modo> <categoría>` la ordena por esa categoría. Un
+modo desconocido abre el selector en lugar de una tabla vacía. Dentro, la fila de botones de categoría
+reordena la tabla abierta en el sitio, y las tres primeras filas llevan medalla.
+
+La misma tabla se puede leer como placeholders: `%totem_top_<modo>_<categoría>_<n>%` y su gemelo
+`_value`. Ver [Placeholders](/docs/exyliatotemtrainer/placeholders).
+
+## Historial de duelos
+
+Cada duelo decidido escribe **dos filas** en `totem_matches`, una por participante, así que "mis
+duelos" es una consulta de una sola columna. Cada fila lleva el rival, si el jugador ganó, el modo, la
+velocidad, el best-of, el marcador a favor y en contra, la duración, los pops, el mejor y el pop medio,
+y cuándo terminó.
+
+`/totem history` muestra las filas más recientes, con victorias y derrotas dibujadas de forma distinta.
+
+```yaml title="plugins/ExyliaTotemTrainer/config.yml"
+history:
+  entries: 20
+  retention-days: 30
+  prune-interval-minutes: 60
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `entries` | `20` | Duelos mostrados a un jugador. |
+| `retention-days` | `30` | Las filas más antiguas que esto se borran. `0` conserva todo. |
+| `prune-interval-minutes` | `60` | Cada cuánto corre la limpieza. La primera pasada es un minuto después del arranque. |
+
+Una pasada mira como mucho las 500 filas más antiguas y borra las que pasan del límite, así que un
+atraso se vacía en varias pasadas en lugar de en una transacción larga. Las estadísticas nunca se
+derivan del historial, que es lo que hace segura su limpieza.
+
+## Reiniciar a un jugador
+
+Desde `/totemtraineradmin` → **Players**, detrás de una confirmación. Un reinicio deja el perfil a
+cero **y** borra todos los récords de entrenamiento del jugador, y después descarta la caché de
+leaderboards. Las dos mitades a propósito: las tablas se leen de los récords, así que un reinicio que
+los dejara mantendría al jugador en todas las tablas en las que estaba.

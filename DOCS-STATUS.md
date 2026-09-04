@@ -21,14 +21,16 @@ scripts/doc-drift.sh exyliaevents # just one
 | `exyliacapture` | `ExyliaCapture` | 1.1.0 | `c8c2ec7` 2026-09-02 | Current — typed durations noted. The database indexes and the admin menu layout were not worth a page. |
 | `exyliaclans` | `ExyliaClans` | 1.0.1 | `94c78fe` 2026-08-31 | Current. |
 | `exyliaclasses` | `ExyliaClasses` | 1.0.0 | `d48bfe0` 2026-08-31 | Current — the only change since was a database index. |
-| `exyliaevents` | `ExyliaEvents` | 1.2.0 | `3c6b6aa` 2026-09-02 | Current — 49 types, gauntlets, the 33 Mace Roulette modifiers, PvP during the hunt, the shrinking floor and event chat isolation. |
+| `exyliaevents` | `ExyliaEvents` | 1.2.0 | `3c6b6aa` 2026-09-02 | 49 types, gauntlets, the 33 Mace Roulette modifiers, PvP during the hunt, the shrinking floor and event chat isolation. The 1.3.0 statistics and leaderboard placeholders are documented ahead of the rest (`fb7782d`). **Gap:** everything else in 1.3.0 — the team King of the Hill event, one dodgeball ball per player, hidden names in Hide & Seek, the TNT Run block break, 15 more trivia questions and the move of player-facing text into `messages.yml`. |
 | `exyliaffa` | `ExyliaFFA` | 1.1.1 | `569a4f1` 2026-09-02 | Current — arena chat isolation and duration inputs documented. |
 | `exyliahiteffect` | `ExyliaHitEffect` | 1.0.10 | `1fe222a` 2026-09-03 | Current. |
 | `exyliakilleffect` | `ExyliaKillEffect` | 1.0.10 | `31b0a76` 2026-09-03 | Current. |
 | `exylialib` | `ExyliaLib` | 1.95.0 | `e4cf0b7` 2026-09-03 | Current — chat rules, cosmetic rules, the display ceiling, region flags, log cleanup and the extra NPC motion. |
 | `exyliapractice` | `ExyliaPracticeCore` | 1.0.0 | `a8b3bf6` 2026-09-03 | Arena usages, the short `practice` identifier, `total_bot_players` and typed kit-rule durations documented. **Gap:** the Bot PvP module has no page at all — difficulties, its menus and `bot-name`/`bot-skin` are undocumented. |
 | `exyliashields` | `ExyliaShields` | 1.0.4 | `83a54f9` 2026-09-01 | Current — the only change since was a database index. |
+| `exyliastaff` | `ExyliaStaff` | 1.1.0 | `0556cce` 2026-09-03 | Current — first full documentation: the sixteen modules, the hotbar, vanish levels, freeze across servers, report priority, the punishment ladder and its command templates, the nine mining factors, the staff log and the admin panel. Left out on purpose: the reports history screen (not registered by the module in 1.1.0), `%staff_reports_mine%` (always 0) and `exyliastaff.inspect.ip` (declared, unused). |
 | `exyliasurvivalcore` | `ExyliaSurvivalCore` | 1.0.6 | `1e1dc33` 2026-09-02 | Current for the two pages that exist (placeholders, permissions). The plugin is not finished, and the rest of its documentation is deliberately unwritten. |
+| `exyliatotemtrainer` | `ExyliaTotemTrainer` | 1.0.0 | `ad46628` 2026-09-03 | Current — first full documentation: the five shipped modes as three choices, grading and score, duels with draws and the even-format rule, arenas from the admin menu, per-mode leaderboards, the `totem_` PlaceholderAPI spelling. |
 
 ## How a review goes
 

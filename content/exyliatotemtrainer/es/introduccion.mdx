@@ -1,0 +1,81 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaTotemTrainer, qué resuelve y cómo está organizada esta documentación."
+---
+
+ExyliaTotemTrainer es un entrenador de totem pops para servidores que se toman en serio la práctica
+de PvP. Un jugador entrena solo a la velocidad en ticks que elija, en un modo que el dueño del
+servidor define, o reta a otro jugador a un duelo al mejor de N que decide únicamente el tótem. Cada
+sesión se califica, cada récord se guarda y cada modo tiene su propia tabla de clasificación.
+
+No es un kit con tótems dentro. Cada cierto número de ticks configurado, el plugin asesta un golpe
+letal que absorbe un tótem en cualquiera de las dos manos; el jugador tiene que poner el siguiente en
+una mano antes del próximo golpe, y el tiempo que tarda es la reacción que se califica. Sin tótem en
+la mano cuando cae un golpe es un fallo: en entrenamiento la sesión termina, en un duelo se pierde la
+ronda. Nunca se muestra la pantalla de muerte.
+
+## Qué incluye
+
+<Cards>
+  <Card title="Modos" href="/docs/exyliatotemtrainer/modos">
+    Cinco de serie, ninguno hardcodeado: cómo se entregan los tótems, una ventana de intervalo aleatorio, una aceleración.
+  </Card>
+  <Card title="Calificación" href="/docs/exyliatotemtrainer/calificacion">
+    Cinco grados contra umbrales por velocidad y por modo, una puntuación de 0 a 100, feedback por grado.
+  </Card>
+  <Card title="Duelos" href="/docs/exyliatotemtrainer/duelos">
+    Retos directos, series al mejor de N, caídas simultáneas que se repiten, resultados guardados al instante.
+  </Card>
+  <Card title="Arenas" href="/docs/exyliatotemtrainer/arenas">
+    Dos spawns por arena, creadas y posicionadas desde el menú de administración, compartidas por muchas sesiones a la vez.
+  </Card>
+  <Card title="Entrenamiento" href="/docs/exyliatotemtrainer/entrenamiento">
+    La mecánica en sí: el golpe, el reequipado, el aislamiento y todo lo que se bloquea mientras tanto.
+  </Card>
+  <Card title="Estadísticas" href="/docs/exyliatotemtrainer/estadisticas">
+    Perfiles, récords por modo y velocidad, una tabla por modo, historial de duelos.
+  </Card>
+</Cards>
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. Folia soportado. |
+| Java | 21 |
+| Dependencias obligatorias | `ExyliaLib`, `packetevents` |
+| Dependencias opcionales | `PlaceholderAPI` |
+
+<Callout type="note" title="Sobre ExyliaLib">
+La configuración tipada, los menús YAML declarativos, la base de datos, los placeholders, los efectos,
+los sidebars, las instantáneas de inventario y los claims de jugador que evitan que los plugins de
+Exylia se pisen entre sí vienen todos de ExyliaLib. El plugin está escrito sobre ella y no funciona
+sin ella.
+</Callout>
+
+## Cómo leer esta documentación
+
+<Steps>
+  <Step title="Empezar">
+    Instalación, y una primera arena y una primera sesión en minutos.
+  </Step>
+  <Step title="Configurar">
+    Modos, calificación, duelos y arenas. Aquí es donde se va la mayor parte del tiempo.
+  </Step>
+  <Step title="Sistemas">
+    Entrenamiento, estadísticas, el scoreboard y cómo se comporta el plugin junto a otros plugins de Exylia.
+  </Step>
+  <Step title="Referencia">
+    Comandos, permisos, placeholders, cada clave de configuración y la API para desarrolladores.
+  </Step>
+</Steps>
+
+## Convenciones
+
+- Los valores marcados como **por defecto** son los que el plugin escribe la primera vez que arranca.
+  Si el archivo ya existe, se conserva tu valor.
+- Los identificadores entre `<` y `>` son variables. `/totem train <mode>` significa
+  `/totem train chaos`, no `/totem train <chaos>`.
+- Los tiempos son segundos con decimales salvo que la clave diga ticks; 20 ticks son un segundo.
+- Los colores usan tokens de paleta de ExyliaLib (`{primary}`, `{highlight}`, `{muted}`); las etiquetas
+  MiniMessage como `<click>` y `<hover>` también funcionan, como muestra la petición de duelo por defecto.

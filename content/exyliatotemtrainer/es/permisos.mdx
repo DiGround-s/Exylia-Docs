@@ -1,0 +1,51 @@
+---
+title: "Permisos"
+description: "Los siete nodos que declara el plugin, qué controla cada uno y sus valores por defecto."
+---
+
+Siete nodos, todos declarados en el plugin. Seis se conceden a todo el mundo por defecto; el nodo de
+administración es para operadores.
+
+## Nodos del plugin
+
+| Permiso | Por defecto | Qué controla |
+|---|---|---|
+| `exyliatotemtrainer.train` | todos | `/totem train`. |
+| `exyliatotemtrainer.duel` | todos | `/totem duel`, `/totem accept` y `/totem deny`: enviar, aceptar y rechazar solicitudes. |
+| `exyliatotemtrainer.leave` | todos | `/totem leave`. |
+| `exyliatotemtrainer.profile` | todos | `/totem profile` y `/totem stats`, propio y de otros. |
+| `exyliatotemtrainer.leaderboard` | todos | `/totem leaderboard` y `/totem top`. |
+| `exyliatotemtrainer.history` | todos | `/totem history`. |
+| `exyliatotemtrainer.admin` | operadores | `/totemtraineradmin`, `/ttadmin` y todas las pantallas detrás, incluido `reload`. |
+
+`/totem` en sí, el menú principal, no tiene nodo: cualquiera puede abrirlo.
+
+<Callout type="warning" title="Los nodos controlan comandos, no menús">
+Las comprobaciones están en los comandos. Los menús no las piden: un jugador sin
+`exyliatotemtrainer.train` no puede escribir `/totem train`, pero sí puede empezar una sesión desde la
+pantalla de entrenamiento en solitario, y lo mismo pasa con los duelos y el botón de salir. Para dejar a
+un grupo fuera de una función, quítale también el menú principal — por ejemplo bloqueando `/totem` con tu
+gestor de comandos — en vez de confiar solo en el nodo.
+</Callout>
+
+<Callout type="note" title="Nada por modo, nada por arena">
+No hay nodos de permiso para modos, velocidades de ticks, formatos ni arenas individuales. Un jugador que
+puede entrenar puede entrenar todos los modos configurados a todas las velocidades configuradas. Poner un
+modo detrás de un rango no es algo que este plugin haga.
+</Callout>
+
+## Ejemplos
+
+Quitar los duelos a un grupo dejando el entrenamiento en solitario:
+
+```text
+/lp group default permission set exyliatotemtrainer.duel false
+```
+
+Dar las pantallas de administración a staff que no es operador:
+
+```text
+/lp group staff permission set exyliatotemtrainer.admin true
+```
+
+Sin el permiso, un comando responde con la línea `no-permission` configurada en `messages.yml`.

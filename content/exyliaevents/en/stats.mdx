@@ -42,10 +42,17 @@ int games  = EventsAPI.getGamesPlayed(uuid);
 
 See [API](/docs/exyliaevents/api).
 
+## Reading them from a scoreboard or a hologram
+
+The counters are placeholders as well: `%exyliaevents_stats_kills%` for the reader's own totals,
+`%exyliaevents_event_stats_kills_koth%` for one event, and `%exyliaevents_top_name_kills_1%` with
+`%exyliaevents_top_value_kills_1%` for the leaderboard, globally or per event. See
+[Placeholders](/docs/exyliaevents/placeholders).
+
 <Callout type="note" title="There is no leaderboard command">
-The plugin tracks statistics and shows them per player; it does not ship a top-ten menu or ranking
-placeholders. Building a leaderboard means reading the tables yourself, or reading the API from
-another plugin.
+The plugin ranks players through those placeholders; it does not ship a top-ten menu or a command
+that prints one. The ranking placeholders sort on `kills`, `deaths`, `wins` or `games` and keep the
+top ten — anything deeper means reading the tables yourself.
 </Callout>
 
 ## Player preferences

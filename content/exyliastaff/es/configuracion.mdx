@@ -1,0 +1,217 @@
+---
+title: "Configuración"
+description: "config.yml, messages.yml, la puerta de comandos, los archivos de módulo, los sidebars, los menús y la base de datos."
+---
+
+Todo se genera en `plugins/ExyliaStaff/` en el primer arranque, con comentarios. El núcleo mantiene dos
+archivos; cada módulo mantiene los suyos bajo `modules/<id>/`, de modo que un dueño que apaga una función
+nunca tiene que pasar por encima de sus ajustes para encontrar el interruptor. Los colores usan tokens de
+paleta como `{primary}`, `{error}` o `{highlight}`, resueltos por la librería. Un mensaje puede abrir con
+una etiqueta de efecto, `[sound:NAME|volume|pitch]`, que suena para quien lo recibe y nunca llega a la pantalla.
+
+`/exyliastaff reload` ejecuta tres pasos: `configs`, `modules` y `command gate`. La hotbar se vuelve a
+leer y a mostrar, los sidebars se reconstruyen, las menas de minería se vuelven a indexar.
+
+## config.yml
+
+```yaml title="plugins/ExyliaStaff/config.yml"
+modules:
+  vanish: true
+  staff-mode: true
+  freeze: true
+  staff-chat: true
+  global-chat: true
+  inspect: true
+  teleport: true
+  staff-list: true
+  scoreboard: true
+  reports: true
+  helpop: true
+  mining: true
+  xray-vision: true
+  punishments: true
+  staff-log: true
+  staff-admin: true
+command-gate:
+  enabled: true
+  staff-only-commands:
+    - tp
+    - teleport
+    - tphere
+    - tpall
+    - inspect
+    - invsee
+    - gamemode
+    - gm
+    - gmc
+    - gms
+    - gmsp
+    - fly
+    - god
+    - vanish
+    - freeze
+    - ss
+    - echest
+    - enderchest
+    - kill
+    - clear
+    - give
+    - xray
+    - xrayvision
+  bypass-permission: exyliastaff.gate.bypass
+  hide-from-tab: true
+```
+
+### Módulos
+
+Un módulo apagado no registra nada: ni comandos, ni listeners, ni tablas. Los ids que usa
+`/exyliastaff module` son los nombres en código: `vanish`, `staffmode`, `freeze`, `staffchat`, `globalchat`,
+`inspect`, `teleport`, `stafflist`, `scoreboard`, `reports`, `helpop`, `mining`, `xrayvision`,
+`punishments`, `stafflog`, `staffadmin`. Un módulo que lanza una excepción al activarse aparece como
+`failed`, mantiene sus comandos apagados y se reintenta en el siguiente arranque.
+
+Vanish, freeze, inspección, visión x-ray y modo staff necesitan PacketEvents y fallan sin él. El modo
+staff consulta vanish y el scoreboard en cada llamada, así que apagar cualquiera de los dos en caliente
+simplemente hace que el modo staff deje de ocultar o deje de mostrar un tablero.
+
+### Puerta de comandos
+
+Los comandos de `staff-only-commands` solo pueden ejecutarse en modo staff. La lista se compara con el
+nombre registrado de cada comando y con todos sus alias, de modo que `tp` también bloquea `teleport`
+cuando es un alias, y con las grafías `plugin:name`. Fuera del modo staff el comando se cancela con
+`gate.blocked`, se quita de la lista de comandos del cliente y no recibe autocompletado cuando
+`hide-from-tab` está encendido. Los jugadores con `bypass-permission` nunca son bloqueados. La puerta no
+comprueba el permiso propio del comando: solo pregunta si el jugador está en modo staff.
+
+## messages.yml
+
+```yaml title="plugins/ExyliaStaff/messages.yml"
+prefix: '{primary}&lSTAFF <#475569>•&r'
+no-permission: '[sound:ENTITY_VILLAGER_NO|1.0|1.0]%prefix% {error}You do not have permission to do that.'
+player-only: '%prefix% {error}Only a player can run this command.'
+player-not-found: '[sound:ENTITY_VILLAGER_NO|1.0|1.0]%prefix% {error}{highlight}%player% {error}is not online.'
+module-disabled: '[sound:ENTITY_VILLAGER_NO|1.0|1.0]%prefix% {error}The {highlight}%module% {error}module is off on this server.'
+reload:
+  started: '%prefix% {muted}Reloading…'
+  done: '[sound:ENTITY_EXPERIENCE_ORB_PICKUP|1.0|1.2]%prefix% {success}Reloaded {highlight}%steps% {success}steps in {highlight}%ms%ms{success}.'
+  failed: '[sound:ENTITY_VILLAGER_NO|1.0|1.0]%prefix% {error}Reload finished with errors. Check the console.'
+modules:
+  header: '%prefix% {letters}Modules {letters_black}» {highlight}%enabled%{letters_black}/{muted}%total% {letters}running'
+  line: ' {muted}❙ %color%%module% {letters_black}» %state%'
+  enabled: '[sound:ENTITY_EXPERIENCE_ORB_PICKUP|1.0|1.2]%prefix% {success}Module {highlight}%module% {success}enabled.'
+  disabled: '%prefix% {warning}Module {highlight}%module% {warning}disabled.'
+  enable-failed: '[sound:ENTITY_VILLAGER_NO|1.0|1.0]%prefix% {error}Module {highlight}%module% {error}could not start: it is already on, it failed, or a dependency is off.'
+  disable-failed: '[sound:ENTITY_VILLAGER_NO|1.0|1.0]%prefix% {error}Module {highlight}%module% {error}is not enabled.'
+  unknown: '[sound:ENTITY_VILLAGER_NO|1.0|1.0]%prefix% {error}No module named {highlight}%module%{error}.'
+gate:
+  blocked: '[sound:ENTITY_VILLAGER_NO|1.0|1.0]%prefix% {error}Enable staff mode before using {highlight}/%command%{error}.'
+redis:
+  server-id: '%prefix% {letters}Server {letters_black}» {highlight}%server%'
+  active: ' {muted}❙ {letters}Redis {letters_black}» {success}connected'
+  inactive: ' {muted}❙ {letters}Redis {letters_black}» {muted}off, local bus only'
+  stats: ' {muted}❙ {letters_black}%stats%'
+```
+
+`%prefix%` se expande a `prefix` en todos los mensajes del plugin, los de los módulos incluidos. `no-permission`
+y `player-only` son lo que envía el framework de comandos; `player-not-found` se envía para cualquier
+argumento de jugador que no resuelve. La convención en todos los archivos: un rechazo suena
+`ENTITY_VILLAGER_NO`, un éxito `ENTITY_EXPERIENCE_ORB_PICKUP`, un aviso `BLOCK_NOTE_BLOCK_PLING`.
+
+## Archivos de módulo
+
+Cada página de módulo muestra su propio `config.yml` y lista sus claves de `messages.yml`.
+
+| Módulo | Archivos |
+|---|---|
+| `staffmode` | `config.yml`, `messages.yml`, `hotbar.yml` |
+| `vanish`, `freeze`, `inspect`, `teleport`, `xrayvision`, `staffchat`, `globalchat`, `stafflist`, `reports`, `helpop`, `mining`, `punishments`, `stafflog`, `staffadmin` | `config.yml`, `messages.yml` |
+| `scoreboard` | `config.yml` |
+
+Los bloques de efecto como `effects.enter`, `alert` o `reminder` son efectos de la librería con las
+secciones `title`, `action-bar`, `boss-bar`, `sound`, `particle` y `firework`. Una sección vacía no se
+escribe en el archivo; añádela para usarla. Sus claves están en la
+[página de efectos de la librería](/docs/exylialib/efectos).
+
+## Sidebars
+
+`modules/scoreboard/config.yml` contiene tres tableros: `staff-mode`, mostrado de servicio; `frozen`,
+mostrado a un jugador congelado; `freezing`, mostrado al miembro del staff que lo retiene. Cada uno tiene
+`enabled`, una lista `title` que se anima cuando tiene varias entradas, hasta quince `lines` y
+`update.interval` en ticks. Los tableros se apilan: un freeze mostrado sobre el tablero de staff lo oculta
+y lo devuelve al liberar.
+
+```yaml title="plugins/ExyliaStaff/modules/scoreboard/config.yml"
+staff-mode:
+  enabled: true
+  title:
+    - '{primary}&lSTAFF'
+  lines:
+    - ''
+    - ' {muted}❙ {letters}Session {letters_black}» {highlight}%staff_staffmode_time%'
+    - ' {muted}❙ {letters}Vanish {letters_black}» %staff_vanish_status%'
+    - ''
+    - ' {muted}❙ {letters}Reports {letters_black}» {warning}%staff_reports_open%'
+    - ' {muted}❙ {letters}Help requests {letters_black}» {info}%staff_helpop_open%'
+    - ''
+    - ' {muted}❙ {letters}TPS {letters_black}» {info}%server_tps% {letters_black}· {letters}MSPT {letters_black}» {info}%server_mspt%ms'
+    - ' {muted}❙ {letters}CPU {letters_black}» {info}%server_cpu_process:percent% {letters_black}proc · {info}%server_cpu_system:percent% {letters_black}host'
+    - ' {muted}❙ {letters}RAM {letters_black}» {info}%server_ram_used%{letters_black}/{info}%server_ram_max% {letters_black}MB'
+    - ' {muted}❙ {letters}Ping {letters_black}» {info}%player_ping%ms'
+    - ''
+    - ' {muted}❙ {letters}Staff {letters_black}» {success}%staff_online% {letters_black}· {letters}Players {letters_black}» {success}%server_online%'
+    - ''
+    - ' {highlight}exylia.net'
+  update:
+    interval: 20
+    smart: true
+frozen:
+  enabled: true
+  title:
+    - '{error}&lFROZEN'
+  lines:
+    - ''
+    - ' {muted}❙ {letters}A staff member is talking'
+    - ' {muted}❙ {letters}to you. Answer them.'
+    - ''
+    - ' {muted}❙ {letters}Staff {letters_black}» {highlight}%staff_freeze_by%'
+    - ' {muted}❙ {letters}Frozen for {letters_black}» {info}%staff_freeze_time%'
+    - ''
+    - ' {error}❙ Do not log out.'
+    - ''
+    - ' {highlight}exylia.net'
+  update:
+    interval: 20
+    smart: true
+freezing:
+  enabled: true
+  title:
+    - '{primary}&lFREEZING'
+  lines:
+    - ''
+    - ' {muted}❙ {letters}Target {letters_black}» {highlight}%staff_freeze_target%'
+    - ' {muted}❙ {letters}Frozen for {letters_black}» {info}%staff_freeze_time%'
+    - ''
+    - ' {highlight}exylia.net'
+  update:
+    interval: 20
+    smart: true
+```
+
+## menus/
+
+Cada pantalla de staff es un archivo YAML bajo `menus/<module>/`: `reports/` con `reasons`, `list` y
+`player`; `helpop/list`; `punishments/` con `categories`, `reasons`, `confirm` y `history`;
+`mining/` con `suspicious` y `player`; `stafflog/` con `sessions`, `summary` y `top`; y
+`staffadmin/` con `hub`, `online`, `team`, `profile`, `audit`, `coverage`, `notes` y `modules`.
+Su formato es el [formato de menús de la librería](/docs/exylialib/menus).
+
+<Callout type="warning" title="Se reescriben en cada arranque">
+Son las pantallas del plugin, no las del dueño: la carpeta se refresca desde el jar cada vez que un
+módulo se activa, así que una edición ahí dura hasta el siguiente reinicio.
+</Callout>
+
+## database.yml
+
+Motor y Redis, escrito por ExyliaLib. H2 por defecto. Ver [Instalación](/docs/exyliastaff/instalacion#base-de-datos)
+para los motores y las tablas, y la [página de base de datos de la librería](/docs/exylialib/base-de-datos) para cada clave,
+`redis.server-id` entre ellas, que es el nombre que muestra cada alerta y cada línea del chat de staff.

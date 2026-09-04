@@ -1,0 +1,55 @@
+---
+title: "Introduction"
+description: "What ExyliaStaff is, what it solves, and how this documentation is organised."
+---
+
+ExyliaStaff is a moderation toolkit for a server or a network. It is built as sixteen modules on
+ExyliaLib, each one switchable from `config.yml`, each one with its own files under `modules/<id>/`:
+a staff mode with a hotbar of tools, a packet-level vanish with rank levels, a freeze for screenshares,
+silent inventory mirrors, staff teleports, x-ray vision, a staff chat across servers, a global-chat
+bypass, reports, help requests, a punishment ladder, an x-ray suspicion detector, a staff list, a staff
+log and an admin panel that investigates the team.
+
+Everything a staff member does on duty leaves a trail: the log counts time and actions per session,
+the audit records every command, and the admin panel turns both into a team board, a risk score and
+a coverage grid. A module that is off registers nothing: no commands, no listeners, no tables.
+
+## What is included
+
+<Cards>
+  <Card title="Staff mode" href="/docs/exyliastaff/staff-mode">
+    A snapshot of the player's inventory, a configurable hotbar of tools, a session that survives relogs.
+  </Card>
+  <Card title="Vanish" href="/docs/exyliastaff/vanish">
+    Packet-level invisibility, rank levels so an admin hides from a helper, fake join and quit lines.
+  </Card>
+  <Card title="Freeze" href="/docs/exyliastaff/freeze">
+    A client-side pin, darkness, isolated chat, a sidebar on both sides, alerts when the target logs out.
+  </Card>
+  <Card title="Reports and helpop" href="/docs/exyliastaff/reports">
+    Reasons with weights, a priority computed on read, clickable alerts on every server.
+  </Card>
+  <Card title="Punishments" href="/docs/exyliastaff/punishments">
+    Categories, reasons and an escalation ladder, executed through your ban plugin's commands.
+  </Card>
+  <Card title="Mining" href="/docs/exyliastaff/mining">
+    Nine suspicion factors over buried veins, a decaying score, alerts that do not repeat every block.
+  </Card>
+  <Card title="Staff admin" href="/docs/exyliastaff/staff-admin">
+    The team board, the audit feed, flags, notes, coverage by weekday and the module switches.
+  </Card>
+  <Card title="Commands" href="/docs/exyliastaff/commands">
+    Every command of every module, with its aliases and its permission.
+  </Card>
+</Cards>
+
+## How it is organised
+
+**Getting started** installs the plugin and walks through a first shift. **Modules** has one page per
+feature: what it does, its file, its commands and its rules. **Reference** collects every command,
+permission and placeholder, the core files, the API and the questions that come up most.
+
+<Callout type="note" title="Where the numbers come from">
+Every default, message and rule on these pages was read from the plugin's source at version 1.1.0.
+Where a page says a value is not configurable, that is because no key exists for it.
+</Callout>

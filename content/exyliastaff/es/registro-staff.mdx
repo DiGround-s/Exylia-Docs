@@ -1,0 +1,71 @@
+---
+title: "Registro del staff"
+description: "Sesiones de modo staff con su tiempo AFK y sus acciones contadas, por miembro del staff, con un ranking y un resumen."
+---
+
+Cada tramo de modo staff es una sesión: cuándo empezó, cuándo terminó, en qué servidor, cuánto de ella
+fue AFK, y cuántas veces ocurrió cada acción en ella. `/stafflog` las muestra; el
+[panel de administración](/docs/exyliastaff/panel-admin) construye su tablero del equipo a partir de ellas.
+
+Id de módulo `stafflog`, interruptor `modules.staff-log`, archivos en `modules/stafflog/`.
+
+## Sesiones
+
+Una sesión se abre cuando un jugador entra en modo staff, o cuando el módulo se activa mientras alguien
+ya lo está, y se cierra cuando lo deja, se desconecta, o el módulo se desactiva. Una desconexión cierra
+la fila y la siguiente conexión abre una nueva, así que las filas son por conexión y los resúmenes las
+suman.
+
+## AFK
+
+El tiempo cuenta como AFK una vez que el jugador ha estado inactivo durante `afk-after-seconds`: ese
+primer tramo de inactividad es gratis, todo lo que sigue es AFK. Moverse a otro
+bloque, hacer clic, chatear, ejecutar un comando y cada acción contada reinician el reloj de
+inactividad. El reloj avanza cada treinta segundos.
+
+## Acciones
+
+Los módulos anuncian lo que hizo un miembro del staff y el registro lo cuenta mientras su sesión está
+abierta en este servidor: `freeze`, `unfreeze`, `inspect`, `enderchest`, `container`, `teleport`,
+`report_resolve`, `report_dismiss`, `helpop_reply`, `helpop_close`, `punish`, `mining_reset` y
+`xray_toggle`.
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/stafflog [player] [days]` | `exyliastaff.stafflog` | Sesiones de los últimos `days`, 7 por defecto: un reloj por sesión con duración, AFK, servidor y acciones. |
+| `/stafflog summary [player]` | `exyliastaff.stafflog` | Totales a 7 y a 30 días. |
+| `/stafflog top [days]` | `exyliastaff.stafflog.others` | Cada miembro del staff con una sesión en la ventana, ordenados por tiempo activo. |
+
+Nombrar a otra persona necesita `exyliastaff.stafflog.others`. `/stafflog 30` lee el número como días
+para tu propio registro. El libro escrito de la hotbar abre el tuyo.
+
+El ranking muestra, por miembro, tiempo activo, tiempo total, tiempo AFK y su porcentaje, sesiones, y
+acciones con una tasa por hora. El tiempo inactivo no cuenta como trabajo.
+
+## Configuración
+
+```yaml title="plugins/ExyliaStaff/modules/stafflog/config.yml"
+afk-after-seconds: 300
+keep-days: 90
+```
+
+Las sesiones más antiguas que `keep-days` se borran una vez al día; `0` lo conserva todo.
+
+## Mensajes
+
+`modules/stafflog/messages.yml`: `no-sessions` con `%target%` y `%days%`, `never-played`,
+`action-line` con `%action%` y `%count%`, `no-actions`, `no-staff` con `%days%`.
+
+## Placeholders
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_stafflog_today%` | Minutos en modo staff hoy, sesión en curso incluida. |
+| `%staff_stafflog_week%` | Minutos en los últimos siete días. |
+
+## Almacenamiento
+
+`staff_log_sessions` guarda una fila por sesión, `staff_log_daily` un total por jugador y día.
+Ambas necesitan el módulo de modo staff para tener algo que registrar.

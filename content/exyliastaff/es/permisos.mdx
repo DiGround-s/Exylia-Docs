@@ -1,0 +1,75 @@
+---
+title: "Permisos"
+description: "Cada nodo, módulo por módulo, y el que convierte a un jugador en staff para todos ellos."
+---
+
+Los nodos siguen `exyliastaff.<module>.<action>`. Ninguno se concede por defecto; dalos a través de tu
+plugin de permisos.
+
+## El que importa
+
+`exyliastaff.staff` marca a un jugador como staff para todos los módulos. Decide quién aparece en
+`/stafflist`, de quién registra los comandos la auditoría, quién puede entrar en modo staff, a quién
+salta el teletransporte aleatorio, a quién no se puede reportar y, con `exyliastaff.vanish.see`, quién
+ve a los jugadores en vanish. Perderlo estando conectado termina la sesión de staff en menos de cinco segundos.
+
+## Núcleo
+
+| Permiso | Qué controla |
+|---|---|
+| `exyliastaff.admin` | La raíz `/exyliastaff` y `/exyliastaff redis`. |
+| `exyliastaff.admin.reload` | `/exyliastaff reload`. |
+| `exyliastaff.admin.modules` | Listar y cambiar el estado de los módulos, desde el comando y desde el panel. |
+| `exyliastaff.gate.bypass` | Nunca lo bloquea la puerta de comandos. Configurable en `config.yml`. |
+
+## Módulos
+
+| Permiso | Qué controla |
+|---|---|
+| `exyliastaff.staffmode` | `/staff`. Necesita también `exyliastaff.staff`. |
+| `exyliastaff.staffmode.others` | Modo staff para otro jugador. |
+| `exyliastaff.vanish` | `/vanish` y el interruptor de la hotbar. Si se pierde estando en vanish, el jugador se vuelve visible. |
+| `exyliastaff.vanish.others` | Vanish para otro jugador. |
+| `exyliastaff.vanish.see` | Ver a los jugadores en vanish de tu nivel o inferior, y sus líneas falsas de entrada y salida. |
+| `exyliastaff.vanish.level.<n>` | Tu nivel de vanish, de `1` a `levels.max`. Cuenta el más alto que tengas. |
+| `exyliastaff.freeze` | Los tres comandos de freeze, las alertas de freeze y oír a un jugador congelado. |
+| `exyliastaff.freeze.bypass` | No puede ser congelado. |
+| `exyliastaff.inspect` | `/inspect`. Si se pierde, los espejos abiertos se cierran. |
+| `exyliastaff.inspect.edit` | Los espejos de inventarios y cofres de ender son editables. |
+| `exyliastaff.inspect.enderchest` | `/echest`. |
+| `exyliastaff.inspect.containers` | Abrir contenedores en silencio. |
+| `exyliastaff.teleport` | `/tp`. |
+| `exyliastaff.teleport.here` | `/stafftphere` y `/tp <a> <b>`. |
+| `exyliastaff.teleport.random` | `/staffrtp`. |
+| `exyliastaff.teleport.phase` | `/phase` y `/jumpto`. |
+| `exyliastaff.xrayvision` | `/xray` y el interruptor de la hotbar. |
+| `exyliastaff.xrayvision.others` | X-ray para otro jugador. |
+| `exyliastaff.staffchat` | `/sc`, y leer el chat de staff. |
+| `exyliastaff.globalchat` | `/globalchat`, y recibir las líneas de red. |
+| `exyliastaff.stafflist` | `/stafflist`. |
+| `exyliastaff.report` | `/report`. |
+| `exyliastaff.reports.manage` | `/reports`, y recibir las alertas de reportes. |
+| `exyliastaff.helpop` | `/helpop`. |
+| `exyliastaff.helpop.manage` | `/hs`, y recibir las alertas de helpop. |
+| `exyliastaff.punish` | `/punish`, y los anuncios de sanción cuando son solo para el staff. |
+| `exyliastaff.punish.history` | `/history`. |
+| `exyliastaff.mining.alerts` | `/mining`, y recibir las alertas de minería. |
+| `exyliastaff.mining.view` | `/mining top` y `/mining view`. |
+| `exyliastaff.mining.reset` | `/mining reset`. |
+| `exyliastaff.stafflog` | `/stafflog` para ti mismo. |
+| `exyliastaff.stafflog.others` | El registro de otra persona, y `/stafflog top`. |
+| `exyliastaff.admin.panel` | `/staffadmin` y todas las pantallas que hay detrás. |
+| `exyliastaff.admin.notes` | Escribir y quitar notas y strikes. |
+
+<Callout type="warning" title="Las comprobaciones viven en los comandos">
+Los menús y la hotbar no repiten todas las comprobaciones. El botón de reinicio de un registro de minería
+no pide `exyliastaff.mining.reset`, el clic del cofre de ender en la hotbar no pide
+`exyliastaff.inspect.enderchest`, y las pantallas de reportes y helpop solo exigen el permiso que las
+abrió. Da a un grupo el nodo de gestión del módulo o déjalo fuera de él; no cuentes con que un subnodo
+por sí solo frene un botón.
+</Callout>
+
+## Objetos de la hotbar
+
+Una entrada de `modules/staffmode/hotbar.yml` puede llevar su propio `permission:`; el objeto solo se
+muestra a los jugadores que lo tengan. El archivo incluido no fija ninguno.

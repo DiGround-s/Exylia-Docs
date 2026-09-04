@@ -1,0 +1,110 @@
+---
+title: "Placeholders"
+description: "Todos los placeholders que responde el plugin, en sus dos escrituras, escritos completos."
+---
+
+Cada placeholder de abajo está escrito completo, y hacer clic en uno lo copia.
+
+## Dos escrituras
+
+Dentro de los archivos del propio plugin — `scoreboards.yml`, `menus/`, `messages.yml` — un placeholder
+se escribe con el grupo `totem` y nada delante:
+
+```text
+%totem_wins%
+```
+
+A través de PlaceholderAPI va delante el nombre del plugin, o el alias corto `exyliatotem`. El grupo se
+queda en el nombre en ambos casos:
+
+```text
+%exyliatotemtrainer_totem_wins%
+%exyliatotem_totem_wins%
+```
+
+<Callout type="danger" title="La palabra totem es parte del nombre">
+`%exyliatotem_wins%` **no** resuelve. PlaceholderAPI le entrega al plugin `wins`, el plugin registró
+`totem_wins`, y nada coincide. Toda forma de PlaceholderAPI de estos placeholders se lee
+`..._totem_<nombre>%`.
+</Callout>
+
+Cada placeholder resuelve para el jugador que lo mira. Uno sin valor — sin espectador, sin perfil cargado
+todavía, sin sesión en curso — deja el texto sin cambiar en vez de escribir una cadena vacía.
+
+## Récord de duelos
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliatotemtrainer_totem_wins%` | Duelos ganados. |
+| `%exyliatotemtrainer_totem_losses%` | Duelos perdidos. |
+| `%exyliatotemtrainer_totem_winrate%` | Victorias sobre duelos jugados, como porcentaje: `50%`. |
+| `%exyliatotemtrainer_totem_best_streak%` | Mejor racha de duelos ganados seguidos. |
+
+## Pops
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliatotemtrainer_totem_total_pops%` | Pops de toda la vida, entrenamiento y duelos juntos. |
+| `%exyliatotemtrainer_totem_pops%` | Pops de la sesión en curso; pops de toda la vida fuera de una. |
+| `%exyliatotemtrainer_totem_streak%` | Pops seguidos de la sesión en curso; la racha actual de duelos ganados fuera de una. |
+| `%exyliatotemtrainer_totem_best%` | Reacción más rápida de la sesión en curso, o la mejor de toda la vida: `0.72s`. `—` si no hay. |
+| `%exyliatotemtrainer_totem_average%` | Reacción media de la sesión en curso, o la media de toda la vida: `0.72s`. `—` si no hay. |
+
+Estos cuatro son los que una línea de sidebar y un lore de lobby pueden compartir: el mismo nombre
+significa la sesión en vivo mientras hay una y el perfil de toda la vida en caso contrario.
+
+## La sesión en curso
+
+Entrenamiento y duelos cuentan ambos como sesión aquí.
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliatotemtrainer_totem_state%` | `none`, `training` o `match`. |
+| `%exyliatotemtrainer_totem_state_label%` | Lo mismo, con las palabras de `menu.state-none`, `state-training` y `state-match`: `None`, `Training`, `Duel`. |
+| `%exyliatotemtrainer_totem_mode%` | El nombre visible del modo que se juega. |
+| `%exyliatotemtrainer_totem_ticks%` | El intervalo que eligió el jugador, en ticks. |
+| `%exyliatotemtrainer_totem_interval%` | El intervalo al que corre la sesión ahora mismo, que un modo con aceleración va moviendo. Cae en `ticks`. |
+| `%exyliatotemtrainer_totem_grade%` | La calificación del último pop: `Perfect`, `Excellent`, `Good`, `Ok` o `Slow`. `—` antes del primer pop; nada fuera de una sesión. |
+| `%exyliatotemtrainer_totem_session_time%` | Cuánto lleva corriendo la sesión. |
+
+## El duelo en curso
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliatotemtrainer_totem_format%` | La longitud de la serie: `BO3`. |
+| `%exyliatotemtrainer_totem_opponent%` | El nombre del rival. |
+| `%exyliatotemtrainer_totem_opponent_pops%` | Los pops del rival en la ronda actual. |
+| `%exyliatotemtrainer_totem_round%` | La ronda que se juega. Un empate repetido conserva su número. |
+| `%exyliatotemtrainer_totem_score%` | Rondas ganadas, las tuyas primero: `2 - 1`. |
+| `%exyliatotemtrainer_totem_match_state%` | `waiting`, `starting`, `active`, `round_end`, `ending` o `finished`. |
+
+## Tablas de clasificación
+
+Una tabla es de un modo y está ordenada por una categoría. La forma general es:
+
+```text
+%exyliatotemtrainer_totem_top_<modo>_<categoria>_<n>%
+%exyliatotemtrainer_totem_top_<modo>_<categoria>_<n>_value%
+```
+
+La primera es el nombre del jugador en la posición `n`, la segunda el número que lo puso ahí.
+
+| Categoría | Ordena por | El valor se lee |
+|---|---|---|
+| `best_score` | Mejor puntuación de sesión, la más alta primero | `87` |
+| `best_pops` | Más pops en una sesión | `112` |
+| `fastest_average` | Mejor reacción media, la más baja primero | `0.41s` |
+| `best_streak` | Racha más larga de pops sin fallo | `64` |
+| `longest_run` | Sesión más larga | `95.30s` |
+
+```text
+%exyliatotemtrainer_totem_top_chaos_best_score_1%
+%exyliatotemtrainer_totem_top_chaos_best_score_1_value%
+%exyliatotemtrainer_totem_top_acceleration_fastest_average_3%
+```
+
+Un id de modo o una categoría con guiones bajos se reconoce entero: `top_my_mode_best_score_1` encuentra
+el modo `my_mode`. Hasta que la tabla se ha leído una vez, ambas formas responden el texto de
+`menu.loading`, `Loading…`, y lanzan la lectura. Una posición más allá del final de la tabla, un modo
+desconocido o una categoría desconocida dejan el texto sin cambiar. Ver
+[Estadísticas](/docs/exyliatotemtrainer/estadisticas) para cómo se construye una tabla.

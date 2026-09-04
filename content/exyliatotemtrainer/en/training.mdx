@@ -1,0 +1,124 @@
+---
+title: "Training"
+description: "The totem mechanic, the solo session from start to summary, and what the plugin protects while a player is inside."
+---
+
+Solo training is one player, one engine, one sidebar. The engine is the same object a duel uses, so
+everything on this page about hits, reactions and protections applies to duels too; what a duel adds
+is on [Duels](/docs/exyliatotemtrainer/duels).
+
+## The mechanic
+
+Every interval the engine deals a **lethal hit** that a totem in either hand absorbs. The player then
+has to get the next totem into a hand before the following hit. The time between the hit and the
+re-equip is the reaction, and the reaction is what gets graded.
+
+| Step | What happens |
+|---|---|
+| Before the hit | The hands are checked server-side. Main hand or off hand holding a totem: the hit is dealt. Neither: the player **failed**, no hit is dealt, no death happens. |
+| The hit | `Player#damage` with cause `CUSTOM` and a lethal amount. The totem pops. |
+| The re-equip | Swapping hands, scrolling the hotbar, clicking or dragging in the inventory: any way a totem reaches a hand. Evaluated one tick later, when the server's inventory is the one the player sees. |
+| The reaction | Measured from the hit to the re-equip, in nanoseconds, then graded. See [Grading](/docs/exyliatotemtrainer/grading). |
+| The restock | One tick after the pop the mode puts totems back: a stocked mode tops up its count in random empty slots, a full-inventory mode refills or completes. See [Modes](/docs/exyliatotemtrainer/modes). |
+
+Ticks drive the cadence; nanoseconds measure the reaction. The interval is the speed the player picked
+in ticks, unless the mode draws it from a window or speeds it up.
+
+<Callout type="note" title="Nobody ever sees a death screen">
+A player without a totem in hand is not hit at all. The engine reports a fail instead, so a session
+ends with a title and a message, never with a respawn.
+</Callout>
+
+## A session, start to finish
+
+`/totem train <mode> [ticks]`, or a mode in the **Solo** screen of `/totem` after picking a speed.
+
+<Steps>
+  <Step title="Checks">
+    The mode has to exist and the interval has to be one of `training.ticks`. A player already
+    training or duelling reads "Finish what you are doing first."; one held by another Exylia plugin
+    reads "You are busy in %plugin%."; one another plugin advises against taking reads "Not right now:
+    %reason%." See [Compatibility](/docs/exyliatotemtrainer/compatibility).
+  </Step>
+  <Step title="Claim and snapshot">
+    The player is claimed for `TRAINING`, their location is remembered, their inventory is saved and
+    cleared, and they are put in **adventure** mode whatever they walked in as.
+  </Step>
+  <Step title="Isolation">
+    They join a group of their own: they see nobody and nobody sees them, and they cannot be hit or
+    touched from outside. See [Compatibility](/docs/exyliatotemtrainer/compatibility).
+  </Step>
+  <Step title="Arena, or right here">
+    The least-loaded ready arena is picked and the player is sent to its spawn A. With no ready arena
+    they train **where they stand**. See [Arenas](/docs/exyliatotemtrainer/arenas).
+  </Step>
+  <Step title="Countdown">
+    `training.countdown` seconds (`3.0` by default) with a title and an action bar. The default subtitle
+    tells them to press E and swap totems from their inventory. **Punching the air ends the countdown
+    at once.**
+  </Step>
+  <Step title="The drill">
+    The totems are handed out, the held slot is set to the first one, the first hit is scheduled and
+    the training sidebar appears. See [Scoreboard](/docs/exyliatotemtrainer/scoreboard).
+  </Step>
+</Steps>
+
+The chat confirms the start: "Training started: %mode% · %ticks% ticks."
+
+## How a session ends
+
+| Reason | When | What the player sees |
+|---|---|---|
+| `FAILED` | No totem in hand when a hit landed | The `fail` effect ("POPPED OUT") and "Missed a totem after %pops% pops.", then the summary |
+| `COMPLETED` | A full-inventory mode without refill ran out of totems | The `training-complete` effect ("COMPLETE") and "Training complete!", then the summary |
+| `LEFT` | `/totem leave`, or the leave button in the menu | The summary; the command also says "You left." |
+| `DISCONNECTED` | The player quit | Nothing; the numbers are stored |
+| `CANCELLED` | Another plugin took the player, or the plugin was disabled | Nothing; the numbers are stored |
+
+Whatever the reason, the session is stored when it had **at least one pop or one fail**: the
+lifetime profile moves and the record for that mode and speed is merged. See
+[Statistics](/docs/exyliatotemtrainer/stats). The `TrainingEndEvent` carries the same reason.
+
+### The summary
+
+`training.summary` in `messages.yml` is a list of lines, sent after `FAILED`, `COMPLETED` and `LEFT`.
+It knows:
+
+| Placeholder | Value |
+|---|---|
+| `%mode%` | The mode's display name |
+| `%ticks%` | The interval picked |
+| `%pops%` | Totems popped |
+| `%fails%` | Fails, 0 or 1 in solo training |
+| `%best%` | Fastest reaction, seconds with two decimals |
+| `%average%` | Average reaction, seconds with two decimals |
+| `%streak%` | Best streak of consecutive pops |
+| `%score%` | The 0 to 100 score |
+| `%duration%` | How long the session lasted |
+
+## While inside
+
+The same protections apply to solo training and duels.
+
+| What | Rule |
+|---|---|
+| Damage | Everything but the engine's own hit is cancelled, including another plugin's `damage()` call with the same cause. |
+| Hunger | Frozen. |
+| Items | Dropping and picking up are cancelled. |
+| Other players | Hitting, right-clicking or being hit by anyone outside your group is cancelled. Players inside a session are not collidable. |
+| Commands | Only the labels in `match.allowed-commands` run (`totem`, `tt`, `totemtrainer`, `msg`, `r`, `tell`, `w` by default). Anything else reads "Leave with /totem leave before using that command." A `plugin:command` prefix is stripped before the check. |
+| Movement | Free in solo training. **Pinned on the horizontal axes in a duel**, falling allowed. |
+| Leaving by other means | A teleport the plugin did not do (an ender pearl, a chorus fruit) or a world change ends the session, or forfeits the duel. |
+| A death from elsewhere | If another plugin kills the player through a path the damage guard did not see, the inventory is kept, the drops are cleared, the console warns and the player is taken out. |
+
+## Leaving
+
+Exit runs in a fixed order: the engine stops and the loadout is taken back, the inventory and game
+mode are restored from the snapshot, the player is teleported back to where they came from (or to
+`arena.return-location`), and the claim is released **last**, so no other mode can dress the player
+while their inventory is still on its way back.
+
+<Callout type="note" title="After a crash">
+A snapshot left behind by a restart is restored on the player's next join, and they are sent back to
+where they were before the session started. Nobody wakes up inside an arena.
+</Callout>

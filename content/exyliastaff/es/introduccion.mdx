@@ -1,0 +1,58 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaStaff, qué resuelve y cómo está organizada esta documentación."
+---
+
+ExyliaStaff es un kit de moderación para un servidor o una red. Está construido como dieciséis módulos
+sobre ExyliaLib, cada uno activable desde `config.yml`, cada uno con sus propios archivos bajo
+`modules/<id>/`: un modo staff con una hotbar de herramientas, un vanish a nivel de paquetes con niveles
+de rango, un freeze para screenshares, espejos de inventario silenciosos, teletransportes de staff,
+visión x-ray, un chat de staff entre servidores, un bypass del chat global, reportes, peticiones de
+ayuda, una escalera de sanciones, un detector de sospecha de x-ray, una lista de staff, un registro del
+staff y un panel de administración que investiga al equipo.
+
+Todo lo que hace un miembro del staff de servicio deja rastro: el registro cuenta tiempo y acciones por
+sesión, la auditoría anota cada comando, y el panel de administración convierte ambos en un tablero del
+equipo, una puntuación de riesgo y una cuadrícula de cobertura. Un módulo apagado no registra nada: ni
+comandos, ni listeners, ni tablas.
+
+## Qué incluye
+
+<Cards>
+  <Card title="Modo staff" href="/docs/exyliastaff/modo-staff">
+    Un snapshot del inventario del jugador, una hotbar de herramientas configurable, una sesión que sobrevive a las reconexiones.
+  </Card>
+  <Card title="Vanish" href="/docs/exyliastaff/vanish">
+    Invisibilidad a nivel de paquetes, niveles de rango para que un admin se oculte de un helper, líneas falsas de entrada y salida.
+  </Card>
+  <Card title="Freeze" href="/docs/exyliastaff/freeze">
+    Un anclaje en el cliente, oscuridad, chat aislado, un sidebar en ambos lados, alertas cuando el objetivo se desconecta.
+  </Card>
+  <Card title="Reportes y helpop" href="/docs/exyliastaff/reportes">
+    Motivos con pesos, una prioridad calculada al leer, alertas clicables en todos los servidores.
+  </Card>
+  <Card title="Sanciones" href="/docs/exyliastaff/sanciones">
+    Categorías, motivos y una escalera de escalado, ejecutados a través de los comandos de tu plugin de bans.
+  </Card>
+  <Card title="Minería" href="/docs/exyliastaff/mineria">
+    Nueve factores de sospecha sobre vetas enterradas, una puntuación que decae, alertas que no se repiten en cada bloque.
+  </Card>
+  <Card title="Panel de administración" href="/docs/exyliastaff/panel-admin">
+    El tablero del equipo, el feed de auditoría, marcas, notas, cobertura por día de la semana y los interruptores de módulos.
+  </Card>
+  <Card title="Comandos" href="/docs/exyliastaff/comandos">
+    Todos los comandos de todos los módulos, con sus alias y su permiso.
+  </Card>
+</Cards>
+
+## Cómo está organizada
+
+**Empezar** instala el plugin y recorre un primer turno. **Módulos** tiene una página por
+funcionalidad: qué hace, su archivo, sus comandos y sus reglas. **Referencia** reúne todos los comandos,
+permisos y placeholders, los archivos del núcleo, la API y las preguntas más frecuentes.
+
+<Callout type="note" title="De dónde salen los números">
+Cada valor por defecto, mensaje y regla de estas páginas se leyó del código fuente del plugin en la
+versión 1.1.0. Cuando una página dice que un valor no es configurable, es porque no existe ninguna clave
+para él.
+</Callout>

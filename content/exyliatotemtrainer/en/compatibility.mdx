@@ -1,0 +1,73 @@
+---
+title: "Compatibility"
+description: "How the plugin shares players with the rest of the Exylia ecosystem, what it needs from the server, and what it deliberately does not do."
+---
+
+A player belongs to one Exylia mode at a time, and ExyliaLib owns that fact. This plugin reads it
+before anything starts and writes it while a player is inside.
+
+## One player, one activity
+
+Entering solo training or a duel takes a **claim** through ExyliaLib's
+[`Sessions`](/docs/exylialib/players#one-player-one-activity), of kind `TRAINING` or `MATCH`.
+ExyliaPracticeCore, ExyliaFFA, ExyliaSandBox, ExyliaEvents and anything else built on the library see
+the player as taken for as long as the claim lasts, and the claim is released last on the way out,
+after the inventory is back.
+
+The question is asked in both directions, and in two halves:
+
+| Half | What it means | What the player reads |
+|---|---|---|
+| **Claim** | Another plugin holds the player: an event, an FFA arena, a practice match. | "You are busy in %plugin%.", naming that plugin. |
+| **Advice** | Nobody holds the player, but their plugin says they are mid-something, such as Practice's "in a party". | "Not right now: %reason%.", in that plugin's own words. |
+
+Advice is not a veto: a plugin that must have the player is unaffected. It is what stops a duel
+request from being sent to somebody halfway through a kit editor, and what stops this plugin from
+pulling a party member out of a practice lobby.
+
+This plugin offers advice of its own: while a duel request is **open on either side**, both players
+are reported as "answering a duel request". Neither of them holds a claim yet, and taking one of them
+away is how the other ends up waiting for an answer that can no longer come.
+
+If another plugin later asks for a player this one holds, the library tells this plugin to let go: a
+solo session ends as `CANCELLED`, a duel is forfeited.
+
+## The opponent picker
+
+The **Duel** screen lists everyone online except the viewer and the players they cannot see, so a
+vanished staff member is not on it. Players who are free come first; a busy player stays on the list,
+sinks below every free one and cannot be clicked, with the reason on the row: "Busy right now" for a
+claim, or the advising plugin's own words. The list is refreshed every second while the window is
+open, so somebody who just stepped into an arena drops out of reach without being reopened.
+
+## After a crash
+
+Entering a session saves the player's inventory before it is cleared. If the server dies between the
+two, the snapshot is still there: on the player's next join it is restored, and they are sent back to
+where the oldest snapshot says they were before any of this started, or to `arena.return-location`
+when one is set. Nobody wakes up inside an arena holding a stack of totems.
+
+## What the server needs
+
+| Plugin | Role |
+|---|---|
+| `ExyliaLib` | Configuration, menus, database, placeholders, effects, sessions, snapshots, teleports. The Lukittu loader installs it, which is why `plugin.yml` lists it as soft. |
+| `packetevents` | Declared as a hard dependency: the server does not load the plugin without it. It is what draws the visual isolation, so two duels in one arena cannot see each other. |
+| `PlaceholderAPI` | Optional. Publishes the placeholders outside the plugin under two identifiers, `exyliatotemtrainer` and `exyliatotem`. See [Placeholders](/docs/exyliatotemtrainer/placeholders). |
+
+<Callout type="warning" title="If the library's packet layer is unavailable">
+Isolation falls back to `hidePlayer` and `showPlayer`, and the console says so once: "PacketEvents is
+missing: match isolation falls back to hidePlayer". The rule is the same, only applied more coarsely.
+</Callout>
+
+Folia is supported: everything that touches a player runs on that player's thread, a match's own
+bookkeeping runs at its arena, and the events the plugin fires arrive on the thread that owns the
+player they are about.
+
+## What is not here
+
+- **No queue.** A duel is always a chosen opponent: `/totem duel <player>` or a click in the picker.
+- **No rating.** Wins, losses, streaks and a win rate, nothing ranked. The leaderboards are about what
+  a mode produces, and they live on [Statistics](/docs/exyliatotemtrainer/stats).
+- **No cross-server play.** Servers sharing a database share arenas, profiles, records and history,
+  but a duel happens on the server both players are on.

@@ -1,0 +1,131 @@
+---
+title: "Vanish"
+description: "Packet-level invisibility, rank levels, what a vanished player cannot do, and how the state follows them across servers."
+---
+
+Vanish is a packet visibility rule: a vanished player is not sent to the clients that may not see
+them, so there is no tab entry, no sound and no footsteps to hide. Who may see them is decided by a
+permission and a level.
+
+Module id `vanish`, switch `modules.vanish`, files under `modules/vanish/`. Needs PacketEvents.
+
+## Who sees whom
+
+A viewer sees a vanished player when they hold `exyliastaff.vanish.see` **and** their level is at
+least the vanished player's level. The level is the highest `exyliastaff.vanish.level.<n>` node the
+player holds, from `1` to `levels.max`; no node is level `0`. Equal levels see each other, so a team
+of the same rank still coordinates, and an admin at level 3 is hidden from a helper at level 1 even
+though the helper sees vanished players. Levels are cached for thirty seconds per player, and
+`levels.enabled: false` makes everyone level 0.
+
+The same rule decides who gets the fake join and quit lines, who sees the coloured, glowing nametag,
+and who keeps other plugins' join and quit messages about a vanished player. A player always sees
+themself.
+
+## Commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/vanish [player]` | `exyliastaff.vanish` | Toggles. `/v` is an alias. |
+| `/vanish on [player]`, `/vanish off [player]` | `exyliastaff.vanish` | Sets the state. |
+
+Naming another player needs `exyliastaff.vanish.others`, and a player whose level is lower than the
+target's is refused with "outranks you". When vanish is changed for somebody else, the target is told
+who did it and the sender gets a confirmation; the target's own enable effect does not play. The
+hotbar's dye toggles the clicking player's vanish. From the console, a player must be named.
+
+## While vanished
+
+| Always | Configurable |
+|---|---|
+| Items are not picked up | No damage taken (`invulnerable`) |
+| Mobs do not target the player | No hunger lost, eating still works (`no-hunger`) |
+| | Pressure plates and tripwires do not trigger (`block-physical-interaction`) |
+| | No breaking or placing blocks (`silent-mode`, off by default) |
+
+## Joins, quits and other servers
+
+With `on-join.remember` on, an enabled vanish is a row in `staff_vanish`. Before the player is even
+logged in, the row is read, waiting up to three seconds for the database, so the first tab list the
+other players receive already excludes them. Their join message is nulled and, for two seconds, any
+chat line from another plugin containing their name is dropped for viewers who may not see them.
+Staff who may see them get the fake join line instead, and the player is told they are still vanished.
+
+A player who lost `exyliastaff.vanish` while away joins visible, and the row is deleted. Losing it
+while online is noticed within five seconds and makes them visible with a message.
+
+On quit the row stays, so the vanish is restored on the next server. Every change is also published
+on the `vanish` channel, which is how `%staff_vanish_count%` counts vanished staff on every server.
+
+<Callout type="warning" title="Disabling the module makes everyone visible">
+`/exyliastaff module disable vanish` unvanishes every vanished player online and deletes their rows,
+so they also rejoin visible.
+</Callout>
+
+## With staff mode
+
+Staff mode vanishes on enter and unvanishes on exit through this module, silently: no message and no
+effect, though the hotbar item still redraws. If the vanish module is off, staff mode simply does not
+vanish anyone.
+
+## Configuration
+
+```yaml title="plugins/ExyliaStaff/modules/vanish/config.yml"
+invulnerable: true
+no-hunger: true
+block-physical-interaction: true
+silent-mode: false
+levels:
+  enabled: true
+  max: 10
+on-join:
+  remember: true
+fake-messages:
+  enabled: true
+  swallow-others: true
+nametag:
+  enabled: true
+  color: GRAY
+  glow: true
+effects:
+  enable:
+    action-bar:
+      text: '{success}You are now {highlight}invisible{success}.'
+      duration: 3.0
+    sound:
+      name: ENTITY_EXPERIENCE_ORB_PICKUP
+      volume: 0.6
+      pitch: 1.4
+  disable:
+    action-bar:
+      text: '{warning}You are now {highlight}visible{warning}.'
+      duration: 3.0
+    sound:
+      name: ENTITY_EXPERIENCE_ORB_PICKUP
+      volume: 0.6
+      pitch: 0.8
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `levels.max` | `10` | Highest level number looked up. Raise it only if you hand out more. |
+| `on-join.remember` | `true` | Keep vanish across relogs and server switches. |
+| `fake-messages.enabled` | `true` | Send the fake join and quit lines to staff who may see the player. |
+| `fake-messages.swallow-others` | `true` | Drop other plugins' join and quit lines about a vanished player. |
+| `nametag.color` | `GRAY` | A named text colour. Unknown names fall back to gray. |
+| `nametag.glow` | `true` | Outline vanished players through walls for staff who may see them. |
+
+## Messages
+
+`modules/vanish/messages.yml`: `enabled`, `disabled`, `enabled-other`, `disabled-other`,
+`enabled-by` and `disabled-by` with `%staff%`, `already-enabled`, `already-disabled`,
+`permission-lost`, `fake-join` and `fake-quit` with `%player%`, `restored`, `higher-level`, and the
+two words `status-on` and `status-off` that the placeholder returns.
+
+## Placeholders
+
+| Placeholder | Value |
+|---|---|
+| `%staff_vanish_status%` | `status-on` or `status-off` for the viewer. |
+| `%staff_vanish_count%` | Vanished staff on every server. |
+| `%staff_vanished%` | `true` while the viewer is vanished, from the core. |

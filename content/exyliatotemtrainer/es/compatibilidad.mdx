@@ -1,0 +1,77 @@
+---
+title: "Compatibilidad"
+description: "Cómo comparte jugadores el plugin con el resto del ecosistema Exylia, qué necesita del servidor y qué no hace a propósito."
+---
+
+Un jugador pertenece a un solo modo de Exylia a la vez, y ExyliaLib es dueña de ese hecho. Este
+plugin lo lee antes de que empiece nada y lo escribe mientras un jugador está dentro.
+
+## Un jugador, una actividad
+
+Entrar en entrenamiento en solitario o en un duelo toma un **reclamo** a través de
+[`Sessions`](/docs/exylialib/jugadores#un-jugador-una-actividad) de ExyliaLib, de tipo `TRAINING` o
+`MATCH`. ExyliaPracticeCore, ExyliaFFA, ExyliaSandBox, ExyliaEvents y cualquier otro plugin construido
+sobre la librería ven al jugador como ocupado mientras dure el reclamo, y el reclamo se libera al final
+de la salida, después de que el inventario haya vuelto.
+
+La pregunta se hace en los dos sentidos, y en dos mitades:
+
+| Mitad | Qué significa | Qué lee el jugador |
+|---|---|---|
+| **Reclamo** | Otro plugin retiene al jugador: un evento, una arena de FFA, una partida de practice. | "You are busy in %plugin%.", nombrando ese plugin. |
+| **Consejo** | Nadie retiene al jugador, pero su plugin dice que está en medio de algo, como el "in a party" de Practice. | "Not right now: %reason%.", con las palabras de ese plugin. |
+
+El consejo no es un veto: un plugin que necesite al jugador no se ve afectado. Es lo que evita que se
+envíe una solicitud de duelo a alguien a medio editor de kit, y lo que evita que este plugin saque a un
+miembro de una party de un lobby de practice.
+
+Este plugin ofrece su propio consejo: mientras una solicitud de duelo está **abierta en cualquiera de
+los dos lados**, ambos jugadores se reportan como "answering a duel request". Ninguno de los dos tiene
+reclamo todavía, y llevarse a uno es la forma de que el otro se quede esperando una respuesta que ya
+no puede llegar.
+
+Si otro plugin pide después a un jugador que este retiene, la librería le dice a este plugin que lo
+suelte: una sesión en solitario termina como `CANCELLED`, un duelo se rinde.
+
+## El selector de rivales
+
+La pantalla **Duel** lista a todos los conectados salvo quien mira y los jugadores que no puede ver,
+así que un miembro del staff en vanish no aparece. Los jugadores libres van primero; un jugador
+ocupado sigue en la lista, baja por debajo de todos los libres y no se puede pulsar, con el motivo en
+su fila: "Busy right now" para un reclamo, o las palabras del plugin que desaconseja. La lista se
+refresca cada segundo mientras la ventana está abierta, así que quien acaba de entrar en una arena
+queda fuera de alcance sin tener que reabrirla.
+
+## Después de un crash
+
+Entrar en una sesión guarda el inventario del jugador antes de vaciarlo. Si el servidor muere entre las
+dos cosas, la instantánea sigue ahí: en la siguiente entrada del jugador se restaura, y se le envía a
+donde la instantánea más antigua dice que estaba antes de que empezara todo esto, o a
+`arena.return-location` cuando hay una. Nadie despierta dentro de una arena con una pila de tótems.
+
+## Qué necesita el servidor
+
+| Plugin | Papel |
+|---|---|
+| `ExyliaLib` | Configuración, menús, base de datos, placeholders, efectos, sesiones, instantáneas, teletransportes. El loader de Lukittu la instala, por eso `plugin.yml` la lista como blanda. |
+| `packetevents` | Declarado como dependencia dura: el servidor no carga el plugin sin él. Es lo que dibuja el aislamiento visual, para que dos duelos en una arena no se vean entre sí. |
+| `PlaceholderAPI` | Opcional. Publica los placeholders fuera del plugin bajo dos identificadores, `exyliatotemtrainer` y `exyliatotem`. Ver [Placeholders](/docs/exyliatotemtrainer/placeholders). |
+
+<Callout type="warning" title="Si la capa de paquetes de la librería no está disponible">
+El aislamiento recurre a `hidePlayer` y `showPlayer`, y la consola lo dice una vez: "PacketEvents is
+missing: match isolation falls back to hidePlayer". La regla es la misma, solo aplicada de forma más
+gruesa.
+</Callout>
+
+Folia está soportado: todo lo que toca a un jugador corre en el hilo de ese jugador, la contabilidad
+de una partida corre en su arena, y los eventos que dispara el plugin llegan en el hilo del jugador al
+que se refieren.
+
+## Qué no hay aquí
+
+- **Sin cola.** Un duelo es siempre un rival elegido: `/totem duel <jugador>` o un clic en el selector.
+- **Sin rating.** Victorias, derrotas, rachas y un porcentaje de victorias, nada clasificatorio. Los
+  leaderboards tratan de lo que produce un modo, y están en
+  [Estadísticas](/docs/exyliatotemtrainer/estadisticas).
+- **Sin juego entre servidores.** Los servidores que comparten base de datos comparten arenas,
+  perfiles, récords e historial, pero un duelo ocurre en el servidor en el que están los dos jugadores.

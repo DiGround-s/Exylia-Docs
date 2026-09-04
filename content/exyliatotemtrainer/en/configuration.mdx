@@ -1,0 +1,319 @@
+---
+title: "Configuration"
+description: "config.yml key by key, what messages.yml and scoreboards.yml hold, the menu files, and where the database is set."
+---
+
+Everything is generated in `plugins/ExyliaTotemTrainer/` on first boot, with comments. Edit the files
+there, never the copies in the jar. Times are seconds with decimals unless a key says ticks; twenty ticks
+are one second. Colours use palette tokens such as `{primary}` or `{success}`.
+
+## config.yml
+
+```yaml title="plugins/ExyliaTotemTrainer/config.yml"
+training:
+  modes:
+    normal:
+      display-name: Normal
+      totems: 0
+      refill: false
+      icon: CHEST
+      description: One full inventory of totems. When it runs out, you are done.
+    infinite:
+      display-name: Infinite
+      totems: 0
+      refill: true
+      icon: TOTEM_OF_UNDYING
+      description: A full inventory, refilled forever. It ends when you miss one.
+    random:
+      display-name: Random
+      totems: 1
+      refill: false
+      icon: ENDER_EYE
+      description: A single totem, in a different random slot after every pop.
+    chaos:
+      display-name: Chaos
+      totems: 1
+      refill: false
+      random-interval:
+        min-ticks: 10
+        max-ticks: 30
+      icon: ENDER_PEARL
+      description: Random slot and random timing. Nothing is where you left it.
+    acceleration:
+      display-name: Acceleration
+      totems: 3
+      refill: false
+      speed-up:
+        every: 10
+        by: 5
+        min-ticks: 5
+      icon: FIREWORK_ROCKET
+      description: Three totems on screen, faster every 10 pops. Find your ceiling.
+  ticks: [25, 20, 15, 10, 5]
+  default-ticks: 20
+  countdown: 3.0
+
+performance:
+  defaults:
+    perfect: 0.25
+    excellent: 0.40
+    good: 0.60
+    ok: 0.90
+  by-ticks:
+    "10":
+      perfect: 0.15
+      excellent: 0.25
+      good: 0.35
+      ok: 0.45
+  by-mode: {}
+  points:
+    perfect: 100
+    excellent: 85
+    good: 70
+    ok: 50
+    slow: 25
+  fail-penalty: 15
+  full-credit-pops: 20
+
+feedback:
+  perfect:
+    effect:
+      action-bar:
+        text: "{success}⚡ PERFECT {muted}· {letters}%reaction%s"
+        duration: 2.0
+        time-style: auto
+      sound:
+        name: ENTITY_EXPERIENCE_ORB_PICKUP
+        volume: 0.8
+        pitch: 1.8
+        category: MASTER
+    chat: "%prefix% {success}Perfect pop! {highlight}%reaction%s"
+  # excellent, good, ok and slow have the same shape, with an empty chat line.
+  fail:
+    title:
+      text: "{error}&lPOPPED OUT"
+      subtitle: "{letters}You did not swap in time"
+      fade-in: 0.0
+      stay: 2.0
+      fade-out: 0.5
+      time-style: auto
+    sound:
+      name: ENTITY_ITEM_BREAK
+      volume: 1.0
+      pitch: 0.8
+      category: MASTER
+  countdown:
+    title:
+      text: "{primary}&l%time%"
+      subtitle: "{letters}Press {highlight}E {letters}and swap totems from your inventory"
+      fade-in: 0.0
+      stay: 1.0
+      fade-out: 0.2
+      time-style: auto
+    action-bar:
+      text: "{secondary}Starting in {highlight}%time%s"
+      duration: 2.0
+      time-style: auto
+    sound:
+      name: BLOCK_NOTE_BLOCK_HAT
+      volume: 1.0
+      pitch: 1.4
+      category: MASTER
+  # match-found, round-won, round-lost, round-draw, match-won, match-lost and
+  # training-complete are effects of the same shape.
+
+match:
+  formats: [1, 3, 5, 7]
+  default-format: 3
+  allow-even-formats: false
+  round-delay: 3.0
+  result-delay: 5.0
+  duel-request-expiry: 30.0
+  allowed-commands: [totem, tt, totemtrainer, msg, r, tell, w]
+
+leaderboard:
+  entries: 10
+  cache-seconds: 300
+
+history:
+  entries: 20
+  retention-days: 30
+  prune-interval-minutes: 60
+
+arena:
+  max-matches-per-arena: 0
+  return-location: ""
+
+debug: false
+```
+
+### `training`
+
+| Key | Default | What it does |
+|---|---|---|
+| `modes` | five modes | One block per mode; a new key is a new mode, no code involved. The key is the mode id used by commands, records, boards and placeholders. Menus list modes in file order. See [Modes](/docs/exyliatotemtrainer/modes). |
+| `modes.<id>.display-name` | | What players see. Palette tokens allowed. |
+| `modes.<id>.totems` | | Totems kept in random slots at once; the popped one comes back in another slot. `0` hands out a full inventory instead. |
+| `modes.<id>.refill` | | Full-inventory modes only: hand out another inventory once the last totem is gone. `false` ends the session there. |
+| `modes.<id>.random-interval` | absent | `min-ticks` and `max-ticks`. Every interval is drawn from the window, shifted so the picked speed sits at its centre. `max-ticks: 0` turns it off, and the block is left out of the file. |
+| `modes.<id>.speed-up` | absent | `every` hits between two speed-ups, `by` ticks taken off each time, `min-ticks` the floor. `by: 0` or `every: 0` turns it off, and the block is left out. |
+| `modes.<id>.icon` | | Material or head used in menus. |
+| `modes.<id>.description` | | One line shown under the mode in menus. |
+| `ticks` | `[25, 20, 15, 10, 5]` | The intervals between hits a player may pick. Any other value is refused. |
+| `default-ticks` | `20` | The interval used when a command leaves it out and the first time a player opens a picker. |
+| `countdown` | `3.0` | Seconds before the first hit, in training and in every duel round. `0` starts at once. |
+
+### `performance`
+
+| Key | Default | What it does |
+|---|---|---|
+| `defaults` | `0.25 / 0.40 / 0.60 / 0.90` | The slowest reaction, in seconds, that still earns `perfect`, `excellent`, `good` and `ok`. Slower than `ok` is `slow`. |
+| `by-ticks` | `"10"` block | Overrides by tick interval, keyed by the interval as text. Checked first. |
+| `by-mode` | empty | Overrides by mode id. Checked after `by-ticks`. |
+| `points` | `100 / 85 / 70 / 50 / 25` | Points each grade is worth in the 0–100 score. |
+| `fail-penalty` | `15` | Points removed from the score per fail. |
+| `full-credit-pops` | `20` | Pops a session needs before its score counts in full; below that the mean is scaled by how far short it fell. `0` scores the mean alone. |
+
+See [Grading](/docs/exyliatotemtrainer/grading) for the formula.
+
+### `feedback`
+
+Every entry is an ExyliaLib effect: `title`, `action-bar`, `boss-bar`, `sound`, `particle` and
+`firework`, each optional. A sub-section that does nothing is left out of the file, and removing a
+section keeps that channel quiet.
+
+| Key | Fires when | Placeholders |
+|---|---|---|
+| `perfect`, `excellent`, `good`, `ok`, `slow` | A pop earned that grade. Each has an `effect` and a `chat` line, empty for none. | `%grade%` (`PERFECT`…), `%reaction%` in seconds, `%pops%`, `%streak%` |
+| `fail` | No totem in hand when a hit landed. | — |
+| `countdown` | Counting down before the first hit; the title and action bar are refreshed with the time left. | `%time%` |
+| `match-found` | Both duellists arrived in the arena. | — |
+| `round-won`, `round-lost` | A round was decided. | — |
+| `round-draw` | Both sides dropped their totem in the same tick; the round is replayed. | — |
+| `match-won`, `match-lost` | The duel was decided. | — |
+| `training-complete` | A full-inventory mode without refill used its last totem. | — |
+
+The effect keys are ExyliaLib's: `title { text, subtitle, fade-in, stay, fade-out, time-style }`,
+`action-bar { text, duration, time-style }`, `sound { name, volume, pitch, category }`. See the
+[library's effects page](/docs/exylialib/effects) for `boss-bar`, `particle` and `firework`.
+
+### `match`
+
+| Key | Default | What it does |
+|---|---|---|
+| `formats` | `[1, 3, 5, 7]` | Best-of lengths offered in the duel screen and accepted by `/totem duel`. |
+| `default-format` | `3` | The length used when a command leaves it out and the first time a player opens the picker. |
+| `allow-even-formats` | `false` | Whether even lengths in `formats` are offered at all. |
+| `round-delay` | `3.0` | Seconds between a round ending and the next countdown. |
+| `result-delay` | `5.0` | Seconds the result stays on screen before both players are sent back. |
+| `duel-request-expiry` | `30.0` | Seconds a request stays open. Never less than one. |
+| `allowed-commands` | `[totem, tt, totemtrainer, msg, r, tell, w]` | Command labels a player may still run while training or in a duel. A `plugin:command` prefix is stripped before the check. |
+
+### `leaderboard`
+
+| Key | Default | What it does |
+|---|---|---|
+| `entries` | `10` | Rows shown per board. |
+| `cache-seconds` | `300` | Seconds a board is kept before the database is asked again. Never less than five. |
+
+### `history`
+
+| Key | Default | What it does |
+|---|---|---|
+| `entries` | `20` | Duels shown to a player in `/totem history`. |
+| `retention-days` | `30` | Duels older than this are deleted. `0` keeps everything. |
+| `prune-interval-minutes` | `60` | How often the prune runs. The first sweep is a minute after start. |
+
+### `arena`
+
+| Key | Default | What it does |
+|---|---|---|
+| `max-matches-per-arena` | `0` | Simultaneous duels and solo sessions one arena hosts. `0` is unlimited. |
+| `return-location` | empty | Where a player is sent after leaving, as `world,x,y,z` or `world,x,y,z,yaw,pitch`. Empty sends them back to where they came from. |
+
+### `debug`
+
+`false` by default. `true` prints debug lines to the console.
+
+## messages.yml
+
+Every line the plugin says. `%prefix%` expands to the `prefix` value at the top of the file,
+`{primary}&lTOTEM &8•&r` by default. Colours are palette tokens, so recolouring the network never means
+editing this file; MiniMessage tags work too, and the duel request uses `<click>` and `<hover>` for its
+Accept and Decline buttons.
+
+A line may open with an effect tag, which never reaches the screen: `[sound:NAME|volume|pitch]` plays a
+sound to whoever receives the line. The defaults use three consistently: `ENTITY_VILLAGER_NO` for a
+refusal, `ENTITY_EXPERIENCE_ORB_PICKUP` for something that worked and `BLOCK_NOTE_BLOCK_PLING` for
+something that wants attention.
+
+| Section | Holds |
+|---|---|
+| `no-permission`, `player-only`, `player-not-found` | The three command refusals. |
+| `reload` | `started`, `done` (`%steps%`, `%ms%`), `failed`. |
+| `common` | `busy`, `busy-elsewhere` (`%plugin%`), `busy-advice` (`%reason%`), `not-in-anything`, `left`, `command-blocked`, and the words `yes` and `no`. |
+| `training` | `started`, `stopped`, `completed`, `failed` (`%pops%`), `unknown-mode`, `unknown-ticks`, and the `summary` list, which knows `%mode%`, `%ticks%`, `%pops%`, `%fails%`, `%best%`, `%average%`, `%streak%`, `%score%`, `%duration%`. |
+| `match` | `starting`, `round-start` (`%round%`, `%rounds%`), `round-won`, `round-lost`, `round-draw`, `ready`, `opponent-ready`, `no-arena`, `unknown-format`, `cancelled`, `opponent-left`, `forfeited`; the `round-summary` list (`%round%`, `%winner%`, `%pops%`, `%average%`, `%best%`, `%score%`, `%score_for%`, `%score_against%`) and the `match-summary` list (`%winner%`, `%loser%`, `%score_winner%`, `%score_loser%`, `%format%`, `%mode%`, `%ticks%`, `%pops%`, `%best%`, `%average%`, `%duration%`). |
+| `duel` | `request-sent`, the `request-received` list (`%player%`, `%mode%`, `%ticks%`, `%format%`, `%seconds%`), `accepted`, `expired`, `expired-sent`, `no-pending`, `target-busy`, `target-not-ready` (`%target%`, `%reason%`), `self-duel`, `denied`, `denied-by`. |
+| `admin` | What the admin screens confirm: arena created, removed, exists, not found, renamed, spawn set, enabled, disabled, duel cancelled, statistics reset, cancelled. |
+| `menu` | Words menus need that are not a whole line: the victory and defeat titles, `none` (`—`), `loading`, the empty texts of each list, the three state labels, `reason-self`, `reason-busy`, `set`, `not-set`, and `categories`. |
+
+`menu.categories` names and iconises the five leaderboard categories:
+
+```yaml title="plugins/ExyliaTotemTrainer/messages.yml"
+menu:
+  categories:
+    best_score:
+      name: Best score
+      icon: NETHER_STAR
+    best_pops:
+      name: Most pops
+      icon: TOTEM_OF_UNDYING
+    fastest_average:
+      name: Fastest average
+      icon: CLOCK
+    best_streak:
+      name: Best streak
+      icon: BLAZE_POWDER
+    longest_run:
+      name: Longest run
+      icon: FEATHER
+```
+
+## scoreboards.yml
+
+Two sidebars, `training` and `match`, driven entirely by placeholders. See
+[Scoreboard](/docs/exyliatotemtrainer/scoreboard).
+
+## menus/
+
+Every screen is a YAML file under `menus/`:
+
+| File | Screen |
+|---|---|
+| `main.yml` | The hub `/totem` opens. |
+| `training.yml` | Mode rows over the tick picker. |
+| `opponents.yml` | Who is online and free to duel. |
+| `duel.yml` | Mode, speed and format for one request. |
+| `profile.yml`, `records.yml`, `history.yml` | A player's numbers, their bests per mode and speed, their recent duels. |
+| `leaderboard_modes.yml`, `leaderboard.yml` | The mode picker and one mode's board. |
+| `result.yml` | The screen shown after a duel, with the rematch button. |
+| `admin/main.yml`, `admin/arenas.yml`, `admin/arena.yml`, `admin/duels.yml`, `admin/players.yml`, `admin/confirm.yml` | The staff screens. |
+
+The player files are copied from the jar once and then left alone, so your edits survive an update.
+The `admin/` folder is **rewritten from the jar on every start**, so a button added in a release reaches
+you; nothing you are meant to edit lives there.
+
+<Callout type="warning" title="A broken menu file does not take the plugin down">
+A file that fails to parse is reported in the console with its path and the reason, and that one screen
+does not open until it is fixed. Everything else keeps working.
+</Callout>
+
+The format is ExyliaLib's declarative menu YAML; see the [library's menus page](/docs/exylialib/menus).
+Click actions live under the `totemtrainer` namespace, for example `totemtrainer:open training`.
+
+## database.yml
+
+Written by ExyliaLib the first time the plugin starts: H2 by default, with MySQL, MariaDB, PostgreSQL
+and MongoDB as alternatives. Arenas, profiles, training records and duel history all live there. See the
+[library's database page](/docs/exylialib/database).

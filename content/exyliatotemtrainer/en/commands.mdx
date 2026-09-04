@@ -1,0 +1,63 @@
+---
+title: "Commands"
+description: "The player command with its subcommands, the staff command, and what each optional argument defaults to."
+---
+
+Two roots that never overlap. `/totem` is the player's door and opens the main menu; `/totemtraineradmin`
+is the staff door and opens the admin menu. `/tt` and `/totemtrainer` are aliases of the first, `/ttadmin`
+of the second.
+
+## Player commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/totem` | — | Opens the main menu. |
+| `/totem train <mode> [ticks]` | `exyliatotemtrainer.train` | Starts solo training in that mode. |
+| `/totem duel [player] [mode] [ticks] [bestOf]` | `exyliatotemtrainer.duel` | Without a player, opens the opponent picker. With one, sends the request straight away. |
+| `/totem accept` | `exyliatotemtrainer.duel` | Accepts the pending duel request. |
+| `/totem deny` | `exyliatotemtrainer.duel` | Declines it. |
+| `/totem profile [player]` | `exyliatotemtrainer.profile` | Opens a profile: yours, or somebody else's. `/totem stats` is an alias. |
+| `/totem leaderboard [mode] [category]` | `exyliatotemtrainer.leaderboard` | Without a mode, the mode picker; with one, that mode's board. `/totem top` is an alias. |
+| `/totem history` | `exyliatotemtrainer.history` | Your recent duels. |
+| `/totem leave` | `exyliatotemtrainer.leave` | Leaves training. Inside a duel it is a **forfeit**: the opponent wins. |
+
+### What the optional arguments default to
+
+| Argument | Default | Refused when |
+|---|---|---|
+| `ticks` | `training.default-ticks` (`20`) | The value is not in `training.ticks`. The message names the interval. |
+| `mode` (duel) | The first mode listed in `training.modes` | The id does not exist. |
+| `bestOf` | `match.default-format` (`3`) | The length is not in `match.formats`, or it is even and `allow-even-formats` is off. |
+| `category` | `best_score` | Never: an unknown category falls back to `best_score`. |
+| `mode` (leaderboard) | — | An unknown mode opens the mode picker instead of an empty board. |
+
+`/totem profile <player>` works for players the server already knows, online or not: an offline row is
+read from the database. A name the server has never seen answers that the player is not online.
+
+Tab completion suggests the configured modes, the tick presets, the offered formats and the five
+leaderboard categories.
+
+## Staff commands
+
+Everything below needs `exyliatotemtrainer.admin`.
+
+| Command | What it does |
+|---|---|
+| `/totemtraineradmin` | Opens the admin menu: arenas, running duels, players, reload. Players only. |
+| `/totemtraineradmin reload` | Reloads every file. Also from the console, and from the menu's button. |
+
+Reload runs four named steps: `configs` (`config.yml`, `messages.yml`, `scoreboards.yml`, then the prefix
+and the debug switch), `performance` (the grading thresholds are rebuilt), `scoreboards` (every board on
+screen is redrawn from the new lines) and `menus` (every screen is compiled again). The menus step also
+runs when ExyliaLib itself is reloaded. The success line reports how many steps ran and in how many
+milliseconds; a failure asks you to check the console.
+
+Reload does **not** touch arenas or player data. Both live in the database, not in a file, and are
+already what the plugin has in memory.
+
+<Callout type="note" title="There is nothing else to type">
+Arenas are created, renamed, positioned, enabled and deleted from the arena screens. Running duels are
+cancelled and player statistics reset from their own screens, each behind a confirmation. See
+[Arenas](/docs/exyliatotemtrainer/arenas). The one thing that stays a command is `reload`, because the
+console has to be able to run it.
+</Callout>

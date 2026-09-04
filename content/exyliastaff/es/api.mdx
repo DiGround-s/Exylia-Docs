@@ -1,0 +1,93 @@
+---
+title: "API"
+description: "La fachada estática con la que otro plugin pregunta por un jugador, los dos eventos que dispara cada módulo y cómo hacer que el registro te cuente."
+badge: "dev"
+---
+
+`net.exylia.exyliaStaff.api.StaffAPI` es estática y responde desde memoria: cada llamada es una lectura
+de caché, segura desde cualquier hilo. Los eventos viven en `net.exylia.exyliaStaff.api.event`.
+
+## Declarar la dependencia
+
+```yaml title="plugin.yml"
+softdepend:
+  - ExyliaStaff
+```
+
+`depend` también funciona. El loader define las clases en el classloader del propio plugin, y Bukkit
+delega entre classloaders de plugins para todo lo que esté listado como dependencia.
+
+## Preguntar por un jugador
+
+```java
+boolean onDuty   = StaffAPI.isInStaffMode(player);
+boolean hidden   = StaffAPI.isVanished(player.getUniqueId());
+boolean pinned   = StaffAPI.isFrozen(player);
+int     level    = StaffAPI.vanishLevel(player); // 0 when vanish is off or no level node
+```
+
+Cada pregunta la responde el módulo dueño de ese estado, y `false` o `0` cuando ese módulo está apagado;
+nada lanza excepciones. `vanishLevel` lee permisos, así que recibe el jugador y debe preguntarse desde un
+hilo que pueda leerlos.
+
+La clase `Permissions` del mismo paquete contiene cada nodo como una constante.
+
+## Eventos
+
+Ambos son eventos Bukkit corrientes, disparados en el hilo del jugador después de aplicar el cambio, y
+ninguno es cancelable.
+
+### StaffStateChangeEvent
+
+Una pieza del estado de staff de un jugador ha cambiado. `getPlayer()`, `getKind()` e `isEnabled()`.
+
+| Tipo | Lo dispara |
+|---|---|
+| `STAFF_MODE` | Entrar, reanudar tras una conexión, salir por cualquier motivo. |
+| `VANISH` | Cada cambio de vanish, incluidos los silenciosos del modo staff y la restauración al conectarse. |
+| `FROZEN` | Congelar y liberar, sobre el jugador congelado. |
+| `STAFF_CHAT` | El interruptor, y cuando se apaga al terminar el servicio o al perder un permiso. |
+| `GLOBAL_CHAT` | Cada cambio de modo; `isEnabled()` es `true` para global y para red. |
+| `MINING_ALERTS` | El interruptor de alertas. |
+| `XRAY_VISION` | Cada encendido o apagado real. |
+| `SPECTATOR` | El interruptor de la vista de espectador. |
+
+```java
+@EventHandler
+public void onState(StaffStateChangeEvent event) {
+    if (event.getKind() == StaffStateChangeEvent.Kind.STAFF_MODE && !event.isEnabled()) {
+        // the shift ended
+    }
+}
+```
+
+### StaffActionEvent
+
+Un miembro del staff hizo algo que merece contarse. `getStaff()`, `getAction()` y un `getTarget()`
+que puede ser nulo. El registro del staff incrementa el contador de la sesión y la auditoría guarda una
+fila; ningún módulo llama a ninguno de los dos directamente.
+
+| Acción | Cuándo |
+|---|---|
+| `freeze`, `unfreeze` | Por un jugador, no la consola. |
+| `inspect`, `enderchest`, `container` | Después de abrirse un espejo. `container` no tiene objetivo. |
+| `teleport` | Después de aterrizar, local o entre servidores. Jump y phase no tienen objetivo. |
+| `report_resolve`, `report_dismiss` | Por reporte, resolver todos incluido. |
+| `helpop_reply`, `helpop_close` | Solo cierre manual, no por tiempo agotado. |
+| `punish` | Después de ejecutarse el comando, sea cual sea su resultado. |
+| `mining_reset` | Por un jugador. |
+| `xray_toggle` | Solo cuando el cambio se recuerda. |
+
+Dispara el tuyo desde otro plugin y se cuenta y se audita como el resto:
+
+```java
+Bukkit.getPluginManager().callEvent(new StaffActionEvent(staff, "rollback", target.getUniqueId()));
+```
+
+## Acciones y menús
+
+Cada acción `staff:<name>` que ejecutan la hotbar y los menús está registrada en el registro de acciones
+de la librería bajo el namespace `staff`, así que un menú de otro plugin puede ejecutar `staff:freeze_toggle` o
+`staff:reports_open`. `StaffKeys.TARGET` y `StaffKeys.TARGET_ID` son las claves de contexto que nombran
+al jugador del que trata una acción; `StaffKeys.target(context)` las lee, o la entidad sobre la que cayó
+el clic.

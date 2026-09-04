@@ -1,0 +1,99 @@
+---
+title: "Arenas"
+description: "What an arena is, how it is created from the admin menu, how one is picked, and the rest of the staff screens."
+---
+
+An arena is a place with two spawns. It is never locked: any number of duels and solo sessions run in
+the same arena at once, and players of different sessions cannot see, hit, touch or pick up after each
+other. The arena knows nothing about who is inside it beyond a count.
+
+Arenas live in the database, in `totem_arenas`, not in a YAML file. Every server pointing at the same
+database shares them, and a reload does not touch them.
+
+## Creating an arena
+
+Everything happens in `/totemtraineradmin` → **Arenas**. There is nothing to type on a command line
+beyond `reload`.
+
+<Steps>
+  <Step title="Create">
+    Click the create button and type an **id** when asked. The id is lowercased and refused if an arena
+    already uses it. The arena appears enabled, with no spawns, and the chat says "Set both spawns next."
+  </Step>
+  <Step title="Name it">
+    On the arena screen, **Display name** opens a text input: up to 64 characters, colours allowed. This
+    is what players read; the id stays as it was.
+  </Step>
+  <Step title="Set both spawns">
+    Click **Spawn A**, then stand where it goes: the wizard stores your position. Repeat with
+    **Spawn B**. Solo training uses spawn A; a duel sends one player to each.
+  </Step>
+  <Step title="Check it is ready">
+    The summary item shows **Ready** once the arena is enabled and both spawns are set in loaded worlds.
+    The arena list marks each arena as ready or incomplete.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Set the spawns a block above the floor if you want">
+A duellist is pinned on the horizontal axes but is allowed to fall, so a spawn set slightly above the
+floor settles instead of leaving somebody hovering.
+</Callout>
+
+## Enabled, disabled, deleted
+
+| Action | Effect |
+|---|---|
+| **Disable** | No new duel or session is sent there. Every duel running in it is stopped, and the chat says so. |
+| **Enable** | The arena is offered again, provided both spawns are set. |
+| **Delete** | Behind a confirmation screen. Stops every duel running in it and removes the row. |
+
+A duel stopped this way is cancelled: both players are sent back and nothing is stored.
+
+## How an arena is picked
+
+When a duel starts or a solo session begins, the plugin takes the **ready** arena hosting the fewest
+duels and solo sessions combined. Ten duels on one server therefore spread across the arenas instead
+of stacking on the first one.
+
+```yaml title="plugins/ExyliaTotemTrainer/config.yml"
+arena:
+  max-matches-per-arena: 0
+  return-location: ""
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `max-matches-per-arena` | `0` | Sessions one arena may host at once, duels and solo sessions counted together. `0` is unlimited. An arena at its cap is skipped. |
+| `return-location` | `""` | Where a player is sent after leaving, as `world,x,y,z` or `world,x,y,z,yaw,pitch`. Empty sends them back to where they came from. |
+
+With `return-location` empty, a player goes back to the exact spot they started from. If that spot is
+unknown, they go to their world's spawn.
+
+<Callout type="note" title="No arena, no duel">
+With no ready arena, solo training still works: the player trains **where they stand**. A duel cannot
+start without one; both players read "No arena is ready. Ask an administrator."
+</Callout>
+
+## The rest of the admin menu
+
+The main screen shows how many arenas exist and how many are ready, the duels running, the solo
+sessions and the players online.
+
+| Screen | What it does |
+|---|---|
+| **Arenas** | The list above, sorted by id, each with its spawns, enabled state and current load. |
+| **Running duels** | Every duel in progress with players, score, arena, round, format, mode and speed. Each can be cancelled behind a confirmation: both players are sent back and nothing is stored. |
+| **Players** | Everyone online with their state, wins, losses and total pops. Each can have their statistics reset behind a confirmation. |
+| **Reload** | Runs the same reload as `/totemtraineradmin reload` and reopens the menu. |
+
+<Callout type="warning" title="A reset is both halves">
+Resetting a player sets their profile back to zero **and** deletes every training record they hold.
+The mode leaderboards are read from those records, so a player left with them would stay on every
+board they were on.
+</Callout>
+
+## The admin menu files
+
+The player-facing menus in `menus/` are copied from the jar once and then left alone, so your edits
+survive. The admin screens in `menus/admin/` are **rewritten from the jar on every start**: a button
+added in a new release has to reach servers that already have the folder. Do not edit them.

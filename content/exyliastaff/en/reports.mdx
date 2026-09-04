@@ -1,0 +1,118 @@
+---
+title: "Reports"
+description: "How a player reports, what stops a report, how priority is computed, and the screens staff review them in."
+---
+
+A player reports another with `/report`, picking a reason from a menu or writing one. Staff on every
+server get a clickable alert, and `/reports` lists what is open by priority, highest first.
+
+Module id `reports`, switch `modules.reports`, files under `modules/reports/`.
+
+## Reporting
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/report <player>` | `exyliastaff.report` | Opens the reasons menu. |
+| `/report <player> <reason>` | `exyliastaff.report` | Sends it. A reason id such as `cheating` becomes that reason; any other text is kept as written, without colours. |
+
+Only online players can be reported. A report is refused, in this order, when the reporter names
+themself, the target holds `exyliastaff.staff` and `allow-report-staff` is off, the reporter is still
+in the `cooldown-seconds` from their last report, or they already have `max-open-per-reporter` open
+reports. Nothing stops the same player from reporting the same target twice.
+
+## Priority
+
+Every reason has a `weight`. A report's score is that weight, plus one per other open report on the
+same target, up to three. Free text weighs 1.
+
+| Score | Level |
+|---|---|
+| 7 or more | `CRITICAL` |
+| 5 or 6 | `HIGH` |
+| 3 or 4 | `NORMAL` |
+| below 3 | `LOW` |
+
+The score is computed when it is read, never stored, so changing a weight reorders the open reports.
+`HIGH` and `CRITICAL` alerts play `alert-urgent` instead of `alert`.
+
+## Reviewing
+
+`/reports`, with `exyliastaff.reports.manage`, opens the list; `/reports <player>` opens that player's
+reports, matching an online player or the name on an open report. The blaze powder in the hotbar
+opens the list. Alerts reach every online staff member with the same permission on every server.
+
+| Screen | Rows | Clicks |
+|---|---|---|
+| List | One head per open report, by priority | Left: the player's reports. Right: resolve. Shift right: dismiss. |
+| Player | Every open report against them | Left: teleport, following them to their server. Right: resolve. Shift right: dismiss. |
+
+The list also has **Resolve all** and **Dismiss all**, and a spyglass that asks for a name. Resolving
+and dismissing both close the report, recording who did it; they differ only in the status kept for
+history. There is no claim step, and the reporter is not told when their report is closed. Closed rows
+stay in `staff_reports` forever.
+
+## Configuration
+
+```yaml title="plugins/ExyliaStaff/modules/reports/config.yml"
+reasons:
+  cheating:
+    name: Cheating
+    description: Hacks, macros or unfair clients.
+    icon: DIAMOND_SWORD
+    weight: 5
+  exploiting:
+    name: Exploiting
+    description: Abusing bugs or glitches.
+    icon: COMMAND_BLOCK
+    weight: 4
+  griefing:
+    name: Griefing
+    description: Destroying or stealing from others.
+    icon: TNT
+    weight: 3
+  toxicity:
+    name: Toxicity
+    description: Insults, harassment or spam.
+    icon: WRITABLE_BOOK
+    weight: 2
+  other:
+    name: Other
+    description: Something else worth a look.
+    icon: PAPER
+    weight: 1
+cooldown-seconds: 60
+allow-report-staff: false
+max-open-per-reporter: 3
+alert:
+  sound:
+    name: BLOCK_NOTE_BLOCK_PLING
+    pitch: 1.4
+alert-urgent:
+  sound:
+    name: BLOCK_NOTE_BLOCK_BELL
+    pitch: 0.7
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `reasons.<id>.name` | | Shown in the menu and stored on the report. Plain text. |
+| `reasons.<id>.weight` | | The base score. |
+| `cooldown-seconds` | `60` | Between two reports by the same player. Under five minutes it is not kept across a restart. |
+| `allow-report-staff` | `false` | Let players report somebody with `exyliastaff.staff`. |
+| `max-open-per-reporter` | `3` | Open reports one player may have. `0` for no limit. |
+| `alert`, `alert-urgent` | | Library effects for staff, on every server. |
+
+## Messages
+
+`modules/reports/messages.yml`: `submitted`, `self`, `staff-protected`, `cooldown` with `%time%`,
+`too-many-open` with `%count%`; `alert-header`, `alert-line` and `alert-actions` with `%id%`,
+`%reporter%`, `%target%`, `%reason%`, `%server%`, `%priority%` and `%priority_score%`, the last one
+a clickable row you may empty; `resolved` and `dismissed` with `%id%`; `closed-all`; `not-found`;
+`target-offline`, `teleported`, `following`; `filter-prompt`, `history-prompt`; `no-reports`,
+`no-history`.
+
+## Placeholders
+
+| Placeholder | Value |
+|---|---|
+| `%staff_reports_open%` | Open reports on the network. |

@@ -1,0 +1,64 @@
+---
+title: "Comandos"
+description: "El comando de jugador con sus subcomandos, el comando de staff y el valor por defecto de cada argumento opcional."
+---
+
+Dos raíces que nunca se solapan. `/totem` es la puerta del jugador y abre el menú principal;
+`/totemtraineradmin` es la puerta del staff y abre el menú de administración. `/tt` y `/totemtrainer` son
+alias del primero, `/ttadmin` del segundo.
+
+## Comandos de jugador
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/totem` | — | Abre el menú principal. |
+| `/totem train <modo> [ticks]` | `exyliatotemtrainer.train` | Empieza un entrenamiento en solitario en ese modo. |
+| `/totem duel [jugador] [modo] [ticks] [bestOf]` | `exyliatotemtrainer.duel` | Sin jugador, abre el selector de rivales. Con uno, envía la solicitud directamente. |
+| `/totem accept` | `exyliatotemtrainer.duel` | Acepta la solicitud de duelo pendiente. |
+| `/totem deny` | `exyliatotemtrainer.duel` | La rechaza. |
+| `/totem profile [jugador]` | `exyliatotemtrainer.profile` | Abre un perfil: el tuyo, o el de otro. `/totem stats` es un alias. |
+| `/totem leaderboard [modo] [categoria]` | `exyliatotemtrainer.leaderboard` | Sin modo, el selector de modos; con uno, la tabla de ese modo. `/totem top` es un alias. |
+| `/totem history` | `exyliatotemtrainer.history` | Tus duelos recientes. |
+| `/totem leave` | `exyliatotemtrainer.leave` | Sale del entrenamiento. Dentro de un duelo es un **abandono**: gana el rival. |
+
+### Valores por defecto de los argumentos opcionales
+
+| Argumento | Por defecto | Se rechaza cuando |
+|---|---|---|
+| `ticks` | `training.default-ticks` (`20`) | El valor no está en `training.ticks`. El mensaje nombra el intervalo. |
+| `modo` (duelo) | El primer modo listado en `training.modes` | El id no existe. |
+| `bestOf` | `match.default-format` (`3`) | La longitud no está en `match.formats`, o es par y `allow-even-formats` está apagado. |
+| `categoria` | `best_score` | Nunca: una categoría desconocida cae en `best_score`. |
+| `modo` (leaderboard) | — | Un modo desconocido abre el selector de modos en vez de una tabla vacía. |
+
+`/totem profile <jugador>` funciona con jugadores que el servidor ya conoce, estén conectados o no: una
+fila de alguien desconectado se lee de la base de datos. Un nombre que el servidor nunca ha visto responde
+que el jugador no está conectado.
+
+El autocompletado sugiere los modos configurados, los presets de ticks, los formatos ofrecidos y las cinco
+categorías de la tabla.
+
+## Comandos de staff
+
+Todo lo de abajo necesita `exyliatotemtrainer.admin`.
+
+| Comando | Qué hace |
+|---|---|
+| `/totemtraineradmin` | Abre el menú de administración: arenas, duelos en curso, jugadores, recarga. Solo jugadores. |
+| `/totemtraineradmin reload` | Recarga todos los archivos. También desde la consola, y desde el botón del menú. |
+
+La recarga ejecuta cuatro pasos con nombre: `configs` (`config.yml`, `messages.yml`, `scoreboards.yml`,
+después el prefijo y el interruptor de debug), `performance` (se reconstruyen los umbrales de
+calificación), `scoreboards` (cada tabla en pantalla se redibuja con las líneas nuevas) y `menus` (cada
+pantalla se compila de nuevo). El paso de menús también corre cuando se recarga ExyliaLib. La línea de
+éxito dice cuántos pasos corrieron y en cuántos milisegundos; un fallo te pide mirar la consola.
+
+La recarga **no** toca las arenas ni los datos de jugador. Ambos viven en la base de datos, no en un
+archivo, y ya son lo que el plugin tiene en memoria.
+
+<Callout type="note" title="No hay nada más que escribir">
+Las arenas se crean, renombran, posicionan, activan y borran desde las pantallas de arena. Los duelos en
+curso se cancelan y las estadísticas de jugador se reinician desde sus propias pantallas, cada una tras
+una confirmación. Ver [Arenas](/docs/exyliatotemtrainer/arenas). Lo único que sigue siendo un comando es
+`reload`, porque la consola tiene que poder ejecutarlo.
+</Callout>

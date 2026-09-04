@@ -1,0 +1,153 @@
+---
+title: "Duels"
+description: "Direct challenges, best-of formats, how a round is decided, what is stored and when, and what a player may still do inside one."
+---
+
+A duel is always a chosen opponent: there is no queue and no matchmaking. Two players play the same
+mode at the same speed in the same arena, and a round goes to whoever keeps a totem in hand. Both
+engines are built from the same rules and the same seed, so a random mode deals both sides the same
+sequence of intervals.
+
+## Sending a request
+
+Two ways in:
+
+- `/totem duel <player> [mode] [ticks] [bestOf]`. Mode defaults to the first mode in `config.yml`,
+  ticks to `training.default-ticks`, the format to `match.default-format`.
+- `/totem` → **Duel**, or `/totem duel` alone, opens the opponent picker: everyone online except
+  yourself and players you cannot see, free players first. A busy player stays on the list, below every
+  free one, with the reason and no click. The list refreshes every second while it is open.
+
+Clicking a player opens the duel screen: their head with wins, losses and fastest pop, the speed
+picker, the format picker and the mode rows. Clicking a mode sends the request. Speed and format are
+remembered for next time.
+
+The request is refused, with a message, when:
+
+| Situation | Message |
+|---|---|
+| The target is yourself | You cannot duel yourself. |
+| You are already training or duelling | Finish what you are doing first. |
+| Another plugin holds you | You are busy in `<plugin>`. |
+| Another plugin advises against it | Not right now: `<reason>`. |
+| The target is held by any plugin, this one included | `<target>` is busy right now. |
+| The target's plugin advises against it | `<target>` is `<reason>`. |
+
+The target receives a line naming the challenger, the mode, the speed and the format, with clickable
+**Accept** and **Decline** buttons that run `/totem accept` and `/totem deny`. One request per target
+is kept; a newer one replaces it. A request expires after `match.duel-request-expiry` seconds (30 by
+default, never under 1), and both sides are told when it does.
+
+<Callout type="note" title="While a request is open">
+Neither side holds a claim yet, so this plugin tells the other Exylia plugins that both players are
+"answering a duel request". That is advice they honour, not a lock: see
+[Compatibility](/docs/exyliatotemtrainer/compatibility).
+</Callout>
+
+## Accepting
+
+`/totem accept` checks both sides again — either may have walked into something while the request sat
+open — and then needs a **ready arena**: enabled, both spawns set. Without one, both players read
+"No arena is ready. Ask an administrator." and nothing starts. The least loaded arena is picked,
+counting the duels and solo sessions it hosts, within `arena.max-matches-per-arena` (`0` is unlimited).
+
+Both players are claimed before anything moves. If the second claim fails, the first is undone —
+inventory included — and nobody is teleported. Then player A goes to spawn A and player B to spawn B,
+both see the `match-found` effect, and the first round's countdown starts.
+
+## Formats
+
+```yaml title="plugins/ExyliaTotemTrainer/config.yml"
+match:
+  formats: [1, 3, 5, 7]
+  default-format: 3
+  allow-even-formats: false
+  round-delay: 3.0
+  result-delay: 5.0
+  duel-request-expiry: 30.0
+  allowed-commands: [totem, tt, totemtrainer, msg, r, tell, w]
+```
+
+| Key | What it does |
+|---|---|
+| `formats` | The best-of lengths offered, in the picker and on the command. Any positive length works. |
+| `default-format` | The length used when none is chosen. |
+| `allow-even-formats` | Even lengths in `formats` are only offered when this is `true`. |
+| `round-delay` | Seconds between a round ending and the next countdown. |
+| `result-delay` | Seconds the result stays on screen, in the arena, before both are sent back. |
+| `duel-request-expiry` | Seconds a request stays open. |
+| `allowed-commands` | Command labels a player may still run while training or duelling. |
+
+A best-of `n` is won by the first side to `n/2 + 1` rounds: two rounds for a BO3, four for a BO7,
+one for a BO1. The series is also over once all `n` rounds have been played, which is what an even
+length needs: a BO2 that ends 1–1 goes to whoever won its second round.
+
+## A round
+
+<Steps>
+  <Step title="Heal and count down">
+    Both players are healed to full health and food, fire is put out, and "Round X of Y" is sent.
+    The countdown is `training.countdown` seconds, the same one training uses.
+  </Step>
+  <Step title="Punch to start">
+    Punching the air during the countdown readies you and tells your opponent. When both have, the
+    round starts at once. One player cannot skip alone: they would take the first hit while the other
+    was still reading a number.
+  </Step>
+  <Step title="The drill">
+    Both engines start in the same tick and hand out the mode's totems. Every interval a lethal hit
+    lands on each player and the totem in hand absorbs it; the next one has to be in a hand before the
+    following hit. Every pop is graded and shown as in training.
+  </Step>
+  <Step title="Standing still">
+    Duellists are pinned on the horizontal axes; falling is allowed so a spawn set above the floor
+    settles. The totem is the whole game.
+  </Step>
+</Steps>
+
+## How a round is decided
+
+- **One side misses**: no totem in hand when its hit landed. The other side wins the round.
+- **Both miss in the same tick**: both engines hit on the same cadence, so a miss opens a one-tick
+  window for the paired hit. Two misses inside it are a **draw**: the `round-draw` effect plays and
+  the round is replayed under the same number — the attempt is kept and its pops count, but the
+  series does not move. Three draws in a row cancel the duel: nobody is swapping.
+- **Both finish a full-inventory mode without refill** (`normal`): nobody missed, so the round is
+  decided on the drill. A side with pops beats a side with none; then the faster average reaction;
+  then the higher score; then more pops. A full tie is a draw and is replayed.
+
+After every round both players see the `round-won`, `round-lost` or `round-draw` effect, the matching
+chat line and a round summary — winner, pops, average, best, score and the series so far. Then
+`round-delay` seconds pass and the next round counts down.
+
+## The end
+
+When a side reaches the rounds to win, both see `match-won` or `match-lost` and the result is
+**stored at once**: the profiles of both players (matches, wins and losses, win rate, rounds won and
+lost, pops, best reaction, the duel win streak — up on a win, back to zero on a loss — and the best
+streak) and one history row per player. Then the match summary is sent, the players stay in the arena
+for `result-delay` seconds, and both are restored and sent back.
+
+Storing first means a server that stops during the pause loses nothing.
+
+Once back, a player whose match ended less than a minute ago gets the **result screen**: VICTORY or
+DEFEAT, both players' pops, best and average, the score and the duration. It has a **Rematch** button
+when the opponent is still online and both are free; it sends a new request with the same settings.
+
+## Forfeit and cancel
+
+| Ending | Caused by | Stored? |
+|---|---|---|
+| **Forfeit** — the opponent wins | `/totem leave`, quitting, changing world, a teleport the plugin did not make (an ender pearl, a chorus fruit), another plugin taking the player back | Yes, as a normal result |
+| **Cancel** — nobody wins | An administrator cancelling it, its arena being disabled or deleted, the plugin disabling, three draws in a row, a teleport to the arena failing | No. Both players read "The duel was cancelled." |
+
+## Commands inside a session
+
+Whoever is training or duelling may only run the labels in `match.allowed-commands`: by default the
+plugin's own commands and private messages (`msg`, `r`, `tell`, `w`). Anything else is blocked with
+"Leave with /totem leave before using that command." A `plugin:command` prefix is stripped before the
+check, so it cannot be used to slip past the list.
+
+Everything else that is blocked meanwhile — damage, hunger, drops, pickups, contact with players
+outside the duel — is on the [Training](/docs/exyliatotemtrainer/training) page, because the same
+protections cover both.

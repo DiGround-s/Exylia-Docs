@@ -1,0 +1,103 @@
+---
+title: "Installation"
+description: "Dependencies, first boot, and the files the plugin generates."
+---
+
+## Before you start
+
+ExyliaTotemTrainer needs two plugins in `plugins/` **before** the first boot.
+
+| Plugin | What for |
+|---|---|
+| `ExyliaLib` | Configuration, menus, database, placeholders, effects, sidebars, inventory snapshots and player claims. |
+| `packetevents` | The visual isolation: players of different sessions do not see each other. Declared as a hard dependency; without it the plugin does not load. |
+
+Optional:
+
+- **PlaceholderAPI** — to use the plugin's placeholders outside it. Everything else works without it.
+
+<Callout type="note" title="ExyliaLib is listed as soft">
+`plugin.yml` names ExyliaLib under `softdepend` on purpose: the loader that installs ExyliaLib is the
+one that has to load first for that install to happen. The plugin still needs it to run.
+</Callout>
+
+## Installing
+
+<Steps>
+  <Step title="Drop in the jars">
+    Copy `ExyliaTotemTrainer.jar` and its dependencies into the server's `plugins/` folder.
+  </Step>
+  <Step title="Start the server">
+    The first boot generates the configuration files, the menus and the database tables.
+  </Step>
+  <Step title="Check the console">
+    You should see `ExyliaTotemTrainer enabled` and, once the arenas are read, `Loaded 0 arenas`.
+    No duel can start before that second line appears.
+  </Step>
+  <Step title="Open the panel">
+    With the `exyliatotemtrainer.admin` permission, run `/totemtraineradmin` to open the admin menu
+    and create a first arena. See [First steps](/docs/exyliatotemtrainer/first-steps).
+  </Step>
+</Steps>
+
+## Generated files
+
+All of them live in `plugins/ExyliaTotemTrainer/`.
+
+| File | Contents |
+|---|---|
+| `config.yml` | Modes, tick presets, grading, feedback, duel formats and delays, leaderboards, history, arena cap. |
+| `messages.yml` | Every line the plugin sends, grouped by system. |
+| `scoreboards.yml` | The two sidebars: one for training, one for a duel. |
+| `menus/` | Every screen: `main`, `training`, `opponents`, `duel`, `profile`, `records`, `history`, `leaderboard_modes`, `leaderboard`, `result`, and the `admin/` folder. |
+| `database.yml` | Database engine, written by ExyliaLib. H2 by default, embedded, nothing to install. |
+
+Player menus are copied from the jar once and then left alone, so your edits survive updates. A menu
+file that fails to parse is reported in the console and that one screen does not open; the rest of the
+plugin keeps running.
+
+<Callout type="warning" title="menus/admin/ is rewritten on every start">
+The six staff screens under `menus/admin/` are refreshed from the jar each time the plugin starts, so
+a button added in a release reaches servers that already have the folder. Nothing an owner is meant
+to edit lives there.
+</Callout>
+
+<Callout type="note" title="Arenas are not in a file">
+Arenas, profiles, training records and duel history live in the database, not in YAML: the tables
+`totem_arenas`, `totem_profiles`, `totem_training_records` and `totem_matches`. Arenas are created
+and edited from `/totemtraineradmin`, which is what lets several servers share one set by pointing at
+the same database.
+</Callout>
+
+## Database
+
+By default the plugin uses **H2**: a file inside the plugin folder, with no server, no installation
+and no maintenance. It is perfectly fine for a single server.
+
+To share data across servers, edit `database.yml`:
+
+```yaml title="plugins/ExyliaTotemTrainer/database.yml"
+database:
+  type: mysql
+  settings:
+    max-pool-size: 0
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Supported engines: `h2`, `mysql`, `mariadb`, `postgresql` and `mongodb`. Only the block matching
+`type` is read. The file is ExyliaLib's; its full reference is in the
+[library's database page](/docs/exylialib/database).
+
+Nothing waits on the database while the plugin enables. Every read and write is asynchronous, and a
+profile is loaded when its player joins.
+
+## Updating
+
+Replace the jar and restart. Your edits to `config.yml`, `messages.yml`, `scoreboards.yml` and the
+player menus are kept; only `menus/admin/` is refreshed from the jar, and arenas and statistics live in
+the database.

@@ -1,0 +1,87 @@
+---
+title: "First steps"
+description: "An arena from the admin menu, a first solo session, and a first duel."
+badge: "guide"
+---
+
+Everything below happens in menus. The only thing typed is the arena's id.
+
+## Creating an arena
+
+<Steps>
+  <Step title="Open the admin menu">
+    `/totemtraineradmin` (or `/ttadmin`) with `exyliatotemtrainer.admin`. The overview shows how
+    many arenas exist and how many are ready.
+  </Step>
+  <Step title="Create it">
+    Arenas → the create button. Type a short id such as `totem1`; it is lowercased and refused if it
+    already exists. The arena appears enabled, with no spawns yet.
+  </Step>
+  <Step title="Name it">
+    On the arena screen, **Display name** asks for what players see. Colours are allowed, 64
+    characters at most.
+  </Step>
+  <Step title="Set both spawns">
+    Click **Spawn A**, then stand where it goes; the wizard stores your position. Do the same for
+    **Spawn B**. Player A of a duel appears at spawn A and player B at spawn B; solo sessions use spawn A.
+  </Step>
+  <Step title="Check it reads ready">
+    An arena is ready when it is enabled and both spawns are set in loaded worlds. The arena list
+    shows every arena as ready or incomplete.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Training needs no arena">
+Solo training works with no arena at all: the player trains where they stand. Duels are the ones
+that need a ready arena; without one the request is answered with "No arena is ready".
+</Callout>
+
+## A first solo session
+
+<Steps>
+  <Step title="Open the menu">
+    `/totem` opens the main menu. Click **Solo**.
+  </Step>
+  <Step title="Pick a speed">
+    The bottom row lists the intervals from `training.ticks`, 25 down to 5 ticks by default. The
+    selected one is remembered for the next time.
+  </Step>
+  <Step title="Pick a mode">
+    Each mode row shows what it does and your best at the selected speed. Clicking starts the
+    session: the inventory is saved and cleared, the totems are handed out, and a countdown runs.
+  </Step>
+  <Step title="Punch the air to start now">
+    A swing during the countdown skips it. Then swap the next totem in before every hit, with `F`,
+    the hotbar, or the inventory.
+  </Step>
+</Steps>
+
+`/totem train <mode> [ticks]` does the same without the menu, and `/totem leave` ends a session.
+
+## A first duel
+
+<Steps>
+  <Step title="Pick an opponent">
+    `/totem` → **Duel** lists everyone online, free players first; busy ones cannot be clicked.
+  </Step>
+  <Step title="Pick the settings">
+    On the opponent's screen choose a speed and a best-of format, then click a mode. That click sends
+    the request.
+  </Step>
+  <Step title="The other side accepts">
+    They receive a line with clickable **Accept** and **Decline** buttons, or run `/totem accept`.
+    The request expires after `match.duel-request-expiry` seconds, 30 by default.
+  </Step>
+  <Step title="Play the rounds">
+    Both players are teleported, a countdown runs (punch the air once each to start at once), and
+    the round goes to whoever keeps a totem in hand. The first to `n/2 + 1` rounds wins the series.
+  </Step>
+</Steps>
+
+`/totem duel <player> [mode] [ticks] [bestOf]` sends a request straight from the command line.
+
+## Where to go next
+
+- [Modes](/docs/exyliatotemtrainer/modes) — retune the five shipped modes or write a sixth.
+- [Grading](/docs/exyliatotemtrainer/grading) — the thresholds, the score and what a player sees per pop.
+- [Duels](/docs/exyliatotemtrainer/duels) — formats, how a round is decided, what is stored.

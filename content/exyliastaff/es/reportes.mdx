@@ -1,0 +1,122 @@
+---
+title: "Reportes"
+description: "Cómo reporta un jugador, qué detiene un reporte, cómo se calcula la prioridad y las pantallas en las que el staff los revisa."
+---
+
+Un jugador reporta a otro con `/report`, eligiendo un motivo de un menú o escribiéndolo. El staff de
+todos los servidores recibe una alerta clicable, y `/reports` lista lo que está abierto por prioridad,
+la más alta primero.
+
+Id de módulo `reports`, interruptor `modules.reports`, archivos en `modules/reports/`.
+
+## Reportar
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/report <player>` | `exyliastaff.report` | Abre el menú de motivos. |
+| `/report <player> <reason>` | `exyliastaff.report` | Lo envía. Un id de motivo como `cheating` se convierte en ese motivo; cualquier otro texto se conserva tal cual, sin colores. |
+
+Solo se puede reportar a jugadores conectados. Un reporte se rechaza, en este orden, cuando quien
+reporta se nombra a sí mismo, el objetivo tiene `exyliastaff.staff` y `allow-report-staff` está
+desactivado, quien reporta sigue dentro de los `cooldown-seconds` desde su último reporte, o ya tiene
+`max-open-per-reporter` reportes abiertos. Nada impide que el mismo jugador reporte dos veces al mismo
+objetivo.
+
+## Prioridad
+
+Cada motivo tiene un `weight`. La puntuación de un reporte es ese peso, más uno por cada otro reporte
+abierto contra el mismo objetivo, hasta tres. El texto libre pesa 1.
+
+| Puntuación | Nivel |
+|---|---|
+| 7 o más | `CRITICAL` |
+| 5 o 6 | `HIGH` |
+| 3 o 4 | `NORMAL` |
+| menos de 3 | `LOW` |
+
+La puntuación se calcula al leerla, nunca se guarda, así que cambiar un peso reordena los reportes
+abiertos. Las alertas `HIGH` y `CRITICAL` reproducen `alert-urgent` en lugar de `alert`.
+
+## Revisar
+
+`/reports`, con `exyliastaff.reports.manage`, abre la lista; `/reports <player>` abre los reportes de
+ese jugador, buscando a un jugador conectado o el nombre de un reporte abierto. El polvo de blaze de
+la hotbar abre la lista. Las alertas llegan a todos los miembros del staff conectados con el mismo
+permiso en todos los servidores.
+
+| Pantalla | Filas | Clics |
+|---|---|---|
+| Lista | Una cabeza por reporte abierto, por prioridad | Izquierdo: los reportes del jugador. Derecho: resolver. Shift derecho: descartar. |
+| Jugador | Todos los reportes abiertos contra él | Izquierdo: teletransportarse, siguiéndolo a su servidor. Derecho: resolver. Shift derecho: descartar. |
+
+La lista también tiene **Resolve all** (resolver todos) y **Dismiss all** (descartar todos), y un
+catalejo que pide un nombre. Resolver y descartar cierran ambos el reporte, registrando quién lo hizo;
+solo difieren en el estado que se conserva para el historial. No hay paso de reclamación, y a quien
+reportó no se le avisa cuando su reporte se cierra. Las filas cerradas se quedan en `staff_reports`
+para siempre.
+
+## Configuración
+
+```yaml title="plugins/ExyliaStaff/modules/reports/config.yml"
+reasons:
+  cheating:
+    name: Cheating
+    description: Hacks, macros or unfair clients.
+    icon: DIAMOND_SWORD
+    weight: 5
+  exploiting:
+    name: Exploiting
+    description: Abusing bugs or glitches.
+    icon: COMMAND_BLOCK
+    weight: 4
+  griefing:
+    name: Griefing
+    description: Destroying or stealing from others.
+    icon: TNT
+    weight: 3
+  toxicity:
+    name: Toxicity
+    description: Insults, harassment or spam.
+    icon: WRITABLE_BOOK
+    weight: 2
+  other:
+    name: Other
+    description: Something else worth a look.
+    icon: PAPER
+    weight: 1
+cooldown-seconds: 60
+allow-report-staff: false
+max-open-per-reporter: 3
+alert:
+  sound:
+    name: BLOCK_NOTE_BLOCK_PLING
+    pitch: 1.4
+alert-urgent:
+  sound:
+    name: BLOCK_NOTE_BLOCK_BELL
+    pitch: 0.7
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `reasons.<id>.name` | | Se muestra en el menú y se guarda en el reporte. Texto plano. |
+| `reasons.<id>.weight` | | La puntuación base. |
+| `cooldown-seconds` | `60` | Entre dos reportes del mismo jugador. Por debajo de cinco minutos no se conserva tras un reinicio. |
+| `allow-report-staff` | `false` | Permite a los jugadores reportar a alguien con `exyliastaff.staff`. |
+| `max-open-per-reporter` | `3` | Reportes abiertos que puede tener un jugador. `0` para no limitar. |
+| `alert`, `alert-urgent` | | Efectos de la librería para el staff, en todos los servidores. |
+
+## Mensajes
+
+`modules/reports/messages.yml`: `submitted`, `self`, `staff-protected`, `cooldown` con `%time%`,
+`too-many-open` con `%count%`; `alert-header`, `alert-line` y `alert-actions` con `%id%`,
+`%reporter%`, `%target%`, `%reason%`, `%server%`, `%priority%` y `%priority_score%`, el último una
+fila clicable que puedes dejar vacía; `resolved` y `dismissed` con `%id%`; `closed-all`; `not-found`;
+`target-offline`, `teleported`, `following`; `filter-prompt`, `history-prompt`; `no-reports`,
+`no-history`.
+
+## Placeholders
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_reports_open%` | Reportes abiertos en la red. |

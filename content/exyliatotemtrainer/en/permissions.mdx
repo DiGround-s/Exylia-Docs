@@ -1,0 +1,51 @@
+---
+title: "Permissions"
+description: "The seven nodes the plugin declares, what each one gates, and their defaults."
+---
+
+Seven nodes, all declared in the plugin. Six are granted to everyone by default; the admin node is for
+operators.
+
+## Plugin nodes
+
+| Permission | Default | What it gates |
+|---|---|---|
+| `exyliatotemtrainer.train` | everyone | `/totem train`. |
+| `exyliatotemtrainer.duel` | everyone | `/totem duel`, `/totem accept` and `/totem deny`: sending, accepting and declining requests. |
+| `exyliatotemtrainer.leave` | everyone | `/totem leave`. |
+| `exyliatotemtrainer.profile` | everyone | `/totem profile` and `/totem stats`, own and others'. |
+| `exyliatotemtrainer.leaderboard` | everyone | `/totem leaderboard` and `/totem top`. |
+| `exyliatotemtrainer.history` | everyone | `/totem history`. |
+| `exyliatotemtrainer.admin` | operators | `/totemtraineradmin`, `/ttadmin` and every screen behind them, including `reload`. |
+
+`/totem` itself, the main menu, has no node: anybody can open it.
+
+<Callout type="warning" title="The nodes gate commands, not menus">
+The checks live on the commands. The menus do not ask for them: a player without
+`exyliatotemtrainer.train` cannot type `/totem train`, but can still start a session from the solo
+training screen, and the same goes for duels and the leave button. To keep a group out of a feature,
+take the main menu away from them as well — for instance by blocking `/totem` with your command manager —
+rather than relying on the node alone.
+</Callout>
+
+<Callout type="note" title="Nothing per mode, nothing per arena">
+There are no permission nodes for individual modes, tick speeds, formats or arenas. A player who may
+train may train every configured mode at every configured speed. Gating a mode behind a rank is not
+something this plugin does.
+</Callout>
+
+## Examples
+
+Taking duels away from a group while leaving solo training in place:
+
+```text
+/lp group default permission set exyliatotemtrainer.duel false
+```
+
+Handing the admin screens to staff who are not operators:
+
+```text
+/lp group staff permission set exyliatotemtrainer.admin true
+```
+
+Without the permission, a command answers with the configured `no-permission` line from `messages.yml`.

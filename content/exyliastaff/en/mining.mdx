@@ -1,0 +1,220 @@
+---
+title: "Mining"
+description: "The x-ray detector: which ores count, what a vein is, the nine suspicion factors, the decaying score, the levels and the alerts."
+---
+
+The mining module watches how players find ore. It does not care how much diamond somebody mines;
+it cares whether they walk straight at buried veins in the dark, seconds apart, through eight blocks
+of stone. Each of those is a factor, the factors add up to a score from 0 to 100, the score decays,
+and staff are alerted when it crosses a level.
+
+Module id `mining`, switch `modules.mining`, files under `modules/mining/`.
+
+## What counts as evidence
+
+Only ores of a family marked `valuable` feed the factors; the rest are counted like stone. Of those,
+only the **first block of a vein** counts: the vein is flood-filled through face neighbours up to
+`vein.max-size` blocks and remembered for `vein.remember-minutes`, so mining the rest of it is free.
+And only a **buried** vein counts, one with at most `ore-exposure.partial-faces` faces open to air:
+an ore on a cave wall is what a torch finds.
+
+A block a player placed is remembered for `placed-blocks.remember-minutes` and ignored when broken.
+Creative breaks are ignored, and so is a break another plugin cancelled.
+
+## The factors
+
+All of them read the last `window-minutes` of breaks. Each adds its points when it triggers; the sum
+is clamped to 100.
+
+| Factor | Triggers when | Points |
+|---|---|---|
+| Frequency | 4, 8 or 13 buried veins in the window | 15, 30, 50 |
+| Valuable ratio | More than 80 %, or 90 %, of broken blocks were buried valuable ore | 20, 35 |
+| Straight line | The last 5 buried veins lie within 2 blocks of one line | 25 |
+| Ambient light | 80 % of buried veins broken in darkness, or in dim light | 25, 12 |
+| Deep mining | Below Y 16 and more than 60 % of the last 20 breaks were buried valuable ore | 15 |
+| Discovery timing | 70 % of the gaps between veins were under 5 seconds; half of that for moderate | 25, 10 |
+| Ore exposure | 70 % of fresh veins fully hidden, or partially | 25, 12 |
+| Approach cost | 70 % of the gaps between veins were 8 blocks or fewer; half of that for moderate | 22, 10 |
+| Beeline | 60 % of veins were walked at directly, over the last 20 seconds and from 8 blocks or more | 25 |
+
+`factors.min-veins` is how many buried veins the ratio factors need before saying anything: one lucky
+diamond in the dark is not a pattern. Every factor has `enabled` and its own thresholds.
+
+## Score and levels
+
+The score never drops when a new assessment is lower; it halves every `decay-half-life-minutes`
+instead, so a player who stops giving reasons fades back to normal. The levels are thresholds on it:
+
+| Level | Score |
+|---|---|
+| `warning` | 16 |
+| `suspicious` | 26 |
+| `very-suspicious` | 51 |
+| `critical` | 76 |
+
+## Alerts
+
+An alert goes out when a player climbs to a higher level than the last one announced, and again
+every `alerts.interval-seconds` while they stay at suspicious or above. A score wobbling on a
+threshold does not alert on every block, and a warning is never repeated on the timer.
+
+Alerts are published on the `mining` channel and delivered on every server to each staff member who
+holds `exyliastaff.mining.alerts` **and** has alerts on, with the effect of that level. `/mining`
+toggles them, `/mining on` and `/mining off` set them; the pickaxe in the hotbar right click does the
+same. Leaving staff mode turns alerts off.
+
+## Looking at a player
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/mining top` | `exyliastaff.mining.view` | The 45 highest scores, decayed to now, with level and top ores. From the console, the top ten as text. |
+| `/mining view <player>` | `exyliastaff.mining.view` | That player's record, online or not: level, score, one item per ore mined. Teleport, back and reset buttons. |
+| `/mining reset <player>` | `exyliastaff.mining.reset` | Wipes the record. Also from the console. |
+
+`/notifications` and `/xraynotify` are aliases of `/mining`. The pickaxe left click opens the list.
+
+## Configuration
+
+```yaml title="plugins/ExyliaStaff/modules/mining/config.yml"
+ores:
+  diamond:
+    materials: [DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE]
+    valuable: true
+  emerald:
+    materials: [EMERALD_ORE, DEEPSLATE_EMERALD_ORE]
+    valuable: true
+  ancient_debris:
+    materials: [ANCIENT_DEBRIS]
+    valuable: true
+  gold:
+    materials: [GOLD_ORE, DEEPSLATE_GOLD_ORE, NETHER_GOLD_ORE]
+    valuable: true
+  lapis:
+    materials: [LAPIS_ORE, DEEPSLATE_LAPIS_ORE]
+    valuable: false
+  redstone:
+    materials: [REDSTONE_ORE, DEEPSLATE_REDSTONE_ORE]
+    valuable: false
+  iron:
+    materials: [IRON_ORE, DEEPSLATE_IRON_ORE]
+    valuable: false
+  copper:
+    materials: [COPPER_ORE, DEEPSLATE_COPPER_ORE]
+    valuable: false
+  coal:
+    materials: [COAL_ORE, DEEPSLATE_COAL_ORE]
+    valuable: false
+window-minutes: 10
+decay-half-life-minutes: 15.0
+factors:
+  min-veins: 3
+  frequency:
+    enabled: true
+    suspicious: 4
+    very-suspicious: 8
+    critical: 13
+    points-suspicious: 15
+    points-very-suspicious: 30
+    points-critical: 50
+  valuable-ratio:
+    enabled: true
+    high: 80
+    very-high: 90
+    points-high: 20
+    points-very-high: 35
+  straight-line:
+    enabled: true
+    block-count: 5
+    tolerance: 2.0
+    points: 25
+  ambient-light:
+    enabled: true
+    darkness: 0
+    dim: 7
+    ratio-percent: 80
+    points-dim: 12
+    points-dark: 25
+  deep-mining:
+    enabled: true
+    y-level: 16
+    ratio-percent: 60
+    points: 15
+  discovery-timing:
+    enabled: true
+    min-streak: 3
+    max-interval-seconds: 5.0
+    consistency: 0.7
+    points-moderate: 10
+    points-high: 25
+  ore-exposure:
+    enabled: true
+    hidden-faces: 0
+    partial-faces: 1
+    ratio-percent: 70
+    points-partial: 12
+    points-hidden: 25
+  approach-cost:
+    enabled: true
+    max-blocks: 8
+    min-streak: 3
+    consistency: 0.7
+    points-moderate: 10
+    points-high: 22
+  beeline:
+    enabled: true
+    approach-seconds: 20.0
+    min-distance: 8.0
+    directness: 0.75
+    min-veins: 3
+    ratio-percent: 60
+    points: 25
+levels:
+  warning: 16
+  suspicious: 26
+  very-suspicious: 51
+  critical: 76
+alerts:
+  interval-seconds: 120
+  warning:
+    sound: { name: BLOCK_NOTE_BLOCK_PLING, volume: 0.7, pitch: 1.0 }
+  suspicious:
+    sound: { name: BLOCK_NOTE_BLOCK_PLING, volume: 0.7, pitch: 1.4 }
+  very-suspicious:
+    sound: { name: BLOCK_NOTE_BLOCK_BIT, volume: 0.7, pitch: 1.6 }
+  critical:
+    sound: { name: ENTITY_ENDER_DRAGON_GROWL, volume: 0.7, pitch: 1.8 }
+vein:
+  max-size: 32
+  remember-minutes: 30
+placed-blocks:
+  remember-minutes: 30
+```
+
+An ore material the server does not know is skipped with one console warning. Reloading re-reads the
+ores and the thresholds; the vein and placed-block memories keep the minutes they started with until
+a restart.
+
+## Messages
+
+`modules/mining/messages.yml`: `alerts-on`, `alerts-off`; `alert` with `%player%`, `%level%`, `%score%`
+and `%server%`; `reset` with `%target%`; `top-header`, `top-line`, `top-empty`; `not-online`,
+`teleported`; `ore-line` with `%ore%` and `%count%`, `ores-none`; `status-on`, `status-off`; and the
+five level names under `levels`, from `normal` to `critical`.
+
+## Placeholders
+
+These read the viewer's own record, which is what a staff sidebar wants.
+
+| Placeholder | Value |
+|---|---|
+| `%staff_mining_level%` | The viewer's level name. |
+| `%staff_mining_score%` | The viewer's score, decayed to now. |
+| `%staff_mining_alerts%` | `status-on` or `status-off`. |
+| `%staff_mining_alerts_active%` | `true` or `false`. |
+
+## Storage
+
+`staff_mining` keeps one row per player: ore counts, the raw score with its timestamp, the level and
+the last alert. Dirty rows are written every thirty seconds, on quit and before the top list. The
+window, the trail and the last announced level live in memory only.

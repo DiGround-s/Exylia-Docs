@@ -1,0 +1,146 @@
+---
+title: "API"
+description: "La fachada estática desde la que otro plugin lee y actúa, y los seis eventos."
+badge: "dev"
+---
+
+`net.exylia.exyliaTotemTrainer.api.TotemTrainerAPI` es estática y lee los registros en vivo. Cada llamada
+devuelve al instante, salvo `loadProfile`, que va a la base de datos por un jugador desconectado. Los
+eventos viven en `net.exylia.exyliaTotemTrainer.api.event`.
+
+## Declarar la dependencia
+
+```yaml title="plugin.yml"
+softdepend:
+  - ExyliaTotemTrainer
+```
+
+`depend` también funciona. En ambos casos las clases del plugin se alcanzan de la forma normal; el loader
+las define en el classloader del propio plugin, y Bukkit delega entre classloaders de plugins para todo lo
+listado como dependencia. Cada método lanza `IllegalStateException` si ExyliaTotemTrainer no está activo.
+
+## Leer
+
+```java
+Optional<ProfileEntity> profile = TotemTrainerAPI.profile(player.getUniqueId());
+profile.ifPresent(row -> log(row.wins() + " wins, best pop " + row.bestPopMillis() + " ms"));
+
+Optional<PlayerContext> state = TotemTrainerAPI.state(player.getUniqueId()); // TRAINING o MATCH
+Optional<Match> match = TotemTrainerAPI.match(player.getUniqueId());
+Optional<TrainingSession> session = TotemTrainerAPI.training(player.getUniqueId());
+
+Collection<Match> running = TotemTrainerAPI.matches();
+Collection<ArenaEntity> arenas = TotemTrainerAPI.arenas();
+int load = TotemTrainerAPI.activeMatches("totem1");
+```
+
+`profile` es la fila en caché de un jugador **conectado**; está vacía mientras su carga sigue en vuelo
+justo después de entrar. Para cualquier otro:
+
+```java
+TotemTrainerAPI.loadProfile(uuid).thenAccept(row -> {
+    // Seguro desde cualquier hilo. Un jugador nunca visto recibe una fila nueva y vacía.
+});
+```
+
+| Método | Devuelve |
+|---|---|
+| `profile(UUID)` | `Optional<ProfileEntity>`: la fila en caché de un jugador conectado. |
+| `loadProfile(UUID)` | `CompletableFuture<ProfileEntity>`: memoria, luego la base de datos, luego una fila nueva. Cualquier hilo. |
+| `match(UUID)` | `Optional<Match>`: el duelo en el que está el jugador. |
+| `matches()` | Todos los duelos en curso. |
+| `training(UUID)` | `Optional<TrainingSession>`: la sesión en solitario en la que está el jugador. |
+| `state(UUID)` | `Optional<PlayerContext>`: `TRAINING`, `MATCH`, o vacío cuando este plugin no tiene nada con él. |
+| `arenas()` | Todas las arenas configuradas, listas o no. |
+| `activeMatches(String arenaId)` | Duelos corriendo en esa arena ahora mismo. |
+
+## Actuar
+
+```java
+// Al jugador se le dice por qué cuando esto devuelve false: modo desconocido,
+// un intervalo no ofrecido, ya ocupado, o retenido por otro plugin.
+boolean started = TotemTrainerAPI.startTraining(player, "chaos", 20);
+
+// Una solicitud de duelo, con los mismos ajustes que construiría un menú.
+GlobalDefaults.Mode mode = GlobalDefaults.training().modes().get("random");
+TotemRules rules = TotemRules.of("random", mode, 15, System.nanoTime());
+MatchSettings settings = new MatchSettings(rules, MatchFormat.of(3));
+boolean sent = TotemTrainerAPI.duel(challenger, target, settings);
+
+// Sale del entrenamiento, o abandona un duelo; false cuando el jugador no está en ninguno.
+boolean left = TotemTrainerAPI.leave(player);
+```
+
+`TotemRules.of` toma el id del modo, su bloque de configuración, el intervalo en ticks y una semilla; la
+semilla es lo que permite a los dos lados de un duelo sortear la misma secuencia de intervalos, así que usa
+una nueva por solicitud. `MatchFormat.of(n)` es un best-of-`n` con `n / 2 + 1` rondas para ganar. `duel`
+envía una **solicitud**: el objetivo todavía tiene que aceptar.
+
+<Callout type="warning" title="Hilos">
+Llama desde el hilo principal — en Folia, desde el hilo dueño del jugador en cuestión. `loadProfile` es la
+única excepción y puede llamarse desde cualquier sitio.
+</Callout>
+
+## Eventos
+
+Los seis extienden `TotemTrainerEvent`, son síncronos, se disparan en el hilo dueño del jugador del que
+tratan, y ninguno es cancelable.
+
+| Evento | Cuándo | Lleva |
+|---|---|---|
+| `TrainingStartEvent` | Se aceptó una sesión en solitario; el jugador está a punto de ser movido y equipado. | `player()`, `rules()` |
+| `TrainingEndEvent` | Una sesión en solitario terminó; los números son finales y están a punto de guardarse. | `player()`, `rules()`, `summary()`, `reason()` |
+| `TotemPopEvent` | Un tótem explotó y el jugador puso el siguiente en una mano. | `player()`, `reactionMillis()`, `grade()`, `inMatch()` |
+| `MatchStartEvent` | Ambos jugadores llegaron a la arena; la primera cuenta atrás empieza a continuación. | `match()` |
+| `RoundEndEvent` | Se puntuó una ronda. | `match()`, `round()`; `round.winner()` es `null` en un empate repetido |
+| `MatchEndEvent` | El duelo se decidió o se canceló. | `match()`, `winner()` (`null` si se canceló), `cancelled()` |
+
+`TrainingEndEvent.Reason` es uno de `FAILED` (sin tótem en la mano cuando llegó un golpe), `COMPLETED`
+(un modo acotado se quedó sin tótems), `LEFT` (`/totem leave`), `DISCONNECTED`, o `CANCELLED` (otro
+plugin se llevó al jugador, o el servidor se está apagando).
+
+```java
+public final class TotemHooks implements Listener {
+
+    @EventHandler
+    public void onPop(TotemPopEvent event) {
+        if (event.grade() == PerformanceGrade.PERFECT && !event.inMatch()) {
+            reward(event.player(), event.reactionMillis());
+        }
+    }
+
+    @EventHandler
+    public void onMatchEnd(MatchEndEvent event) {
+        if (event.cancelled()) {
+            return;
+        }
+        UUID winner = event.winner();
+        Match match = event.match();
+        announce(match.participant(winner).name() + " beat " + match.opponent(winner).name()
+                + " " + match.participant(winner).score() + "-" + match.opponent(winner).score());
+    }
+}
+```
+
+<Callout type="note" title="MatchEndEvent se dispara antes de escribir el resultado">
+Los perfiles y el historial se actualizan después del evento, de forma asíncrona. Lee el ganador y los
+marcadores del evento, no de los perfiles.
+</Callout>
+
+## Tipos
+
+`PerformanceGrade` es `PERFECT`, `EXCELLENT`, `GOOD`, `OK`, `SLOW`, del mejor al peor; `key()` es la
+clave de configuración en minúsculas.
+
+`PerformanceSummary` es el resultado inmutable de una sesión, una ronda o un lado de un duelo:
+
+| Campo | Significado |
+|---|---|
+| `pops()`, `fails()` | Conteos. |
+| `bestMillis()`, `worstMillis()`, `averageMillis()`, `totalMillis()` | Tiempos de reacción en milisegundos. Un `bestMillis` de cero significa que no se registró ningún pop. |
+| `currentStreak()`, `bestStreak()` | Pops seguidos al final, y la mejor racha. |
+| `durationMillis()` | Cuánto duró. |
+| `score()` | De 0 a 100, como lo calcula [Calificación](/docs/exyliatotemtrainer/calificacion). |
+| `grades()` | Cuántos pops ganaron cada calificación. |
+
+`bestSeconds()`, `averageSeconds()` y `durationSeconds()` son los mismos números en segundos.

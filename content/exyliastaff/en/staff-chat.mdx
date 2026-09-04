@@ -1,0 +1,76 @@
+---
+title: "Staff chat and global chat"
+description: "A channel only staff read, across every server; and a bypass that lets staff read the chats other plugins keep isolated."
+---
+
+Two modules about who reads what. **Staff chat** is a channel of its own: what a staff member says
+there reaches every staff member on the network and nobody else. **Global chat** is the opposite: it
+lets a staff member read every chat on the server, past the isolation of matches, arenas and events,
+and, one step further, every server's chat.
+
+## Staff chat
+
+Module id `staffchat`, switch `modules.staff-chat`, files under `modules/staffchat/`.
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/sc` | `exyliastaff.staffchat` | Toggles: everything you type goes to staff until you toggle again. `/staffchat` is an alias. |
+| `/sc <message>` | `exyliastaff.staffchat` | Sends one line without changing the toggle. Also from the console. |
+
+There is no prefix character: the toggle and the command are the two ways in. The writable book in
+the hotbar toggles it. The toggle is stored in `staff_prefs`, so it survives a relog and follows the
+player across servers; leaving staff mode turns it off, and so does losing the permission.
+
+Every line goes through the `staffchat` channel and comes back, the local ones too, so one server
+with no Redis works the same as ten with it. Received lines are delivered to every online player with
+`exyliastaff.staffchat` and, when `console` is on, printed to the console.
+
+```yaml title="plugins/ExyliaStaff/modules/staffchat/config.yml"
+format: '{letters_black}[{primary}SC{letters_black}] {muted}%server% {letters_black}» {highlight}%player% {letters_black}» {letters}%message%'
+console: true
+```
+
+`%server%` is the sender's server id from `database.yml`. Messages: `toggled-on`, `toggled-off`,
+`permission-lost`, `console-needs-message`, `status-on`, `status-off`.
+
+| Placeholder | Value |
+|---|---|
+| `%staff_staffchat_toggled%` | `status-on` or `status-off`. |
+| `%staff_staffchat_active%` | `true` or `false`. |
+
+## Global chat
+
+Module id `globalchat`, switch `modules.global-chat`, files under `modules/globalchat/`.
+
+`/globalchat`, or `/chatbypass`, with `exyliastaff.globalchat`, cycles through three modes. The bell
+in the hotbar does the same.
+
+| Mode | What you read | Who reads you |
+|---|---|---|
+| `OFF` | The chat around you, as any player. | As any player. |
+| `GLOBAL` | Every chat on this server, whatever another plugin isolates. | Everyone on the server, past every rule. |
+| `NETWORK` | The same, plus every other server's public chat, in `format`. | Only your server. What you say never leaves it. |
+
+The bypass is the library's: an event whose players talk only to each other, an arena whose chat
+never leaves it, a frozen player's isolated chat, are all read. Only reading crosses servers. The mode
+is stored in `staff_prefs`, re-applied on join, and is **not** turned off by leaving staff mode;
+losing the permission resets it to off.
+
+Every public line on this server is published on the `globalchat` channel when `relay` is on; lines
+another plugin cancelled, staff chat and mutes among them, are never relayed. Turning `relay` off makes
+this server silent to the network while its own staff still read the others.
+
+```yaml title="plugins/ExyliaStaff/modules/globalchat/config.yml"
+relay: true
+format: '{letters_black}[{primary}NET{letters_black}] {muted}%server% {letters_black}» {highlight}%player% {letters_black}» {letters}%message%'
+```
+
+Messages: `toggled-on`, `toggled-network`, `toggled-off`, `permission-lost`, and the plain words
+`status-on`, `status-network`, `status-off`.
+
+| Placeholder | Value |
+|---|---|
+| `%staff_globalchat_toggled%` | `status-off`, `status-on` or `status-network`. |
+| `%staff_globalchat_active%` | `true` in global or network mode. |
+| `%staff_globalchat_network%` | `true` in network mode. |
+| `%staff_globalchat_mode%` | `OFF`, `GLOBAL` or `NETWORK`. |

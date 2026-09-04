@@ -1,0 +1,173 @@
+---
+title: "Modos"
+description: "Los cinco modos de serie, las tres decisiones de las que se compone cada uno y cómo escribir un sexto."
+---
+
+Un modo no es un nombre que el código conozca. Es un conjunto de decisiones bajo `training.modes` en
+`config.yml`: cómo se entregan los tótems, si el intervalo entre golpes se sortea dentro de una
+ventana y si se acelera a medida que avanza la sesión. Los cinco modos de serie son esas decisiones y
+nada más, lo que los convierte en la referencia para cualquier modo que añadas.
+
+## Las tres decisiones
+
+| Clave | Qué decide |
+|---|---|
+| `totems`, `refill` | Cómo se surte el inventario. Un `totems` mayor que cero mantiene esa cantidad de tótems en ranuras aleatorias; `0` entrega un inventario completo, y `refill` dice si se vuelve a entregar cuando se agota. |
+| `random-interval` | Cada intervalo se sortea en una ventana entre `min-ticks` y `max-ticks` en lugar de mantenerse fijo. |
+| `speed-up` | Cada `every` golpes el intervalo pierde `by` ticks, sin bajar nunca de `min-ticks`. |
+
+<Callout type="note" title="Dos bloques opcionales">
+`random-interval` y `speed-up` se dejan fuera del archivo cuando no hacen nada: una ventana con
+`max-ticks: 0`, una aceleración con `by: 0` o `every: 0`. Añade cualquiera de los dos bloques a
+cualquier modo, o los dos: un modo que a la vez varía y acelera está a un bloque de distancia.
+</Callout>
+
+## Los modos de serie
+
+| Modo | `totems` | `refill` | `random-interval` | `speed-up` |
+|---|---|---|---|---|
+| `normal` | 0 | no | — | — |
+| `infinite` | 0 | sí | — | — |
+| `random` | 1 | — | — | — |
+| `chaos` | 1 | — | 10..30 | — |
+| `acceleration` | 3 | — | — | −5 cada 10, hasta 5 |
+
+Tal como quedan escritos en el archivo generado:
+
+```yaml title="plugins/ExyliaTotemTrainer/config.yml"
+training:
+  modes:
+    normal:
+      display-name: Normal
+      totems: 0
+      refill: false
+      icon: CHEST
+      description: One full inventory of totems. When it runs out, you are done.
+    infinite:
+      display-name: Infinite
+      totems: 0
+      refill: true
+      icon: TOTEM_OF_UNDYING
+      description: A full inventory, refilled forever. It ends when you miss one.
+    random:
+      display-name: Random
+      totems: 1
+      refill: false
+      icon: ENDER_EYE
+      description: A single totem, in a different random slot after every pop.
+    chaos:
+      display-name: Chaos
+      totems: 1
+      refill: false
+      random-interval:
+        min-ticks: 10
+        max-ticks: 30
+      icon: ENDER_PEARL
+      description: Random slot and random timing. Nothing is where you left it.
+    acceleration:
+      display-name: Acceleration
+      totems: 3
+      refill: false
+      speed-up:
+        every: 10
+        by: 5
+        min-ticks: 5
+      icon: FIREWORK_ROCKET
+      description: Three totems on screen, faster every 10 pops. Find your ceiling.
+  ticks: [25, 20, 15, 10, 5]
+  default-ticks: 20
+  countdown: 3.0
+```
+
+## Cómo se comporta cada decisión
+
+### Surtido: `totems` mayor que cero
+
+El modo mantiene exactamente esa cantidad de tótems en las 36 ranuras del inventario principal, cada
+uno en una ranura vacía sorteada al azar. La ranura que se sostiene nunca se usa: un tótem que cayera
+ahí ya estaría en la mano y la reacción sería cero. Un tick después de un pop el inventario se rellena
+hasta la cantidad configurada, así que un modo surtido nunca se agota: solo termina cuando el jugador falla.
+
+### Inventario completo: `totems: 0`
+
+Las 36 ranuras se llenan al empezar, la mano secundaria queda vacía y la ranura sostenida pasa a ser la
+primera de la hotbar, de modo que el jugador ya sostiene el tótem que el primer golpe hace saltar.
+Cuando desaparece el último tótem:
+
+- `refill: true` vuelve a llenar todas las ranuras menos la sostenida, y la sesión sigue hasta un fallo.
+- `refill: false` completa la sesión ahí. El jugador ve el efecto `training-complete` y el resumen; en
+  un duelo, que los dos lados terminen así decide la ronda con sus números
+  (ver [Duelos](/docs/exyliatotemtrainer/duelos)).
+
+### Intervalo aleatorio
+
+Cada intervalo se sortea en `min-ticks..max-ticks`, desplazado para que la velocidad que eligió el
+jugador quede en el centro de la ventana. `chaos` es `10..30`: en una sesión de 25 ticks sortea en
+`15..35`, en una de 10 ticks en `1..20`, porque la ventana nunca baja de un tick. Ese desplazamiento es lo que hace que
+una velocidad elegida signifique lo mismo en todos los modos.
+
+### Aceleración
+
+Cada `every` golpes el intervalo pierde `by` ticks, nunca por debajo de `min-ticks`:
+
+```text
+intervalo = max(min-ticks, ticks − floor(golpes / every) × by)
+```
+
+`acceleration` a 20 ticks corre a 20 los diez primeros golpes, después a 15, a 10, a 5, y se queda
+en 5. El placeholder `%totem_interval%` y el sidebar siguen el intervalo actual.
+
+Los dos bloques se combinan: con ambos, la ventana sigue al intervalo acelerado. Los sorteos salen de
+un flujo aleatorio sembrado por sesión, así que los dos lados de un duelo reciben la misma secuencia
+de intervalos.
+
+## Añadir un modo
+
+Una clave nueva bajo `modes` es un modo nuevo. No hace falta nada más: menús, récords, tablas y
+placeholders se indexan por el id del modo.
+
+```yaml title="plugins/ExyliaTotemTrainer/config.yml"
+training:
+  modes:
+    storm:
+      display-name: Storm
+      totems: 2
+      refill: false
+      random-interval:
+        min-ticks: 8
+        max-ticks: 24
+      speed-up:
+        every: 8
+        by: 2
+        min-ticks: 4
+      icon: LIGHTNING_ROD
+      description: Two totems, drifting timing, and it only gets faster.
+```
+
+| Clave | Qué es |
+|---|---|
+| La clave misma (`storm`) | El id del modo: lo que recibe `/totem train storm`, bajo lo que se archivan récords y tablas, y lo que nombra `%totem_top_storm_best_score_1%`. |
+| `display-name` | Lo que leen los jugadores en menús, mensajes y el sidebar. Se permiten tokens de paleta. |
+| `icon` | El objeto de la fila del modo: un nombre de material, o una cabeza escrita como la escriben los menús (`playerhead-<nombre>`, `basehead-<base64>`). |
+| `description` | Una línea mostrada bajo el modo en los menús. |
+
+Los menús listan los modos en el orden del archivo. La línea de regla bajo cada modo — "One totem,
+random slot", "Full inventory, refilled", "10-30 ticks", "-5 ticks every 10, down to 5" — se construye
+a partir de los números, así que un modo que inventes se describe solo.
+
+<Callout type="warning" title="Renombrar el id de un modo">
+Los récords y las tablas se indexan por el id. Una clave renombrada empieza vacía, y las filas antiguas
+se quedan en la base de datos bajo el id anterior. Cambia el `display-name` cuando solo tenga que
+cambiar el texto.
+</Callout>
+
+## Velocidades y cuenta atrás
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `training.ticks` | `[25, 20, 15, 10, 5]` | Los intervalos que un jugador puede elegir, en ticks. Cualquier otro se rechaza, también en el comando. |
+| `training.default-ticks` | `20` | El intervalo que usa `/totem train <mode>` sin número, y la primera selección del selector. Mantenlo dentro de la lista anterior. |
+| `training.countdown` | `3.0` | Segundos antes del primer golpe, en entrenamiento y antes de cada ronda de duelo. `0` empieza al instante. |
+
+El selector recuerda la velocidad que cada jugador eligió por última vez. Si esa velocidad se quita
+después de `training.ticks`, se aplica la por defecto.

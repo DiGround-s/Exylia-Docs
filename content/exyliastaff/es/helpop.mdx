@@ -1,0 +1,70 @@
+---
+title: "Helpop"
+description: "Un jugador pregunta, el staff de todos los servidores recibe la alerta, uno la reclama y los dos conversan sobre la petición hasta que se cierra."
+---
+
+`/helpop <message>` abre una petición. Cada miembro del staff de cada servidor recibe una alerta con un
+botón **Reclamar**; el que la reclama responde con `/hs reply`, y a partir de ahí todo lo que el jugador
+escriba en `/helpop` va a ese miembro del staff, esté donde esté. La petición se cierra cuando el staff
+la cierra, o por sí sola si nadie la reclamó a tiempo.
+
+Id de módulo `helpop`, interruptor `modules.helpop`, archivos en `modules/helpop/`.
+
+## Para jugadores
+
+`/helpop <message>` con `exyliastaff.helpop`. Un jugador tiene una petición viva a la vez: un segundo
+`/helpop` mientras sigue sin reclamar responde "You already have request #12 waiting", y hay una
+espera de `cooldown-seconds` entre dos peticiones. Una vez reclamada, `/helpop <message>` es el canal
+de respuesta, sin cooldown, y se avisa al jugador si quien la atiende no está conectado ahora mismo.
+
+## Para el staff
+
+Todo lo de abajo necesita `exyliastaff.helpop.manage`. `/helpop-staff` es la forma larga de `/hs`.
+
+| Comando | Qué hace |
+|---|---|
+| `/hs` | Abre la lista. El casco de tortuga de la hotbar también. |
+| `/hs list` | Imprime las peticiones abiertas y reclamadas, la más antigua primero. También desde la consola. |
+| `/hs claim <id>` | La reclama. Se le dice al jugador quién la atiende. |
+| `/hs reply <id> <message>` | Responde. Una petición sin reclamar se reclama al responder; una reclamada por otro se rechaza. |
+| `/hs close <id> [reason]` | La cierra, con `default-close-reason` cuando no se da ninguno. Cualquier miembro del staff puede cerrar cualquier petición. |
+
+En la lista, clic izquierdo reclama, clic derecho teletransporta al jugador, siguiéndolo hasta su
+servidor, y shift + clic derecho cierra.
+
+## Tiempo de espera
+
+Cada treinta segundos, las peticiones que siguen sin reclamar pasados `timeout-minutes` se cierran con
+`timeout-reason`, y se le dice al jugador que nadie estaba disponible. Una petición reclamada nunca
+caduca. `0` desactiva el tiempo de espera.
+
+## Configuración
+
+```yaml title="plugins/ExyliaStaff/modules/helpop/config.yml"
+cooldown-seconds: 30
+timeout-minutes: 15
+alert:
+  sound:
+    name: BLOCK_NOTE_BLOCK_BELL
+    pitch: 1.2
+```
+
+Un cooldown por debajo de cinco minutos no se conserva tras un reinicio. `alert` es un efecto de la librería que se reproduce al
+staff de todos los servidores; se le puede añadir un title o una action bar.
+
+## Mensajes
+
+`modules/helpop/messages.yml`: `sent` y `already-open` con `%id%`; `cooldown` con `%time%`;
+`alert-header`, `alert-line` y `alert-actions` con `%id%`, `%player%`, `%server%` y
+`%message%`, la última una fila clicable que puedes dejar vacía; `list-header`, `list-line`, `list-empty`;
+`not-found`, `already-claimed`; `claimed`, `claimed-notice`; `transcript-staff` y
+`transcript-player`; `handler-offline`; `closed`, `closed-notice`, `timed-out`;
+`default-close-reason`, `timeout-reason`; `player-offline`, `player-not-here`, `teleported`,
+`following`.
+
+## Placeholders
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_helpop_open%` | Peticiones sin reclamar en la red. |
+| `%staff_helpop_claimed_by_me%` | Peticiones vivas que ha reclamado quien lo ve. |

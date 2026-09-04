@@ -1,0 +1,79 @@
+---
+title: "Primeros pasos"
+description: "Los permisos que necesita un primer grupo de staff, un primer turno en modo staff y qué revisar después."
+badge: "guide"
+---
+
+## Dos nodos para empezar
+
+Todos los módulos hacen primero la misma pregunta: ¿tiene este jugador `exyliastaff.staff`? Ese nodo es
+lo que convierte a alguien en staff: le permite ver a los jugadores en vanish cuando además tiene
+`exyliastaff.vanish.see`, recibir alertas, aparecer en `/stafflist`, y es obligatorio junto con
+`exyliastaff.staffmode` para entrar en modo staff. Perderlo estando conectado termina la sesión en menos
+de cinco segundos.
+
+Un grupo de helpers que pueda hacer un turno necesita, como mínimo:
+
+```text
+exyliastaff.staff
+exyliastaff.staffmode
+exyliastaff.vanish
+exyliastaff.vanish.see
+exyliastaff.freeze
+exyliastaff.inspect
+exyliastaff.teleport
+exyliastaff.reports.manage
+exyliastaff.helpop.manage
+```
+
+La lista completa, módulo por módulo, está en la página de [Permisos](/docs/exyliastaff/permisos).
+
+## Un primer turno
+
+<Steps>
+  <Step title="Entra en modo staff">
+    `/staff`. Tu inventario se guarda, aparece la hotbar de herramientas, pasas a modo aventura,
+    volando e invulnerable, y entras en vanish. El sidebar de staff muestra el tiempo de sesión, tu
+    estado de vanish y los reportes y peticiones de ayuda abiertos.
+  </Step>
+  <Step title="Usa la hotbar">
+    El reloj del primer slot: clic izquierdo salta al bloque que miras, clic derecho atraviesa la
+    pared que tienes delante. El tinte alterna el vanish, el disco de música visita a un jugador
+    aleatorio, el libro inspecciona al jugador que miras, el hacha abre el menú de sanciones sobre él
+    y el hielo lo congela. Abre tu inventario: la barrera sale del modo staff.
+  </Step>
+  <Step title="Atiende un reporte">
+    Un reporte llega como alerta de chat en todos los servidores con un botón **Open**. `/reports` los
+    lista por prioridad; clic izquierdo en una fila para ver todo lo abierto contra ese jugador, clic
+    derecho lo resuelve, shift + clic derecho lo descarta.
+  </Step>
+  <Step title="Sal del modo staff">
+    `/staff` de nuevo, o la barrera. Tu inventario, armadura, modo de juego, vuelo, vida y hambre
+    vuelven, te teletransportas a donde entraste, y el vanish se desactiva si antes eras visible. El
+    chat de staff, el x-ray y las alertas de minería se apagan con la sesión.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Nada de lo que recojas entra en tu inventario">
+En modo staff, los objetos del suelo se quedan en el suelo y todos los slots están bloqueados. Tus
+propios objetos no se muestran; la hotbar es una capa dibujada en el cliente. Las cuatro piezas de cuero
+son la única excepción: se llevan puestas de verdad, para que el resto del staff vea el uniforme.
+</Callout>
+
+## Qué revisar después
+
+- `/stafflog` abre tus sesiones de los últimos siete días: duración, tiempo AFK, servidor y las
+  acciones contadas en cada una.
+- `/staffadmin`, con `exyliastaff.admin.panel`, abre el hub: quién está de servicio, el tablero del
+  equipo, el feed de auditoría, las filas marcadas, la cobertura por día de la semana y los interruptores
+  de módulos.
+- `/exyliastaff modules` desde la consola lista los dieciséis módulos y su estado.
+
+## La puerta de comandos
+
+`config.yml` trae una lista de comandos que un miembro del staff solo puede ejecutar en modo staff:
+`tp`, `gamemode`, `fly`, `give`, `vanish`, `freeze`, `xray` y sus alias, entre otros. Fuera del modo
+staff el comando se rechaza con "Enable staff mode before using /tp" y se oculta del autocompletado. La
+idea es dejar rastro, no poner un candado: cada uso ocurre entonces dentro de una sesión registrada. Los
+jugadores con `exyliastaff.gate.bypass` nunca pasan por la puerta. Ver
+[Configuración](/docs/exyliastaff/configuracion#puerta-de-comandos).

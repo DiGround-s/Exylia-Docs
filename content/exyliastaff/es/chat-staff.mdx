@@ -1,0 +1,78 @@
+---
+title: "Chat de staff y chat global"
+description: "Un canal que solo lee el staff, en todos los servidores; y un bypass que permite al staff leer los chats que otros plugins mantienen aislados."
+---
+
+Dos módulos sobre quién lee qué. El **chat de staff** es un canal propio: lo que un miembro del staff
+dice ahí llega a todos los miembros del staff de la red y a nadie más. El **chat global** es lo
+contrario: permite a un miembro del staff leer todos los chats del servidor, por encima del
+aislamiento de partidas, arenas y eventos, y, un paso más allá, el chat de todos los servidores.
+
+## Chat de staff
+
+Id de módulo `staffchat`, interruptor `modules.staff-chat`, archivos en `modules/staffchat/`.
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/sc` | `exyliastaff.staffchat` | Alterna: todo lo que escribes va al staff hasta que vuelvas a alternar. `/staffchat` es un alias. |
+| `/sc <message>` | `exyliastaff.staffchat` | Envía una línea sin cambiar el interruptor. También desde la consola. |
+
+No hay carácter de prefijo: el interruptor y el comando son las dos vías de entrada. El libro
+escribible de la hotbar lo alterna. El interruptor se guarda en `staff_prefs`, así que sobrevive a
+una reconexión y sigue al jugador entre servidores; salir del modo staff lo apaga, y perder el
+permiso también.
+
+Cada línea pasa por el canal `staffchat` y vuelve, también las locales, así que un servidor sin Redis
+funciona igual que diez con él. Las líneas recibidas se entregan a todos los jugadores conectados con
+`exyliastaff.staffchat` y, cuando `console` está activado, se imprimen en la consola.
+
+```yaml title="plugins/ExyliaStaff/modules/staffchat/config.yml"
+format: '{letters_black}[{primary}SC{letters_black}] {muted}%server% {letters_black}» {highlight}%player% {letters_black}» {letters}%message%'
+console: true
+```
+
+`%server%` es el id de servidor del remitente en `database.yml`. Mensajes: `toggled-on`, `toggled-off`,
+`permission-lost`, `console-needs-message`, `status-on`, `status-off`.
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_staffchat_toggled%` | `status-on` o `status-off`. |
+| `%staff_staffchat_active%` | `true` o `false`. |
+
+## Chat global
+
+Id de módulo `globalchat`, interruptor `modules.global-chat`, archivos en `modules/globalchat/`.
+
+`/globalchat`, o `/chatbypass`, con `exyliastaff.globalchat`, rota entre tres modos. La campana de la
+hotbar hace lo mismo.
+
+| Modo | Qué lees | Quién te lee |
+|---|---|---|
+| `OFF` | El chat a tu alrededor, como cualquier jugador. | Como a cualquier jugador. |
+| `GLOBAL` | Todos los chats de este servidor, aísle lo que aísle otro plugin. | Todo el servidor, por encima de cualquier regla. |
+| `NETWORK` | Lo mismo, más el chat público de todos los demás servidores, en `format`. | Solo tu servidor. Lo que dices nunca sale de él. |
+
+El bypass es el de la librería: un evento cuyos jugadores solo hablan entre sí, una arena cuyo chat
+nunca sale de ella, el chat aislado de un jugador congelado, todos se leen. Solo la lectura cruza
+servidores. El modo se guarda en `staff_prefs`, se vuelve a aplicar al entrar y **no** se apaga al
+salir del modo staff; perder el permiso lo devuelve a apagado.
+
+Cada línea pública de este servidor se publica en el canal `globalchat` cuando `relay` está activado;
+las líneas que otro plugin canceló, entre ellas el chat de staff y los muteos, nunca se retransmiten.
+Desactivar `relay` deja este servidor mudo para la red mientras su propio staff sigue leyendo a los
+demás.
+
+```yaml title="plugins/ExyliaStaff/modules/globalchat/config.yml"
+relay: true
+format: '{letters_black}[{primary}NET{letters_black}] {muted}%server% {letters_black}» {highlight}%player% {letters_black}» {letters}%message%'
+```
+
+Mensajes: `toggled-on`, `toggled-network`, `toggled-off`, `permission-lost`, y las palabras sueltas
+`status-on`, `status-network`, `status-off`.
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_globalchat_toggled%` | `status-off`, `status-on` o `status-network`. |
+| `%staff_globalchat_active%` | `true` en modo global o de red. |
+| `%staff_globalchat_network%` | `true` en modo de red. |
+| `%staff_globalchat_mode%` | `OFF`, `GLOBAL` o `NETWORK`. |

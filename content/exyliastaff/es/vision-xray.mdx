@@ -1,0 +1,75 @@
+---
+title: "Visión x-ray"
+description: "Menas resaltadas a través de la piedra para un miembro del staff: cuáles, a qué distancia, cuántas y cuándo se apaga sola."
+---
+
+La visión x-ray resalta el contorno de las menas alrededor de un miembro del staff para que vea hacia
+dónde está cavando un sospechoso. Cada mena es una entidad de display invisible, brillante y solo en
+el cliente, con la forma del bloque; no se genera nada en el servidor y nadie más la ve.
+
+Id de módulo `xrayvision`, interruptor `modules.xray-vision`, archivos en `modules/xrayvision/`.
+Necesita PacketEvents.
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/xray` | `exyliastaff.xrayvision` | Alterna. `/xrayvision` es un alias. |
+| `/xray on`, `/xray off` | `exyliastaff.xrayvision` | Lo fija. |
+| `/xray <player>`, `/xray on <player>` | `exyliastaff.xrayvision.others` | Para otra persona. Se le dice quién lo hizo. |
+
+La piedra luminosa de la hotbar lo alterna.
+
+## Qué se escanea
+
+El cuadrado de chunks a `radius` chunks del chunk de quien mira, así que `3` es un cuadrado de 7 por
+7, desde `y-radius` bloques por debajo de los pies hasta otros tantos por encima, limitado a la altura
+del mundo. Solo se leen los chunks cargados; el escaneo toma un snapshot del chunk en el hilo de la
+región y lo recorre en un worker. Entrar en un chunk nuevo descarta los contornos de los chunks que
+salieron del rango y escanea los que entraron; un cambio de mundo lo reescanea todo. Con
+`refresh-seconds` a `0` no se reescanea nada hasta que quien mira cambie de chunk, así que una mena
+minada mientras tanto conserva su contorno hasta entonces.
+
+`max-blocks-per-player` es un presupuesto sobre todos los contornos que tiene quien mira: una vez
+gastado, los chunks siguientes no añaden nada.
+
+## Cuándo se apaga
+
+Salir del modo staff apaga el x-ray y lo recuerda apagado. Perder el permiso hace lo mismo, en menos
+de cinco segundos. Una desconexión o la desactivación del módulo lo apagan sin olvidarlo, así que
+vuelve a encenderse en la siguiente sesión con "X-ray is still on from your last session".
+
+## Configuración
+
+```yaml title="plugins/ExyliaStaff/modules/xrayvision/config.yml"
+radius: 3
+y-radius: 24
+refresh-seconds: 0
+max-blocks-per-player: 2000
+outlines:
+  DIAMOND_ORE: '#5DE5E5'
+  DEEPSLATE_DIAMOND_ORE: '#5DE5E5'
+  EMERALD_ORE: '#3FE05B'
+  DEEPSLATE_EMERALD_ORE: '#3FE05B'
+  ANCIENT_DEBRIS: '#FF5555'
+  GOLD_ORE: '#FFD24A'
+  DEEPSLATE_GOLD_ORE: '#FFD24A'
+  IRON_ORE: '#E8E8E8'
+  DEEPSLATE_IRON_ORE: '#E8E8E8'
+```
+
+`outlines` asocia un material de bloque a su color, como `#RRGGBB` o un nombre de color como `AQUA`.
+Añade o quita entradas con libertad; una entrada que no sea un bloque o no sea un color se descarta
+en silencio.
+
+## Mensajes
+
+`modules/xrayvision/messages.yml`: `enabled`, `disabled`, `enabled-other`, `disabled-other`,
+`enabled-by` y `disabled-by`, `permission-lost`, `restored`, `status-on`, `status-off`.
+
+## Placeholders
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_xrayvision_status%` | `status-on` o `status-off` para quien mira. |
+| `%staff_xrayvision_active%` | `true` o `false`. |

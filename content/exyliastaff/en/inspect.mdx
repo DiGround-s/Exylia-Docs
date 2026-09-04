@@ -1,0 +1,44 @@
+---
+title: "Inspect"
+description: "Silent mirrors of a player's inventory, ender chest and any container, editable or read-only by permission."
+---
+
+An inspection opens a live mirror of somebody's inventory: no chest lid, no sound, the mirror follows
+the source while it is open, and with the edit permission what you move is written back. Only online
+players can be inspected.
+
+Module id `inspect`, switch `modules.inspect`, files under `modules/inspect/`. Needs PacketEvents.
+
+## Commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/inspect <player>` | `exyliastaff.inspect` | The player's inventory. `/invsee` and `/examine` are aliases. |
+| `/echest <player>` | `exyliastaff.inspect.enderchest` | Their ender chest. `/enderchest` is an alias. |
+
+The book in the hotbar does the same on the player you look at, within five blocks: right click for
+the inventory, left click for the ender chest. Right clicking a chest, barrel or any other container
+with an empty hand opens it silently, with `exyliastaff.inspect.containers`.
+
+## Read-only or editable
+
+With `exyliastaff.inspect.edit` the inventory and ender chest mirrors are editable and the title says
+so; without it they are read-only. Container mirrors are always read-only.
+
+A mirror closes on its own when the viewer leaves staff mode, loses `exyliastaff.inspect`, or the
+module is disabled.
+
+## Configuration
+
+```yaml title="plugins/ExyliaStaff/modules/inspect/config.yml"
+inventory-title: '{primary}&lINVENTORY {letters_black}» {letters}%target%'
+enderchest-title: '{primary}&lENDER CHEST {letters_black}» {letters}%target%'
+container-title: '{primary}&lCONTAINER {letters_black}» {letters}%target%'
+```
+
+`%target%` is the player's name, or the container's block name for containers.
+
+## Messages
+
+`modules/inspect/messages.yml`: `opened` and `opened-enderchest` with `%target%` and `%mode%`, which
+reads `(editable)` or `(read-only)`; `no-target`; `open-failed`.

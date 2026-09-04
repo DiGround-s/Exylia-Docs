@@ -1,0 +1,79 @@
+---
+title: "Introduction"
+description: "What ExyliaTotemTrainer is, what it solves, and how this documentation is organised."
+---
+
+ExyliaTotemTrainer is a totem-pop trainer for servers that take PvP practice seriously. A player
+trains alone at a tick speed they pick, in a mode the server owner defines, or challenges another
+player to a best-of duel decided by the totem alone. Every session is graded, every best is kept,
+and every mode has its own leaderboard.
+
+It is not a kit with totems in it. Every configured number of ticks the plugin deals a lethal hit that
+a totem in either hand absorbs; the player has to get the next one into a hand before the next hit,
+and the time that takes is the reaction that is graded. No totem in hand when a hit lands is a fail:
+in training the session ends, in a duel the round is lost. No death screen is ever shown.
+
+## What is included
+
+<Cards>
+  <Card title="Modes" href="/docs/exyliatotemtrainer/modes">
+    Five shipped, none hardcoded: how totems are handed out, a random interval window, a speed-up.
+  </Card>
+  <Card title="Grading" href="/docs/exyliatotemtrainer/grading">
+    Five grades against thresholds per tick speed and per mode, a 0–100 score, feedback per grade.
+  </Card>
+  <Card title="Duels" href="/docs/exyliatotemtrainer/duels">
+    Direct challenges, best-of series, simultaneous drops replayed, results stored the moment they happen.
+  </Card>
+  <Card title="Arenas" href="/docs/exyliatotemtrainer/arenas">
+    Two spawns per arena, created and positioned from the admin menu, shared by many sessions at once.
+  </Card>
+  <Card title="Training" href="/docs/exyliatotemtrainer/training">
+    The mechanic itself: the hit, the re-equip, the isolation and everything that is blocked meanwhile.
+  </Card>
+  <Card title="Statistics" href="/docs/exyliatotemtrainer/stats">
+    Profiles, bests per mode and speed, one leaderboard per mode, duel history.
+  </Card>
+</Cards>
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21 or newer. Folia supported. |
+| Java | 21 |
+| Required dependencies | `ExyliaLib`, `packetevents` |
+| Optional dependencies | `PlaceholderAPI` |
+
+<Callout type="note" title="About ExyliaLib">
+Typed configuration, declarative YAML menus, the database, placeholders, effects, sidebars, inventory
+snapshots and the player claims that keep Exylia plugins from stepping on each other all come from
+ExyliaLib. The plugin is written on top of it and does not run without it.
+</Callout>
+
+## How to read this documentation
+
+<Steps>
+  <Step title="Getting started">
+    Installation, and a first arena and a first session within minutes.
+  </Step>
+  <Step title="Configuring">
+    Modes, grading, duels and arenas. This is where most of the time goes.
+  </Step>
+  <Step title="Systems">
+    Training, statistics, the scoreboard and how the plugin behaves next to other Exylia plugins.
+  </Step>
+  <Step title="Reference">
+    Commands, permissions, placeholders, every configuration key, and the developer API.
+  </Step>
+</Steps>
+
+## Conventions
+
+- Values marked as **default** are what the plugin writes the first time it starts. If the file
+  already exists, your value is kept.
+- Identifiers between `<` and `>` are variables. `/totem train <mode>` means `/totem train chaos`,
+  not `/totem train <chaos>`.
+- Times are seconds with decimals unless a key says ticks; 20 ticks are one second.
+- Colours use ExyliaLib palette tokens (`{primary}`, `{highlight}`, `{muted}`); MiniMessage tags such
+  as `<click>` and `<hover>` work too, as the default duel request shows.

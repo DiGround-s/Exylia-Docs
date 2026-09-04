@@ -1,0 +1,95 @@
+---
+title: "Scoreboard"
+description: "The two sidebars in scoreboards.yml: when each shows, their default lines and the refresh block."
+---
+
+`scoreboards.yml` defines two sidebars: `training`, shown to a player in a solo session, and `match`,
+shown to a duellist. Outside both, the plugin shows nothing, and whatever board a lobby plugin had
+underneath comes back on its own.
+
+## The file
+
+```yaml title="plugins/ExyliaTotemTrainer/scoreboards.yml"
+training:
+  enabled: true
+  title:
+    - "{primary}&lTOTEM TRAINER"
+  lines:
+    - ""
+    - "{secondary}Session:"
+    - " {letters_black}▎ {letters}%totem_mode% {muted}· {letters}%totem_interval% ticks"
+    - " {letters_black}▎ {letters}Time {letters_black}» {info}%totem_session_time%"
+    - ""
+    - "{secondary}Performance:"
+    - " {letters_black}▎ {letters}Pops {letters_black}» {info}%totem_pops%"
+    - " {letters_black}▎ {letters}Best {letters_black}» {success}%totem_best%"
+    - " {letters_black}▎ {letters}Average {letters_black}» {info}%totem_average%"
+    - " {letters_black}▎ {letters}Streak {letters_black}» {highlight}%totem_streak%"
+    - " {letters_black}▎ {letters}Last {letters_black}» %totem_grade%"
+    - ""
+    - "{muted}exylia.net"
+  update:
+    interval: 10
+    smart: true
+    cache: true
+match:
+  enabled: true
+  title:
+    - "{primary}&lTOTEM TRAINER"
+  lines:
+    - ""
+    - "{secondary}Duel: {muted}· {letters}%totem_format%"
+    - " {letters_black}▎ {letters}vs {highlight}%totem_opponent%"
+    - " {letters_black}▎ {letters}Round {letters_black}» {info}%totem_round%"
+    - " {letters_black}▎ {letters}Score {letters_black}» {success}%totem_score%"
+    - " {letters_black}▎ {letters}%totem_match_state%"
+    - ""
+    - "{secondary}Round:"
+    - " {letters_black}▎ {letters}Pops {letters_black}» {info}%totem_pops% {muted}· {letters}%totem_opponent_pops%"
+    - " {letters_black}▎ {letters}Best {letters_black}» {success}%totem_best%"
+    - " {letters_black}▎ {letters}Average {letters_black}» {info}%totem_average%"
+    - " {letters_black}▎ {letters}Streak {letters_black}» {highlight}%totem_streak%"
+    - ""
+    - "{muted}exylia.net"
+  update:
+    interval: 10
+    smart: true
+    cache: true
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `enabled` | `true` | `false` keeps the section written but shows no board for that context. |
+| `title` | one line | A list. With several entries they animate: each refresh shows the next. |
+| `lines` | see above | The lines, top first. At most 15; extra lines are dropped. |
+| `update.interval` | `10` | **Ticks** between refreshes. 20 ticks is one second. |
+| `update.smart` | `true` | Sends only the lines that changed instead of the whole board. |
+| `update.cache` | `true` | Read for compatibility with older files: parsed text is cached by ExyliaLib for every plugin at once. |
+
+## What the lines can say
+
+Nothing is pushed into a board. The library renders it on its own interval and asks the placeholders,
+so a line is any text with `%totem_*%` placeholders in it, and any other placeholder ExyliaLib
+resolves works too. The full list is on [Placeholders](/docs/exyliatotemtrainer/placeholders); the
+ones the defaults use:
+
+| Placeholder | Board | Value |
+|---|---|---|
+| `%totem_mode%` | training | The mode's display name |
+| `%totem_interval%` | training | The current interval in ticks, which an accelerating mode keeps moving |
+| `%totem_session_time%` | training | Time since the drill began |
+| `%totem_pops%`, `%totem_best%`, `%totem_average%`, `%totem_streak%` | both | The running session's numbers, this round's in a duel |
+| `%totem_grade%` | training | The last pop's grade, `—` before the first |
+| `%totem_format%` | match | `BO3` |
+| `%totem_opponent%`, `%totem_opponent_pops%` | match | The other side and their pops this round |
+| `%totem_round%`, `%totem_score%`, `%totem_match_state%` | match | Round number, `2 - 1`, and `starting`, `active`, `round_end`… |
+
+<Callout type="note" title="The grade line never goes blank">
+`%totem_grade%` answers `—` between the start of a session and its first pop, so the line reads
+"Last » —" instead of showing the placeholder's own name.
+</Callout>
+
+## Reloading
+
+`/totemtraineradmin reload` re-reads the file and rebuilds the board of every player currently in a
+session or a duel.

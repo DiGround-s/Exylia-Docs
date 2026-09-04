@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { LANGS, SITE, toLang, type Lang } from "@/content/registry";
+import { DEFAULT_LANG, LANGS, SITE, toLang, type Lang } from "@/content/registry";
 import { HtmlLang } from "@/components/HtmlLang";
 
 export function generateStaticParams() {
@@ -17,7 +17,7 @@ export async function generateMetadata({
     description: SITE.description[lang],
     alternates: {
       canonical: `/${lang}`,
-      languages: Object.fromEntries(LANGS.map((code) => [code, `/${code}`])),
+      languages: { ...Object.fromEntries(LANGS.map((code) => [code, `/${code}`])), "x-default": `/${DEFAULT_LANG}` },
     },
     openGraph: { locale: lang === "es" ? "es_ES" : "en_US" },
   };

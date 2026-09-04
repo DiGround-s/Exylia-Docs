@@ -1,0 +1,100 @@
+---
+title: "Preguntas frecuentes"
+description: "Lo que más se pregunta."
+---
+
+## El plugin no arranca
+
+`packetevents` es una dependencia dura: sin él el servidor nunca carga el plugin. `ExyliaLib` aparece
+como blanda solo para que el loader pueda instalarla, pero el plugin la necesita para funcionar. Comprueba
+que ambos están en `plugins/`.
+
+## "No arena is ready. Ask an administrator."
+
+Un duelo necesita una arena **activada** y con **los dos spawns** puestos, en mundos cargados. Abre
+`/totemtraineradmin`, Arenas: una fila marcada como incompleta carece de alguno de ellos. Los duelos
+tampoco pueden empezar en los primeros instantes tras el arranque, antes de que las arenas se hayan leído
+de la base de datos.
+
+## Un jugador no puede retar a alguien
+
+Dos rechazos distintos. "`<nombre>` is busy right now" significa que otro plugin de Exylia retiene a ese
+jugador: está en una arena FFA, en un evento, en una partida de practice. "`<nombre>` is `<motivo>`"
+significa que nadie lo retiene pero un plugin lo desaconseja, con sus propias palabras — "in a party", o el
+"answering a duel request" de este mismo plugin mientras hay una solicitud abierta a cualquiera de sus lados.
+
+## Los duelos nunca empiezan en la arena que quiero
+
+No se elige. Cada duelo va a la arena lista que aloja menos duelos y sesiones en solitario en ese momento,
+así dos arenas se reparten la carga. `arena.max-matches-per-arena` limita lo que acoge una arena; `0` es
+ilimitado.
+
+## ¿Pueden entrenar sin arena?
+
+Sí. Sin ninguna arena lista, el entrenamiento en solitario ocurre donde está el jugador. Los duelos sí
+necesitan una.
+
+## La cuenta atrás es demasiado larga
+
+`training.countdown` en `config.yml`, tres segundos por defecto, usada antes de cada sesión de
+entrenamiento y de cada ronda de duelo. Los jugadores también pueden golpear el aire para saltársela: solos
+en entrenamiento, y en un duelo la ronda empieza en cuanto los dos han golpeado.
+
+## Las velocidades rápidas se califican con demasiada manga ancha
+
+Los umbrales se resuelven por intervalo de ticks antes que nada. Añade un bloque bajo
+`performance.by-ticks` con el intervalo como texto por clave — el archivo por defecto ya trae uno para
+`"10"` — y esa velocidad se califica con sus propios números. `by-mode` hace lo mismo por modo, y se mira
+después de `by-ticks`. Ver [Calificación](/docs/exyliatotemtrainer/calificacion).
+
+## ¿Cómo añado un modo?
+
+Escribe un bloque nuevo bajo `training.modes` y recarga. Un modo son sus números: `totems` (cuántos se
+mantienen en ranuras aleatorias, `0` para un inventario completo), `refill`, una ventana
+`random-interval` opcional y un `speed-up` opcional. Nada en el código conoce los cinco modos incluidos
+por su nombre, así que un sexto recibe los mismos menús, récords y tabla. Ver
+[Modos](/docs/exyliatotemtrainer/modos).
+
+## Una sesión corta puntúa mucho menos de lo que sugieren sus calificaciones
+
+Eso es `performance.full-credit-pops`, veinte por defecto. Por debajo de esos pops la media de los puntos
+de calificación se escala según lo que faltó a la sesión, así que un pop perfecto de suerte no puede
+superar a una tirada larga y limpia en una tabla ordenada por puntuación. Ponlo en `0` para puntuar la
+media sola.
+
+## ¿Qué es un empate, y por qué se canceló un duelo?
+
+Los dos motores golpean con la misma cadencia, así que ambos jugadores pueden soltar el tótem en el mismo
+tick. Esa ronda es un empate: nadie puntúa, y se repite con el mismo número. Tres empates seguidos
+significan que ninguno de los dos está cambiando de tótem, y el duelo se cancela sin guardar nada.
+
+## ¿Puedo ofrecer un best-of-2 o un best-of-4?
+
+Lista la longitud en `match.formats` y pon `match.allow-even-formats: true`. Una serie par puede acabar
+igualada; cuando lo hace, el ganador de su última ronda se lleva el duelo.
+
+## Un jugador no aparece en la tabla
+
+Una tabla nunca coloca un cero: una sesión que acabó antes de un solo pop no fija ninguna mejor marca. Y la
+tabla se guarda en caché durante `leaderboard.cache-seconds`, cinco minutos por defecto — aunque guardar un
+récord nuevo vacía la caché, así que quien acaba de fijar uno se ve en la tabla en la que lo fijó.
+
+## Mis placeholders de PlaceholderAPI salen sin resolver
+
+El nombre del grupo es parte del placeholder. Es `%exyliatotemtrainer_totem_wins%` o
+`%exyliatotem_totem_wins%`, nunca `%exyliatotem_wins%`. Ver
+[Placeholders](/docs/exyliatotemtrainer/placeholders).
+
+## ¿Dónde están las arenas y las estadísticas?
+
+En la base de datos, no en YAML: `totem_arenas`, `totem_profiles`, `totem_training_records` y
+`totem_matches`. H2 por defecto; apunta `database.yml` a MySQL, MariaDB, PostgreSQL o MongoDB para
+compartirlas entre servidores. La recarga no las toca.
+
+## ¿Funciona en Folia?
+
+Sí, declara soporte de Folia, y cada evento que dispara corre en el hilo dueño del jugador.
+
+## ¿Dónde consigo soporte?
+
+En el [Discord de Exylia](https://discord.exylia.net).

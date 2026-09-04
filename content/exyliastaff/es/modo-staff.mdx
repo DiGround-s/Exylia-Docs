@@ -1,0 +1,170 @@
+---
+title: "Modo staff"
+description: "La sesión, el snapshot, la hotbar de herramientas, la vista de espectador y lo que un miembro del staff no puede hacer de servicio."
+---
+
+El modo staff es una sesión. Entrar guarda un snapshot del jugador, aplica el estado de staff y muestra
+una hotbar de herramientas; salir restaura el snapshot. La sesión es una fila en la base de datos, así
+que sobrevive a una reconexión y sigue al jugador a otro servidor que comparta la misma base de datos, y
+es lo que cuenta el [registro del staff](/docs/exyliastaff/registro-staff).
+
+Id de módulo `staffmode`, interruptor `modules.staff-mode`, archivos bajo `modules/staffmode/`. Necesita
+PacketEvents: la hotbar es una capa dibujada en el cliente.
+
+## Entrar
+
+`/staff`, o `/staffmode` y `/mod`, con `exyliastaff.staff` y `exyliastaff.staffmode`. En orden:
+
+1. El jugador se rechaza con "Finish what you are doing first" si otro plugin lo tiene en una
+   actividad, por ejemplo una partida o un evento.
+2. Se recuerda si ya estaba en vanish.
+3. Se guarda un snapshot y se escribe la fila de `staff_sessions`. Solo entonces se toca al jugador.
+4. Se aplican el modo de juego, el vuelo y la invulnerabilidad, se llenan la vida y la comida, se
+   muestran la hotbar y el uniforme, se colorea el nametag para el resto del staff y aparece el sidebar
+   `staff-mode`.
+5. Si `auto-vanish` está activado y era visible, entra en vanish en silencio.
+6. Suena el efecto de entrada y empieza la sesión.
+
+Mientras está de servicio, el jugador queda excluido de todos los plugins cosméticos construidos sobre la
+librería y cuenta como observador para todos los modos aislantes, de modo que una partida o un evento no
+le ocultan el servidor.
+
+## Salir
+
+`/staff` de nuevo, la barrera de la hotbar, `/staff off`, perder un permiso, o un admin. Primero se borra
+la fila, después se restaura el snapshot: armadura, modo de juego, vuelo, vida y hambre, más un
+teletransporte de vuelta a donde empezó la sesión cuando `restore-location` está activado. El vanish se
+desactiva si el jugador era visible antes de entrar y `restore-vanish` está activado. Se avisa a todos los
+módulos de que el turno terminó: el chat de staff, la visión x-ray, las alertas de minería y los espejos
+de inventario abiertos se cierran con él.
+
+Perder `exyliastaff.staff` o `exyliastaff.staffmode` estando conectado se detecta en menos de cinco
+segundos y termina la sesión con "You lost permission for staff mode".
+
+## Reconexiones y servidores
+
+`exit-on-quit` está desactivado por defecto: una desconexión conserva la fila, y la siguiente entrada en
+cualquier servidor con la misma base de datos reanuda la sesión, con "Staff session resumed" y el tiempo
+transcurrido. Un `/stop` conserva todas las sesiones por el mismo motivo. Una fila cuyo snapshot ya no
+existe se borra; un snapshot sin fila se restaura en silencio, así que un crash nunca deja a un miembro
+del staff con el uniforme puesto.
+
+## La hotbar
+
+`modules/staffmode/hotbar.yml` se copia desde el jar una vez y después no se toca. Cada entrada nombra un
+slot, un objeto y qué ejecuta un clic; una entrada etiquetada con `module: <id>` solo se muestra mientras
+ese módulo está activado, y una entrada con `permission:` solo se muestra a los jugadores que lo tienen.
+
+| Slot | Objeto | Clic izquierdo | Clic derecho |
+|---|---|---|---|
+| 0 | Reloj | Saltar al bloque que miras | Atravesar la pared |
+| 1 | Tinte lima o gris | Alternar vanish | |
+| 3 | Disco de música | Jugador aleatorio | |
+| 5 | Libro | Ender chest del jugador que miras | Inventario del jugador que miras |
+| 7 | Hacha de netherite | Sancionar al jugador que miras | |
+| 8 | Hielo compacto | Congelar o descongelar al jugador que miras | |
+| 9 | Ojo o perla de ender | Vista de espectador | |
+| 12 | Polvo de blaze | Abrir reportes | |
+| 14 | Casco de tortuga | Abrir peticiones de ayuda | |
+| 17 | Barrera | Salir del modo staff | |
+| 27 | Pico de diamante o de hierro | Mineros sospechosos | Alternar alertas de minería |
+| 28 | Libro editable o libro | Alternar chat de staff | |
+| 29 | Glowstone o cristal gris | Alternar visión x-ray | |
+| 30 | Campana o cadena | Ciclar chat global | |
+| 34 | Tu cabeza | Lista de staff | |
+| 35 | Libro escrito | Tu registro del staff | |
+
+Las entradas de dos objetos muestran uno u otro leyendo un placeholder como `%staff_vanished%`, así que
+la hotbar se redibuja sola cuando el estado cambia. Hacer clic derecho con la mano vacía sobre un cofre
+lo abre en silencio. Los slots van de `0` a `35`, más `offhand`, `helmet`, `chestplate`, `leggings` y
+`boots`. Las cuatro piezas de armadura se llevan puestas de verdad, así que el resto de jugadores las ven;
+todo lo demás se dibuja en el cliente y nunca entra en el inventario.
+
+Las acciones se escriben como `staff:<name>`; los comandos como `player: <cmd>`, `console: <cmd>` o
+`player-proxy: <cmd>`. Los clics pueden ser `left`, `right`, `shift_left`, `shift_right`, `drop`, `swap`,
+`middle` y más. El archivo incluido trae un ejemplo comentado de CoreProtect.
+
+## Vista de espectador
+
+`/staff spectator`, o `/staff spec`, o el ojo de ender: modo de juego espectador real, para volar a
+través de paredes y seguir a un jugador. Desactivarla devuelve el modo de juego de staff configurado. El
+botón **Follow** del panel la usa.
+
+## Lo que el staff no puede hacer
+
+| Siempre | Configurable en `block` |
+|---|---|
+| Dañar nada, incluso con proyectiles | Recoger objetos (`pickup`) |
+| Soltar, mover o intercambiar objetos; escribir slots creativos | Romper bloques (`block-break`), colocarlos (`block-place`) |
+| | Desgastar objetos (`item-damage`), perder hambre (`hunger`) |
+
+Los mobs nunca atacan a un miembro del staff mientras `invulnerable` está activado.
+
+## Configuración
+
+```yaml title="plugins/ExyliaStaff/modules/staffmode/config.yml"
+gamemode: ADVENTURE
+fly: true
+invulnerable: true
+auto-vanish: true
+restore-vanish: true
+exit-on-quit: false
+restore-location: true
+block:
+  pickup: true
+  block-break: true
+  block-place: true
+  item-damage: true
+  hunger: true
+nametag-color: AQUA
+scoreboard: true
+effects:
+  enter:
+    title:
+      text: '{primary}&lSTAFF MODE'
+      subtitle: '{letters}Enabled'
+      stay: 2.0
+      fade-out: 0.5
+    sound:
+      name: BLOCK_NOTE_BLOCK_PLING
+      pitch: 1.5
+  exit:
+    title:
+      text: '{primary}&lSTAFF MODE'
+      subtitle: '{letters}Disabled'
+      stay: 2.0
+      fade-out: 0.5
+    sound:
+      name: BLOCK_NOTE_BLOCK_PLING
+      pitch: 0.8
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `gamemode` | `ADVENTURE` | Modo de juego de servicio. Un valor desconocido cae en aventura. Creativo siempre permite volar. |
+| `fly` | `true` | Permitir el vuelo. |
+| `invulnerable` | `true` | No recibe daño, los mobs no lo atacan. |
+| `auto-vanish` | `true` | Vanish al entrar. Necesita el módulo de vanish. |
+| `restore-vanish` | `true` | Quitar el vanish al salir cuando el jugador era visible antes de entrar. |
+| `exit-on-quit` | `false` | Terminar la sesión al desconectarse en vez de reanudarla en la siguiente entrada. |
+| `restore-location` | `true` | Teletransportar de vuelta a donde empezó la sesión. |
+| `nametag-color` | `AQUA` | Color del nombre tal como lo ve el resto del staff. Vacío o desconocido para ninguno. |
+| `scoreboard` | `true` | Mostrar el sidebar `staff-mode`. Necesita el módulo de scoreboard. |
+| `effects.enter`, `effects.exit` | | Efectos de la librería: title, action bar, boss bar, sonido, partícula, fuego artificial. |
+
+## Mensajes
+
+`modules/staffmode/messages.yml`: `enabled`, `disabled`, `already-enabled`, `already-disabled`,
+`enabled-other` y `disabled-other` con `%target%`, `permission-lost`, `session-removed`,
+`session-resumed` con `%time%`, `disabled-by-module`, `spectator-on`, `spectator-off`, y `busy`
+con `%activity%` y `%plugin%`.
+
+## Placeholders
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_staffmode_status%` | `true` mientras el que lo ve tiene una sesión. |
+| `%staff_staffmode_time%` | Tiempo de sesión como reloj, vacío fuera del modo staff. |
+| `%staff_staffmode_spectator%` | `true` en vista de espectador. |
+| `%staff_mode%` | `true` mientras está en modo staff, desde el núcleo. |
+| `%staff_in_mode%` | Jugadores en modo staff en este servidor. |

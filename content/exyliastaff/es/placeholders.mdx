@@ -1,0 +1,105 @@
+---
+title: "Placeholders"
+description: "Cada placeholder que responde el plugin, en sus dos grafías, escrito completo."
+---
+
+Cada placeholder de abajo está escrito completo, y al hacer clic en uno se copia.
+
+## Dos grafías
+
+Dentro de los archivos del propio plugin, los sidebars, los menús y los mensajes, un placeholder se
+escribe con el grupo `staff` y nada delante:
+
+```text
+%staff_reports_open%
+```
+
+A través de PlaceholderAPI el nombre del plugin va delante. El grupo se queda en el nombre en ambos casos:
+
+```text
+%exyliastaff_staff_reports_open%
+```
+
+Cada valor es una lectura de memoria; nada de esto toca la base de datos. Un placeholder de un módulo
+apagado no responde nada.
+
+## Núcleo
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_mode%` | `true` mientras quien lo ve está en modo staff. |
+| `%staff_vanished%` | `true` mientras está en vanish. |
+| `%staff_frozen%` | `true` mientras está congelado. |
+| `%staff_online%` | Jugadores con `exyliastaff.staff` en este servidor. |
+| `%staff_in_mode%` | Jugadores en modo staff en este servidor. |
+| `%staff_modules_enabled%` | Módulos en marcha. |
+
+## Modo staff
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_staffmode_status%` | `true` con una sesión. |
+| `%staff_staffmode_time%` | Tiempo de sesión como un reloj. Vacío fuera del modo staff. |
+| `%staff_staffmode_spectator%` | `true` en vista de espectador. |
+
+## Vanish
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_vanish_status%` | El texto `status-on` o `status-off`. |
+| `%staff_vanish_count%` | Staff en vanish en todos los servidores. |
+
+## Freeze
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_freeze_by%` | Quién congeló a quien lo ve. |
+| `%staff_freeze_time%` | Cuánto tiempo, como un reloj, para el jugador congelado y para el miembro del staff que lo retiene. |
+| `%staff_freeze_target%` | A quién ha congelado quien lo ve en este servidor. |
+
+## Chat
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_staffchat_toggled%` | El texto `status-on` o `status-off`. |
+| `%staff_staffchat_active%` | `true` o `false`. |
+| `%staff_globalchat_toggled%` | El texto `status-off`, `status-on` o `status-network`. |
+| `%staff_globalchat_active%` | `true` en modo global o red. |
+| `%staff_globalchat_network%` | `true` en modo red. |
+| `%staff_globalchat_mode%` | `OFF`, `GLOBAL` o `NETWORK`. |
+| `%staff_stafflist_total%` | Staff conectado en todos los servidores. |
+
+## Reportes, helpop, sanciones
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_reports_open%` | Reportes abiertos en la red. |
+| `%staff_helpop_open%` | Solicitudes de ayuda sin reclamar. |
+| `%staff_helpop_claimed_by_me%` | Solicitudes activas que quien lo ve ha reclamado. |
+| `%staff_punishments_total%` | Sanciones que quien lo ve ha aplicado. |
+| `%staff_punishments_today%` | De esas, las de hoy. |
+
+## Minería y x-ray
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_mining_level%` | El nombre del nivel de sospecha de quien lo ve. |
+| `%staff_mining_score%` | La puntuación propia de quien lo ve, con decaimiento. |
+| `%staff_mining_alerts%` | El texto `status-on` o `status-off`. |
+| `%staff_mining_alerts_active%` | `true` o `false`. |
+| `%staff_xrayvision_status%` | El texto `status-on` o `status-off`. |
+| `%staff_xrayvision_active%` | `true` o `false`. |
+
+## Registro del staff
+
+| Placeholder | Valor |
+|---|---|
+| `%staff_stafflog_today%` | Minutos en modo staff hoy. |
+| `%staff_stafflog_week%` | Minutos en los últimos siete días. |
+
+## En los sidebars
+
+El sidebar de staff por defecto mezcla estos con los placeholders de servidor de la librería: `%server_tps%`,
+`%server_mspt%`, `%server_cpu_process:percent%`, `%server_ram_used%`, `%server_online%` y
+`%player_ping%`. Apagar el módulo de reportes, helpop o vanish deja su placeholder sin resolver en
+el tablero; quita la línea.

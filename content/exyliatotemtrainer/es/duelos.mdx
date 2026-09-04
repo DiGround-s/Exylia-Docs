@@ -1,0 +1,156 @@
+---
+title: "Duelos"
+description: "Retos directos, formatos al mejor de N, cómo se decide una ronda, qué se guarda y cuándo, y qué puede seguir haciendo un jugador dentro de uno."
+---
+
+Un duelo es siempre un rival elegido: no hay cola ni matchmaking. Dos jugadores juegan el mismo modo a
+la misma velocidad en la misma arena, y la ronda es de quien mantenga un tótem en la mano. Los dos
+motores se construyen con las mismas reglas y la misma semilla, así que un modo aleatorio reparte a
+ambos lados la misma secuencia de intervalos.
+
+## Enviar una solicitud
+
+Dos formas de entrar:
+
+- `/totem duel <player> [mode] [ticks] [bestOf]`. El modo por defecto es el primero de `config.yml`,
+  los ticks `training.default-ticks`, el formato `match.default-format`.
+- `/totem` → **Duel**, o `/totem duel` solo, abre el selector de rivales: todos los conectados menos tú
+  y los jugadores que no puedes ver, los libres primero. Un jugador ocupado sigue en la lista, debajo
+  de todos los libres, con el motivo y sin clic. La lista se refresca cada segundo mientras está abierta.
+
+Hacer clic en un jugador abre la pantalla del duelo: su cabeza con victorias, derrotas y pop más
+rápido, el selector de velocidad, el selector de formato y las filas de modos. Hacer clic en un modo
+envía la solicitud. La velocidad y el formato se recuerdan para la próxima vez.
+
+La solicitud se rechaza, con un mensaje, cuando:
+
+| Situación | Mensaje |
+|---|---|
+| El objetivo eres tú mismo | You cannot duel yourself. |
+| Ya estás entrenando o en un duelo | Finish what you are doing first. |
+| Otro plugin te tiene retenido | You are busy in `<plugin>`. |
+| Otro plugin lo desaconseja | Not right now: `<reason>`. |
+| El objetivo está retenido por cualquier plugin, este incluido | `<target>` is busy right now. |
+| El plugin del objetivo lo desaconseja | `<target>` is `<reason>`. |
+
+El objetivo recibe una línea con el retador, el modo, la velocidad y el formato, con botones **Accept**
+y **Decline** clicables que ejecutan `/totem accept` y `/totem deny`. Se guarda una solicitud por
+objetivo; una más nueva sustituye a la anterior. Una solicitud caduca a los `match.duel-request-expiry`
+segundos (30 por defecto, nunca menos de 1), y se avisa a los dos lados cuando ocurre.
+
+<Callout type="note" title="Mientras una solicitud está abierta">
+Ninguno de los dos lados tiene todavía un claim, así que este plugin avisa a los demás plugins de
+Exylia de que ambos jugadores están "answering a duel request". Es un consejo que ellos respetan, no un
+bloqueo: ver [Compatibilidad](/docs/exyliatotemtrainer/compatibilidad).
+</Callout>
+
+## Aceptar
+
+`/totem accept` vuelve a comprobar a los dos lados — cualquiera puede haberse metido en algo mientras la
+solicitud esperaba — y después necesita una **arena lista**: habilitada y con los dos spawns. Sin ella,
+ambos leen "No arena is ready. Ask an administrator." y no empieza nada. Se elige la arena menos
+cargada, contando los duelos y las sesiones en solitario que aloja, dentro de `arena.max-matches-per-arena`
+(`0` es sin límite).
+
+Los dos jugadores se reclaman antes de que nada se mueva. Si el segundo claim falla, el primero se
+deshace — inventario incluido — y nadie es teletransportado. Después el jugador A va al spawn A y el B
+al spawn B, ambos ven el efecto `match-found` y empieza la cuenta atrás de la primera ronda.
+
+## Formatos
+
+```yaml title="plugins/ExyliaTotemTrainer/config.yml"
+match:
+  formats: [1, 3, 5, 7]
+  default-format: 3
+  allow-even-formats: false
+  round-delay: 3.0
+  result-delay: 5.0
+  duel-request-expiry: 30.0
+  allowed-commands: [totem, tt, totemtrainer, msg, r, tell, w]
+```
+
+| Clave | Qué hace |
+|---|---|
+| `formats` | Las longitudes al mejor de N ofrecidas, en el selector y en el comando. Vale cualquier longitud positiva. |
+| `default-format` | La longitud usada cuando no se elige ninguna. |
+| `allow-even-formats` | Las longitudes pares de `formats` solo se ofrecen cuando esto es `true`. |
+| `round-delay` | Segundos entre el final de una ronda y la siguiente cuenta atrás. |
+| `result-delay` | Segundos que el resultado permanece en pantalla, en la arena, antes de devolver a los dos. |
+| `duel-request-expiry` | Segundos que una solicitud permanece abierta. |
+| `allowed-commands` | Etiquetas de comando que un jugador puede seguir ejecutando mientras entrena o está en duelo. |
+
+Un mejor de `n` lo gana el primer lado que llega a `n/2 + 1` rondas: dos rondas en un BO3, cuatro en
+un BO7, una en un BO1. La serie también termina cuando se han jugado las `n` rondas, que es lo que una
+longitud par necesita: un BO2 que acaba 1–1 es para quien ganó su segunda ronda.
+
+## Una ronda
+
+<Steps>
+  <Step title="Curar y contar">
+    Los dos jugadores se curan a vida y comida completas, se apaga el fuego y se envía "Round X of Y".
+    La cuenta atrás es `training.countdown` segundos, la misma que usa el entrenamiento.
+  </Step>
+  <Step title="Golpea para empezar">
+    Golpear el aire durante la cuenta atrás te marca como listo y se lo dice al rival. Cuando los dos lo
+    han hecho, la ronda empieza al instante. Un jugador no puede saltarla solo: recibiría el primer
+    golpe mientras el otro todavía lee un número.
+  </Step>
+  <Step title="El ejercicio">
+    Los dos motores arrancan en el mismo tick y entregan los tótems del modo. En cada intervalo cae un
+    golpe letal sobre cada jugador y el tótem en la mano lo absorbe; el siguiente tiene que estar en una
+    mano antes del golpe siguiente. Cada pop se califica y se muestra como en entrenamiento.
+  </Step>
+  <Step title="Quietos">
+    Los duelistas están fijados en los ejes horizontales; caer está permitido, para que un spawn puesto
+    por encima del suelo se asiente. El tótem es todo el juego.
+  </Step>
+</Steps>
+
+## Cómo se decide una ronda
+
+- **Un lado falla**: sin tótem en la mano cuando cayó su golpe. El otro lado gana la ronda.
+- **Los dos fallan en el mismo tick**: los dos motores golpean con la misma cadencia, así que un fallo
+  abre una ventana de un tick para el golpe emparejado. Dos fallos dentro de ella son un **empate**: se
+  reproduce el efecto `round-draw` y la ronda se repite con el mismo número — el intento se conserva y
+  sus pops cuentan, pero la serie no avanza. Tres empates seguidos cancelan el duelo: nadie está cambiando tótems.
+- **Los dos terminan un modo de inventario completo sin refill** (`normal`): nadie falló, así que la
+  ronda se decide con el ejercicio. Un lado con pops gana a uno sin ninguno; después la media de
+  reacción más rápida; después la puntuación más alta; después más pops. Un empate total es empate y se repite.
+
+Tras cada ronda ambos ven el efecto `round-won`, `round-lost` o `round-draw`, la línea de chat
+correspondiente y un resumen de ronda: ganador, pops, media, mejor, puntuación y la serie hasta ahora.
+Después pasan `round-delay` segundos y la siguiente ronda cuenta atrás.
+
+## El final
+
+Cuando un lado llega a las rondas necesarias, ambos ven `match-won` o `match-lost` y el resultado se
+**guarda al instante**: los perfiles de los dos jugadores (partidas, victorias y derrotas, porcentaje
+de victorias, rondas ganadas y perdidas, pops, mejor reacción, la racha de victorias en duelo — sube
+con una victoria, vuelve a cero con una derrota — y la mejor racha) y una fila de historial por
+jugador. Después se envía el resumen del duelo, los jugadores permanecen en la arena `result-delay`
+segundos, y ambos son restaurados y devueltos.
+
+Guardar primero significa que un servidor que se detiene durante la pausa no pierde nada.
+
+De vuelta, un jugador cuyo duelo terminó hace menos de un minuto recibe la **pantalla de resultado**:
+VICTORY o DEFEAT, los pops, mejor y media de los dos jugadores, la puntuación y la duración. Tiene un
+botón **Rematch** cuando el rival sigue conectado y ambos están libres; envía una solicitud nueva con
+los mismos ajustes.
+
+## Abandono y cancelación
+
+| Final | Causado por | ¿Se guarda? |
+|---|---|---|
+| **Abandono** — gana el rival | `/totem leave`, salir del servidor, cambiar de mundo, un teletransporte que el plugin no hizo (una perla de ender, una fruta coral), otro plugin recuperando al jugador | Sí, como un resultado normal |
+| **Cancelación** — nadie gana | Un administrador cancelándolo, su arena deshabilitada o borrada, el plugin desactivándose, tres empates seguidos, un teletransporte a la arena que falla | No. Ambos leen "The duel was cancelled." |
+
+## Comandos dentro de una sesión
+
+Quien está entrenando o en duelo solo puede ejecutar las etiquetas de `match.allowed-commands`: por
+defecto los comandos del propio plugin y los mensajes privados (`msg`, `r`, `tell`, `w`). Cualquier
+otro se bloquea con "Leave with /totem leave before using that command." Un prefijo `plugin:comando`
+se elimina antes de la comprobación, así que no sirve para saltarse la lista.
+
+Todo lo demás que se bloquea mientras tanto — daño, hambre, soltar y recoger objetos, contacto con
+jugadores fuera del duelo — está en la página de [Entrenamiento](/docs/exyliatotemtrainer/entrenamiento),
+porque las mismas protecciones cubren ambos.

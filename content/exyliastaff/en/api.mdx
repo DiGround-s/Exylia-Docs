@@ -1,0 +1,93 @@
+---
+title: "API"
+description: "The static facade another plugin asks about a player, the two events every module fires, and how to be counted by the log."
+badge: "dev"
+---
+
+`net.exylia.exyliaStaff.api.StaffAPI` is static and answers from memory: every call is a cache read,
+safe from any thread. Events live in `net.exylia.exyliaStaff.api.event`.
+
+## Declaring the dependency
+
+```yaml title="plugin.yml"
+softdepend:
+  - ExyliaStaff
+```
+
+`depend` works too. The loader defines the classes in this plugin's own classloader, and Bukkit
+delegates between plugin classloaders for anything listed as a dependency.
+
+## Asking about a player
+
+```java
+boolean onDuty   = StaffAPI.isInStaffMode(player);
+boolean hidden   = StaffAPI.isVanished(player.getUniqueId());
+boolean pinned   = StaffAPI.isFrozen(player);
+int     level    = StaffAPI.vanishLevel(player); // 0 when vanish is off or no level node
+```
+
+Each question is answered by the module that owns the state, and by `false` or `0` when that module
+is off; nothing throws. `vanishLevel` reads permissions, so it takes the player and must be asked on a
+thread that may read them.
+
+The `Permissions` class in the same package holds every node as a constant.
+
+## Events
+
+Both are plain Bukkit events, fired on the player's thread after the change is applied, and neither
+is cancellable.
+
+### StaffStateChangeEvent
+
+A piece of a player's staff state flipped. `getPlayer()`, `getKind()` and `isEnabled()`.
+
+| Kind | Fired by |
+|---|---|
+| `STAFF_MODE` | Entering, resuming after a join, leaving for any reason. |
+| `VANISH` | Every vanish change, including the silent ones from staff mode and a join restore. |
+| `FROZEN` | Freeze and release, on the frozen player. |
+| `STAFF_CHAT` | The toggle, and when it is switched off by duty end or a lost permission. |
+| `GLOBAL_CHAT` | Every mode change; `isEnabled()` is `true` for global and for network. |
+| `MINING_ALERTS` | The alerts toggle. |
+| `XRAY_VISION` | Every actual on or off. |
+| `SPECTATOR` | The spectator view toggle. |
+
+```java
+@EventHandler
+public void onState(StaffStateChangeEvent event) {
+    if (event.getKind() == StaffStateChangeEvent.Kind.STAFF_MODE && !event.isEnabled()) {
+        // the shift ended
+    }
+}
+```
+
+### StaffActionEvent
+
+A staff member did something worth counting. `getStaff()`, `getAction()` and a nullable
+`getTarget()`. The staff log increments the session's counter and the audit records a row; no module
+calls either directly.
+
+| Action | When |
+|---|---|
+| `freeze`, `unfreeze` | By a player, not the console. |
+| `inspect`, `enderchest`, `container` | After a mirror opened. `container` has no target. |
+| `teleport` | After landing, local or cross-server. Jump and phase have no target. |
+| `report_resolve`, `report_dismiss` | Per report, resolve-all included. |
+| `helpop_reply`, `helpop_close` | Manual close only, not a timeout. |
+| `punish` | After the command ran, whatever its outcome. |
+| `mining_reset` | By a player. |
+| `xray_toggle` | Only when the change is remembered. |
+
+Fire your own from another plugin and it is counted and audited like the rest:
+
+```java
+Bukkit.getPluginManager().callEvent(new StaffActionEvent(staff, "rollback", target.getUniqueId()));
+```
+
+## Actions and menus
+
+Every `staff:<name>` action the hotbar and the menus run is registered with the library's action
+registry under the namespace `staff`, so a menu of another plugin may run `staff:freeze_toggle` or
+`staff:reports_open`. `StaffKeys.TARGET` and `StaffKeys.TARGET_ID` are the context keys that name
+the player an action is about; `StaffKeys.target(context)` reads them, or the entity the click
+landed on.

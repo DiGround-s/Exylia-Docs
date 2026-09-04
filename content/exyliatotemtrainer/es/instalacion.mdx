@@ -1,0 +1,103 @@
+---
+title: "Instalación"
+description: "Dependencias, primer arranque y los archivos que el plugin genera."
+---
+
+## Antes de empezar
+
+ExyliaTotemTrainer necesita dos plugins en `plugins/` **antes** del primer arranque.
+
+| Plugin | Para qué |
+|---|---|
+| `ExyliaLib` | Configuración, menús, base de datos, placeholders, efectos, sidebars, instantáneas de inventario y claims de jugador. |
+| `packetevents` | El aislamiento visual: los jugadores de sesiones distintas no se ven entre sí. Declarado como dependencia dura; sin él el plugin no carga. |
+
+Opcional:
+
+- **PlaceholderAPI** — para usar los placeholders del plugin fuera de él. Todo lo demás funciona sin él.
+
+<Callout type="note" title="ExyliaLib figura como soft">
+`plugin.yml` pone ExyliaLib en `softdepend` a propósito: el loader que instala ExyliaLib es el que
+tiene que cargar primero para que esa instalación ocurra. El plugin sigue necesitándola para funcionar.
+</Callout>
+
+## Instalar
+
+<Steps>
+  <Step title="Coloca los jars">
+    Copia `ExyliaTotemTrainer.jar` y sus dependencias en la carpeta `plugins/` del servidor.
+  </Step>
+  <Step title="Arranca el servidor">
+    En el primer arranque se generan los archivos de configuración, los menús y las tablas de la base de datos.
+  </Step>
+  <Step title="Revisa la consola">
+    Deberías ver `ExyliaTotemTrainer enabled` y, cuando se hayan leído las arenas, `Loaded 0 arenas`.
+    Ningún duelo puede empezar antes de que aparezca esa segunda línea.
+  </Step>
+  <Step title="Abre el panel">
+    Con el permiso `exyliatotemtrainer.admin`, ejecuta `/totemtraineradmin` para abrir el menú de
+    administración y crear una primera arena. Ver [Primeros pasos](/docs/exyliatotemtrainer/primeros-pasos).
+  </Step>
+</Steps>
+
+## Archivos generados
+
+Todos viven en `plugins/ExyliaTotemTrainer/`.
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | Modos, velocidades en ticks, calificación, feedback, formatos y tiempos de duelo, tablas, historial, límite por arena. |
+| `messages.yml` | Cada línea que el plugin envía, agrupada por sistema. |
+| `scoreboards.yml` | Los dos sidebars: uno para entrenamiento, otro para duelo. |
+| `menus/` | Cada pantalla: `main`, `training`, `opponents`, `duel`, `profile`, `records`, `history`, `leaderboard_modes`, `leaderboard`, `result`, y la carpeta `admin/`. |
+| `database.yml` | Motor de base de datos, escrito por ExyliaLib. H2 por defecto, embebido, nada que instalar. |
+
+Los menús de jugador se copian del jar una vez y después no se tocan, así que tus ediciones sobreviven
+a las actualizaciones. Un archivo de menú que no se puede leer se reporta en consola y esa pantalla no
+abre; el resto del plugin sigue funcionando.
+
+<Callout type="warning" title="menus/admin/ se reescribe en cada arranque">
+Las seis pantallas de staff bajo `menus/admin/` se refrescan desde el jar cada vez que el plugin
+arranca, para que un botón añadido en una versión llegue a los servidores que ya tienen la carpeta.
+Ahí no vive nada que un dueño deba editar.
+</Callout>
+
+<Callout type="note" title="Las arenas no están en un archivo">
+Arenas, perfiles, récords de entrenamiento e historial de duelos viven en la base de datos, no en YAML:
+las tablas `totem_arenas`, `totem_profiles`, `totem_training_records` y `totem_matches`. Las arenas se
+crean y editan desde `/totemtraineradmin`, que es lo que permite a varios servidores compartir un mismo
+conjunto apuntando a la misma base de datos.
+</Callout>
+
+## Base de datos
+
+Por defecto el plugin usa **H2**: un archivo dentro de la carpeta del plugin, sin servidor, sin
+instalación y sin mantenimiento. Perfecto para un solo servidor.
+
+Para compartir datos entre servidores, edita `database.yml`:
+
+```yaml title="plugins/ExyliaTotemTrainer/database.yml"
+database:
+  type: mysql
+  settings:
+    max-pool-size: 0
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Motores soportados: `h2`, `mysql`, `mariadb`, `postgresql` y `mongodb`. Solo se lee el bloque que
+coincide con `type`. El archivo es de ExyliaLib; su referencia completa está en la
+[página de base de datos de la librería](/docs/exylialib/base-de-datos).
+
+Nada espera a la base de datos mientras el plugin se activa. Cada lectura y escritura es asíncrona, y
+un perfil se carga cuando su jugador entra.
+
+## Actualizar
+
+Sustituye el jar y reinicia. Tus ediciones en `config.yml`, `messages.yml`, `scoreboards.yml` y los menús
+de jugador se conservan; solo `menus/admin/` se regenera desde el jar, y las arenas y estadísticas viven en
+la base de datos.

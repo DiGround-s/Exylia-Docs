@@ -1,0 +1,124 @@
+---
+title: "Entrenamiento"
+description: "La mecánica del tótem, la sesión en solitario de principio a resumen, y qué protege el plugin mientras un jugador está dentro."
+---
+
+El entrenamiento en solitario es un jugador, un motor, un sidebar. El motor es el mismo objeto que usa
+un duelo, así que todo lo que dice esta página sobre golpes, reacciones y protecciones vale también
+para los duelos; lo que un duelo añade está en [Duelos](/docs/exyliatotemtrainer/duelos).
+
+## La mecánica
+
+Cada intervalo el motor asesta un **golpe letal** que absorbe un tótem en cualquiera de las dos manos.
+El jugador tiene entonces que llevar el siguiente tótem a una mano antes del golpe siguiente. El tiempo
+entre el golpe y el reequipado es la reacción, y la reacción es lo que se califica.
+
+| Paso | Qué ocurre |
+|---|---|
+| Antes del golpe | Se comprueban las manos en el servidor. Mano principal o secundaria con un tótem: se asesta el golpe. Ninguna: el jugador **falló**, no hay golpe, no hay muerte. |
+| El golpe | `Player#damage` con causa `CUSTOM` y una cantidad letal. El tótem se consume. |
+| El reequipado | Cambiar de mano, desplazar la hotbar, clic o arrastre en el inventario: cualquier forma de que un tótem llegue a una mano. Se evalúa un tick después, cuando el inventario del servidor es el que ve el jugador. |
+| La reacción | Medida desde el golpe hasta el reequipado, en nanosegundos, y después calificada. Ver [Calificación](/docs/exyliatotemtrainer/calificacion). |
+| La reposición | Un tick después del pop el modo repone tótems: un modo con reserva completa su cuenta en ranuras vacías al azar, un modo de inventario completo rellena o termina. Ver [Modos](/docs/exyliatotemtrainer/modos). |
+
+Los ticks marcan la cadencia; los nanosegundos miden la reacción. El intervalo es la velocidad que el
+jugador eligió en ticks, salvo que el modo lo saque de una ventana o lo acelere.
+
+<Callout type="note" title="Nadie ve nunca una pantalla de muerte">
+Un jugador sin tótem en la mano no recibe el golpe. El motor registra un fallo en su lugar, así que una
+sesión termina con un título y un mensaje, nunca con un respawn.
+</Callout>
+
+## Una sesión, de principio a fin
+
+`/totem train <modo> [ticks]`, o un modo en la pantalla **Solo** de `/totem` tras elegir velocidad.
+
+<Steps>
+  <Step title="Comprobaciones">
+    El modo tiene que existir y el intervalo tiene que ser uno de `training.ticks`. Un jugador que ya
+    entrena o está en duelo lee "Finish what you are doing first."; uno retenido por otro plugin de
+    Exylia lee "You are busy in %plugin%."; uno sobre el que otro plugin desaconseja lee "Not right now:
+    %reason%." Ver [Compatibilidad](/docs/exyliatotemtrainer/compatibilidad).
+  </Step>
+  <Step title="Reclamo e instantánea">
+    El jugador queda reclamado para `TRAINING`, se recuerda su posición, su inventario se guarda y se
+    vacía, y pasa a modo **aventura** entrara como entrara.
+  </Step>
+  <Step title="Aislamiento">
+    Entra en un grupo propio: no ve a nadie y nadie lo ve, y no puede ser golpeado ni tocado desde
+    fuera. Ver [Compatibilidad](/docs/exyliatotemtrainer/compatibilidad).
+  </Step>
+  <Step title="Arena, o aquí mismo">
+    Se elige la arena lista con menos carga y el jugador va a su spawn A. Sin ninguna arena lista,
+    entrena **donde está**. Ver [Arenas](/docs/exyliatotemtrainer/arenas).
+  </Step>
+  <Step title="Cuenta atrás">
+    `training.countdown` segundos (`3.0` por defecto) con un título y una action bar. El subtítulo por
+    defecto le dice que pulse E y cambie tótems desde el inventario. **Golpear al aire termina la
+    cuenta atrás al momento.**
+  </Step>
+  <Step title="El ejercicio">
+    Se reparten los tótems, la ranura en mano pasa a la primera, se programa el primer golpe y aparece
+    el sidebar de entrenamiento. Ver [Scoreboard](/docs/exyliatotemtrainer/scoreboard).
+  </Step>
+</Steps>
+
+El chat confirma el inicio: "Training started: %mode% · %ticks% ticks."
+
+## Cómo termina una sesión
+
+| Motivo | Cuándo | Qué ve el jugador |
+|---|---|---|
+| `FAILED` | Sin tótem en la mano cuando llegó un golpe | El efecto `fail` ("POPPED OUT") y "Missed a totem after %pops% pops.", después el resumen |
+| `COMPLETED` | Un modo de inventario completo sin relleno se quedó sin tótems | El efecto `training-complete` ("COMPLETE") y "Training complete!", después el resumen |
+| `LEFT` | `/totem leave`, o el botón de salir del menú | El resumen; el comando además dice "You left." |
+| `DISCONNECTED` | El jugador se desconectó | Nada; los números se guardan |
+| `CANCELLED` | Otro plugin se llevó al jugador o el plugin se desactivó | Nada; los números se guardan |
+
+Sea cual sea el motivo, la sesión se guarda cuando tuvo **al menos un pop o un fallo**: el perfil de
+por vida se mueve y el récord de ese modo y velocidad se fusiona. Ver
+[Estadísticas](/docs/exyliatotemtrainer/estadisticas). El `TrainingEndEvent` lleva el mismo motivo.
+
+### El resumen
+
+`training.summary` en `messages.yml` es una lista de líneas, enviada tras `FAILED`, `COMPLETED` y
+`LEFT`. Conoce:
+
+| Placeholder | Valor |
+|---|---|
+| `%mode%` | El nombre visible del modo |
+| `%ticks%` | El intervalo elegido |
+| `%pops%` | Tótems consumidos |
+| `%fails%` | Fallos, 0 o 1 en solitario |
+| `%best%` | Reacción más rápida, segundos con dos decimales |
+| `%average%` | Reacción media, segundos con dos decimales |
+| `%streak%` | Mejor racha de pops consecutivos |
+| `%score%` | La puntuación de 0 a 100 |
+| `%duration%` | Cuánto duró la sesión |
+
+## Mientras se está dentro
+
+Las mismas protecciones valen para el entrenamiento en solitario y para los duelos.
+
+| Qué | Regla |
+|---|---|
+| Daño | Todo salvo el golpe del propio motor se cancela, incluida una llamada `damage()` de otro plugin con la misma causa. |
+| Hambre | Congelada. |
+| Objetos | Soltar y recoger se cancelan. |
+| Otros jugadores | Golpear, hacer clic derecho o recibir golpes de cualquiera fuera de tu grupo se cancela. Los jugadores dentro de una sesión no colisionan. |
+| Comandos | Solo corren las etiquetas de `match.allowed-commands` (`totem`, `tt`, `totemtrainer`, `msg`, `r`, `tell`, `w` por defecto). Cualquier otra lee "Leave with /totem leave before using that command." Un prefijo `plugin:comando` se quita antes de comprobar. |
+| Movimiento | Libre en solitario. **Anclado en los ejes horizontales en un duelo**, con caída permitida. |
+| Salir por otros medios | Un teletransporte que no hizo el plugin (una perla de ender, una fruta coral) o un cambio de mundo termina la sesión, o rinde el duelo. |
+| Una muerte desde fuera | Si otro plugin mata al jugador por un camino que la guarda de daño no vio, se conserva el inventario, se vacían los drops, la consola avisa y el jugador sale. |
+
+## Salir
+
+La salida sigue un orden fijo: el motor se detiene y se retira el equipamiento, el inventario y el modo
+de juego se restauran desde la instantánea, el jugador vuelve a donde estaba (o a
+`arena.return-location`), y el reclamo se libera **al final**, para que ningún otro modo pueda vestir
+al jugador mientras su inventario está aún de camino.
+
+<Callout type="note" title="Después de un crash">
+Una instantánea que un reinicio dejó atrás se restaura en la siguiente entrada del jugador, y se le
+envía a donde estaba antes de empezar la sesión. Nadie despierta dentro de una arena.
+</Callout>
