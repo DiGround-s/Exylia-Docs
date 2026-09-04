@@ -16,24 +16,28 @@ training:
       display-name: Normal
       totems: 0
       refill: false
+      close-inventory: false
       icon: CHEST
       description: One full inventory of totems. When it runs out, you are done.
     infinite:
       display-name: Infinite
       totems: 0
       refill: true
+      close-inventory: false
       icon: TOTEM_OF_UNDYING
       description: A full inventory, refilled forever. It ends when you miss one.
     random:
       display-name: Random
       totems: 1
       refill: false
+      close-inventory: false
       icon: ENDER_EYE
       description: A single totem, in a different random slot after every pop.
     chaos:
       display-name: Chaos
       totems: 1
       refill: false
+      close-inventory: false
       random-interval:
         min-ticks: 10
         max-ticks: 30
@@ -43,12 +47,20 @@ training:
       display-name: Acceleration
       totems: 3
       refill: false
+      close-inventory: false
       speed-up:
         every: 10
         by: 5
         min-ticks: 5
       icon: FIREWORK_ROCKET
       description: Three totems on screen, faster every 10 pops. Find your ceiling.
+    blackout:
+      display-name: Blackout
+      totems: 0
+      refill: true
+      close-inventory: true
+      icon: ENDER_CHEST
+      description: A full inventory that slams shut on every pop. Open it again, fast.
   ticks: [25, 20, 15, 10, 5]
   default-ticks: 20
   countdown: 3.0
@@ -151,10 +163,11 @@ debug: false
 
 | Clave | Por defecto | Qué hace |
 |---|---|---|
-| `modes` | cinco modos | Un bloque por modo; una clave nueva es un modo nuevo, sin código. La clave es el id del modo que usan comandos, récords, tablas y placeholders. Los menús listan los modos en el orden del archivo. Ver [Modos](/docs/exyliatotemtrainer/modos). |
+| `modes` | seis modos | Un bloque por modo; una clave nueva es un modo nuevo, sin código. La clave es el id del modo que usan comandos, récords, tablas y placeholders. Los menús listan los modos en el orden del archivo. Ver [Modos](/docs/exyliatotemtrainer/modos). |
 | `modes.<id>.display-name` | | Lo que ven los jugadores. Admite tokens de paleta. |
 | `modes.<id>.totems` | | Tótems mantenidos en ranuras aleatorias a la vez; el que explota vuelve en otra ranura. `0` entrega un inventario completo en su lugar. |
 | `modes.<id>.refill` | | Solo modos de inventario completo: entregar otro inventario cuando se va el último tótem. `false` termina la sesión ahí. |
+| `modes.<id>.close-inventory` | | Cierra el inventario de golpe tras cada pop, así que hay que volver a abrirlo antes de poder cambiar el siguiente tótem de mano. |
 | `modes.<id>.random-interval` | ausente | `min-ticks` y `max-ticks`. Cada intervalo se sortea dentro de la ventana, desplazada para que la velocidad elegida quede en su centro. `max-ticks: 0` lo apaga, y el bloque se deja fuera del archivo. |
 | `modes.<id>.speed-up` | ausente | `every` golpes entre dos aceleraciones, `by` ticks que se quitan cada vez, `min-ticks` el suelo. `by: 0` o `every: 0` lo apaga, y el bloque se deja fuera. |
 | `modes.<id>.icon` | | Material o cabeza usada en los menús. |

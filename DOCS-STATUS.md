@@ -30,7 +30,7 @@ scripts/doc-drift.sh exyliaevents # just one
 | `exyliashields` | `ExyliaShields` | 1.0.4 | `83a54f9` 2026-09-01 | Current — the only change since was a database index. |
 | `exyliastaff` | `ExyliaStaff` | 1.1.0 | `0556cce` 2026-09-03 | Current — first full documentation: the sixteen modules, the hotbar, vanish levels, freeze across servers, report priority, the punishment ladder and its command templates, the nine mining factors, the staff log and the admin panel. Left out on purpose: the reports history screen (not registered by the module in 1.1.0), `%staff_reports_mine%` (always 0) and `exyliastaff.inspect.ip` (declared, unused). |
 | `exyliasurvivalcore` | `ExyliaSurvivalCore` | 1.0.6 | `1e1dc33` 2026-09-02 | Current for the two pages that exist (placeholders, permissions). The plugin is not finished, and the rest of its documentation is deliberately unwritten. |
-| `exyliatotemtrainer` | `ExyliaTotemTrainer` | 1.0.0 | `ad46628` 2026-09-03 | Current — first full documentation: the five shipped modes as three choices, grading and score, duels with draws and the even-format rule, arenas from the admin menu, per-mode leaderboards, the `totem_` PlaceholderAPI spelling. |
+| `exyliatotemtrainer` | `ExyliaTotemTrainer` | 1.0.0 | `6ec68a0` 2026-09-04 | Current — first full documentation: the six shipped modes as four choices, grading and score, duels with draws and the even-format rule, arenas from the admin menu, per-mode leaderboards, the `totem_` PlaceholderAPI spelling. Blackout and `close-inventory` documented. |
 
 ## How a review goes
 

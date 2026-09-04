@@ -1,18 +1,20 @@
 ---
 title: "Modos"
-description: "Los cinco modos de serie, las tres decisiones de las que se compone cada uno y cómo escribir un sexto."
+description: "Los seis modos de serie, las cuatro decisiones de las que se compone cada uno y cómo escribir un séptimo."
 ---
 
 Un modo no es un nombre que el código conozca. Es un conjunto de decisiones bajo `training.modes` en
 `config.yml`: cómo se entregan los tótems, si el intervalo entre golpes se sortea dentro de una
-ventana y si se acelera a medida que avanza la sesión. Los cinco modos de serie son esas decisiones y
-nada más, lo que los convierte en la referencia para cualquier modo que añadas.
+ventana, si el inventario se cierra tras cada pop y si se acelera a medida que avanza la sesión. Los
+seis modos de serie son esas decisiones y nada más, lo que los convierte en la referencia para
+cualquier modo que añadas.
 
-## Las tres decisiones
+## Las cuatro decisiones
 
 | Clave | Qué decide |
 |---|---|
 | `totems`, `refill` | Cómo se surte el inventario. Un `totems` mayor que cero mantiene esa cantidad de tótems en ranuras aleatorias; `0` entrega un inventario completo, y `refill` dice si se vuelve a entregar cuando se agota. |
+| `close-inventory` | La pantalla del inventario se cierra de golpe tras cada pop, así que hay que volver a abrirla antes de poder cambiar el siguiente tótem de mano. |
 | `random-interval` | Cada intervalo se sortea en una ventana entre `min-ticks` y `max-ticks` en lugar de mantenerse fijo. |
 | `speed-up` | Cada `every` golpes el intervalo pierde `by` ticks, sin bajar nunca de `min-ticks`. |
 
@@ -24,13 +26,14 @@ cualquier modo, o los dos: un modo que a la vez varía y acelera está a un bloq
 
 ## Los modos de serie
 
-| Modo | `totems` | `refill` | `random-interval` | `speed-up` |
-|---|---|---|---|---|
-| `normal` | 0 | no | — | — |
-| `infinite` | 0 | sí | — | — |
-| `random` | 1 | — | — | — |
-| `chaos` | 1 | — | 10..30 | — |
-| `acceleration` | 3 | — | — | −5 cada 10, hasta 5 |
+| Modo | `totems` | `refill` | `close-inventory` | `random-interval` | `speed-up` |
+|---|---|---|---|---|---|
+| `normal` | 0 | no | no | — | — |
+| `infinite` | 0 | sí | no | — | — |
+| `random` | 1 | — | no | — | — |
+| `chaos` | 1 | — | no | 10..30 | — |
+| `acceleration` | 3 | — | no | — | −5 cada 10, hasta 5 |
+| `blackout` | 0 | sí | sí | — | — |
 
 Tal como quedan escritos en el archivo generado:
 
@@ -41,24 +44,28 @@ training:
       display-name: Normal
       totems: 0
       refill: false
+      close-inventory: false
       icon: CHEST
       description: One full inventory of totems. When it runs out, you are done.
     infinite:
       display-name: Infinite
       totems: 0
       refill: true
+      close-inventory: false
       icon: TOTEM_OF_UNDYING
       description: A full inventory, refilled forever. It ends when you miss one.
     random:
       display-name: Random
       totems: 1
       refill: false
+      close-inventory: false
       icon: ENDER_EYE
       description: A single totem, in a different random slot after every pop.
     chaos:
       display-name: Chaos
       totems: 1
       refill: false
+      close-inventory: false
       random-interval:
         min-ticks: 10
         max-ticks: 30
@@ -68,12 +75,20 @@ training:
       display-name: Acceleration
       totems: 3
       refill: false
+      close-inventory: false
       speed-up:
         every: 10
         by: 5
         min-ticks: 5
       icon: FIREWORK_ROCKET
       description: Three totems on screen, faster every 10 pops. Find your ceiling.
+    blackout:
+      display-name: Blackout
+      totems: 0
+      refill: true
+      close-inventory: true
+      icon: ENDER_CHEST
+      description: A full inventory that slams shut on every pop. Open it again, fast.
   ticks: [25, 20, 15, 10, 5]
   default-ticks: 20
   countdown: 3.0
@@ -98,6 +113,14 @@ Cuando desaparece el último tótem:
 - `refill: false` completa la sesión ahí. El jugador ve el efecto `training-complete` y el resumen; en
   un duelo, que los dos lados terminen así decide la ronda con sus números
   (ver [Duelos](/docs/exyliatotemtrainer/duelos)).
+
+### Inventario cerrado tras cada pop
+
+`close-inventory: true` cierra la pantalla del inventario en cuanto un tótem explota. Lo que quede
+en el cursor se descarta al cerrarla, así que ningún tótem termina en el suelo; el inventario acaba
+de rellenarse de todas formas. Volver a abrirla es parte del ejercicio, y la reacción se sigue
+midiendo desde el golpe hasta que el siguiente tótem llega a una mano, así que ese tiempo cuenta.
+`blackout` es esa decisión sobre un inventario completo con relleno.
 
 ### Intervalo aleatorio
 
@@ -152,8 +175,8 @@ training:
 | `description` | Una línea mostrada bajo el modo en los menús. |
 
 Los menús listan los modos en el orden del archivo. La línea de regla bajo cada modo — "One totem,
-random slot", "Full inventory, refilled", "10-30 ticks", "-5 ticks every 10, down to 5" — se construye
-a partir de los números, así que un modo que inventes se describe solo.
+random slot", "Full inventory, refilled", "10-30 ticks", "Inventory shuts on every pop", "-5 ticks
+every 10, down to 5" — se construye a partir de los números, así que un modo que inventes se describe solo.
 
 <Callout type="warning" title="Renombrar el id de un modo">
 Los récords y las tablas se indexan por el id. Una clave renombrada empieza vacía, y las filas antiguas

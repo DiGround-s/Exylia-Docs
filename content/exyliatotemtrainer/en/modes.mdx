@@ -1,18 +1,19 @@
 ---
 title: "Modes"
-description: "The five shipped modes, the three choices each one is made of, and how to write a sixth."
+description: "The six shipped modes, the four choices each one is made of, and how to write a seventh."
 ---
 
 A mode is not a name the code knows. It is a set of choices under `training.modes` in `config.yml`:
-how totems are handed out, whether the interval between hits is drawn from a window, and whether it
-speeds up as the session goes on. The five shipped modes are those choices and nothing else, which
-makes them the reference for any mode you add.
+how totems are handed out, whether the interval between hits is drawn from a window, whether the
+inventory is shut after every pop, and whether it speeds up as the session goes on. The six shipped
+modes are those choices and nothing else, which makes them the reference for any mode you add.
 
-## The three choices
+## The four choices
 
 | Key | What it decides |
 |---|---|
 | `totems`, `refill` | How the inventory is stocked. `totems` above zero keeps that many totems in random slots; `0` hands out a full inventory, and `refill` says whether it is handed out again when it runs out. |
+| `close-inventory` | The inventory screen is slammed shut after every pop, so it has to be opened again before the next totem can be swapped in. |
 | `random-interval` | Every interval is drawn from a window between `min-ticks` and `max-ticks` instead of kept fixed. |
 | `speed-up` | Every `every` hits the interval loses `by` ticks, never going below `min-ticks`. |
 
@@ -24,13 +25,14 @@ that both drifts and accelerates is a block away.
 
 ## The shipped modes
 
-| Mode | `totems` | `refill` | `random-interval` | `speed-up` |
-|---|---|---|---|---|
-| `normal` | 0 | no | — | — |
-| `infinite` | 0 | yes | — | — |
-| `random` | 1 | — | — | — |
-| `chaos` | 1 | — | 10..30 | — |
-| `acceleration` | 3 | — | — | −5 every 10, down to 5 |
+| Mode | `totems` | `refill` | `close-inventory` | `random-interval` | `speed-up` |
+|---|---|---|---|---|---|
+| `normal` | 0 | no | no | — | — |
+| `infinite` | 0 | yes | no | — | — |
+| `random` | 1 | — | no | — | — |
+| `chaos` | 1 | — | no | 10..30 | — |
+| `acceleration` | 3 | — | no | — | −5 every 10, down to 5 |
+| `blackout` | 0 | yes | yes | — | — |
 
 As written in the generated file:
 
@@ -41,24 +43,28 @@ training:
       display-name: Normal
       totems: 0
       refill: false
+      close-inventory: false
       icon: CHEST
       description: One full inventory of totems. When it runs out, you are done.
     infinite:
       display-name: Infinite
       totems: 0
       refill: true
+      close-inventory: false
       icon: TOTEM_OF_UNDYING
       description: A full inventory, refilled forever. It ends when you miss one.
     random:
       display-name: Random
       totems: 1
       refill: false
+      close-inventory: false
       icon: ENDER_EYE
       description: A single totem, in a different random slot after every pop.
     chaos:
       display-name: Chaos
       totems: 1
       refill: false
+      close-inventory: false
       random-interval:
         min-ticks: 10
         max-ticks: 30
@@ -68,12 +74,20 @@ training:
       display-name: Acceleration
       totems: 3
       refill: false
+      close-inventory: false
       speed-up:
         every: 10
         by: 5
         min-ticks: 5
       icon: FIREWORK_ROCKET
       description: Three totems on screen, faster every 10 pops. Find your ceiling.
+    blackout:
+      display-name: Blackout
+      totems: 0
+      refill: true
+      close-inventory: true
+      icon: ENDER_CHEST
+      description: A full inventory that slams shut on every pop. Open it again, fast.
   ticks: [25, 20, 15, 10, 5]
   default-ticks: 20
   countdown: 3.0
@@ -97,6 +111,14 @@ hotbar slot, so the player already holds the totem the first hit pops. When the 
 - `refill: false` completes the session there. The player sees the `training-complete` effect and the
   summary; in a duel, both sides finishing this way decides the round on their numbers
   (see [Duels](/docs/exyliatotemtrainer/duels)).
+
+### Inventory shut on every pop
+
+`close-inventory: true` shuts the inventory screen the moment a totem pops. Anything held on the
+cursor is cleared as it closes, so no totem is left on the floor; the inventory has just been
+refilled anyway. Opening the screen again is part of the drill, and the reaction is still measured
+from the hit to the next totem reaching a hand, so the time it takes counts. `blackout` is that
+choice on top of a refilled full inventory.
 
 ### Random interval
 
@@ -150,8 +172,8 @@ training:
 | `description` | One line shown under the mode in menus. |
 
 Menus list modes in the order the file does. The rule line under each mode — "One totem, random
-slot", "Full inventory, refilled", "10-30 ticks", "-5 ticks every 10, down to 5" — is built from the
-numbers, so a mode you invent describes itself.
+slot", "Full inventory, refilled", "10-30 ticks", "Inventory shuts on every pop", "-5 ticks every 10,
+down to 5" — is built from the numbers, so a mode you invent describes itself.
 
 <Callout type="warning" title="Renaming a mode id">
 Records and leaderboards are keyed by the id. A renamed key starts empty, and the old rows stay in

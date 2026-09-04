@@ -16,24 +16,28 @@ training:
       display-name: Normal
       totems: 0
       refill: false
+      close-inventory: false
       icon: CHEST
       description: One full inventory of totems. When it runs out, you are done.
     infinite:
       display-name: Infinite
       totems: 0
       refill: true
+      close-inventory: false
       icon: TOTEM_OF_UNDYING
       description: A full inventory, refilled forever. It ends when you miss one.
     random:
       display-name: Random
       totems: 1
       refill: false
+      close-inventory: false
       icon: ENDER_EYE
       description: A single totem, in a different random slot after every pop.
     chaos:
       display-name: Chaos
       totems: 1
       refill: false
+      close-inventory: false
       random-interval:
         min-ticks: 10
         max-ticks: 30
@@ -43,12 +47,20 @@ training:
       display-name: Acceleration
       totems: 3
       refill: false
+      close-inventory: false
       speed-up:
         every: 10
         by: 5
         min-ticks: 5
       icon: FIREWORK_ROCKET
       description: Three totems on screen, faster every 10 pops. Find your ceiling.
+    blackout:
+      display-name: Blackout
+      totems: 0
+      refill: true
+      close-inventory: true
+      icon: ENDER_CHEST
+      description: A full inventory that slams shut on every pop. Open it again, fast.
   ticks: [25, 20, 15, 10, 5]
   default-ticks: 20
   countdown: 3.0
@@ -151,10 +163,11 @@ debug: false
 
 | Key | Default | What it does |
 |---|---|---|
-| `modes` | five modes | One block per mode; a new key is a new mode, no code involved. The key is the mode id used by commands, records, boards and placeholders. Menus list modes in file order. See [Modes](/docs/exyliatotemtrainer/modes). |
+| `modes` | six modes | One block per mode; a new key is a new mode, no code involved. The key is the mode id used by commands, records, boards and placeholders. Menus list modes in file order. See [Modes](/docs/exyliatotemtrainer/modes). |
 | `modes.<id>.display-name` | | What players see. Palette tokens allowed. |
 | `modes.<id>.totems` | | Totems kept in random slots at once; the popped one comes back in another slot. `0` hands out a full inventory instead. |
 | `modes.<id>.refill` | | Full-inventory modes only: hand out another inventory once the last totem is gone. `false` ends the session there. |
+| `modes.<id>.close-inventory` | | Slams the inventory shut after every pop, so it has to be opened again before the next totem can be swapped in. |
 | `modes.<id>.random-interval` | absent | `min-ticks` and `max-ticks`. Every interval is drawn from the window, shifted so the picked speed sits at its centre. `max-ticks: 0` turns it off, and the block is left out of the file. |
 | `modes.<id>.speed-up` | absent | `every` hits between two speed-ups, `by` ticks taken off each time, `min-ticks` the floor. `by: 0` or `every: 0` turns it off, and the block is left out. |
 | `modes.<id>.icon` | | Material or head used in menus. |

@@ -955,8 +955,8 @@ export const plugins: Plugin[] = [
     name: "ExyliaTotemTrainer",
     tagline: { en: "Totem training and best-of duels", es: "Entrenamiento de tótems y duelos al mejor de" },
     summary: {
-      en: "Solo totem-pop drills at five tick speeds in five configurable modes, best-of duels against a chosen opponent, reactions graded PERFECT to SLOW, a leaderboard per mode, duel history and an admin surface that is only menus.",
-      es: "Entrenamiento de pops de tótem en solitario a cinco velocidades en cinco modos configurables, duelos al mejor de contra un rival elegido, reacciones calificadas de PERFECT a SLOW, una tabla por modo, historial de duelos y una administración que es solo menús.",
+      en: "Solo totem-pop drills at five tick speeds in six configurable modes, best-of duels against a chosen opponent, reactions graded PERFECT to SLOW, a leaderboard per mode, duel history and an admin surface that is only menus.",
+      es: "Entrenamiento de pops de tótem en solitario a cinco velocidades en seis modos configurables, duelos al mejor de contra un rival elegido, reacciones calificadas de PERFECT a SLOW, una tabla por modo, historial de duelos y una administración que es solo menús.",
     },
     version: "1.0.0",
     status: "stable",
