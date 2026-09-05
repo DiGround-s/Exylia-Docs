@@ -1,0 +1,90 @@
+---
+title: "Crear efectos con IA"
+description: "Describe el efecto que quieres, copia el prompt y pega la respuesta en effects.yml."
+---
+
+Escribir un efecto de muerte a mano significa conocer veintiséis formas, cuarenta parámetros y qué le
+hace `ease:in` a una espada que cae. No hace falta. El prompt de abajo lo lleva todo — el lenguaje de
+pasos, los límites, las tres reglas que te ahorran una tarde y dos efectos incluidos al completo — así
+que lo único que queda de tu parte es la idea.
+
+## Escribe primero la idea
+
+El prompt vale lo que vale lo que le metes. «Algo chulo» produce algo genérico; un párrafo produce el
+efecto que te imaginabas. Cuenta:
+
+<Steps>
+  <Step title="De qué está hecho">
+    Bloques y objetos reales, por su nombre. `NETHERITE_SWORD`, `AMETHYST_CLUSTER`,
+    `CRYING_OBSIDIAN`. Eso es lo que le da silueta al efecto — las partículas solo son la luz que lo
+    rodea.
+  </Step>
+  <Step title="Qué se mueve, y hacia dónde">
+    Cae desde arriba, se cierra sobre el centro, sale disparado, sube y se queda. Dale una dirección
+    y una distancia: «doce espadas caen desde diez bloques de altura».
+  </Step>
+  <Step title="Cuánto dura">
+    Un efecto de muerte es una escena de segundo y medio a tres segundos. Di si quieres un único
+    golpe o tres tiempos encadenados.
+  </Step>
+  <Step title="Qué pasa con el cuerpo">
+    Casi todos los efectos incluidos colocan a la víctima con una línea `[NPC]`. De pie y luego
+    desplomándose, lanzado hacia atrás, girando, de rodillas — dilo, o di que no quieres cuerpo.
+  </Step>
+  <Step title="El tono y el sonido">
+    Pesado y áspero, o limpio y brillante. Nombra un sonido si tienes uno en mente; si no, deja que
+    el modelo elija y cámbialo después.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Un ejemplo de idea bien escrita">
+«Un funeral. La víctima se arrodilla y cae hacia delante. Ocho pilares de `DEEPSLATE_TILES` salen del
+suelo a su alrededor en un círculo de tres bloques, despacio, durante un segundo. Un `SOUL_LANTERN`
+queda flotando encima del cuerpo y brilla. Una campana apagada al final. Frío, silencioso, sin
+fuego.»
+</Callout>
+
+## Copia el prompt
+
+<AiPrompt id="killeffect" />
+
+Pégalo en la IA que uses, sustituye `<<< WRITE YOUR IDEA HERE >>>` por lo que has escrito arriba y
+envíalo.
+
+## Después
+
+<Steps>
+  <Step title="Pega la respuesta en effects.yml">
+    Abre `plugins/ExyliaKillEffect/effects.yml` y pega el bloque bajo `kill_effects:`, con la misma
+    indentación que los efectos que ya están. Comprueba que su `category` existe.
+  </Step>
+  <Step title="Recarga">
+    `/killeffectsadmin reload`. Cada jugador que tenga ese efecto se vuelve a comprobar contra el
+    catálogo nuevo, así que un efecto que deja de existir se le quita a quien lo tuviera.
+  </Step>
+  <Step title="Lee la consola">
+    Un paso que no se puede leer se descarta y se imprime con la línea que lo causó. Ese es tu
+    corrector: si no aparece nada, todas las líneas se entendieron.
+  </Step>
+  <Step title="Míralo y ajústalo">
+    Pruébalo contigo mismo. Los números son lo fácil de cambiar — `radius`, `life`, `size`, el
+    `[DELAY]` entre tiempos. El prompt le pide al modelo que explique qué hace cada paso para que
+    sepas qué número mover.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="El modelo también se equivoca">
+Escribe un material que no existe, o un parámetro que una forma no entiende, y la consola lo dice. No
+puede romper el plugin — una línea mala se descarta y el resto del efecto se sigue reproduciendo —
+pero te puede costar una tarde si no lees la consola. Devuélvele el error a la IA y normalmente lo
+arregla a la primera.
+</Callout>
+
+<Callout type="note" title="También es un permiso">
+La clave que pegues se convierte en `exyliakilleffect.effect.<clave>`, así que nadie ve el efecto
+nuevo hasta que se lo concedas. Mira [Permisos](/docs/exyliakilleffect/permisos).
+</Callout>
+
+Todo lo que sabe el prompt está documentado aquí también, por si prefieres escribir el efecto tú:
+[Secuencias](/docs/exyliakilleffect/secuencias) es el lenguaje de pasos completo, y
+[Efectos y categorías](/docs/exyliakilleffect/efectos) es el archivo que lo rodea.

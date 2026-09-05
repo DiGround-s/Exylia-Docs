@@ -1,0 +1,88 @@
+---
+title: "Creating effects with AI"
+description: "Describe the effect you want, copy the prompt, and paste the answer into effects.yml."
+---
+
+Writing a kill effect by hand means knowing twenty-six shapes, forty parameters and what `ease:in`
+does to a falling sword. You do not have to. The prompt below carries all of it — the step language,
+the limits, the three rules that save an afternoon, and two shipped effects in full — so the only
+thing left for you is the idea.
+
+## Write the idea first
+
+The prompt is only as good as what you put in it. "Something cool" produces something generic; a
+paragraph produces the effect you pictured. Say:
+
+<Steps>
+  <Step title="What it is made of">
+    Real blocks and items, named. `NETHERITE_SWORD`, `AMETHYST_CLUSTER`, `CRYING_OBSIDIAN`. This is
+    what gives an effect its silhouette — particles are only the light around it.
+  </Step>
+  <Step title="What moves, and where">
+    Falls from above, closes on the centre, throws itself outwards, rises and hangs. Give it a
+    direction and a distance: "twelve blades fall from ten blocks up".
+  </Step>
+  <Step title="How long it lasts">
+    A kill effect is a scene of a second and a half to three seconds. Say whether you want a single
+    slam or three beats one after another.
+  </Step>
+  <Step title="What happens to the body">
+    Almost every shipped effect places the victim with an `[NPC]` line. Standing then collapsing,
+    thrown backwards, spinning, kneeling — say it, or say you want no body at all.
+  </Step>
+  <Step title="The mood and the sound">
+    Heavy and grinding, or bright and clean. Name a sound if you have one in mind; otherwise let the
+    model choose and change it afterwards.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="A worked example of an idea">
+"A funeral. The victim kneels, then falls forward. Eight `DEEPSLATE_TILES` pillars rise out of the
+ground around them in a circle of three blocks, slowly, over a second. A `SOUL_LANTERN` hangs above
+the body and glows. Muffled bell at the end. Cold, quiet, no fire."
+</Callout>
+
+## Copy the prompt
+
+<AiPrompt id="killeffect" />
+
+Paste it into whichever AI you use, replace `<<< WRITE YOUR IDEA HERE >>>` with what you wrote above,
+and send it.
+
+## Then
+
+<Steps>
+  <Step title="Paste the answer into effects.yml">
+    Open `plugins/ExyliaKillEffect/effects.yml` and paste the block under `kill_effects:`, at the
+    same indentation as the effects already there. Make sure its `category` is one that exists.
+  </Step>
+  <Step title="Reload">
+    `/killeffectsadmin reload`. Every player picking that effect is re-checked against the new
+    catalogue, so an effect that stops existing is dropped from whoever had it.
+  </Step>
+  <Step title="Read the console">
+    A step that cannot be read is dropped and printed with the line that caused it. That is your
+    proofreader: if nothing appears, every line was understood.
+  </Step>
+  <Step title="Watch it, then tune it">
+    Test it on yourself. Numbers are the easy part to change — `radius`, `life`, `size`, the
+    `[DELAY]` between beats. The prompt asks the model to explain what each step does so you know
+    which number to move.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="The model can still be wrong">
+It writes a material that does not exist, or a parameter a shape does not understand, and the
+console says so. It cannot break the plugin — a bad line is dropped, the rest of the effect still
+plays — but it can waste an afternoon if you do not read the console. Give the error back to the AI
+and it usually fixes it in one turn.
+</Callout>
+
+<Callout type="note" title="It is a permission too">
+The key you paste becomes `exyliakilleffect.effect.<key>`, so nobody sees the new effect until they
+are granted it. See [Permissions](/docs/exyliakilleffect/permissions).
+</Callout>
+
+Everything the prompt knows is documented here too, if you would rather write the effect yourself:
+[Sequences](/docs/exyliakilleffect/sequences) is the full step language, and
+[Effects and categories](/docs/exyliakilleffect/effects) is the file around it.

@@ -1,0 +1,88 @@
+---
+title: "Crear efectos con IA"
+description: "Describe el efecto que quieres, copia el prompt y pega la respuesta en effects.yml."
+---
+
+Escribir un efecto de flecha a mano significa conocer veintiséis formas, cuarenta parámetros, cinco
+momentos y por qué el rastro se escribe con un presupuesto que el impacto no tiene. No hace falta. El
+prompt de abajo lo lleva todo — el lenguaje de pasos, los momentos, el presupuesto, las tres reglas
+que te ahorran una tarde y dos efectos incluidos al completo — así que lo único que queda de tu parte
+es la idea.
+
+## Escribe primero la idea
+
+El prompt vale lo que vale lo que le metes. «Algo chulo» produce algo genérico; un párrafo produce el
+efecto que te imaginabas. Cuenta:
+
+<Steps>
+  <Step title="De qué está hecho">
+    Bloques y objetos reales, por su nombre. `MAGMA_BLOCK`, `BLUE_ICE`, `ECHO_SHARD`. Eso es lo que
+    le da silueta al efecto — las partículas solo son la luz que lo rodea.
+  </Step>
+  <Step title="Qué hace el rastro">
+    Qué se desprende del asta, y qué le pasa una vez queda detrás de la flecha: gira y se apaga, cae,
+    orbita, se queda flotando. Uno o dos objetos pequeños, nada más.
+  </Step>
+  <Step title="Qué hace el impacto">
+    Esta es la recompensa. Un anillo que se aplasta hacia fuera, escombros lanzados hacia arriba que
+    vuelven a caer, un pilar, una explosión. Dale una dirección y un tamaño.
+  </Step>
+  <Step title="Si caer sobre un jugador es distinto">
+    `hit-entity` y `hit-block` son el mismo momento contado aparte. Dilo si darle a alguien merece
+    una imagen distinta a darle al suelo; si no, un solo `hit` responde por los dos.
+  </Step>
+  <Step title="Si el disparo enseña algo al salir del arco">
+    `launch` es opcional, corto y discreto. La mayoría de efectos no lo usan — dilo si quieres uno.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Un ejemplo de idea bien escrita">
+«Una flecha de hielo. El rastro deja detrás dos trocitos de `BLUE_ICE` girando y encogiéndose, con un
+brillo de partícula de escarcha. Al impactar, un anillo plano de `PACKED_ICE` se extiende un bloque y
+medio, seis fragmentos salen hacia arriba y vuelven a caer, y suena un crujido seco. Sobre un jugador,
+añade un brillo blanco alrededor de los fragmentos.»
+</Callout>
+
+## Copia el prompt
+
+<AiPrompt id="arrows" />
+
+Pégalo en la IA que uses, sustituye `<<< WRITE YOUR IDEA HERE >>>` por lo que has escrito arriba y
+envíalo.
+
+## Después
+
+<Steps>
+  <Step title="Pega la respuesta en effects.yml">
+    Abre `plugins/ExyliaArrows/effects.yml` y pega el bloque bajo `arrow_effects:`, con la misma
+    indentación que los efectos que ya están. Comprueba que su `category` existe.
+  </Step>
+  <Step title="Recarga">
+    `/arrowsadmin reload`. Cada jugador que tenga ese efecto se vuelve a comprobar contra el catálogo
+    nuevo, así que un efecto que deja de existir se le quita a quien lo tuviera.
+  </Step>
+  <Step title="Lee la consola">
+    Un paso que no se puede leer se descarta y se imprime con la línea que lo causó. Ese es tu
+    corrector: si no aparece nada, todas las líneas se entendieron.
+  </Step>
+  <Step title="Dispara lejos, y con compañía">
+    Un rastro solo enseña lo que cuesta en un vuelo entero y con varios arqueros disparando. Si con
+    cuatro flechas en el aire ya se nota, sube `trail-interval` a `2` o quita un paso del rastro.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="El modelo también se equivoca">
+Escribe un material que no existe, o un parámetro que una forma no entiende, y la consola lo dice. No
+puede romper el plugin — una línea mala se descarta y el resto del efecto se sigue reproduciendo —
+pero te puede costar una tarde si no lees la consola. Devuélvele el error a la IA y normalmente lo
+arregla a la primera.
+</Callout>
+
+<Callout type="note" title="También es un permiso">
+La clave que pegues se convierte en `exyliarrows.effect.<clave>`, así que nadie ve el efecto nuevo
+hasta que se lo concedas. Mira [Permisos](/docs/exyliaarrows/permisos).
+</Callout>
+
+Todo lo que sabe el prompt está documentado aquí también, por si prefieres escribir el efecto tú:
+[Secuencias](/docs/exyliaarrows/secuencias) es el lenguaje de pasos completo, y
+[Efectos y categorías](/docs/exyliaarrows/efectos) es el archivo que lo rodea.

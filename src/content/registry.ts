@@ -417,6 +417,7 @@ function effectsNav(): NavGroup[] {
       pages: [
         page("effects", "effects", "efectos"),
         page("sequences", "sequences", "secuencias"),
+        page("create-with-ai", "create-with-ai", "crear-con-ia"),
         page("modes-and-tokens", "modes-and-tokens", "modos-y-fichas"),
         page("menu", "menu", "menu"),
       ],

@@ -1,0 +1,87 @@
+---
+title: "Creating effects with AI"
+description: "Describe the effect you want, copy the prompt, and paste the answer into effects.yml."
+---
+
+Writing an arrow effect by hand means knowing twenty-six shapes, forty parameters, five triggers and
+why a trail is written to a budget a hit is not. You do not have to. The prompt below carries all of
+it — the step language, the triggers, the budget, the three rules that save an afternoon, and two
+shipped effects in full — so the only thing left for you is the idea.
+
+## Write the idea first
+
+The prompt is only as good as what you put in it. "Something cool" produces something generic; a
+paragraph produces the effect you pictured. Say:
+
+<Steps>
+  <Step title="What it is made of">
+    Real blocks and items, named. `MAGMA_BLOCK`, `BLUE_ICE`, `ECHO_SHARD`. This is what gives an
+    effect its silhouette — particles are only the light around it.
+  </Step>
+  <Step title="What the trail does">
+    What comes off the shaft, and what happens to it once it is behind the arrow: it tumbles and
+    burns out, it falls, it orbits, it hangs. One or two small objects, nothing more.
+  </Step>
+  <Step title="What the impact does">
+    This is the payoff. A ring that flattens outwards, debris thrown up and dropped back, a pillar,
+    a burst. Give it a direction and a size.
+  </Step>
+  <Step title="Whether landing on a player differs">
+    `hit-entity` and `hit-block` are the same moment told apart. Say so if hitting somebody deserves
+    a different picture to hitting the ground; otherwise one `hit` answers for both.
+  </Step>
+  <Step title="Whether the shot leaving the bow shows anything">
+    `launch` is optional, short and quiet. Most effects skip it — say if you want one.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="A worked example of an idea">
+"An arrow made of ice. The trail leaves two small `BLUE_ICE` chips behind it, spinning and shrinking,
+with a little frost particle glow. On impact a flat `PACKED_ICE` ring spreads out about a block and a
+half, six shards are thrown upwards and drop back, and a sharp cracking sound. On a player, add a
+white glow around the shards."
+</Callout>
+
+## Copy the prompt
+
+<AiPrompt id="arrows" />
+
+Paste it into whichever AI you use, replace `<<< WRITE YOUR IDEA HERE >>>` with what you wrote above,
+and send it.
+
+## Then
+
+<Steps>
+  <Step title="Paste the answer into effects.yml">
+    Open `plugins/ExyliaArrows/effects.yml` and paste the block under `arrow_effects:`, at the same
+    indentation as the effects already there. Make sure its `category` is one that exists.
+  </Step>
+  <Step title="Reload">
+    `/arrowsadmin reload`. Every player picking that effect is re-checked against the new catalogue,
+    so an effect that stops existing is dropped from whoever had it.
+  </Step>
+  <Step title="Read the console">
+    A step that cannot be read is dropped and printed with the line that caused it. That is your
+    proofreader: if nothing appears, every line was understood.
+  </Step>
+  <Step title="Shoot it far, and shoot it with company">
+    A trail only shows its cost across a full flight with several archers firing. If four arrows in
+    the air is enough to notice, raise `trail-interval` to `2` or cut a step from the trail.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="The model can still be wrong">
+It writes a material that does not exist, or a parameter a shape does not understand, and the
+console says so. It cannot break the plugin — a bad line is dropped, the rest of the effect still
+plays — but it can waste an afternoon if you do not read the console. Give the error back to the AI
+and it usually fixes it in one turn.
+</Callout>
+
+<Callout type="note" title="It is a permission too">
+The key you paste becomes `exyliarrows.effect.<key>`, so nobody sees the new effect until they are
+granted it. See [Permissions](/docs/exyliaarrows/permissions).
+</Callout>
+
+Everything the prompt knows is documented here too, if you would rather write the effect yourself:
+[Sequences](/docs/exyliaarrows/sequences) is the full step language, and
+[Effects and categories](/docs/exyliaarrows/effects) is the file around it.

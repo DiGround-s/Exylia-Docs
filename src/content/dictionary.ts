@@ -48,6 +48,19 @@ export const dict = {
       pages: { en: "Pages", es: "Páginas" },
     },
   },
+  ai: {
+    kicker: { en: "AI", es: "IA" },
+    title: { en: "Copy the prompt", es: "Copia el prompt" },
+    lead: {
+      en: "Everything the model needs: the step language, the limits, and effects that ship. Paste it into your AI, write your idea where it asks, and paste the answer into effects.yml.",
+      es: "Todo lo que el modelo necesita: el lenguaje de pasos, los límites y efectos que ya vienen. Pégalo en tu IA, escribe tu idea donde te lo pide, y pega la respuesta en effects.yml.",
+    },
+    copy: { en: "Copy prompt", es: "Copiar prompt" },
+    copied: { en: "Copied", es: "Copiado" },
+    lines: { en: "lines", es: "líneas" },
+    show: { en: "Read it", es: "Leerlo" },
+    hide: { en: "Hide", es: "Ocultar" },
+  },
   landing: {
     kicker: { en: "Official documentation", es: "Documentación oficial" },
     line1: { en: "Every plugin,", es: "Cada plugin," },

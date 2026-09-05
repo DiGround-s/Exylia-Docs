@@ -1,0 +1,83 @@
+---
+title: "Creating effects with AI"
+description: "Describe the effect you want, copy the prompt, and paste the answer into effects.yml."
+---
+
+Writing a hit effect by hand means knowing twenty-six shapes, forty parameters and why the shipped
+ones are never longer than six tenths of a second. You do not have to. The prompt below carries all
+of it — the step language, the budget, the three rules that save an afternoon, and three shipped
+effects in full — so the only thing left for you is the idea.
+
+## Write the idea first
+
+The prompt is only as good as what you put in it. "Something cool" produces something generic; a
+paragraph produces the effect you pictured. Say:
+
+<Steps>
+  <Step title="What it is made of">
+    Real blocks and items, named. `GOLD_BLOCK`, `COBBLESTONE`, `IRON_SWORD`. This is what gives an
+    effect its silhouette — particles are only the light around it.
+  </Step>
+  <Step title="One gesture, not a scene">
+    A hit effect is a single movement: splinters thrown outwards, a ring that flattens, one blade
+    passing through. Say what that movement is and which way it goes.
+  </Step>
+  <Step title="That it plays on every blow">
+    This is the part that matters. Two to five steps, under six tenths of a second, one sound. Ask
+    for anything longer and it reads as lag in a real fight, not as an effect.
+  </Step>
+  <Step title="The mood and the sound">
+    Sharp and metallic, dull and heavy, wet, electric. Name a sound if you have one in mind;
+    otherwise let the model choose and change it afterwards.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="A worked example of an idea">
+"Glass. On the hit, six `GLASS_PANE` shards burst outwards from the chest, small, tumbling, shrinking
+to nothing in a third of a second. One flat `WHITE_STAINED_GLASS` ring flattens under them. A high,
+brittle break sound. Nothing falls to the ground, nothing lingers."
+</Callout>
+
+## Copy the prompt
+
+<AiPrompt id="hiteffect" />
+
+Paste it into whichever AI you use, replace `<<< WRITE YOUR IDEA HERE >>>` with what you wrote above,
+and send it.
+
+## Then
+
+<Steps>
+  <Step title="Paste the answer into effects.yml">
+    Open `plugins/ExyliaHitEffect/effects.yml` and paste the block under `hit_effects:`, at the same
+    indentation as the effects already there. Make sure its `category` is one that exists.
+  </Step>
+  <Step title="Reload">
+    `/hiteffectsadmin reload`. Every player picking that effect is re-checked against the new
+    catalogue, so an effect that stops existing is dropped from whoever had it.
+  </Step>
+  <Step title="Read the console">
+    A step that cannot be read is dropped and printed with the line that caused it. That is your
+    proofreader: if nothing appears, every line was understood.
+  </Step>
+  <Step title="Test it in a real fight, not on a dummy">
+    One hit looks fine on its own. Twenty hits in five seconds is the test that matters — if the
+    screen fills up, cut a step or halve a `life`.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="The model can still be wrong">
+It writes a material that does not exist, or a parameter a shape does not understand, and the
+console says so. It cannot break the plugin — a bad line is dropped, the rest of the effect still
+plays — but it can waste an afternoon if you do not read the console. Give the error back to the AI
+and it usually fixes it in one turn.
+</Callout>
+
+<Callout type="note" title="It is a permission too">
+The key you paste becomes `exyliahiteffect.effect.<key>`, so nobody sees the new effect until they
+are granted it. See [Permissions](/docs/exyliahiteffect/permissions).
+</Callout>
+
+Everything the prompt knows is documented here too, if you would rather write the effect yourself:
+[Sequences](/docs/exyliahiteffect/sequences) is the full step language, and
+[Effects and categories](/docs/exyliahiteffect/effects) is the file around it.

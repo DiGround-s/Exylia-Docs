@@ -1,0 +1,84 @@
+---
+title: "Crear efectos con IA"
+description: "Describe el efecto que quieres, copia el prompt y pega la respuesta en effects.yml."
+---
+
+Escribir un efecto de golpe a mano significa conocer veintiséis formas, cuarenta parámetros y por qué
+los que vienen incluidos nunca pasan de seis décimas de segundo. No hace falta. El prompt de abajo lo
+lleva todo — el lenguaje de pasos, el presupuesto, las tres reglas que te ahorran una tarde y tres
+efectos incluidos al completo — así que lo único que queda de tu parte es la idea.
+
+## Escribe primero la idea
+
+El prompt vale lo que vale lo que le metes. «Algo chulo» produce algo genérico; un párrafo produce el
+efecto que te imaginabas. Cuenta:
+
+<Steps>
+  <Step title="De qué está hecho">
+    Bloques y objetos reales, por su nombre. `GOLD_BLOCK`, `COBBLESTONE`, `IRON_SWORD`. Eso es lo que
+    le da silueta al efecto — las partículas solo son la luz que lo rodea.
+  </Step>
+  <Step title="Un gesto, no una escena">
+    Un efecto de golpe es un solo movimiento: astillas que salen disparadas, un anillo que se aplasta,
+    una hoja que atraviesa. Di cuál es ese movimiento y hacia dónde va.
+  </Step>
+  <Step title="Que suena en cada golpe">
+    Esta es la parte importante. De dos a cinco pasos, menos de seis décimas de segundo, un sonido.
+    Pide algo más largo y en un combate de verdad se lee como lag, no como efecto.
+  </Step>
+  <Step title="El tono y el sonido">
+    Seco y metálico, sordo y pesado, húmedo, eléctrico. Nombra un sonido si tienes uno en mente; si
+    no, deja que el modelo elija y cámbialo después.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Un ejemplo de idea bien escrita">
+«Cristal. Al golpear, seis fragmentos de `GLASS_PANE` salen disparados desde el pecho, pequeños,
+girando, encogiéndose hasta desaparecer en un tercio de segundo. Un anillo plano de
+`WHITE_STAINED_GLASS` se aplasta debajo. Un sonido de rotura agudo y quebradizo. Nada cae al suelo,
+nada se queda.»
+</Callout>
+
+## Copia el prompt
+
+<AiPrompt id="hiteffect" />
+
+Pégalo en la IA que uses, sustituye `<<< WRITE YOUR IDEA HERE >>>` por lo que has escrito arriba y
+envíalo.
+
+## Después
+
+<Steps>
+  <Step title="Pega la respuesta en effects.yml">
+    Abre `plugins/ExyliaHitEffect/effects.yml` y pega el bloque bajo `hit_effects:`, con la misma
+    indentación que los efectos que ya están. Comprueba que su `category` existe.
+  </Step>
+  <Step title="Recarga">
+    `/hiteffectsadmin reload`. Cada jugador que tenga ese efecto se vuelve a comprobar contra el
+    catálogo nuevo, así que un efecto que deja de existir se le quita a quien lo tuviera.
+  </Step>
+  <Step title="Lee la consola">
+    Un paso que no se puede leer se descarta y se imprime con la línea que lo causó. Ese es tu
+    corrector: si no aparece nada, todas las líneas se entendieron.
+  </Step>
+  <Step title="Pruébalo en un combate real, no en un muñeco">
+    Un golpe suelto siempre se ve bien. Veinte golpes en cinco segundos es la prueba que importa — si
+    la pantalla se llena, quita un paso o parte por la mitad un `life`.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="El modelo también se equivoca">
+Escribe un material que no existe, o un parámetro que una forma no entiende, y la consola lo dice. No
+puede romper el plugin — una línea mala se descarta y el resto del efecto se sigue reproduciendo —
+pero te puede costar una tarde si no lees la consola. Devuélvele el error a la IA y normalmente lo
+arregla a la primera.
+</Callout>
+
+<Callout type="note" title="También es un permiso">
+La clave que pegues se convierte en `exyliahiteffect.effect.<clave>`, así que nadie ve el efecto nuevo
+hasta que se lo concedas. Mira [Permisos](/docs/exyliahiteffect/permisos).
+</Callout>
+
+Todo lo que sabe el prompt está documentado aquí también, por si prefieres escribir el efecto tú:
+[Secuencias](/docs/exyliahiteffect/secuencias) es el lenguaje de pasos completo, y
+[Efectos y categorías](/docs/exyliahiteffect/efectos) es el archivo que lo rodea.

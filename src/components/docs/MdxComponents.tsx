@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CodeBlock } from "./CodeBlock";
 import { InlineCode } from "./InlineCode";
+import { AiPrompt } from "./AiPrompt";
 import type { Lang } from "@/content/registry";
 
 /* ---------------- Callout ---------------- */
@@ -211,5 +212,8 @@ export function createMdxComponents(lang: Lang) {
     Step,
     Badge,
     Field,
+    AiPrompt: (props: { id: Parameters<typeof AiPrompt>[0]["id"] }) => (
+      <AiPrompt {...props} lang={lang} />
+    ),
   };
 }
