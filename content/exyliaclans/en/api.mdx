@@ -1,125 +1,189 @@
 ---
 title: "API"
-description: "The reflection-based API jar for third-party plugins, and the ExyliaLib clan bridge every Exylia plugin already reads."
+description: "Reading clans, members, roles, land and DTR, and running the same flows the player's own commands run."
+badge: "dev"
 ---
 
-There are two ways to ask ExyliaClans a question, and most of the time you want the second one.
-
-## The clan bridge — nothing to do
-
-ExyliaClans registers itself with ExyliaLib's `Clans` registry at priority 100 on enable. Anything in the
-ecosystem that asks *are these two on the same side* gets ExyliaClans' answer, without being configured
-to and without importing anything from this plugin.
-
-That is why an ExyliaFFA arena's friendly fire, an ExyliaCapture team check and an ExyliaPracticeCore
-party check all already agree with the clan a player is actually in. If you are writing a plugin on
-ExyliaLib, read `net.exylia.lib.clan.Clans` and you are done.
-
-The snapshot the bridge exposes carries the id, the name — used as the tag, because clans here have no
-separate one — the leader, the members, the moderators (every member whose rank may `INVITE`), the online
-count, the level, the balance, the effective member cap, the allies and the rivals.
-
-## The API jar
-
-For a plugin that is **not** on ExyliaLib, `ExyliaClans-API-1.0.0.jar` is a standalone jar with no
-dependencies of its own. It talks to the plugin by reflection, so it compiles and runs whether or not
-ExyliaClans is installed.
-
-```groovy
-dependencies {
-    compileOnly files('libs/ExyliaClans-API-1.0.0.jar')
-}
-```
-
-```yaml
-softdepend: [ExyliaClans]
-```
-
-### Availability
+`ClansService` is how another plugin reads and drives ExyliaClans: who is in which clan, what they may
+do there, how the clan is progressing, whether its land can be raided right now — and, when you want
+it, the same actions the player's own commands run.
 
 ```java
-if (!ExyliaClansAPI.isAvailable()) return;
+ExyliaAPI.get(ClansService.class).ifPresent(clans ->
+    clans.clanOf(player.getUniqueId())
+         .ifPresent(clan -> player.sendMessage("Clan: " + clan.name())));
 ```
 
-Everything else returns a safe empty value when the plugin is absent — `false`, `0`, `Optional.empty()`,
-an empty list — so a guard is a courtesy rather than a requirement.
-
-### What it exposes
-
-```java
-boolean                  isInClan(UUID player);
-boolean                  isLeader(UUID player);
-Optional<String>         getClanId(UUID player);
-Optional<String>         getClanName(UUID player);
-Optional<ClanData>       getClan(UUID player);
-Optional<ClanData>       getClanById(String clanId);
-Optional<ClanData>       getClanByName(String name);
-Collection<ClanData>     getAllClans();
-List<UUID>               getClanMemberUuids(String clanId);
-
-boolean                  areAllies(String clanIdA, String clanIdB);
-boolean                  areSameClan(UUID a, UUID b);
-boolean                  isFriendlyFireEnabled(UUID player);
-
-double                   getClanKdr(String clanId);
-long                     getClanKills(String clanId);
-long                     getClanDeaths(String clanId);
-
-boolean                  isRaidable(UUID player);
-double                   getDtr(String clanId);
-```
-
-`ClanData` is a record:
-
-```java
-record ClanData(
-    String id, String name, UUID leaderId,
-    double balance, boolean friendlyFire,
-    List<UUID> memberUuids,
-    double kdr, long kills, long deaths
-) {
-    int     getMemberCount();
-    boolean isLeader(UUID uuid);
-    boolean isMember(UUID uuid);
-}
-```
-
-### Example
-
-```java
-public boolean canDamage(Player attacker, Player victim) {
-    if (!ExyliaClansAPI.isAvailable()) return true;
-    if (!ExyliaClansAPI.areSameClan(attacker.getUniqueId(), victim.getUniqueId())) return true;
-    return ExyliaClansAPI.isFriendlyFireEnabled(attacker.getUniqueId());
-}
-```
-
-<Callout type="note" title="The API jar is read-only">
-It answers questions; it does not create clans, move members, edit balances or write claims. Anything
-that changes state goes through the commands, the menus or `/clanadmin` — which is what keeps the log,
-the broadcasts, the caches and the WorldGuard regions in step.
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
 </Callout>
 
-## Actions, from another plugin's menus
+## Before you reach for it — the clan bridge
 
-Because the actions are registered in ExyliaLib's shared registry under the `exyliaclans:` namespace, any
-ExyliaLib menu — in any plugin — can call them:
+If your question is *are these two on the same side*, you do not want this service.
 
-```yaml
-items:
-  clans:
-    slot: 22
-    material: SHIELD
-    name: "{primary}&lCLANS"
-    actions:
-      - "exyliaclans:open_main_menu"
+ExyliaClans registers itself with ExyliaLib's clan bridge at priority 100 on enable. Anything that
+asks `net.exylia.lib.clan.Clans` gets ExyliaClans' answer, without being configured to and without
+knowing ExyliaClans exists — which is why an ExyliaFFA arena's friendly fire, an ExyliaCapture team
+check and an ExyliaPracticeCore party check already agree with the clan a player is actually in.
+
+```java
+if (Clans.areInSameClan(attacker.getUniqueId(), victim.getUniqueId())) return;
+if (Clans.areAllied(attacker.getUniqueId(), victim.getUniqueId())) return;
 ```
 
-That is the supported way to put a clan button in a hub menu. The full list is in
-[Menus](/docs/exyliaclans/menus#actions).
+The bridge is deliberately small — same clan, allied, rivals, the clan a player is in, its members and
+its online members — and it answers the same way on a server running a different clan plugin
+altogether. Use it for relations. Use `ClansService` for everything the bridge does not model: roles,
+progression, statistics, DTR, land, and every action below.
 
-## Placeholders, from anywhere
+<Callout type="warning" title="Queries are cheap, actions are not">
+Everything that returns a value reads from the plugin's cache and is safe from a menu redraw or a
+placeholder. Everything that returns `void` runs the same flow the player's own command runs —
+permission checks, cooldowns, database writes and the messages the player sees — so call those on the
+main thread, and no more often than a player could trigger them.
+</Callout>
 
-Every `%exyliaclans_…%` placeholder resolves through ExyliaLib's registry with or without
-PlaceholderAPI, so a scoreboard, a hologram or another plugin's config can read clan state without any
-code at all. See [Placeholders](/docs/exyliaclans/placeholders).
+## Membership
+
+| Method | What it does |
+|---|---|
+| `boolean isInClan(UUID player)` | Whether the player belongs to any clan. |
+| `boolean isLeader(UUID player)` | Whether the player leads their clan. |
+| `Optional<Clan> clanOf(UUID player)` | Their clan. Empty when they are in none. |
+| `Optional<Clan> clanById(String clanId)` | A clan by id. Empty when no clan has it. |
+| `Optional<Clan> clanByName(String name)` | A clan by the name players type, case insensitive. Empty when no clan goes by it. |
+| `Collection<Clan> allClans()` | Every clan, as a snapshot of the cache. Fine for a leaderboard, wasteful in a loop. |
+| `Optional<ClanMember> memberOf(UUID player)` | Their membership record. Empty when they are in no clan. |
+| `List<ClanMember> membersOf(String clanId)` | Everyone in a clan. Empty when the clan does not exist. |
+| `Optional<ClanRole> roleOf(UUID player)` | Their role within their clan. Empty when they are in no clan. |
+| `String roleNameOf(UUID player)` | The role name, for display. An empty string when they are in no clan. |
+| `int memberCount(UUID player)` | How many players are in that player's clan. `0` when they are in none. |
+
+## Relations
+
+| Method | What it does |
+|---|---|
+| `boolean areAllies(String clanIdA, String clanIdB)` | Whether two clans are allied. |
+| `boolean areRivals(String clanIdA, String clanIdB)` | Whether two clans are rivals. |
+| `boolean sameClan(UUID playerA, UUID playerB)` | Whether two players share a clan. `false` when either is clanless, so two unaffiliated players are never treated as clanmates. |
+| `boolean friendlyFireEnabled(UUID player)` | Whether their clan lets members hurt each other. `false` when it is off *or* the player is in no clan. |
+| `int allyCount(UUID player)` | How many allies their clan has. `0` when they are in none. |
+
+## Progression
+
+Everything a clan's level derives from is computed here rather than stored on the `Clan` record, so
+reading a clan stays a cache hit.
+
+| Method | What it does |
+|---|---|
+| `int level(String clanId)` | The clan's level. `1` when the clan does not exist. |
+| `long exp(String clanId)` | Experience earned. |
+| `long expForNextLevel(String clanId)` | What the next level costs. `0` when the clan does not exist or is already at the highest level. |
+| `int maxMembers(String clanId)` | The member limit at its current level. |
+| `int maxAlliances(String clanId)` | The alliance limit at its current level. |
+| `int maxRivals(String clanId)` | The rivalry limit at its current level. |
+
+## Statistics
+
+| Method | What it does |
+|---|---|
+| `Optional<ClanStats> stats(String clanId)` | The clan's kill, death and playtime totals. Empty when the clan does not exist. |
+
+## Raiding
+
+| Method | What it does |
+|---|---|
+| `boolean isRaidable(String clanId)` | Whether the clan's land can be raided right now. |
+| `DtrState dtrState(String clanId)` | Where it stands in the DTR cycle. `NORMAL` when the clan does not exist or the server runs without DTR. |
+| `double dtr(String clanId)` | Its current deaths-till-raidable. |
+| `double maxDtr(String clanId)` | The highest DTR it can reach at its current size and level. |
+
+## Land
+
+| Method | What it does |
+|---|---|
+| `Optional<ClanClaim> claimOf(String clanId)` | The land the clan owns. Empty when it owns none. |
+
+## Actions
+
+Each of these runs the same flow the player's own command runs, permission checks and messages
+included. They report nothing back: the player is told what happened, and a caller that needs to know
+reads the state afterwards.
+
+| Method | What it does |
+|---|---|
+| `void createClan(Player player, String name)` | Creates a clan led by the player, under the name given. |
+| `void disbandClan(Player leader)` | Disbands the leader's clan. |
+| `void leaveClan(Player player)` | Removes the player from their clan. |
+| `void invite(Player inviter, Player target)` | Invites a player to the inviter's clan. |
+| `void kick(Player actor, UUID target)` | Removes a member from the actor's clan. |
+| `void transferLeader(Player leader, UUID newLeader)` | Hands leadership to another member. |
+| `void deposit(Player player, double amount)` | Moves money from the player into the clan bank. |
+| `void withdraw(Player player, double amount)` | Moves money from the clan bank to the player. |
+| `void sendClanChat(Player player, String message)` | Sends a message to the player's clan chat. |
+| `void setHome(Player player)` | Sets the clan home to where the player is standing. |
+| `void teleportHome(Player player)` | Sends the player to their clan home. |
+
+## Types
+
+Every record is a snapshot taken at the moment of the lookup, not a live view. The plugin replaces its
+objects on every change, so ask again rather than holding one across ticks.
+
+### `Clan`
+
+`id`, `name`, `leader`, `balance`, `open`, `friendlyFire`, `dtr`, `exp`. Only the stored fields —
+level, member count, maximum DTR and whether the clan is raidable are methods on the service.
+
+### `ClanMember`
+
+`player`, `clanId`, `roleId`. A player belongs to at most one clan, so this is the whole of their clan
+identity. Resolve `roleId` with `roleOf(UUID)`.
+
+### `ClanRole`
+
+`id`, `clanId`, `name`, `weight` (higher outranks lower), `defaultRole`, `permissions`.
+
+`has(String permission)` tests one, case insensitively. These are the plugin's own clan permissions —
+they gate clan actions, not server commands, and the set grows between releases: treat an unknown name
+as one this version does not have rather than as an error. See [Roles](/docs/exyliaclans/roles).
+
+### `ClanStats`
+
+`clanId`, `kills`, `deaths`, `playTimeSeconds`, summed across every member.
+
+`kdr()` returns kills per death. A clan that has never died reports its kill count rather than
+infinity, because a leaderboard has to sort it and a menu has to print it.
+
+### `ClanClaim`
+
+`id`, `clanId`, `world`, `minX`, `minZ`, `maxX`, `maxZ`, `baseY`. Edges are inclusive block
+coordinates and the claim spans the full height of the world.
+
+`contains(int x, int z)` tests a column; `contains(Location location)` tests a location, world
+included.
+
+### `DtrState`
+
+| Value | Meaning |
+|---|---|
+| `NORMAL` | Above zero and not regenerating: the ordinary state. |
+| `FROZEN` | Recently lost a member, so DTR is held still before it recovers. |
+| `REGENERATING` | Recovering towards its maximum. |
+| `RAIDABLE` | At or below zero: the clan's land can be raided. |
+
+## What it does not expose
+
+ExyliaClans publishes no events, and the service is curated rather than a mirror of the plugin. Menu
+openers, the role editor, claim writes, ally and rival management, bans and everything under
+`/clanadmin` are left out on purpose: those are the paths that keep the log, the broadcasts, the
+caches and the WorldGuard regions in step, and a public method that skipped them would be a way to
+corrupt a clan quietly.
+
+Two things cover most of what is missing without any code. The `exyliaclans:` actions work from any
+ExyliaLib menu in any plugin — see [Menus](/docs/exyliaclans/menus#actions) — and every
+`%exyliaclans_…%` placeholder resolves with or without PlaceholderAPI, so a scoreboard or a hologram
+reads clan state directly. See [Placeholders](/docs/exyliaclans/placeholders).
+
+If something you genuinely need is still missing, ask on [Discord](https://discord.exylia.net).

@@ -233,6 +233,7 @@ const LIB_NAV: NavGroup[] = [
   {
     label: { en: "Reference", es: "Referencia" },
     pages: [
+      page("api", "api", "api"),
       page("modules", "modules", "modulos"),
       page("faq", "faq", "faq"),
     ],
@@ -566,6 +567,7 @@ const SURVIVALCORE_NAV: NavGroup[] = [
     pages: [
       page("permissions", "permissions", "permisos"),
       page("placeholders", "placeholders", "placeholders"),
+      page("api", "api", "api"),
     ],
   },
 ];

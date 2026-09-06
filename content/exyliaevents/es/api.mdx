@@ -1,89 +1,168 @@
 ---
 title: "API"
-description: "Leer y controlar eventos desde otro plugin, y la reserva compartida de jugador."
+description: "Leer qué está corriendo, qué está configurado y qué hizo un jugador, y meter o sacar gente de un evento."
 badge: "dev"
 ---
 
-`net.exylia.exyliaEvents.api.EventsAPI` es estática y es el punto de entrada soportado.
-
-## Consultar estado
-
-```java
-import net.exylia.exyliaEvents.api.EventsAPI;
-
-Optional<GameEvent> event = EventsAPI.getActiveEvent(player);
-Optional<GameEvent> byId  = EventsAPI.getEventById("lms1");
-List<GameEvent> running   = EventsAPI.getRunningEvents();
-boolean playing           = EventsAPI.isInEvent(player);
-
-Optional<EventConfiguration> config = EventsAPI.getConfiguration("lms1");
-```
-
-## Mover jugadores
+`EventsService` es con lo que otro plugin averigua si un jugador está dentro de un minijuego, qué está
+corriendo o se puede arrancar ahora mismo, y con lo que mete o saca a alguien.
 
 ```java
-boolean joined     = EventsAPI.joinEvent(player, "lms1");
-boolean spectating = EventsAPI.spectateEvent(player, "lms1");
-boolean left       = EventsAPI.leaveEvent(player);
+ExyliaAPI.get(EventsService.class).ifPresent(events ->
+    events.eventOf(player.getUniqueId())
+          .ifPresent(event -> player.sendMessage("Playing " + event.displayName())));
 ```
 
-Cada uno devuelve si ocurrió, así que una entrada fallida — evento lleno, no admite entrada, jugador
-ocupado en otra cosa — es un `false` y no una excepción.
+<Callout type="danger" title="Este plugin no publica ningún evento de Bukkit">
+A pesar del nombre, no hay nada que escuchar en `net.exylia.lib.api.events.event`: ese paquete no
+existe. `GameEvent` es una **foto de un minijuego en curso**, no un `org.bukkit.event.Event`, y nunca te
+llega desde un listener: se lo pides al service. Si viniste buscando un hook que se dispare cuando
+arranca o termina un minijuego, no lo hay; consultá `runningEvents()` o leé el estado de un jugador
+cuando lo necesites.
+</Callout>
+
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
+Exylia y viven en la [página de la API pública](/docs/exylialib/api).
+</Callout>
+
+## Definiciones y ejecuciones
+
+Una `EventDefinition` es lo que armó un admin; un `GameEvent` es una partida de eso. Las definiciones
+sobreviven a las partidas y son bajo lo que se archivan las estadísticas, así que todo lo que persiste
+— una tabla, un menú, un placeholder — se apoya en el id de una definición, mientras que entrar,
+espectar o forzar el final nombran el id de una partida que existe ahora mismo.
+
+Todo lo que devuelve un valor lee de las cachés del plugin y es seguro desde el redibujado de un menú o
+desde un placeholder. Todo lo que actúa mueve jugadores entre mundos, guarda y vacía inventarios y
+escribe filas, así que llamalo desde el hilo principal y no más seguido de lo que un jugador podría
+dispararlo.
+
+## Eventos en curso
+
+| Método | Qué hace |
+|---|---|
+| `Optional<GameEvent> eventOf(UUID)` | El evento en el que está un jugador, o vacío si no está en ninguno. |
+| `Optional<GameEvent> eventById(String eventId)` | Un evento en curso por el id de la partida, o vacío si no hay ninguna con ese id. |
+| `List<GameEvent> runningEvents()` | Todos los eventos que corren ahora mismo, sin orden particular. |
+| `List<GameEvent> joinableEvents()` | Todos los eventos a los que todavía se podría dejar entrar a un jugador. |
+| `boolean isInEvent(UUID)` | Si algún evento lo tiene, jugando o espectando. |
+| `boolean isPlaying(UUID)` | Si es un participante que todavía no fue eliminado. |
+| `boolean isSpectating(UUID)` | Si está mirando un evento en curso. |
+
+`eventOf` e `isInEvent` cubren tanto espectar como jugar: para todo lo demás en el servidor, un jugador
+que mira un evento está en el evento, que es lo que en realidad pregunta un plugin de chat, de
+scoreboard o de teletransporte. `isSpectating` cubre también al eliminado — un jugador eliminado se
+queda en el evento mirando el resto, así que desde afuera son lo mismo.
+
+`joinableEvents()` filtra solo por estado. Un evento de esa lista puede estar lleno igual, así que un
+menú que los ofrezca debería mirar `GameEvent.isFull()` antes de prometer nada.
+
+## Definiciones
+
+| Método | Qué hace |
+|---|---|
+| `Optional<EventDefinition> definition(String configId)` | Un evento configurado, o vacío si no hay nada configurado con ese id. |
+| `List<EventDefinition> definitions()` | Todos los eventos configurados, deshabilitados incluidos. |
+| `List<EventDefinition> startableDefinitions()` | Todos los que se podrían arrancar ahora: habilitados, completamente armados y no corriendo ya. |
+
+`startableDefinitions()` es la lista que debería ofrecer un menú de "arrancar un evento", porque las
+otras dos ofrecerían entradas que `start(String)` va a rechazar.
 
 ## Estadísticas
 
-```java
-int kills  = EventsAPI.getPlayerKills(uuid);
-int deaths = EventsAPI.getPlayerDeaths(uuid);
-int wins   = EventsAPI.getPlayerWins(uuid);
-int games  = EventsAPI.getGamesPlayed(uuid);
-```
+| Método | Qué hace |
+|---|---|
+| `Optional<EventStats> stats(UUID)` | Los contadores de un jugador en todos los eventos, o vacío mientras la primera lectura sigue en vuelo. |
+| `Optional<EventStats> eventStats(UUID, String configId)` | Los mismos contadores dentro de un evento configurado, vacío por la misma razón. |
 
-Son los totales globales del jugador en todos los eventos.
+Las dos leen de la caché. Un jugador por el que todavía nadie preguntó responde vacío *y* dispara la
+lectura, así que un placeholder dibujado en el hilo principal nunca espera a la base de datos y el
+dibujado siguiente ya tiene el número.
 
-## La reserva compartida
+## Acciones
 
-La parte interesante para quien escriba otro minijuego: ExyliaEvents no pregunta a cada plugin si un
-jugador está ocupado. Se lo pregunta a un único registro.
+Cada una ejecuta el mismo flujo que el comando del propio jugador, con los chequeos de permisos, la
+reserva del jugador y los mensajes que ve. Un `false` es una negativa que ya se le explicó.
 
-```java
-// ¿Hay algo en el servidor que tenga a este jugador?
-boolean free = EventsAPI.isAvailable(player);
+| Método | Qué hace |
+|---|---|
+| `boolean join(Player, String eventId)` | Mete a un jugador en un evento en curso. `true` si después quedó adentro. |
+| `boolean leave(Player)` | Saca al jugador del evento que lo tenga, jugando o espectando. |
+| `boolean spectate(Player, String eventId)` | Mete a un jugador en un evento en curso como espectador. |
+| `Optional<GameEvent> start(String configId)` | Arranca una partida nueva de un evento configurado, o vacío si fue rechazada. |
+| `boolean forceEnd(String eventId)` | Termina un evento en curso ahora mismo, sin ganador. |
 
-// Tomarlo para este plugin. Atómico — esto es lo que decide de verdad.
-boolean mine = EventsAPI.claim(player);
+`start` se rechaza cuando la definición está deshabilitada, incompleta o ya corriendo: una configuración
+aloja una partida por vez, porque la arena es parte de la configuración.
 
-// Devolverlo.
-EventsAPI.releaseClaim(player);
-```
+`forceEnd` es el corte administrativo: a los jugadores se les devuelve el inventario y se los manda a
+casa, y no se paga nada. Usalo para una decisión de moderación o un apagado, no para terminar una
+partida.
 
-`isAvailable` es una pregunta, no una reserva: entre preguntar y actuar, otro puede haberse llevado al
-jugador. `claim` es lo que decide, y acepta un callback de liberación para poder avisar a quien lo
-tenga de que lo suelte.
+## Tipos
 
-La reserva es **reentrante**: un jugador que pasa del lobby del evento a la partida, o de jugar a
-espectar, mantiene una única reserva continua en vez de soltarla y competir por recuperarla.
+| Tipo | Qué es |
+|---|---|
+| `GameEvent` | Un evento en curso como estaba cuando preguntaste. |
+| `EventDefinition` | Un evento configurado: `id`, `displayName`, `type`, `enabled`. |
+| `EventStats` | Los contadores de un jugador: `kills`, `deaths`, `wins`, `gamesPlayed`. |
+| `GameState` | En qué punto de su vida está un evento en curso. |
 
-<Callout type="note" title="Por qué importa">
-Es lo que evita que un jugador esté en una arena de FFA y en un evento a la vez sin que ninguno de
-esos plugins sepa que los otros existen. Un modo añadido más tarde queda cubierto sin tocar este
-código.
-</Callout>
+### GameEvent
 
-## Declarar la dependencia
+Una foto, no una vista viva: el conjunto de jugadores, el estado y el reloj de un evento cambian cada
+tick, así que los valores son los que estaban vigentes en el momento de la consulta. Volvé a preguntar
+en vez de guardarla entre ticks.
 
-```yaml title="plugin.yml"
-softdepend:
-  - ExyliaEvents
-```
+`id` es el id de *esta partida* y vive solo mientras dura el evento. `configId` es el id de la
+configuración desde la que se arrancó y es el mismo en todas sus partidas — vacío si el evento se armó
+sin una. Una tabla, una estadística o una entrada de menú se apoyan en `configId`; entrar o forzar el
+final nombran el `id`.
 
-```java
-if (Bukkit.getPluginManager().isPluginEnabled("ExyliaEvents")) {
-    EventsAPI.joinEvent(player, "lms1");
-}
-```
+El resto es `type` (qué minijuego, por ejemplo `tntrun`; vacío si la configuración ya no está),
+`displayName`, `description`, `state`, `minPlayers`, `maxPlayers`, los conjuntos inmutables `players` y
+`spectators`, `alivePlayers` y `remainingSeconds` tal como los cuenta el evento — uno sin límite de
+tiempo nunca los descuenta. `players` incluye a los eliminados.
 
-<Callout type="warning" title="Hilo principal">
-Entrar, salir y espectar teletransportan jugadores, cambian inventarios y arrancan tareas. Llámalos
-desde el hilo del servidor — en Folia, desde el hilo dueño de la región del jugador.
-</Callout>
+`playerCount()` es la cantidad de jugadores sin contar espectadores. `isFull()` es lo que apaga un
+botón, no lo que decide: estar lleno no es la única razón por la que se rechaza una entrada, el estado
+también tiene que permitirla.
+
+### EventDefinition
+
+Es aquello *desde* lo que se arranca un evento, y existe juegue alguien o no. Acá están solo los cuatro
+campos sobre los que puede actuar un plugin de afuera de la suite — los límites de la arena, los puntos
+de aparición, las tablas de recompensas y los ajustes por minijuego son asunto del plugin y cambian de
+forma entre releases. `id` es la clave bajo la que se archiva cada estadística.
+
+### EventStats
+
+Los mismos cuatro números responden las dos preguntas, así que un solo record sirve para `stats` y para
+`eventStats`; a qué alcance pertenece un valor lo decide la llamada que lo devolvió, no el record.
+`kdr()` devuelve la cantidad de kills para un jugador que nunca murió en vez de infinito, porque una
+tabla lo tiene que ordenar y un menú lo tiene que imprimir. `winRate()` va de `0` a `100`, y es `0` para
+alguien que no jugó nada.
+
+### GameState
+
+| Constante | Significado |
+|---|---|
+| `WAITING` | Abierto, llenándose, esperando jugadores suficientes para arrancar. |
+| `STARTING` | Con gente suficiente y en cuenta atrás; todavía se puede entrar hasta que llegue a cero. |
+| `PLAYING` | En juego. |
+| `ENDING` | Terminado, mostrando al ganador y pagando antes de limpiarse solo. |
+| `DISABLED` | Detenido por un admin o por una falla, y a punto de eliminarse. |
+
+`isJoinable()` es true mientras el evento se llena o cuenta atrás; `isActive()` solo mientras se está
+jugando.
+
+## Lo que no expone
+
+Ningún evento de Bukkit, como se dijo arriba. Nada de editor de arenas, escrituras de spawns o
+recompensas, ajustes por minijuego, manejo de gauntlets o inscripciones, ni forma de escribir una
+estadística. El registro que decide si un jugador ya está ocupado en otro lado también es interno —
+desde afuera se le pregunta al service de cada plugin, que para este es `isInEvent`.
+
+Si una integración realmente necesita algo que no está acá, pídelo en
+[Discord](https://discord.exylia.net) — agregar un método a un service es un release menor.

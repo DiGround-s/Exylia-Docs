@@ -1,185 +1,117 @@
 ---
 title: "API"
-description: "ArmorSkinAPI: registering skins and animation types from code, building skin items, applying and removing skins, and redrawing a player."
+description: "Reading the skin catalogue, a player's wardrobe, and the skins written onto armor."
+badge: "dev"
 ---
 
-Everything another plugin needs is on one class, `net.exylia.exyliaArmorSkin.api.ArmorSkinAPI`.
+`ArmorSkinService` is what another plugin reads and drives ExyliaArmorSkin through: the catalogue,
+the wardrobe a player chooses in, and the skins written onto armor itself.
 
 ```java
-import net.exylia.exyliaArmorSkin.api.ArmorSkinAPI;
-
-ArmorSkinAPI api = ArmorSkinAPI.get();
-```
-
-`get()` throws `IllegalStateException` while the plugin is not enabled, so add
-`softdepend: [ExyliaArmorSkin]` to your `plugin.yml` and call it from `onEnable` or later.
-
-## Skins
-
-```java
-import net.exylia.exyliaArmorSkin.skin.SkinDefinition;
-import org.bukkit.Color;
-
-SkinDefinition ruby = new SkinDefinition(
-        "ruby",                                   // id, matched lowercased
-        "{error}&lRUBY",                          // name
-        java.util.Set.of(),                       // pieces: empty means all four
-        new SkinDefinition.Look(Color.fromRGB(0xC0102A), "ward", "redstone"),
-        SkinDefinition.Effects.NONE);
-
-api.register(ruby);
-```
-
-| Method | Returns | What it does |
-|---|---|---|
-| `register(SkinDefinition)` | — | Adds or replaces a skin. Survives `/armorskinsadmin reload`. |
-| `unregister(String id)` | `boolean` | Removes one, whether it came from code or from the file. |
-| `skin(String id)` | `Optional<SkinDefinition>` | Looks one up. |
-| `exists(String id)` | `boolean` | Whether an id resolves. |
-| `registry()` | `SkinRegistry` | The registry itself: `all()`, `ids()`, `onChange(listener)`. |
-
-<Callout type="note" title="Code and file live side by side">
-A reload replaces only the entries that came from `skins.yml`. A skin registered here stays until it
-is unregistered or the server stops — and it is listed by `/armorskinsadmin list` like any other.
-</Callout>
-
-### What a definition holds
-
-| Component | Type | Notes |
-|---|---|---|
-| `id` | `String` | Stored on the armour. Compared trimmed and lowercased. |
-| `name` | `String` | Palette tokens and `&` codes allowed. |
-| `pieces` | `Set<ArmorPiece>` | `HELMET`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`. **An empty set becomes all four.** |
-| `look` | `Look` | `color`, `trimPattern`, `trimMaterial` — the trim keys resolve when drawn. `Look.PLAIN` for none. |
-| `effects` | `Effects` | `onEquip`, `onUnequip`, `ambient`, `set`. `Effects.NONE` for none, and a three-argument constructor leaves the set bonus empty. |
-| `animation` | `SkinAnimation` | Optional, `null` for a still colour. |
-| `icon` | `String` | Optional material for the skin item, `null` to use `skin-item.material`. |
-
-Three constructors are provided: without an animation and icon, with an animation, and with both.
-
-`Effects.set` is a `SetBonus(EffectConfig onComplete, EffectConfig onBreak, Ambient ambient)` — what
-plays when every piece the skin fits is worn with it, while it lasts, and when it ends. `SetBonus.NONE`
-is the empty one.
-
-`permission()` returns the node that lets a player use the skin, `exyliaarmorskin.skin.<id>` with the
-id lowercased. It is derived, never stored, so a skin registered here has a node like any other.
-
-## Animation types
-
-```java
-import net.exylia.exyliaArmorSkin.skin.SkinAnimation;
-import net.exylia.exyliaArmorSkin.skin.animation.AnimationSpec;
-
-api.animations().register("strobe2", spec -> new SkinAnimation() {
-    @Override public long intervalTicks() { return spec.intervalTicks(); }
-    @Override public org.bukkit.Color colorAt(long frame, org.bukkit.Color base) {
-        return frame % 2 == 0 ? org.bukkit.Color.WHITE : org.bukkit.Color.BLACK;
-    }
+ExyliaAPI.get(ArmorSkinService.class).ifPresent(skins -> {
+    skins.select(player, ArmorPiece.HELMET, "sakura");
+    skins.skinItem("sakura").ifPresent(item -> player.getInventory().addItem(item));
 });
 ```
 
-A registered type is immediately usable from `animations.yml` as `type: strobe2`, and from code:
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
+</Callout>
 
-```java
-SkinAnimation animation = api.animations()
-        .create("rainbow", new AnimationSpec(2, java.util.List.of(), java.util.Map.of()))
-        .orElseThrow();
-```
+Everything is addressed by **skin id**, matched without regard to case. An id the catalogue does not
+declare is not an error — a reload can remove one while a crate still hands it out — so lookups
+answer empty and writes answer `false`.
 
-| Method on `animations()` | What it does |
-|---|---|
-| `register(String, Function<AnimationSpec, SkinAnimation>)` | Adds a type. |
-| `unregister(String)` | Removes one. |
-| `has(String)` / `types()` | What types exist. |
-| `resolve(String)` | A preset from `animations.yml` first, else a bare type with default values. |
-| `create(String type, AnimationSpec)` | Builds one from a spec. |
-
-`AnimationSpec` is `(long intervalTicks, List<Color> colors, Map<String, String> options)`, with the
-interval floored at one tick, and `option(name, fallback)` for reading numbers and booleans.
-
-## Items
-
-| Method | Returns | What it does |
-|---|---|---|
-| `skinItem(String id, Player viewer)` | `Optional<ItemStack>` | The skin item, rendered for that viewer. |
-| `remover(Player viewer)` | `ItemStack` | A remover. |
-| `isSkinItem(ItemStack)` | `boolean` | Whether a stack is a skin item. |
-| `isRemover(ItemStack)` | `boolean` | Whether a stack is a remover. |
-| `skinId(ItemStack)` | `Optional<String>` | The id on a skin item **or** on skinned armour. |
-| `hasSkin(ItemStack armor)` | `boolean` | Whether a piece of armour wears a skin. |
-
-## Applying and removing
-
-```java
-ApplyResult result = api.apply(chestplate, "ruby");
-if (result.success()) {
-    // the chestplate is unchanged except for one data value
-}
-```
+## The catalogue
 
 | Method | What it does |
 |---|---|
-| `apply(ItemStack armor, String skinId)` | Applies a skin by id. |
-| `apply(ItemStack armor, ItemStack skinItem)` | Applies the skin a skin item carries. The item is not consumed. |
-| `remove(ItemStack armor, Player receiver)` | Removes the skin and gives it back as an item. |
-| `strip(ItemStack armor)` | Removes the skin and gives nothing back. |
+| `skins()` | Every skin the server declares, in the order a menu draws them. A snapshot: fine for building a shop, wasteful in a loop. |
+| `skin(String skinId)` | One skin as an `Optional<ArmorSkin>`. Empty when the catalogue declares no such id. |
+| `exists(String skinId)` | Whether the catalogue declares that id. |
 
-Every check happens before anything is written, so a failed call leaves both stacks exactly as they
-were. The armour is mutated in place.
+## Permissions
 
-<Callout type="warning" title="The API ignores per-skin permissions, the display does not">
-`apply()` never checks `exyliaarmorskin.skin.<id>` — it is the tool you grant a skin with. But with
-`hide-without-permission: true`, a wearer without that node is still shown the real armour, so grant
-the node alongside the skin unless you mean it to be invisible.
-</Callout>
-
-### `ApplyResult`
-
-| Value | Meaning |
+| Method | What it does |
 |---|---|
-| `APPLIED` | The skin was written. |
-| `REMOVED` | The skin was cleared. |
-| `NOT_ARMOR` | The stack is not a wearable armour piece — or it is a skin item. |
-| `UNSUPPORTED_PIECE` | The skin does not list that slot. |
-| `UNKNOWN_SKIN` | No skin with that id is registered. |
-| `INVALID_ITEM` | The stack handed in as a skin item is not one, or carries no id. |
-| `ALREADY_SKINNED` | The armour already wears a skin. |
-| `NO_SKIN` | The armour wears no skin. |
-| `INVENTORY_FULL` | The receiver has no free slot; nothing was changed. |
-| `NO_PERMISSION` | The player lacks the skin's node. Only ever returned by the inventory drag, never by the API. |
+| `canUse(Player, String skinId)` | Whether they may wear the skin on at least one piece. |
+| `canUse(Player, String skinId, ArmorPiece)` | Whether they may wear it on that one piece. |
 
-`success()` is true for `APPLIED` and `REMOVED`.
+Both answer by the server's own rule, which includes the setting that turns permissions off
+entirely — a shop asking gets the same answer the wardrobe would give, not a raw permission check.
+The per-piece form is separate because a rank can be sold one slot at a time: a player given the
+helmet node wears the skin on their head and nowhere else.
 
 ## The wardrobe
 
-| Method | Returns | What it does |
-|---|---|---|
-| `wardrobe()` | `Wardrobe` or `null` | The wardrobe itself, or `null` while `behaviour.mode` is `item`. |
-| `wear(Player, ArmorPiece, String skinId)` | `ApplyResult` | Wears a skin on one slot, or on every slot the player may use when the piece is `null`. |
-| `undress(Player, ArmorPiece)` | `ApplyResult` | Clears one slot, or the whole wardrobe when the piece is `null`. |
-| `chosen(Player, ArmorPiece)` | `Optional<String>` | The skin chosen for that slot, whatever they are wearing there. |
+| Method | What it does |
+|---|---|
+| `mode()` | Where the skins this server draws come from, as a `SkinMode`. |
+| `selected(UUID player, ArmorPiece)` | The skin id chosen for that slot, as an `Optional<String>`. Empty when they chose none, the wardrobe is off, or their wardrobe is still being read. |
+| `select(Player, ArmorPiece, String skinId)` | Sets the choice for that slot. `true` when it was stored. |
+| `clear(Player, ArmorPiece)` | Takes the chosen skin off one slot. `true` when something was there to remove. |
+| `clearAll(Player)` | Takes every chosen skin off. `true` when something was there to remove. |
 
-These write to the player's row, never to the armour. With the wardrobe off, `wear` answers
-`UNKNOWN_SKIN`, `undress` answers `NO_SKIN` and `chosen` is empty.
+`selected` is a choice, not a result: it stays set while the slot is empty, and the skin appears
+again the moment the player equips armor that fits.
+
+<Callout type="warning" title="select sets, and here it also checks">
+`select` is a set rather than a toggle — running it twice leaves the skin on. In this plugin it is
+**gated by permission**: the wardrobe offers one write, that write enforces the server's rule, and a
+player who may not wear the skin is refused. That is the opposite of ExyliaArmorTrims and
+ExyliaArrows, where the owner's own setting says selection is never limited by a node. Ask
+`canUse(Player, String, ArmorPiece)` first if you want to know why before asking.
+</Callout>
+
+## Skins on items
+
+| Method | What it does |
+|---|---|
+| `skinOf(ItemStack armor)` | The skin id written onto that armor, as an `Optional<String>`. Empty when it carries none. |
+| `apply(ItemStack armor, String skinId)` | Writes a skin onto the armor in place, keeping everything else it had. `true` when written. |
+| `strip(ItemStack armor)` | Takes the skin off and gives nothing back. `true` when a skin was there. |
+| `skinItem(String skinId)` | A skin item ready to be given out, as an `Optional<ItemStack>`. Empty when the catalogue declares no such skin. |
+| `isSkinItem(ItemStack)` | Whether an item is one of this plugin's skin items. |
+
+Ask `isSkinItem` before a container, a shop or a trade treats a stack as ordinary loot: a skin item
+is drawn as whatever suits it and is not the material it looks like.
 
 ## Redrawing
 
 | Method | What it does |
 |---|---|
-| `refresh(Player)` | Rebuilds that player's visuals from their real armour and re-sends them. |
-| `refreshAll()` | The same for everyone online. |
+| `refresh(Player)` | Recomputes what the player looks like and re-sends it to everyone who can see them. |
 
-Call `refresh` after changing a worn piece behind the plugin's back — the armour-change event covers
-equipping and unequipping, but not an item you rewrote in place while it was being worn.
+Only needed after something the service does not know about changed — a permission granted at
+runtime, an item swapped by another plugin. Every write above already redraws.
 
-## What is stored on the item
+## Types
 
-One persistent data value under this plugin's namespace:
+**`ArmorSkin`** — `id`, `name` (colour codes still in it), `permission` (the node granting the skin
+on every piece it fits) and `pieces`. `supports(ArmorPiece)` answers whether the skin fits a slot.
+What the skin *looks* like is deliberately absent: that is the plugin's own drawing code, and
+`skinItem` already covers what a third party needs.
 
-| Key | On | Value |
-|---|---|---|
-| `exyliaarmorskin:skin` | Armour, and skin items | The skin id. |
-| `exyliaarmorskin:item` | Skin items and removers only | `skin` or `remover`. |
+**`ArmorPiece`** — `HELMET`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`. `slot()` gives the Bukkit
+`EquipmentSlot`, so a caller reading an inventory does not keep a switch of its own in step.
 
-Armour is told apart from a skin item by the second key: a stack carrying both is a skin item, never
-skinned armour.
+**`SkinMode`** — where a drawn skin comes from: `ITEM` (only what a skin item wrote onto the armor),
+`WARDROBE` (only what the wearer chose; skin items do nothing) or `BOTH`. `usesItems()` and
+`usesWardrobe()` answer without a switch. Worth asking before writing anything: the half a server
+does not use answers `false` or empty rather than throwing, so an integration written for both runs
+on either.
+
+<Callout type="tip" title="Queries are cheap, actions are not">
+Everything returning a value reads the plugin's cache and is safe from a menu redraw or a
+placeholder. Everything that changes a wardrobe writes to the database and redraws the player for
+everyone watching — call those on the main thread, and no more often than a player could.
+</Callout>
+
+## What it does not expose
+
+No events: ExyliaArmorSkin publishes none. Menu openers, the wardrobe's own editor flow, animation
+definitions and raw configuration rows are left out on purpose — a public contract cannot be broken
+later, so it carries what an integration needs and nothing that only made sense inside one version.
+
+If something you need is genuinely missing, ask on [Discord](https://discord.exylia.net).

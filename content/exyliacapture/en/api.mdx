@@ -1,77 +1,141 @@
 ---
 title: "API"
-description: "The public entry point for other plugins."
+description: "Reading configured and running capture events, starting and stopping one, and reading player and clan statistics."
 badge: "dev"
 ---
 
-`net.exylia.exyliaCapture.api.CaptureAPI` is static, and is the supported way to reach the plugin
-from another one.
-
-## Starting and stopping
-
-```java
-import net.exylia.exyliaCapture.api.CaptureAPI;
-
-// Start a configured event by its configuration id.
-Optional<BaseCaptureEvent> started = CaptureAPI.startEvent("koth1");
-
-// Same, but reporting to a command sender the way the admin command does.
-CaptureAPI.startEvent(sender, "koth1");
-
-// Stop a running event by its event id.
-boolean stopped = CaptureAPI.stopEvent(eventId);
-CaptureAPI.stopEvent(sender, eventId);
-```
-
-`startEvent` returns empty when the event does not exist, is disabled, is incompletely configured or
-is already running — the same checks the scheduler goes through.
-
-## Reading state
+`CaptureService` is what another plugin reads and drives ExyliaCapture through: the events an
+administrator configured, the ones running right now, starting and stopping them, and the statistics
+they leave behind.
 
 ```java
-Collection<BaseCaptureEvent> running = CaptureAPI.getActiveEvents();
-Optional<BaseCaptureEvent> event     = CaptureAPI.getEvent(eventId);
-boolean active                       = CaptureAPI.isEventActive("koth1");
-
-// Prints the running events to a sender, as /captureadmin list does.
-CaptureAPI.listEvents(sender);
+ExyliaAPI.get(CaptureService.class).ifPresent(capture ->
+    capture.activeEvents().forEach(event ->
+        getLogger().info(event.displayName() + " has " + event.participants() + " players")));
 ```
 
-<Callout type="note" title="Configuration id and event id are not the same">
-`isEventActive` and `startEvent` take the **configuration** id — what you named the event in the
-panel. `getEvent` and `stopEvent` take the id of the running instance.
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
 </Callout>
 
-## Players and statistics
-
-```java
-CapturePlayerStats stats = CaptureAPI.getPlayerStats(uuid);
-
-Optional<BaseCaptureEvent> theirEvent = CaptureAPI.getEventByParticipant(uuid);
-```
-
-`getPlayerStats` returns the player's global totals: wins, captures, points earned, leaderboard
-points and captured time. A player with no history returns a zeroed record rather than null.
-
-`getEventByParticipant` answers which running event a player is taking part in, if any — the
-straightforward way to keep your own plugin out of the way while somebody is in an event.
-
-## Declaring the dependency
-
-```yaml title="plugin.yml"
-softdepend:
-  - ExyliaCapture
-```
-
-With `softdepend` your plugin still loads when ExyliaCapture is absent, so check before calling:
-
-```java
-if (Bukkit.getPluginManager().isPluginEnabled("ExyliaCapture")) {
-    CaptureAPI.startEvent("koth1");
-}
-```
-
-<Callout type="warning" title="Main thread">
-These methods start and stop events, which spawn entities, holograms and tasks. Call them from the
-server thread — on Folia, from the thread owning the region the event is in.
+<Callout type="warning" title="CaptureEvent is not a Bukkit event">
+In this plugin an "event" is a **game mode being played** — a KOTH, a conquest, a payload — not
+something you register a listener for. `CaptureEvent` is a plain record describing one run of one,
+and ExyliaCapture publishes no Bukkit events at all. Nothing on this page is listened to; it is all
+read and called.
 </Callout>
+
+A **config** is an event an administrator set up; a **run** is one occurrence of it. At most one run
+of a config exists at a time, and a run carries its config's id — so `start(String)`, `stop(String)`
+and `event(String)` all take the same string, and a config can be started again once its run has
+ended.
+
+## Configured events
+
+| Method | What it does |
+|---|---|
+| `config(String configId)` | One config as an `Optional<CaptureConfig>`. Empty when no config has that id. |
+| `configs()` | Every event config, enabled or not. |
+| `startableConfigs()` | The configs that could be started right now: enabled, fully configured and not already running. |
+| `eventTypes()` | Every event type the plugin knows how to run, as a `Set<String>` of type ids. |
+
+A config missing its zone is left out of `startableConfigs()` but still appears in `configs()`, so an
+admin menu can show it as unfinished rather than hide it.
+
+<Callout type="note" title="Event types are a registry, not an enum">
+`CaptureConfig.type()` is a `String` because the types are a registry the plugin can be extended
+with — KOTH, conquest, payload and the rest are what ships, not what is possible, and a mode
+registered by another plugin appears here too. Compare a type against `eventTypes()` rather than
+against a constant of your own.
+</Callout>
+
+## Running events
+
+| Method | What it does |
+|---|---|
+| `event(String eventId)` | One running event as an `Optional<CaptureEvent>`. Empty when nothing with that id is running. |
+| `activeEvents()` | Every event running right now. Empty when none are. |
+| `isRunning(String configId)` | Whether that config has a run going. |
+| `eventOf(UUID player)` | The event a player is taking part in, as an `Optional<CaptureEvent>`. Empty when they are in none. |
+| `participants(String eventId)` | Everybody taking part, as a `List<UUID>`. Empty when nothing with that id is running. |
+| `points(String eventId, UUID player)` | What a player has scored. `0` when the event is not running or is not scored by points. |
+| `scores(String eventId)` | Everybody's score, as a `Map<UUID, Integer>`. Empty for a mode that does not score by points. |
+
+A player counts as taking part from the first moment they stand in a zone, and keeps counting until
+the event ends — so `eventOf` still answers for somebody who has since walked out, which is what a
+reward or a scoreboard needs. `scores` is a snapshot of the tallies, so it can be sorted and drawn
+without the next tick changing it underneath.
+
+## Actions
+
+| Method | What it does |
+|---|---|
+| `start(String configId)` | Starts a run of a config. Returns the new run's id, or empty when it could not start. |
+| `stop(String eventId)` | Ends a run early. `true` when something was running under that id. |
+
+`start` refuses when the config is disabled, unfinished, or already running, and says so in the
+plugin's log rather than throwing — an automation that starts events on a schedule should not have to
+catch anything.
+
+`stop` finishes the event the way its clock running out finishes it: a winner is resolved from the
+scores so far and the rewards are handed out. There is deliberately no way to cancel one without
+rewards — a stopped event players took part in is still an event they took part in.
+
+## Statistics
+
+| Method | What it does |
+|---|---|
+| `stats(UUID player)` | A player's totals across every event. |
+| `stats(UUID player, String configId)` | A player's totals in one event. |
+| `clanStats(String clanId)` | A clan's totals across every event. |
+| `topPlayers(int limit)` | The best players overall, as a `CompletableFuture<List<CaptureStats>>`, best first. |
+| `topPlayers(String configId, int limit)` | The same for one event. |
+| `topClans(int limit)` | The best clans overall, as a `CompletableFuture<List<CaptureClanStats>>`, best first. |
+| `cachedTopPlayers()` | The podium the plugin keeps warm for its own placeholders, best first. |
+| `cachedTopClans()` | The same for clans. |
+
+`stats` reads the cache and never fails: a player with no row gets one with every counter at zero, and
+the real row is fetched in the background for the next call.
+
+<Callout type="tip" title="The futures are the only calls that query">
+`topPlayers` and `topClans` go to the database and complete on a database thread. For a placeholder or
+a menu redraw prefer `cachedTopPlayers()` and `cachedTopClans()` — ten rows refreshed on a timer, and
+empty until the first refresh has run, which is the distinction a placeholder needs: it can print a
+fallback rather than block a tick on a query.
+</Callout>
+
+## Types
+
+**`CaptureConfig`** — `id` (also how the event is started), `displayName`, `type` (from the registry),
+`enabled`, `iconMaterial` and `maxDurationMillis`, which is `0` when the event runs until somebody
+wins. The zone, the reward tables and the mode's own settings are left out: they are the plugin's own
+geometry and reward types, and none of them are something a third party can act on without also owning
+the mode.
+
+**`CaptureEvent`** — a snapshot of a run: `id` (its config's id), `displayName`, `type`, `state`,
+`elapsedMillis`, `remainingMillis`, `infiniteDuration` and `participants`, the number of players who
+have been inside a zone at least once. The plugin ticks a run several times a second, so the times here
+are the ones current at the moment of the lookup — ask again rather than holding one across ticks.
+
+**`CaptureStats`** — `player`, `eventConfigId`, `wins`, `captures`, `timeCapturedSeconds`, `points`
+and `leaderboardPoints`. One shape covers both scopes: `eventConfigId` is empty for totals across
+every event and names the config for one event's row. A player who never took part still has one of
+these with every counter at zero, so a menu or a placeholder never handles an absent row.
+
+**`CaptureClanStats`** — `clanId`, `wins`, `captures`, `points`, `leaderboardPoints`. Only written when
+an event runs in clan mode, which needs a clan plugin installed: without one every event scores
+individually and these stay at zero.
+
+**`CaptureState`** — where a run is in its life: `IDLE` (built but not started, or already finished and
+about to be forgotten), `RUNNING` (the clock ticks and the zones are live) or `ENDING` (a winner is
+decided and the rewards are being handed out).
+
+## What it does not expose
+
+No Bukkit events: ExyliaCapture publishes none, and the "events" above are game modes. Zone geometry,
+reward tables, the scheduler's own writes, admin menus and raw configuration rows are left out on
+purpose — a public contract cannot be broken later, so it carries what an integration needs and
+nothing that only made sense inside one version.
+
+If something you need is genuinely missing, ask on [Discord](https://discord.exylia.net).

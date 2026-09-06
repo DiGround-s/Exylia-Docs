@@ -32,6 +32,28 @@ scripts/doc-drift.sh exyliaevents # just one
 | `exyliasurvivalcore` | `ExyliaSurvivalCore` | 1.0.6 | `1e1dc33` 2026-09-02 | Current for the two pages that exist (placeholders, permissions). The plugin is not finished, and the rest of its documentation is deliberately unwritten. |
 | `exyliatotemtrainer` | `ExyliaTotemTrainer` | 1.0.0 | `6ec68a0` 2026-09-04 | Current — first full documentation: the six shipped modes as four choices, grading and score, duels with draws and the even-format rule, arenas from the admin menu, per-mode leaderboards, the `totem_` PlaceholderAPI spelling. Blackout and `close-inventory` documented. |
 
+## The API pages
+
+Every plugin's **API** page was rewritten on 2026-09-06 for the new API system, and they are current
+for the whole suite regardless of what each row above says. A row's *reviewed through* still refers
+to the rest of that plugin's set, not to its API page.
+
+What changed: the per-plugin reflection jars and static facades are gone. There is now one published
+artifact, `com.github.DiGround-s.ExyliaLib:exylia-api`, holding every service, record, enum and event
+in the suite, reached through `net.exylia.lib.api.ExyliaAPI`. Documented against `exylia-api` at
+ExyliaLib `befa514` — release tag `v1.113.0`, the tag JitPack builds and the one the pages name.
+
+| | |
+|---|---|
+| Hub page | `exylialib` — integration for Gradle, Gradle Kotlin DSL and Maven, the lookup, timing, events, and the classloader reason the artifact must be `compileOnly`. New page. |
+| Rewritten | The 14 plugins that already had an API page. |
+| New | `exyliasurvivalcore`, which had none and now publishes 31 methods and 6 cancellable events. Registered in `SURVIVALCORE_NAV`. |
+| Not documented | ExyliaBetCore, ExyliaChatCosmetics, ExyliaSandBox, ExyliaSpecialsV3, ExyliaPearls, ExyliaTotems and ExyliaPracticeBotV3 all publish a service, but have no documentation set on this site at all. They are absent from the hub's service table for that reason. |
+
+The source of truth for these pages is
+`~/Java/Exylia/ExyliaLib/exylia-api/src/main/java/net/exylia/lib/api/`, not the plugin repositories:
+the interfaces carry the javadoc that says why each method behaves as it does.
+
 ## How a review goes
 
 1. `scripts/doc-drift.sh` — see what moved.

@@ -1,84 +1,130 @@
 ---
 title: "API"
-description: "What another plugin can do with kill effects."
+description: "What another plugin can do with kill effects: the catalogue, what a player chose, and what a weapon carries."
+badge: "dev"
 ---
 
+`KillEffectService` reads ExyliaKillEffect's catalogue, sets what a player wears, and binds effects onto
+weapons. One lookup gets you the whole surface.
+
 ```java
-KillEffectAPI api = ExyliaKillEffect.getInstance().api();
+ExyliaAPI.get(KillEffectService.class).ifPresent(effects ->
+    effects.chosenEffect(player.getUniqueId())
+           .ifPresent(effect -> player.sendMessage("Kill effect: " + effect.name())));
 ```
 
-Everything works in **effect ids** — the keys `effects.yml` declares, matched without regard to case.
+An empty result from the lookup means kill effects are not part of this server, rather than that
+something failed.
 
-<Callout type="note" title="Nothing here checks permissions">
-A plugin calling this has already decided the player may have the effect: a crate, a rank reward, a
-shop. Being overruled by a node the buyer does not have yet is not what it asked for.
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
+</Callout>
+
+## Everything is an id
+
+Effects and categories are named by the keys `effects.yml` declares. Ids are normalised — lowercase,
+letters, digits and underscores — and matched without regard to case, so the id a shop stored last
+month still resolves after the owner retyped it in a different case.
+
+<Callout type="note" title="Nothing here checks permission">
+A plugin calling this has already decided the player may have the effect: a crate opened, a rank
+bought, a reward claimed. Being overruled by a permission node the buyer has not been given yet is not
+what it asked for. `mayUse` is there for callers that do want the check, on their own terms.
 </Callout>
 
 ## The catalogue
 
 | Method | What it does |
 |---|---|
-| `effects()` | Every effect the server declares, in file order. |
-| `effect(String id)` | One effect, as an `Optional<EffectDefinition>`. |
-| `exists(String id)` | Whether the id names one. |
+| `List<KillEffect> effects()` | Every effect the server declares, in file order. A snapshot — fine for building a shop page, wasteful inside a loop that could ask for one id. |
+| `Optional<KillEffect> effect(String effectId)` | One effect by id. Empty when the file declares none by that id. |
+| `boolean effectExists(String effectId)` | Whether an effect exists. The cheap form of `effect`, for validating what a player typed or what a config named. |
+| `List<KillEffectCategory> categories()` | Every category, in the order the tabs are drawn. |
+| `Optional<KillEffectCategory> category(String categoryId)` | One category by id. Empty when the file declares none by that id. |
+| `List<KillEffect> effectsIn(String categoryId)` | The effects in a category, in the order they are drawn. Empty when the category does not exist. |
+| `boolean mayUse(Player player, String effectId)` | Whether a player may use an effect: its own permission, every effect at once, or its whole category. An unknown id is never allowed, so a stale id reads as locked rather than free. |
 
-An `EffectDefinition` carries `id()`, `categoryId()`, `name()`, `icon()`, `description()`,
-`priority()`, `steps()` and `weapons()`, plus `permission()`, `mayUse(Player)` and
-`fits(Material)`.
+## What a player chose
 
-## What a player wears
-
-| Method | What it does |
-|---|---|
-| `chosen(Player)` | The effect that follows them, empty when they chose none. |
-| `choose(Player, String id)` | Sets it. Returns `false` when the id names nothing. |
-| `clear(Player)` | Takes it off. |
-
-## The shortlist
+Everything taking a `UUID` reads what is held in memory for an online player. Somebody whose row has
+not arrived yet answers as though they chose nothing, rather than blocking the caller on a database.
 
 | Method | What it does |
 |---|---|
-| `favourites(Player)` | What they starred, in their own order. Empty while their row is still loading. |
-| `isFavourite(Player, String id)` | Whether one effect is starred. |
-| `toggleFavourite(Player, String id)` | Stars it, or unstars it. |
-| `clearFavourites(Player)` | Empties the list. |
+| `Optional<KillEffect> chosenEffect(UUID player)` | The effect they picked in the menu. Empty when they chose none. |
+| `boolean chooseEffect(Player player, String effectId)` | Sets the effect their kills play. `false` when no effect goes by that id, and then nothing changed. |
+| `void clearEffect(Player player)` | Leaves them with no chosen effect. |
+| `List<KillEffect> favourites(UUID player)` | The effects they starred, in the order they starred them — their order, not the catalogue's. Empty when they have none or are not loaded. |
+| `boolean isFavourite(UUID player, String effectId)` | Whether they starred an effect. |
+| `boolean toggleFavourite(Player player, String effectId)` | Stars an effect, or unstars it when it is already starred. `false` when no effect goes by that id. |
+| `void clearFavourites(Player player)` | Empties their favourites. |
 
-## Weapons and items
+## What a weapon carries
 
 | Method | What it does |
 |---|---|
-| `boundTo(ItemStack)` | The effect bound to an item, empty when it carries none. |
-| `bind(ItemStack, String id)` | Binds one; the item is changed in place. |
-| `unbind(ItemStack)` | Unbinds and gives nothing back; changed in place. |
-| `token(String id, Player viewer)` | A token ready to be given away. |
-| `remover(Player viewer)` | A remover item. |
+| `boolean weaponBindingEnabled()` | Whether effects bound to weapons are played on this server. Where they are not, binding writes a value nothing will ever play — so ask before offering it. |
+| `boolean playerChoiceEnabled()` | Whether the effect a player picked in the menu is played on this server. |
+| `boolean fitsWeapon(String effectId, Material weapon)` | Whether the effect accepts that kind of item. An effect that declares no weapons fits every weapon. |
+| `Optional<KillEffect> boundEffect(ItemStack weapon)` | The effect a weapon carries. Empty when it carries none. |
+| `KillEffectBindResult bind(ItemStack weapon, String effectId)` | Binds an effect. The item is changed in place, and only after every check has passed. |
+| `KillEffectBindResult unbind(ItemStack weapon)` | Takes the effect off and gives nothing back, for callers that hand the token back themselves. Changed in place. |
+| `Optional<ItemStack> token(String effectId, Player viewer)` | The item a crate or a shop hands over: applying it to a weapon binds the effect. Drawn for that viewer, because name and lore carry placeholders. Empty when no effect goes by that id. |
+| `ItemStack remover(Player viewer)` | The remover item. Applying it to a weapon takes the effect off and hands the token back. |
 
-`bind` and `unbind` answer with an `ApplyResult`:
+`bind` and `unbind` write on the caller's own copy of the stack. Pass a copy rather than an item still
+sitting in an open inventory view: what a player sees is redrawn when the stack is set back.
+
+## KillEffectBindResult
+
+Every check runs before anything is written, so any result other than `BOUND` or `UNBOUND` means both
+items were left exactly as they were. `isSuccess()` is true for those two and nothing else.
 
 | Value | Meaning |
 |---|---|
-| `BOUND` / `UNBOUND` | It worked. `isSuccess()` is true for these two only. |
-| `NOT_A_WEAPON` | The item cannot carry an effect at all. |
-| `WRONG_WEAPON` | A weapon, but not one this effect fits. |
-| `UNKNOWN_EFFECT` | The id names nothing the file declares. |
-| `ALREADY_BOUND` | The weapon already carries one. |
-| `NO_EFFECT` | It carries none. |
-| `INVENTORY_FULL` | The token had nowhere to go. |
-| `NO_PERMISSION` | The player does not own it. |
-| `INVALID_ITEM` | The item used was not one of this plugin's own. |
+| `BOUND` | The weapon now carries the effect. |
+| `UNBOUND` | The weapon no longer carries an effect. |
+| `NOT_A_WEAPON` | The item is not something an effect can be bound to at all. |
+| `WRONG_WEAPON` | A weapon, but not one this effect declares itself to fit. |
+| `UNKNOWN_EFFECT` | No effect goes by that id, which is also what a stale id reads as. |
+| `ALREADY_BOUND` | The weapon already carries an effect; unbind before binding another. |
+| `NO_EFFECT` | The weapon carries no effect, so there was nothing to take off. |
+| `FAILED` | Refused for a reason this contract does not name. |
 
-## An example
+<Callout type="tip" title="Write a default branch">
+Nothing produces `FAILED` today. It is there so that a reason added inside the plugin later arrives as
+a value you can handle, rather than as an exception thrown at whoever happened to ask — which on a
+live server is a third-party plugin with no way to recover. Handle the results you care about, and let
+everything else fall through one branch.
+</Callout>
 
-```java
-KillEffectAPI api = ExyliaKillEffect.getInstance().api();
+## The records
 
-// A crate reward: hand out a token rather than granting a node.
-api.token("blade_storm", player).ifPresent(token ->
-        player.getInventory().addItem(token));
+`KillEffect` carries `id()`, `categoryId()`, `name()`, `icon()`, `description()`, `priority()` and
+`permission()` — the description in the file's own words, the icon as the file names it, and the
+permission that grants this one effect, so a shop can sell it without knowing how the node is built.
 
-// A kit that comes with the effect already on the sword.
-ItemStack sword = kit.sword();
-if (api.bind(sword, "judgement").isSuccess()) {
-    player.getInventory().addItem(sword);
-}
-```
+`KillEffectCategory` carries `id()`, `name()`, `icon()`, `priority()` and `permission()`. Its
+permission grants every effect in it at once, which is what lets a rank be sold as "every infernal
+effect" instead of as a list of ids that grows whenever the owner adds one.
+
+Both are snapshots of what the file said when you asked. A reload replaces the whole catalogue, so an
+effect held across one is the old description of an id that may no longer exist — look it up again
+rather than keeping it.
+
+## The twin plugin
+
+[`HitEffectService`](/docs/exyliahiteffect/api) is the same contract for effects played on a hit.
+The two are deliberately identical in shape: same method names, same order, same results. An
+integration written against one ports to the other by changing the types.
+
+## What it does not expose
+
+What an effect actually draws — the particle steps the sequence engine compiles — is not here. It is
+this version's implementation of the effect, changes whenever the owner edits a line, and means
+nothing outside the plugin that plays it. Menu openers, the in-game editor and administrative writes
+are left out for the same reason: a public contract cannot be broken later, so it holds what an
+integration genuinely needs and nothing that only made sense inside one version.
+
+If something you need is missing, ask on [Discord](https://discord.exylia.net).

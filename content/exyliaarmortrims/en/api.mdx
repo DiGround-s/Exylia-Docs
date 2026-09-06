@@ -1,112 +1,125 @@
 ---
 title: "API"
-description: "ArmorTrimAPI: registering presets, building items, engraving armor, changing a player's choice and redrawing them."
+description: "Reading the trim catalogue, the halves a player combines by hand, their chosen trim, and the trims written onto armor."
+badge: "dev"
 ---
 
-Everything is on one class, `net.exylia.exyliaArmorTrims.api.ArmorTrimAPI`.
+`ArmorTrimService` is what another plugin reads and drives ExyliaArmorTrims through: the presets, the
+patterns and materials a player combines by hand, the trim they chose, and the trims written onto
+armor itself.
 
 ```java
-import net.exylia.exyliaArmorTrims.api.ArmorTrimAPI;
-
-ArmorTrimAPI api = ArmorTrimAPI.get();
+ExyliaAPI.get(ArmorTrimService.class).ifPresent(trims -> {
+    trims.select(player, ArmorPiece.CHESTPLATE, "sentry/netherite");
+    trims.trimItem("ruby").ifPresent(item -> player.getInventory().addItem(item));
+});
 ```
 
-`get()` throws `IllegalStateException` while the plugin is not enabled, so add
-`softdepend: [ExyliaArmorTrims]` to your `plugin.yml` and call it from `onEnable` or later.
-
-## Registering trims
-
-```java
-import net.exylia.exyliaArmorTrims.trim.TrimDefinition;
-import net.exylia.exyliaArmorTrims.trim.TrimLook;
-
-api.register(TrimDefinition.preset(
-        "ruby",                              // id: the permission and the stored value
-        "{error}&lRUBY",                     // name
-        java.util.Set.of(),                  // pieces: empty means all four
-        new TrimLook("rib", "redstone"),     // pattern and material
-        null));                              // icon, or null for the config.yml one
-```
-
-| Method | Returns | What it does |
-|---|---|---|
-| `register(TrimDefinition)` | — | Adds or replaces a preset. Survives a reload. |
-| `unregister(String id)` | `boolean` | Removes one, from code or from the file. |
-| `trim(String stored)` | `Optional<TrimDefinition>` | Resolves a preset id or a `pattern/material` pair. |
-| `exists(String id)` | `boolean` | Whether an id resolves. |
-| `registry()` | `TrimRegistry` | The registry itself: `presets()`, `ids()`, `patterns()`, `materials()`, `onChange(listener)`. |
-
-<Callout type="note" title="Code and file live side by side">
-A reload replaces only the entries that came from `trims.yml`. A preset registered here stays until it
-is unregistered or the server stops, and `/armortrimsadmin list` shows it like any other.
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
 </Callout>
 
-## Items
+Everything is addressed by **trim id**, matched without regard to case. That is either a preset the
+server owner named, or the `pattern/material` form of a combination — the slash tells them apart, and
+no registry key contains one. An id that names neither is not an error, so lookups answer empty and
+writes answer `false`.
 
-| Method | Returns | What it does |
-|---|---|---|
-| `trimItem(String stored, Player viewer)` | `Optional<ItemStack>` | That trim's item, drawn for that viewer. |
-| `remover(Player viewer)` | `ItemStack` | A remover. |
-| `isTrimItem(ItemStack)` | `boolean` | Whether a stack is a trim item. |
-| `isRemover(ItemStack)` | `boolean` | Whether it is a remover. |
-| `trimId(ItemStack)` | `Optional<String>` | The trim a trim item offers, or the one a piece of armor carries. |
-| `hasTrim(ItemStack armor)` | `boolean` | Whether a piece carries a trim. |
+## The catalogue
 
-## Engraving armor
-
-```java
-ApplyResult result = api.apply(chestplate, "ruby");
-if (result.success()) { /* ... */ }
-```
-
-| Method | Returns | What it does |
-|---|---|---|
-| `apply(ItemStack armor, String stored)` | `ApplyResult` | Writes the trim onto the armor. |
-| `apply(ItemStack armor, ItemStack trimItem)` | `ApplyResult` | The same, taking the trim from an item. The item is not consumed. |
-| `remove(ItemStack armor, Player receiver)` | `ApplyResult` | Takes it off and hands it back as an item. |
-| `strip(ItemStack armor)` | `ApplyResult` | Takes it off and gives nothing back. |
-
-None of them check permissions: that is the caller's business. All of them check before writing, so a
-call that fails leaves both items exactly as they were.
-
-### ApplyResult
-
-| Value | What it means |
+| Method | What it does |
 |---|---|
-| `APPLIED` · `REMOVED` | It worked. `success()` returns `true`. |
-| `NOT_ARMOR` | It was not a piece of armor. |
-| `UNSUPPORTED_PIECE` | The preset does not fit that piece. |
-| `UNKNOWN_TRIM` | The value resolves to no trim. |
-| `INVALID_ITEM` | The item was not a trim item. |
-| `ALREADY_TRIMMED` | The piece already carried a trim. |
-| `NO_TRIM` | There was nothing to remove. |
-| `INVENTORY_FULL` | The returned item did not fit. |
-| `NO_PERMISSION` | The player may not use that trim. |
+| `trims()` | Every preset the server declares, in the order a menu draws them. Presets only: combinations are too many to list. |
+| `trim(String trimId)` | One trim as an `Optional<ArmorTrim>`, taking a preset id or a `pattern/material` combination. Empty when the id names neither. |
+| `exists(String trimId)` | Whether the catalogue declares that preset. Presets only — a combination is valid whenever both halves are, so ask `trim` for one of those. |
+| `patterns()` | The patterns a player can combine by hand, in menu order. |
+| `materials()` | The materials a player can combine by hand, in menu order. |
 
-## The player's choice
+## Permissions
 
-It exists only while the mode uses the menu; with `mode: item`, `selections()` returns `null`.
+| Method | What it does |
+|---|---|
+| `canUse(Player, String trimId)` | Whether they may wear the trim on at least one piece. |
+| `canUse(Player, String trimId, ArmorPiece)` | Whether they may wear it on that one piece. |
 
-| Method | Returns | What it does |
-|---|---|---|
-| `selections()` | `TrimSelections` | The per-player layer, or `null`. |
-| `wear(Player, ArmorPiece, String stored)` | `ApplyResult` | Puts the trim on, or takes it off when already worn. A `null` piece means every piece it fits. |
-| `bare(Player, ArmorPiece)` | `ApplyResult` | Clears one piece's choice, or all of them with `null`. |
-| `chosen(Player, ArmorPiece)` | `Optional<String>` | What they chose for that slot, whatever they are wearing. |
+Both answer by the server's own rule, which includes the setting that turns permissions off
+entirely — a shop asking gets the same answer the menu would give, not a raw permission check. The
+per-piece form is separate because a rank can be sold one slot at a time: a player given the helmet
+node wears the trim on their head and nowhere else.
 
-`wear` does respect permissions, because it is the same door the menu uses.
+## What the player chose
+
+| Method | What it does |
+|---|---|
+| `mode()` | Where the trims this server draws come from, as a `TrimMode`. |
+| `selected(UUID player, ArmorPiece)` | The trim id chosen for that slot, as an `Optional<String>`. Empty when they chose none, the menu is off, or their selection is still being read. |
+| `select(Player, ArmorPiece, String trimId)` | Sets the choice for that slot. `true` when it was stored. |
+| `clear(Player, ArmorPiece)` | Takes the chosen trim off one slot. `true` when something was there to remove. |
+| `clearAll(Player)` | Takes every chosen trim off. `true` when something was there to remove. |
+
+`selected` is a choice, not a result: it stays set while the slot is empty, and the trim appears
+again the moment the player equips armor that fits.
+
+<Callout type="warning" title="select sets, and does not ask for a node">
+`select` is a set rather than a toggle — running it twice leaves the trim on. It is **not gated by
+permission**, because the server owner's own setting says it should not be: a trim handed out by a
+crate or a reward is owned whether or not a node was ever granted for it. That is the same rule
+ExyliaArrows follows and the opposite of ExyliaArmorSkin. Ask `canUse(Player, String, ArmorPiece)`
+first when you do want the permission to decide.
+</Callout>
+
+## Trims on items
+
+| Method | What it does |
+|---|---|
+| `trimOf(ItemStack armor)` | The trim id written onto that armor, as an `Optional<String>`. Empty when it carries none. |
+| `apply(ItemStack armor, String trimId)` | Writes a trim onto the armor in place, keeping everything else it had. `true` when written. |
+| `strip(ItemStack armor)` | Takes the trim off and gives nothing back. `true` when a trim was there. |
+| `trimItem(String trimId)` | A trim item ready to be given out, as an `Optional<ItemStack>`. Empty when the id names no trim. |
+| `isTrimItem(ItemStack)` | Whether an item is one of this plugin's trim items. |
+
+Ask `isTrimItem` before a container, a shop or a trade treats a stack as ordinary loot: a trim item
+is drawn as whatever suits it and is not the material it looks like.
 
 ## Redrawing
 
 | Method | What it does |
 |---|---|
-| `refresh(Player)` | Recomputes their look and re-sends it to everyone who can see them. |
-| `refreshAll()` | The same for everybody online. |
+| `refresh(Player)` | Recomputes what the player looks like and re-sends it to everyone who can see them. |
 
-Useful after changing permissions from code: the look is recomputed whenever armor is equipped, and
-this forces it without waiting.
+Only needed after something the service does not know about changed — a permission granted at
+runtime, an item swapped by another plugin. Every write above already redraws.
 
-## Pieces
+## Types
 
-`ArmorPiece` is `HELMET`, `CHESTPLATE`, `LEGGINGS` and `BOOTS`. `ArmorPiece.of(ItemStack)` says which
-slot a piece belongs to, and `ArmorPiece.parse("helmet")` reads a name.
+**`ArmorTrim`** — `id`, `name` (colour codes still in it), `permission`, `pieces`, `pattern`,
+`material` and `preset`. `supports(ArmorPiece)` answers whether the trim fits a slot. A preset is an
+entry the owner named and has one node; a combination has an empty `permission`, because it is
+granted by the two halves behind it instead.
+
+**`TrimOption`** — one half a player combines by hand: `id`, `name`, `permission`. Patterns and
+materials share the record, and which half one is comes from the method that handed it over. They
+exist because a combination is sold in halves: giving a player a preset never quietly gives them its
+pattern to recombine.
+
+**`ArmorPiece`** — `HELMET`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`. `slot()` gives the Bukkit
+`EquipmentSlot`, so a caller reading an inventory does not keep a switch of its own in step.
+
+**`TrimMode`** — where a drawn trim comes from: `ITEM` (only what a trim item wrote onto the armor),
+`MENU` (only what the wearer chose; trim items do nothing) or `BOTH`. `usesItems()` and `usesMenu()`
+answer without a switch. Worth asking before writing anything: the half a server does not use answers
+`false` or empty rather than throwing, so an integration written for both runs on either.
+
+<Callout type="tip" title="Queries are cheap, actions are not">
+Everything returning a value reads the plugin's cache and is safe from a menu redraw or a
+placeholder. Everything that changes a selection writes to the database and redraws the player for
+everyone watching — call those on the main thread, and no more often than a player could.
+</Callout>
+
+## What it does not expose
+
+No events: ExyliaArmorTrims publishes none. Menu openers, the custom-tab editor flow, removers and
+raw configuration rows are left out on purpose — a public contract cannot be broken later, so it
+carries what an integration needs and nothing that only made sense inside one version.
+
+If something you need is genuinely missing, ask on [Discord](https://discord.exylia.net).

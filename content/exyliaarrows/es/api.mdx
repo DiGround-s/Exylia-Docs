@@ -1,85 +1,134 @@
 ---
 title: "API"
-description: "Qué puede hacer otro plugin con los efectos de flecha."
+description: "Leer el catálogo de efectos y sus categorías, el efecto elegido por un jugador, sus favoritos y su ajuste de partículas, y los efectos ligados a los arcos."
+badge: "dev"
 ---
 
+`ArrowsService` es por donde otro plugin lee y maneja ExyliaArrows: el catálogo y sus categorías, el
+efecto que eligió el jugador, sus favoritos y su ajuste de partículas, y los efectos ligados a los
+arcos.
+
 ```java
-ArrowsAPI api = ExyliaArrows.getInstance().api();
+ExyliaAPI.get(ArrowsService.class).ifPresent(arrows -> {
+    arrows.select(player, "storm");
+    arrows.effectItem("storm").ifPresent(item -> player.getInventory().addItem(item));
+});
 ```
 
-Todo trabaja con **ids de efecto** — las claves que declara `effects.yml`, comparadas sin importar
-mayúsculas.
-
-<Callout type="note" title="Aquí no se comprueba ningún permiso">
-Un plugin que llama esto ya decidió que el jugador puede tener el efecto: una caja, una recompensa de
-rango, una tienda. Que lo anule un nodo que el comprador todavía no tiene no es lo que pidió.
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
+Exylia y están en la [página de la API pública](/docs/exylialib/api).
 </Callout>
+
+Todo se direcciona por **id de efecto**, comparado sin distinguir mayúsculas. Un id que el catálogo no
+declara no es un error — una recarga puede quitar uno mientras una caja todavía lo reparte —, así que
+las búsquedas devuelven vacío y las escrituras devuelven `false`.
 
 ## El catálogo
 
 | Método | Qué hace |
 |---|---|
-| `effects()` | Todos los efectos declarados, en el orden del archivo. |
-| `effect(String id)` | Uno, como `Optional<EffectDefinition>`. |
-| `exists(String id)` | Si el id nombra alguno. |
+| `effects()` | Todos los efectos que declara el servidor, en el orden en que los dibuja el menú. Una foto: sirve para montar una tienda, sobra dentro de un bucle. |
+| `effect(String effectId)` | Un efecto como `Optional<ArrowEffect>`. Vacío cuando el catálogo no declara ese id. |
+| `exists(String effectId)` | Si el catálogo declara ese id. |
+| `categories()` | Todas las categorías, en el orden en que el menú dibuja sus pestañas. |
+| `category(String categoryId)` | Una categoría como `Optional<ArrowCategory>`. Vacío cuando el catálogo no declara ese id. |
+| `effectsIn(String categoryId)` | Los efectos de una categoría, en orden de menú. Vacío cuando la categoría no existe. |
 
-Un `EffectDefinition` lleva `id()`, `categoryId()`, `name()`, `icon()`, `description()`,
-`priority()`, `steps()` y `bows()`, además de `permission()`, `mayUse(Player)` y
-`fits(Material)`.
-
-## Lo que lleva un jugador
-
-| Método | Qué hace |
-|---|---|
-| `chosen(Player)` | El efecto que lo sigue, vacío si no eligió ninguno. |
-| `choose(Player, String id)` | Se lo pone. Devuelve `false` si el id no nombra nada. |
-| `clear(Player)` | Se lo quita. |
-
-## La lista de favoritos
+## Permisos
 
 | Método | Qué hace |
 |---|---|
-| `favourites(Player)` | Lo que marcó, en su propio orden. Vacío mientras su fila sigue cargando. |
-| `isFavourite(Player, String id)` | Si un efecto está marcado. |
-| `toggleFavourite(Player, String id)` | Lo marca, o lo desmarca. |
-| `clearFavourites(Player)` | Vacía la lista. |
+| `canUse(Player, String effectId)` | Si puede usar el efecto. |
 
-## Arcos y objetos
+Responde con la regla del propio servidor: el nodo del efecto, el de toda su categoría, el comodín, o
+el ajuste que apaga los permisos por completo. Una tienda que pregunta recibe la misma respuesta que
+daría el menú, no una comprobación cruda de nodo.
+
+## Lo que eligió el jugador
 
 | Método | Qué hace |
 |---|---|
-| `boundTo(ItemStack)` | El efecto atado a un objeto, vacío si no lleva ninguno. |
-| `bind(ItemStack, String id)` | Ata uno; el objeto se modifica en el sitio. |
-| `unbind(ItemStack)` | Lo desata sin devolver nada; también en el sitio. |
-| `token(String id, Player viewer)` | Una ficha lista para entregar. |
-| `remover(Player viewer)` | Un removedor. |
+| `mode()` | De dónde salen los efectos que reproduce este servidor, como `EffectMode`. |
+| `selected(UUID player)` | Su id de efecto elegido, como `Optional<String>`. Vacío cuando no eligió ninguno, el menú está apagado, o su fila todavía se está leyendo. |
+| `select(Player, String effectId)` | Fija el efecto que lo acompaña. `true` cuando quedó guardado. |
+| `clear(Player)` | Le quita el efecto elegido. |
 
-`bind` y `unbind` responden con un `ApplyResult`:
+<Callout type="warning" title="select fija, y no pide nodo">
+`select` fija en vez de alternar: llamarlo dos veces deja el efecto puesto. **No pasa por permiso**,
+porque el ajuste del propio dueño del servidor dice que no debe hacerlo: un efecto repartido por una
+caja o una recompensa es suyo se le haya concedido un nodo o no. Es la misma regla que sigue
+ExyliaArmorTrims y lo contrario de ExyliaArmorSkin. Pregunta antes por `canUse` cuando sí quieras que
+decida el permiso.
+</Callout>
 
-| Valor | Significado |
+## Favoritos
+
+| Método | Qué hace |
 |---|---|
-| `BOUND` / `UNBOUND` | Salió bien. `isSuccess()` es cierto solo para estos dos. |
-| `NOT_A_WEAPON` | El objeto no puede llevar un efecto. |
-| `WRONG_WEAPON` | Es un arco, pero no una que encaje con ese efecto. |
-| `UNKNOWN_EFFECT` | El id no nombra nada declarado. |
-| `ALREADY_BOUND` | El arco ya lleva uno. |
-| `NO_EFFECT` | No lleva ninguno. |
-| `INVENTORY_FULL` | La ficha no tenía dónde ir. |
-| `NO_PERMISSION` | El jugador no tiene el efecto. |
-| `INVALID_ITEM` | El objeto usado no era de este plugin. |
+| `favourites(UUID player)` | Los ids de efecto que marcó, en el orden en que los marcó. Vacío cuando no marcó ninguno o todavía se está leyendo. |
+| `isFavourite(UUID player, String effectId)` | Si un efecto está marcado. |
+| `toggleFavourite(Player, String effectId)` | Marca un efecto, o lo desmarca cuando ya lo estaba. `true` cuando el id nombraba un efecto que existe. |
+| `clearFavourites(Player)` | Desmarca todo. |
 
-## Un ejemplo
+La lista corta guarda el orden del jugador y no el del catálogo: la armó alguien, y reordenarla se lo
+quita. `toggleFavourite` es a propósito un alternador y no un par de métodos: la estrella es un solo
+control con dos estados, y quien tuviera que leer el estado primero competiría con el jugador que la
+está pulsando.
 
-```java
-ArrowsAPI api = ExyliaArrows.getInstance().api();
+## Visibilidad de partículas
 
-// Premio de caja: entregar una ficha en vez de dar un nodo.
-api.token("ember_trail", player).ifPresent(token ->
-        player.getInventory().addItem(token));
+| Método | Qué hace |
+|---|---|
+| `visibility(UUID player)` | Quién ve ahora mismo sus partículas de flecha. `ParticleVisibility.ALL` cuando nunca lo cambió o todavía se está leyendo. |
+| `setVisibility(Player, ParticleVisibility)` | Guarda quién las ve. |
 
-// Un kit que ya viene con el efecto en la espada.
-ItemStack bow = kit.bow();
-if (api.bind(bow, "phoenix").isSuccess()) {
-    player.getInventory().addItem(bow);
-}
-```
+## Efectos en los objetos
+
+| Método | Qué hace |
+|---|---|
+| `boundTo(ItemStack bow)` | El id de efecto ligado a ese arco, ballesta o tridente, como `Optional<String>`. Vacío cuando no lleva ninguno. |
+| `bind(ItemStack bow, String effectId)` | Liga un efecto al arco, en el sitio, conservando todo lo demás que tenía. Se rechaza cuando el objeto no admite efectos, o cuando el efecto declara que no encaja en él. |
+| `unbind(ItemStack bow)` | Quita el efecto y no devuelve nada a cambio. `true` cuando había uno. |
+| `effectItem(String effectId)` | Una ficha de efecto lista para entregar, como `Optional<ItemStack>`. Vacío cuando el catálogo no declara ese efecto. |
+| `isEffectItem(ItemStack)` | Si un objeto es una de las fichas de efecto del plugin. |
+
+Pregunta `isEffectItem` antes de que un cofre, una tienda o un intercambio traten un stack como botín
+normal: una ficha se dibuja como convenga a lo que lleva y no es el material que aparenta.
+
+## Tipos
+
+**`ArrowEffect`** — `id`, `categoryId`, `name` (con los códigos de color dentro), `permission` (el
+nodo que concede ese efecto suelto) y `description` (las palabras del dueño, con sus saltos de línea).
+Lo que el efecto *dibuja* no está a propósito: es una secuencia compilada que pertenece al plugin que
+la reproduce.
+
+**`ArrowCategory`** — `id`, `name`, `permission`. Su nodo concede de una vez todos los efectos que
+contiene, que es como se vende un rango como "todos los efectos de tormenta" sin listarlos uno a uno.
+
+**`EffectMode`** — de dónde sale el efecto que suena: `PLAYER` (solo lo que eligió el jugador; el arco
+no lleva nada), `BOW` (solo lo ligado al arco; el menú no elige nada) o `BOTH`. `usesBows()` y
+`usesMenu()` responden sin switch. Vale la pena preguntarlo antes de escribir nada: la mitad que un
+servidor no usa devuelve `false` o vacío en lugar de lanzar, así que una integración escrita para las
+dos funciona en cualquiera.
+
+**`ParticleVisibility`** — `ALL`, `NONE`, `SELF_ONLY`, `OTHERS_ONLY`. Es un ajuste del jugador, no del
+servidor. La etiqueta con la que se muestra cada modo la escribe el dueño del servidor y no viaja
+aquí: una constante es una identidad, no un nombre.
+
+<Callout type="tip" title="Las consultas son baratas, las acciones no">
+Todo lo que devuelve un valor lee la caché del plugin y es seguro desde un redibujado de menú o un
+placeholder: un jugador que todavía no terminó de cargar se lee como uno que no eligió nada, que es
+por lo que aquí toda lectura responde en vez de esperar. Todo lo que cambia la elección de un jugador
+escribe en la base de datos, así que llama a eso desde el hilo principal y no más seguido de lo que
+podría un jugador.
+</Callout>
+
+## Lo que no expone
+
+No hay eventos: ExyliaArrows no publica ninguno. Los abridores de menú, el editor de efectos, las
+secuencias de partículas compiladas y las filas crudas de configuración quedan fuera a propósito: un
+contrato público no se puede romper después, así que lleva lo que una integración necesita y nada que
+solo tuviera sentido dentro de una versión.
+
+Si de verdad te falta algo, pídelo en [Discord](https://discord.exylia.net).

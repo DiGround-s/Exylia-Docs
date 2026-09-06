@@ -1,92 +1,121 @@
 ---
 title: "API"
-description: "Reading a player's class, energy and marks from another plugin."
+description: "Reading the class catalogue, its abilities and energy, and what a player is wearing, warming up into and marked with."
 badge: "dev"
 ---
 
-`ClassesAPI` is reached through the plugin instance:
+`ClassesService` is what another plugin reads and drives ExyliaClasses through: the class catalogue,
+what each class can do and what it spends, and what a player is right now.
 
 ```java
-ClassesAPI api = ExyliaClasses.getInstance().getClassesAPI();
+ExyliaAPI.get(ClassesService.class).ifPresent(classes ->
+    classes.classOf(player.getUniqueId())
+           .ifPresent(found -> player.sendMessage("Class: " + found.name())));
 ```
 
-## Reading a player
-
-```java
-boolean inClass = api.isInClass(player);
-
-Optional<ClassDefinition> current = api.getCurrentClass(player);
-String name = current.map(ClassDefinition::getDisplayName).orElse("None");
-
-double energy = api.getPlayerEnergy(player);   // 0 when untracked
-int marks     = api.getPlayerMarks(player);    // 0 when unmarked
-```
-
-`getCurrentClass` is empty both for a player with no state and for one whose state exists but holds no
-class, so a caller never has to distinguish those.
-
-## Reading the roster
-
-```java
-Collection<ClassDefinition> all = api.getAllClasses();
-Optional<ClassDefinition> rogue = api.getClass("rogue");
-```
-
-Ids are file names lowercased, so `classes/Rogue.yml` is `"rogue"`.
-
-## Reading state directly
-
-```java
-Optional<PlayerState> state = api.getPlayerState(player);
-```
-
-`PlayerState` carries the current class, the energy value, the mark count and the mark weapon. It is
-live state, not a snapshot.
-
-## Changing a player
-
-```java
-api.removeFromClass(player);
-```
-
-The only mutation the API offers. It removes the passives, the special passives, the energy bar, the
-marks and every ability cooldown the class declared, and tells the player.
-
-<Callout type="warning" title="Removing does not stop them re-entering">
-The armour is still on, so the next armour change — or the next reload — puts them straight back into
-a warmup for the same class. To keep somebody out, take the armour off or revoke the class's
-permission.
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
 </Callout>
 
-## What a ClassDefinition holds
+Classes are addressed by **class id** — the name of the class file, lowercased.
 
-| Accessor | Type |
+<Callout type="warning" title="A class is worn, not chosen">
+A player is in a class because their armor says so. Nothing here assigns one directly: `apply` asks
+the plugin to enter a class the way equipping the armor would, refusal message and warm-up included,
+and the class ends by itself the moment a piece comes off. A plugin that wants somebody in a class
+gives them the armor `PlayerClass.equipment()` names.
+</Callout>
+
+## The catalogue
+
+| Method | What it does |
 |---|---|
-| `getId()` | `String` |
-| `getDisplayName()` | `String` |
-| `getPermission()` | `String` — `"NONE"` when the class is free |
-| `hasPermission()` | `boolean` — false for `NONE`, blank or missing |
-| `getEquipment()` | `Map<EquipmentSlot, Material>` |
-| `getPassiveEffects()` | `List<String>` — the raw effect lines |
-| `getSpecialPassives()` | `List<SpecialPassive>` |
-| `getWarmup()` | `Warmup` |
-| `getEnergy()` | `Energy`, or `null` when the class has none |
-| `getAbilities()` | `Map<Material, Ability>` |
-| `getHoldEffects()` | `Map<Material, HoldEffect>` |
-| `getWeapons()` | `Map<Material, Weapon>` — each a `MarkWeapon` or a `BackstabWeapon` |
+| `classes()` | Every class the server declares. A snapshot: fine for building a menu, wasteful in a loop. |
+| `classById(String classId)` | One class as an `Optional<PlayerClass>`. Empty when the catalogue declares no such id. |
+| `exists(String classId)` | Whether the catalogue declares that id. |
+| `abilities(String classId)` | What the class can do. Empty when the class does not exist or has no abilities. |
+| `energy(String classId)` | The resource it spends, as an `Optional<ClassEnergy>`. Empty when the class does not exist or spends nothing. |
 
-## Declaring the dependency
+## Permissions
 
-```yaml title="plugin.yml"
-softdepend:
-  - ExyliaClasses
-```
+| Method | What it does |
+|---|---|
+| `canUse(Player, String classId)` | Whether they may enter the class. `false` when the class does not exist. |
 
-There are no events to listen to, and nothing is persisted — a player's class exists only while they
-are online.
+Answers by the server's own rule, so a class the owner left open is allowed for everybody rather than
+refused for want of a node nobody declared.
 
-<Callout type="note" title="Threads">
-Everything here reads in-memory state and is safe to call from any thread. Acting on the result — 
-applying effects, changing a player — belongs on the thread that owns that player, which on Folia is
-what ExyliaLib's `Tasks.runAtEntity` is for.
+## What a player is
+
+| Method | What it does |
+|---|---|
+| `isInClass(UUID player)` | Whether they are in a class right now. |
+| `classOf(UUID player)` | Their class as an `Optional<PlayerClass>`. Empty when they are in none. |
+| `energyOf(UUID player)` | How much energy they hold right now. `0` when they are in no class or their class spends none. |
+| `marks(UUID player)` | How many marks they carry. Zero is the ordinary state. |
+| `isMarked(UUID player)` | Whether they are marked at all. |
+| `warmingUp(Player)` | The class they are currently warming up into, as an `Optional<PlayerClass>`. Empty when they are not warming up. |
+| `classForEquipment(Player)` | The class their current armor names, whether or not they are in it. Empty when it names none. |
+
+`energyOf` rises on its own between calls, at the class's own refill rate — read it when you draw
+rather than caching it. `isMarked` is not the same as `marks` being above zero: a mark also belongs to
+the weapon that placed it, and one whose weapon is gone no longer counts. Marks are put on a player by
+somebody else's weapon and spent by it.
+
+Between putting the armor on and the class taking effect there is a delay the owner configures, and a
+player in it is in no class yet — which is why `warmingUp` exists, and why `classForEquipment` is what
+tells "wearing the wrong armor" apart from "warming up". `classForEquipment` is also what a preview
+asks: what would this set make somebody, before they wear it.
+
+## Actions
+
+| Method | What it does |
+|---|---|
+| `apply(Player, String classId)` | Asks the player to enter a class. Returns nothing. |
+| `remove(Player)` | Takes them out of their class, with its passive effects, bars and cooldowns. |
+
+`apply` runs the same flow equipping the armor runs: the permission is checked and refused out loud,
+and the warm-up runs before the class takes effect — so nothing has happened by the time the call
+returns, which is why it reports nothing back. Read `classOf` afterwards if you need to know. The
+class still ends the moment the player's armor stops naming it, so this is not a way to put somebody
+in a class they are not dressed for.
+
+`remove` leaves the armor alone, so putting a piece back on puts them in the class again.
+
+## Types
+
+**`PlayerClass`** — `id`, `name` (colour codes still in it), `permission` and `equipment`, a map of
+`EquipmentSlot` to `Material`. `gated()` answers whether entering the class needs a node at all; an
+empty `permission` means the class is open to everyone. `equipment` is part of the public shape on
+purpose: a kit plugin that hands out those pieces has handed out the class, and one that takes a piece
+away has taken it back.
+
+**`ClassAbility`** — `name`, `trigger` (the `Material` a player holds to use it, and also its key
+within the class, so no two abilities share one), `type`, `cooldown` in seconds, `energyCost` and
+`radius` in blocks. What the ability actually applies is left out: those are lines the owner writes in
+the plugin's own syntax. What is here is what a menu, a shop or a heads-up display needs to describe
+an ability without playing it.
+
+**`ClassEnergy`** — `name` (mana, focus, rage), `symbol`, `max` and `regenPerTick`. It belongs to the
+class rather than to the player: every archer has the same ceiling and the same refill rate, and what
+one of them holds right now is `energyOf`. `regenPerTick` is there so a bar can be predicted between
+updates rather than polled.
+
+**`AbilityType`** — who an ability reaches: `SELF`, `TO_CLAN`, `TO_ALLY`, `TO_ENEMY`,
+`TO_CLAN_AND_ALLY`. The clan-aware values mean nothing on a server without clans, where they find
+nobody and the ability behaves as `SELF` does. `radius` is ignored by `SELF`.
+
+<Callout type="tip" title="Queries are cheap, actions are not">
+Everything returning a value reads the plugin's cache and is safe from a menu redraw or a
+placeholder. `apply` and `remove` run the same flow a player's own gear change runs — potion effects,
+cooldowns, bars, the messages they see — so call those on the main thread.
 </Callout>
+
+## What it does not expose
+
+No events: ExyliaClasses publishes none. Ability execution, passive effects, the weapon and mark
+internals, and raw configuration rows are left out on purpose — a public contract cannot be broken
+later, so it carries what an integration needs and nothing that only made sense inside one version.
+
+If something you need is genuinely missing, ask on [Discord](https://discord.exylia.net).

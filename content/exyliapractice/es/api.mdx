@@ -1,133 +1,270 @@
 ---
-title: "API para desarrolladores"
-description: "PracticeAPI, las acciones que pueden llamar tus menús, y cómo otro plugin se lleva a un jugador del practice."
+title: "API"
+description: "Leer arenas, kits, partidas, colas, parties y ranking, y preguntar si un jugador está libre antes de llevártelo."
+badge: "dev"
 ---
 
-## PracticeAPI
-
-`net.exylia.exyliaPracticeCore.api.PracticeAPI` es una fachada estática sobre todo lo que hace el
-plugin. Compila contra el jar del plugin; no lo incluyas dentro del tuyo.
-
-### Estado
+`PracticeService` es la forma en que otro plugin lee y maneja ExyliaPracticeCore: qué está haciendo un
+jugador, qué se está peleando y dónde, y los mismos flujos que ejecutan los comandos del propio
+jugador.
 
 ```java
-PlayerState  getPlayerState(UUID uuid)
-boolean      isAvailable(Player player)
-boolean      isInGame(UUID uuid)
-boolean      isInQueue(UUID uuid)
-boolean      isSpectating(UUID uuid)
-boolean      requireAvailable(Player player)     // avisa al jugador si no lo está
-boolean      requireQueueJoinable(Player player)
+ExyliaAPI.get(PracticeService.class).ifPresent(practice ->
+    practice.matchOf(player.getUniqueId())
+            .ifPresent(match -> player.sendMessage("Peleando en " + match.kitId())));
 ```
 
-Los nueve estados son `AVAILABLE`, `IN_PARTY`, `IN_QUEUE`, `LOADING_MATCH`, `IN_GAME`, `SPECTATING`,
-`EDITING_KIT`, `IN_PVP_ZONE` y `EXTERNAL`.
-
-<Callout type="note" title="No se guarda nada">
-El estado de un jugador se deduce en cada llamada del registro de claims de ExyliaLib y de su
-pertenencia a una party. No hay un mapa de estados que pueda desincronizarse, y la respuesta se puede
-pedir desde cualquier hilo.
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
+Exylia y están en la [página de la API pública](/docs/exylialib/api).
 </Callout>
 
-### Cola y partidas
+<Callout type="warning" title="Pregunta antes de mover a un jugador">
+El practice se adueña de un jugador mientras esté en cola, peleando, viendo una partida o editando un
+kit, y todo eso se rompe si lo teletransportas a otro lado. `isAvailable(UUID)` es la pregunta que
+tiene que hacer cualquier otro modo antes de nada; `state(UUID)` dice por qué la respuesta fue no.
+</Callout>
 
-```java
-boolean joinQueue(Player player, String kitId)
-boolean leaveQueue(Player player)
-boolean quickQueue(Player player)
-boolean requeue(Player player)
-boolean isInQueueForKit(UUID uuid, String kitId)
+<Callout type="note" title="Las consultas son baratas, las acciones no">
+Todo lo que devuelve un valor lee de la caché del plugin y es seguro desde el redibujado de un menú o
+desde un placeholder — los dos métodos que devuelven `CompletableFuture` son la excepción, y los dos se
+delatan solos. Todo lo demás ejecuta el mismo flujo que el comando del propio jugador, con sus
+comprobaciones de permiso, sus cooldowns y sus mensajes, así que llámalo en el hilo principal y no más
+seguido de lo que un jugador podría provocarlo. Una acción devuelve si el plugin la *aceptó*; al
+jugador ya se le dijo por qué no.
+</Callout>
 
-Optional<Game> getGame(Player player)
-boolean        leave(Player player)     // abandona, sale de la cola, sale de una zona
-void           sendToLobby(Player player)
-```
+## Arenas
 
-### Duelos y parties
+| Método | Qué hace |
+|---|---|
+| `Optional<Arena> arena(String arenaId)` | Una arena por id. Vacío si ninguna la tiene. |
+| `List<Arena> arenas()` | Todas las arenas, activadas o no, como snapshot de la caché. Vale para un menú, sobra dentro de un bucle. |
 
-```java
-boolean sendDuelRequest(Player sender, String targetName, String kitId, int rounds, String arenaId)
-void    acceptDuelRequest(Player player)
-void    declineDuelRequest(Player player)
-void    cancelDuelRequest(Player player)
-boolean canStartDuelWith(Player sender, Player target)
+## Kits
 
-Optional<Party> getParty(UUID uuid)
-boolean createParty(Player player)
-boolean inviteToParty(Player leader, Player target)
-boolean joinParty(Player player, String leaderName)
-boolean startPartyFfa(Player leader, String kitId)
-boolean startPartySplit(Player leader, String kitId)
-boolean queuePartyForDuel(Player leader, String kitId)
-```
+| Método | Qué hace |
+|---|---|
+| `Optional<Kit> kit(String kitId)` | Un kit por id. Vacío si ninguno lo tiene. |
+| `List<Kit> kits()` | Todos los kits, activados o no. |
+| `List<Kit> kitsPlayableIn(String arenaId)` | Los kits jugables en una arena. No es lo mismo que filtrar `Kit.compatibleArenas()` por tu cuenta: un kit que no nombra ninguna arena se puede jugar en todas. Vacío si la arena no existe. |
+| `List<KitCategory> kitCategories()` | Todas las categorías de kit, activadas o no. |
+| `List<KitLoadout> loadouts(UUID player, String kitId)` | Los loadouts guardados de un jugador para un kit. Se leen de la copia cargada al entrar, así que un jugador desconectado no tiene ninguno. |
+| `boolean applyKit(Player player, String kitId)` | Le da el kit al jugador como haría una partida: limpia lo que llevaba y aplica los efectos y reglas del kit, usando su propio loadout si guardó alguno. `false` si ningún kit tiene ese id. |
 
-### Kits y arenas
+## Estado del jugador
 
-```java
-Optional<KitEntity>          getKit(String kitId)
-List<KitEntity>              getAllKits()
-List<KitEntity>              getCompatibleKits(String arenaId)
-Optional<KitCategoryEntity>  getKitCategory(String categoryId)
-void                         applyKit(Player player, KitEntity kit)
-List<PlayerKitEntity>        getPlayerKitSlots(Player player, String kitId)
-int                          getMaxKitSlots(Player player)
+| Método | Qué hace |
+|---|---|
+| `PracticeState state(UUID player)` | Qué está haciendo el jugador. `AVAILABLE` para cualquiera que el plugin no esté reteniendo. |
+| `boolean isAvailable(UUID player)` | Si nadie tiene un claim sobre él. No es lo mismo que comparar `state(UUID)` con `AVAILABLE`, porque también puede estar retenido por un plugin que no es este. |
+| `boolean isInMatch(UUID player)` | Si está en una partida. Cierto desde que empieza a montarse, y cierto para un espectador que la mira desde dentro — usa `MatchInfo.isActive()` cuando necesites que esté peleando de verdad. |
+| `boolean isInQueue(UUID player)` | Si está esperando en al menos una cola. |
+| `void sendToLobby(Player player)` | Lo lleva al lobby del practice y nada más. |
+| `boolean leave(Player player)` | Lo saca de donde esté, rindiendo la partida. Responde si la petición fue *aceptada*, no si ya terminó; `false` para un estado sin salida, como una partida todavía cargando o una zona PvP. |
 
-Optional<ArenaEntity>                            getArena(String arenaId)
-List<ArenaEntity>                                getAllArenas()
-Optional<ArenaInstance>                          acquireInstance(String arenaId)
-CompletableFuture<Optional<ArenaAcquireResult>>  acquireOrClone(String arenaId)
-void                                             releaseInstance(ArenaInstance i, boolean regenerate)
-```
+## Partidas
 
-`acquireOrClone` es la vía para que otro modo de juego tome prestada una arena de practice: coge una
-instancia, úsala, libérala. Liberarla con `regenerate` restaura los bloques desde el esquemático.
+| Método | Qué hace |
+|---|---|
+| `Optional<MatchInfo> matchOf(UUID player)` | La partida en la que está, peleando o mirándola desde dentro. Vacío si no está en ninguna. |
+| `Optional<MatchInfo> match(String matchId)` | Una partida por id. Vacío en cuanto termina. |
+| `Collection<MatchInfo> activeMatches()` | Todas las partidas en curso, sin orden concreto. |
+| `boolean spectate(Player spectator, String matchId)` | Manda a un jugador a mirar. Se rechaza para una partida que no empezó o ya terminó, para una contra bots, y para una cuyos peleadores apagaron los espectadores. |
+| `boolean spectatePlayer(Player spectator, Player target)` | Lo mismo, para lo que esté peleando otro jugador. Mirar a alguien que a su vez es espectador se rechaza en vez de seguirlo en silencio. |
+| `boolean stopSpectating(Player spectator)` | Saca al espectador. `false` si no estaba mirando nada. |
 
-### Estadísticas
+## Cola
 
-```java
-Optional<PlayerSeasonStatsEntity> getKitStats(UUID uuid, String kitId)
-Optional<PlayerSeasonStatsEntity> getGlobalStats(UUID uuid)
-int                               getMmr(UUID uuid, String kitId)
-RankInfo                          getRankInfo(UUID uuid, String kitId)
+| Método | Qué hace |
+|---|---|
+| `Set<String> queuedKits(UUID player)` | Los kits en cuya cola espera. Un jugador puede esperar en varias a la vez y se lleva la primera partida que salga. |
+| `int queueSize(String kitId)` | Cuántos jugadores esperan por un kit. `0` para uno en el que no espera nadie. |
+| `boolean joinQueue(Player player, String kitId)` | Lo mete en una cola. Se rechaza si el jugador no está disponible, si sus estadísticas no terminaron de cargar, si la cola está bloqueada por una rotación de temporada, o si el kit no es de cola. |
+| `boolean leaveQueue(Player player)` | Lo saca de todas las colas. Se rechaza una vez encontrada su partida: a esa altura ya no está esperando, y soltarlo lo dejaría libre para meterse en otro modo mientras la partida lo carga. |
 
-CompletableFuture<List<PlayerSeasonStatsEntity>> getLeaderboard(String kitId, LeaderboardStatsType type)
-CompletableFuture<Optional<UUID>>                resolvePlayerUuid(String playerName)
-CompletableFuture<Boolean>                       setPlayerStat(UUID uuid, String kitId, String field, String value)
-CompletableFuture<Boolean>                       modifyPlayerStat(UUID uuid, String kitId, String field, double delta)
-```
+## Duelos
 
-Pasa `PlayerSeasonStatsEntity.GLOBAL_KEY` —el literal `"global"`— como id de kit para el ladder
-general.
+| Método | Qué hace |
+|---|---|
+| `boolean sendDuelRequest(Player sender, Player target, String kitId, int rounds)` | Manda una petición de duelo. La arena la elige el plugin, entre las que admiten el kit; `rounds` es `1` para una sola pelea. A los dos jugadores se les avisa qué pasó. |
+| `void acceptDuelRequest(Player player, Player sender)` | Acepta la petición de `sender`. |
+| `void declineDuelRequest(Player player, Player sender)` | Rechaza la petición de `sender`. |
+| `List<String> pendingDuelSenders(Player target)` | Quién tiene una petición esperándolo. Nombres, no UUIDs, y solo los que siguen conectados: una petición de alguien que se desconectó no se puede aceptar. |
 
-### Managers
+## Parties
 
-Para lo que la fachada no cubra, los managers están accesibles: `getArenaManager`, `getKitManager`,
-`getKitService`, `getGameManager`, `getGameService`, `getQueueManager`, `getLobbyManager`,
-`getStatsManager`, `getEloService`, `getRankRegistry`, `getPlayerSettingsManager`,
-`getGameStatsManager`.
+| Método | Qué hace |
+|---|---|
+| `Optional<Party> partyOf(UUID player)` | Su party. Vacío si no está en ninguna. |
+| `boolean createParty(Player player)` | Crea una party liderada por el jugador. |
+| `boolean inviteToParty(Player leader, Player target)` | Invita a un jugador a la party del líder. |
+| `boolean leaveParty(Player player)` | Lo saca de su party. Si se va el líder, la party pasa a otro en vez de disolverse. |
+| `boolean disbandParty(Player leader)` | Disuelve la party. |
+
+## Estadísticas y ranking
+
+| Método | Qué hace |
+|---|---|
+| `Optional<PlayerStats> stats(UUID player, String kitId)` | Sus números en un kit, esta temporada. Vacío si nunca terminó una partida en él. |
+| `Optional<PlayerStats> globalStats(UUID player)` | Sus números sumando todos los kits, esta temporada. Vacío si nunca terminó una partida. |
+| `int elo(UUID player, String kitId)` | Su ELO en un kit. Devuelve el ELO inicial del servidor para quien nunca lo jugó, porque es con el que lo emparejaría. |
+| `Rank rank(UUID player, String kitId)` | Dónde lo deja su ELO en la escalera visible. El rango más bajo para quien nunca jugó. |
+| `CompletableFuture<List<PlayerStats>> leaderboard(String kitId, LeaderboardType type)` | La cabeza de la tabla de un kit, de mejor a peor. Es una lectura de base de datos, cacheada un rato tras cada una — no la llames por cada fila de un menú. Pasa `PlayerStats.GLOBAL_KIT` para la tabla global. |
+| `CompletableFuture<List<MatchRecord>> matchHistory(UUID player, String kitId)` | Sus últimas partidas, de la más nueva a la más vieja. Lectura de base de datos, cacheada un rato, y solo llega hasta donde llegue la retención del servidor. Pasa `PlayerStats.GLOBAL_KIT` para todos los kits. |
 
 ## Llevarte a un jugador del practice
 
-No llames a este plugin. Reclama al jugador con el registro de sesiones de ExyliaLib y el lobby
-reacciona solo:
+No llames al plugin para liberar a un jugador. Réclamalo por el registro de sesiones de ExyliaLib y el
+lobby reacciona solo:
 
 ```java
 Optional<Claim> claim = Sessions.of(myPlugin).claim(player, "MY_MODE");
 if (claim.isEmpty()) return;   // alguien se negó a soltarlo
 ```
 
-En cuanto aterriza el claim, este plugin oculta el scoreboard del jugador, le quita los objetos de
-lobby y lo saca del conjunto de visibilidad del lobby. Soltar el claim lo devuelve todo, pero solo si
-nadie más lo ha tomado entretanto, para que ceder un jugador de un modo a otro no haga aparecer un kit
-de lobby por el camino.
+En cuanto entra el claim, el practice le esconde el scoreboard, le quita los ítems del lobby y lo saca
+del conjunto de visibilidad. Soltar el claim devuelve todo eso — pero solo si nadie más lo tomó
+mientras tanto, así que pasar a un jugador de un modo a otro no le hace parpadear el kit del lobby en
+el medio. Pedir a un jugador que el practice está reteniendo rinde su partida, lo saca de su cola o lo
+saca de su zona PvP primero; un estado sin salida rechaza el claim.
 
-Pedir un jugador que este plugin tenga hace que primero abandone su partida, salga de su cola o salga
-de su zona PvP. Un estado sin salida rechaza el claim.
+## Tipos
 
-## Acciones
+Cada record es un snapshot del momento de la consulta. Una partida cambia varias veces por segundo y
+deja de existir poco después de terminar, así que vuelve a preguntar en vez de guardártela — y busca a
+los peleadores por UUID en el momento en que actúes sobre ellos.
 
-El plugin registra **213 acciones** bajo el espacio de nombres `practice:`, usables desde cualquier
-menú u objeto de ExyliaLib del servidor:
+### `Arena`
+
+`id`, `displayName`, `enabled`, `priority`, `iconMaterial`, `usages`. Los spawns, las regiones y los
+esquemas con los que se regenera la arena no están aquí: son lo que el plugin necesita para correr una
+partida, no lo que otro plugin necesita saber.
+
+`allows(ArenaUsage usage)` comprueba un uso.
+
+### `ArenaUsage`
+
+`QUEUE` (matchmaking), `DUEL` (duelos entre jugadores), `PARTY` (FFA y peleas por equipos de party),
+`BOT` (peleas contra bots). Una arena que no declara ninguno los acepta todos, y en ese caso
+`Arena.usages()` devuelve el conjunto completo en vez de uno vacío.
+
+### `Kit`
+
+`id`, `displayName`, `description`, `enabled`, `ranked`, `queueEnabled`, `duelEnabled`,
+`partyEnabled`, `priority`, `iconMaterial`, `categories`, `compatibleArenas` (vacío para cualquiera).
+
+Los cuatro flags de modo van sueltos en vez de en un conjunto porque el servidor los enciende y apaga
+por separado: un kit puede admitir duelos y no cola mientras un admin lo ajusta. Los ítems que reparte
+un kit no están aquí — solo significan algo aplicados a un jugador, que es para lo que está `applyKit`.
+
+### `KitCategory`
+
+`id`, `displayName`, `description`, `enabled`, `priority`, `iconMaterial`. Solo presentación: una
+categoría decide dónde se dibuja un kit, nunca dónde se puede jugar. Un kit puede estar en varias, o en
+ninguna.
+
+### `KitLoadout`
+
+`kitId`, `slotIndex`, `name`, `iconMaterial`. Solo la etiqueta: los ítems son una disposición privada
+de inventario, y el plugin ya se los da a su dueño cuando empieza la partida.
+
+### `PracticeState`
+
+Solo `AVAILABLE` significa que el jugador está libre. Cualquier otro valor es algo que se rompería si
+lo mueves.
+
+| Valor | Significado |
+|---|---|
+| `AVAILABLE` | Parado en el lobby, en nada. |
+| `IN_PARTY` | En una party que todavía no entró en cola para nada. |
+| `IN_QUEUE` | Esperando partida. |
+| `LOADING_MATCH` | Se le está montando una partida alrededor. |
+| `IN_GAME` | Peleando. |
+| `SPECTATING` | Mirando una partida. |
+| `EDITING_KIT` | Editando un loadout de kit. |
+| `EXTERNAL` | Retenido por otro plugin, que lo dijo reclamándolo. |
+| `IN_PVP_ZONE` | Dentro de una zona PvP abierta del mundo del lobby. |
+
+### `MatchInfo`
+
+`id`, `kitId`, `arenaId`, `mode`, `status`, `ranked`, `currentRound`, `totalRounds`, `players`,
+`alivePlayers`, `spectators`, `startedAt` (milisegundos epoch, `0` mientras la partida carga) y
+`durationMillis`.
+
+`isActive()` es lo que debe comprobar cualquier cosa que actúe sobre peleadores vivos, en vez de que la
+partida exista y ya: existe mientras se prepara la arena y un momento después del último golpe. Los
+modos contra bots reportan un jugador y un rival que no existe, porque un bot no es un jugador y este
+plugin no lo modela.
+
+### `MatchMode`
+
+`DUEL_1V1`, `PARTY_FFA`, `PARTY_SPLIT`, `PARTY_DUEL`, `BOT_DUEL`, `BOT_PARTY`.
+
+`againstBots()` es cierto para los dos últimos. Esos no registran nada — ni estadísticas, ni movimiento
+de ELO, ni fila de historial —, así que una integración que cuente partidas debería saltárselos en vez
+de preguntarse por qué los números no se mueven.
+
+### `MatchStatus`
+
+`LOADING`, `STARTING`, `ACTIVE`, `ROUND_ENDING`, `POINT_RESETTING`, `ENDING`, `ENDED`. Una partida
+existe antes de que se pueda golpear a nadie y un momento después del último golpe, así que comprueba
+`ACTIVE` y no que la partida esté presente.
+
+### `MatchRecord`
+
+El lado de un jugador en una partida terminada: `matchId`, `playerUuid`, `opponentName`, `kitId`,
+`arenaId`, `result`, `ranked`, `eloBefore`, `eloAfter`, `eloChange`, `playedAt`, `durationMillis`,
+`kills`, `deaths`, `damageDealt`, `bestCombo`.
+
+Una partida produce uno de estos por jugador, así que la misma pelea es un `WIN` aquí y un `LOSS` en la
+copia del rival — únelas por `matchId` para ver las dos mitades. Las filas se podan pasada la retención
+del servidor; todo lo que se deriva de la partida ya se guardó en `PlayerStats` al terminar.
+
+### `MatchResult`
+
+`WIN`, `LOSS`, `DRAW`. Se guarda por jugador, no por partida.
+
+### `Party`
+
+`id`, `leader`, `members` (con el líder incluido), `open`, `maxSize`, más `size()` e
+`isMember(UUID)`.
+
+Una party no retiene a nadie por sí sola — sus miembros siguen libres hasta que entra en cola, que es
+por lo que `state(UUID)` devuelve `IN_PARTY` en vez de negarse a que otro modo se lleve a uno.
+
+### `PlayerStats`
+
+Los números de un jugador en un kit y una temporada: `playerUuid`, `playerName`, `kitId`, `season`,
+`kills`, `deaths`, `wins`, `losses`, `draws`, `currentStreak`, `bestStreak`, `elo`, `peakElo`,
+`rankedGamesPlayed`, `damageDealt`, `damageTaken`, `bestCombo`, `timePlayed` (milisegundos), `winRate`
+(de 0 a 1) y `kdr`.
+
+Las temporadas reinician: son los números desde que empezó la actual. La fila aparece la primera vez
+que el jugador termina una partida en el kit, así que quien no tiene fila sencillamente no lo jugó. El
+global es el mismo record guardado bajo el id de kit `PlayerStats.GLOBAL_KIT` — el literal `global` —,
+que es lo que permite que una sola consulta responda las dos cosas.
+
+### `Rank`
+
+`id`, `displayName`, `divisionName`, `divisionNumber`, `icon`, `lp`, `lpMax`.
+
+Derivado, no guardado: el archivo de rangos del servidor corta el rango de ELO en bandas con nombre y
+cada banda en divisiones, así que un rango es una forma de dibujar `PlayerStats.elo()` y no algo que el
+jugador posea. Los nombres y el icono vienen escritos en MiniMessage — un rango suele ser un degradado
+—, así que pásalos por un formateador en vez de imprimirlos literales. No todos los rangos tienen
+divisiones: cuando no las tienen, `divisionName` viene vacío y `divisionNumber` y `lpMax` son `0`, y ahí
+conviene mostrar el ELO crudo, porque `lp` no tiene sobre qué contarse.
+
+### `LeaderboardType`
+
+Por qué se ordena una tabla, una columna indexada cada uno: `RANK` (ELO), `KILLS`, `DEATHS`, `KDR`,
+`WINS`, `LOSSES`, `WIN_RATE`, `BEST_STREAK`, `CURRENT_STREAK`, `DAMAGE_DEALT`, `TIME_PLAYED`.
+
+## Acciones desde los menús de otro plugin
+
+El plugin registra sus acciones en el registro compartido de ExyliaLib bajo el namespace `practice:`,
+así que cualquier menú de ExyliaLib del servidor puede llamarlas:
 
 ```yaml
 actions:
@@ -137,31 +274,42 @@ actions:
 
 Las de jugador son el conjunto útil fuera de este plugin: `open_queue_categories`, `join_queue`,
 `leave_queue`, `open_stats`, `open_history`, `open_settings`, `open_kit_editor`,
-`open_spectate_games`, `open_party_hub`, `open_party_game_menu`, `leave_game`, `duel_send_request`.
+`open_spectate_games`, `open_party_hub`, `leave_game` y `duel_send_request`. Toda acción que cambie una
+arena, un kit o los datos de alguien comprueba `exyliapractice.admin` en el propio registro, así que
+nombrarla en un archivo de jugador no regala nada.
 
-<Callout type="warning" title="Casi todas las acciones de admin se protegen por navegación, no por permiso">
-Solo 49 de las 213 comprueban `exyliapractice.admin` por sí mismas: los puntos de entrada, como
-`open_admin`, `open_data_management`, `open_admin_stats` y `reload`. Las acciones hoja que hay detrás
-no: `data_do_clear_all_stats`, `data_do_reset_all_elo`, `data_import`, `delete_arena`, `create_kit`,
-`set_lobby` y las demás se ejecutan para quien las pulse.
+## Bots
 
-Con la configuración de serie eso es seguro, porque esos ids solo aparecen dentro de menús de
-administración que únicamente pueden abrirse con una acción comprobada. Pero el espacio de nombres de
-acciones es de todo el servidor: nombrar una de ellas en un objeto de lobby, un menú de jugador o el
-menú de otro plugin se la entregaría a cualquiera. Nunca pongas un id `practice:data_*`,
-`practice:delete_*`, `practice:create_*` o `practice:set_*` en un archivo que vea un jugador.
-</Callout>
+Los bots son un plugin aparte, ExyliaPracticeBotV3, con su propio service en el mismo artefacto:
+`net.exylia.lib.api.practicebot.PracticeBotService`, al que se llega con `PracticeBots.get()`. Genera
+un bot a partir de un `BotSpec` — dueño, punto de aparición, modo de combate, dificultad, si reaparece,
+y opcionalmente un kit y una skin —, devuelve un `BotHandle`, encuentra el bot detrás de una entidad o
+de un jugador, y dice cuántos existen frente al tope configurado. Lanza un evento,
+`PracticeBotDeathEvent`, para que nadie tenga que mirar muertes de entidades y adivinar qué cadáveres
+eran bots; no es cancelable, porque cuando corre el bot ya no está, y se llama en el hilo en el que
+corría el bot.
 
-## Eventos
+Un servidor sin el plugin de bots simplemente responde vacío, que es justamente el punto de una
+integración blanda.
 
-El plugin no lanza eventos propios de Bukkit. Lo que escucha otro plugin en su lugar es el registro de
-sesiones de ExyliaLib:
+## Lo que no expone
+
+ExyliaPracticeCore no publica eventos propios. Lo que escucha otro plugin en su lugar es el registro de
+sesiones de ExyliaLib, que informa de todos los modos del servidor y no solo de este:
 
 ```java
 Sessions.watch(myPlugin,
     claim -> { /* alguien fue tomado */ },
-    claim -> { /* alguien fue liberado */ });
+    claim -> { /* alguien fue soltado */ });
 ```
 
-Es el mismo mecanismo que usa el lobby de este plugin, y avisa de todos los modos del servidor, no solo
-del practice.
+El service está curado, no es un espejo del plugin. Los abridores de menú, el editor de kits, el manejo
+y la regeneración de instancias de arena, la rotación de temporada, las escrituras administrativas
+sobre las estadísticas de alguien y las filas crudas de configuración quedan afuera a propósito: son el
+plugin corriéndose a sí mismo, y un método público que metiera mano ahí sería una forma de romper una
+partida en silencio.
+
+La integración HTTP aparte que publica resultados y rangos en `practice-api.exylia.net` no es parte de
+esto — ver [Web API](/docs/exyliapractice/web-api).
+
+Si de verdad te falta algo, pídelo en [Discord](https://discord.exylia.net).

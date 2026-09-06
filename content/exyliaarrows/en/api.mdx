@@ -1,84 +1,132 @@
 ---
 title: "API"
-description: "What another plugin can do with arrow effects."
+description: "Reading the effect catalogue and its categories, a player's chosen effect, their shortlist and particle setting, and the effects bound to bows."
+badge: "dev"
 ---
 
+`ArrowsService` is what another plugin reads and drives ExyliaArrows through: the catalogue and its
+categories, the effect a player chose, their shortlist and particle setting, and the effects bound to
+bows.
+
 ```java
-ArrowsAPI api = ExyliaArrows.getInstance().api();
+ExyliaAPI.get(ArrowsService.class).ifPresent(arrows -> {
+    arrows.select(player, "storm");
+    arrows.effectItem("storm").ifPresent(item -> player.getInventory().addItem(item));
+});
 ```
 
-Everything works in **effect ids** — the keys `effects.yml` declares, matched without regard to case.
-
-<Callout type="note" title="Nothing here checks permissions">
-A plugin calling this has already decided the player may have the effect: a crate, a rank reward, a
-shop. Being overruled by a node the buyer does not have yet is not what it asked for.
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
 </Callout>
+
+Everything is addressed by **effect id**, matched without regard to case. An id the catalogue does
+not declare is not an error — a reload can remove one while a crate still hands it out — so lookups
+answer empty and writes answer `false`.
 
 ## The catalogue
 
 | Method | What it does |
 |---|---|
-| `effects()` | Every effect the server declares, in file order. |
-| `effect(String id)` | One effect, as an `Optional<EffectDefinition>`. |
-| `exists(String id)` | Whether the id names one. |
+| `effects()` | Every effect the server declares, in the order a menu draws them. A snapshot: fine for building a shop, wasteful in a loop. |
+| `effect(String effectId)` | One effect as an `Optional<ArrowEffect>`. Empty when the catalogue declares no such id. |
+| `exists(String effectId)` | Whether the catalogue declares that id. |
+| `categories()` | Every category, in the order the menu draws its tabs. |
+| `category(String categoryId)` | One category as an `Optional<ArrowCategory>`. Empty when the catalogue declares no such id. |
+| `effectsIn(String categoryId)` | The effects in one category, in menu order. Empty when the category does not exist. |
 
-An `EffectDefinition` carries `id()`, `categoryId()`, `name()`, `icon()`, `description()`,
-`priority()`, `steps()` and `bows()`, plus `permission()`, `mayUse(Player)` and
-`fits(Material)`.
-
-## What a player wears
-
-| Method | What it does |
-|---|---|
-| `chosen(Player)` | The effect that follows them, empty when they chose none. |
-| `choose(Player, String id)` | Sets it. Returns `false` when the id names nothing. |
-| `clear(Player)` | Takes it off. |
-
-## The shortlist
+## Permissions
 
 | Method | What it does |
 |---|---|
-| `favourites(Player)` | What they starred, in their own order. Empty while their row is still loading. |
-| `isFavourite(Player, String id)` | Whether one effect is starred. |
-| `toggleFavourite(Player, String id)` | Stars it, or unstars it. |
-| `clearFavourites(Player)` | Empties the list. |
+| `canUse(Player, String effectId)` | Whether they may use the effect. |
 
-## Bows and items
+Answers by the server's own rule: the effect's node, the node for its whole category, the wildcard,
+or the setting that turns permissions off entirely. A shop asking gets the same answer the menu would
+give, not a raw permission check.
+
+## What the player chose
 
 | Method | What it does |
 |---|---|
-| `boundTo(ItemStack)` | The effect bound to an item, empty when it carries none. |
-| `bind(ItemStack, String id)` | Binds one; the item is changed in place. |
-| `unbind(ItemStack)` | Unbinds and gives nothing back; changed in place. |
-| `token(String id, Player viewer)` | A token ready to be given away. |
-| `remover(Player viewer)` | A remover item. |
+| `mode()` | Where the effects this server plays come from, as an `EffectMode`. |
+| `selected(UUID player)` | Their chosen effect id, as an `Optional<String>`. Empty when they chose none, the menu is off, or their row is still being read. |
+| `select(Player, String effectId)` | Sets the effect that follows them. `true` when it was stored. |
+| `clear(Player)` | Takes their chosen effect off. |
 
-`bind` and `unbind` answer with an `ApplyResult`:
+<Callout type="warning" title="select sets, and does not ask for a node">
+`select` is a set rather than a toggle — running it twice leaves the effect on. It is **not gated by
+permission**, because the server owner's own setting says it should not be: an effect handed out by a
+crate or a reward is owned whether or not a node was ever granted for it. That is the same rule
+ExyliaArmorTrims follows and the opposite of ExyliaArmorSkin. Ask `canUse` first when you do want the
+permission to decide.
+</Callout>
 
-| Value | Meaning |
+## Favourites
+
+| Method | What it does |
 |---|---|
-| `BOUND` / `UNBOUND` | It worked. `isSuccess()` is true for these two only. |
-| `NOT_A_WEAPON` | The item cannot carry an effect at all. |
-| `WRONG_WEAPON` | A bow, but not one this effect fits. |
-| `UNKNOWN_EFFECT` | The id names nothing the file declares. |
-| `ALREADY_BOUND` | The bow already carries one. |
-| `NO_EFFECT` | It carries none. |
-| `INVENTORY_FULL` | The token had nowhere to go. |
-| `NO_PERMISSION` | The player does not own it. |
-| `INVALID_ITEM` | The item used was not one of this plugin's own. |
+| `favourites(UUID player)` | The effect ids they starred, in the order they starred them. Empty when they starred none or are still being read. |
+| `isFavourite(UUID player, String effectId)` | Whether one effect is starred. |
+| `toggleFavourite(Player, String effectId)` | Stars an effect, or unstars it when it is already starred. `true` when the id named an effect that exists. |
+| `clearFavourites(Player)` | Unstars everything. |
 
-## An example
+The shortlist keeps the player's own order rather than the catalogue's — somebody built it, and
+re-sorting it takes that away. `toggleFavourite` is deliberately a toggle rather than a pair of
+methods: the star is one control with two states, and a caller that had to read the state first would
+race the player clicking it.
 
-```java
-ArrowsAPI api = ExyliaArrows.getInstance().api();
+## Particle visibility
 
-// A crate reward: hand out a token rather than granting a node.
-api.token("ember_trail", player).ifPresent(token ->
-        player.getInventory().addItem(token));
+| Method | What it does |
+|---|---|
+| `visibility(UUID player)` | Who currently sees their arrow particles. `ParticleVisibility.ALL` when they never changed it or are still being read. |
+| `setVisibility(Player, ParticleVisibility)` | Stores who sees them. |
 
-// A kit that comes with the effect already on the sword.
-ItemStack bow = kit.bow();
-if (api.bind(bow, "phoenix").isSuccess()) {
-    player.getInventory().addItem(bow);
-}
-```
+## Effects on items
+
+| Method | What it does |
+|---|---|
+| `boundTo(ItemStack bow)` | The effect id bound to that bow, crossbow or trident, as an `Optional<String>`. Empty when it carries none. |
+| `bind(ItemStack bow, String effectId)` | Binds an effect to the bow in place, keeping everything else it had. Refused when the item is not something an effect can be bound to, or when the effect declares itself not to fit it. |
+| `unbind(ItemStack bow)` | Takes the effect off and gives nothing back. `true` when an effect was there. |
+| `effectItem(String effectId)` | An effect token ready to be given out, as an `Optional<ItemStack>`. Empty when the catalogue declares no such effect. |
+| `isEffectItem(ItemStack)` | Whether an item is one of this plugin's effect tokens. |
+
+Ask `isEffectItem` before a container, a shop or a trade treats a stack as ordinary loot: a token is
+drawn as whatever suits what it carries and is not the material it looks like.
+
+## Types
+
+**`ArrowEffect`** — `id`, `categoryId`, `name` (colour codes still in it), `permission` (the node
+granting this one effect) and `description` (the owner's own words, line breaks and all). What the
+effect *draws* is deliberately absent: it is a compiled sequence belonging to the plugin that plays
+it.
+
+**`ArrowCategory`** — `id`, `name`, `permission`. Its node grants every effect inside it at once,
+which is how a rank is sold as "every storm effect" without listing them one by one.
+
+**`EffectMode`** — where a played effect comes from: `PLAYER` (only what the player picked; a bow
+carries nothing), `BOW` (only what is bound to the bow; the menu chooses nothing) or `BOTH`.
+`usesBows()` and `usesMenu()` answer without a switch. Worth asking before writing anything: the half
+a server does not use answers `false` or empty rather than throwing, so an integration written for
+both runs on either.
+
+**`ParticleVisibility`** — `ALL`, `NONE`, `SELF_ONLY`, `OTHERS_ONLY`. A player's own setting, not a
+server one. The label each mode is shown under is written by the server owner and is not carried
+here: a constant is an identity, not a name.
+
+<Callout type="tip" title="Queries are cheap, actions are not">
+Everything returning a value reads the plugin's cache and is safe from a menu redraw or a
+placeholder — a player who has not finished loading reads as one who chose nothing, which is why
+every read answers rather than waits. Everything that changes a player's choice writes to the
+database, so call those on the main thread and no more often than a player could.
+</Callout>
+
+## What it does not expose
+
+No events: ExyliaArrows publishes none. Menu openers, the effect editor, the compiled particle
+sequences and raw configuration rows are left out on purpose — a public contract cannot be broken
+later, so it carries what an integration needs and nothing that only made sense inside one version.
+
+If something you need is genuinely missing, ask on [Discord](https://discord.exylia.net).

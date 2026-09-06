@@ -1,56 +1,153 @@
 ---
 title: "API"
-description: "The static facade another plugin asks about a player, the two events every module fires, and how to be counted by the log."
+description: "Ask what a player's staff state is, read the rosters, drive a module, and listen for everything staff do."
 badge: "dev"
 ---
 
-`net.exylia.exyliaStaff.api.StaffAPI` is static and answers from memory: every call is a cache read,
-safe from any thread. Events live in `net.exylia.exyliaStaff.api.event`.
-
-## Declaring the dependency
-
-```yaml title="plugin.yml"
-softdepend:
-  - ExyliaStaff
-```
-
-`depend` works too. The loader defines the classes in this plugin's own classloader, and Bukkit
-delegates between plugin classloaders for anything listed as a dependency.
-
-## Asking about a player
+`StaffService` is how another plugin asks whether a player is vanished, frozen or on duty, and how it
+runs one of the staff member's own actions without going through a command.
 
 ```java
-boolean onDuty   = StaffAPI.isInStaffMode(player);
-boolean hidden   = StaffAPI.isVanished(player.getUniqueId());
-boolean pinned   = StaffAPI.isFrozen(player);
-int     level    = StaffAPI.vanishLevel(player); // 0 when vanish is off or no level node
+ExyliaAPI.get(StaffService.class).ifPresent(staff -> {
+    if (staff.isVanished(target.getUniqueId()) && !staff.canSee(viewer, target)) {
+        event.setCancelled(true);
+    }
+});
 ```
 
-Each question is answered by the module that owns the state, and by `false` or `0` when that module
-is off; nothing throws. `vanishLevel` reads permissions, so it takes the player and must be asked on a
-thread that may read them.
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
+</Callout>
 
-The `Permissions` class in the same package holds every node as a constant.
+## Every feature is a module, and a module can be off
+
+Staff mode, vanish, freeze, staff chat and the rest are separate modules the owner switches on and off
+in `config.yml` or at runtime. A question about a module that is off answers as though nobody is in
+that state — `false`, `0`, `GlobalChatMode.OFF` — and an action on a module that is off does nothing.
+Nothing here throws because a feature is missing, because a feature being missing is the owner's
+decision rather than an error. Ask `isModuleEnabled(String)` when the difference matters.
+
+Everything that returns a value is a memory read off the module caches, safe from a placeholder, a
+scoreboard line or a combat listener. Everything that acts runs the same flow the staff member's own
+command runs — the permission checks, the messages they see, the hotbar redraw, the session log — so
+call those on the main thread and no more often than a player could trigger them.
+
+## State
+
+| Method | What it does |
+|---|---|
+| `boolean isStaff(Player)` | Whether they hold the staff permission at all. The one question the other modules are built on; takes the player because it reads a permission. |
+| `boolean isInStaffMode(UUID)` | Whether they have a staff session open. |
+| `boolean isVanished(UUID)` | Whether they are hidden from the players below their vanish level. |
+| `boolean isFrozen(UUID)` | Whether they are frozen and may not act. |
+| `boolean isSpectator(UUID)` | Whether their staff session is flying through blocks. |
+| `boolean isXrayVisionActive(UUID)` | Whether they are seeing ores through stone. |
+
+## Vanish
+
+| Method | What it does |
+|---|---|
+| `int vanishLevel(Player)` | Their vanish rank, `0` when they hold no level node. Reads permissions, so it takes the player. |
+| `boolean canSee(Player viewer, Player target)` | Whether the viewer may see the target right now: not vanished at all, allowed to see vanished players, and the level comparison, in that order. |
+
+`canSee` is the check anything that lists, targets or renders players wants — it is what keeps an admin
+hidden from a helper who is otherwise allowed to see vanished staff.
+
+## Chat
+
+| Method | What it does |
+|---|---|
+| `boolean isStaffChatToggled(UUID)` | Whether their normal chat goes to staff chat instead. |
+| `GlobalChatMode globalChatMode(UUID)` | How far their chat reaches. `OFF` when the module is off or they never raised it. |
+| `boolean receivesMiningAlerts(UUID)` | Whether they are told about suspicious mining. |
+
+## Rosters
+
+| Method | What it does |
+|---|---|
+| `List<UUID> onlineStaff()` | Everybody on this server who counts as staff, in no particular order. |
+| `List<UUID> onlineInStaffMode()` | Everybody on this server with a staff session open. |
+
+Both are this server only: staff working on another server of the network are not online here and have
+no `Player` to read a permission from. Both lists are unmodifiable.
+
+## Modules
+
+| Method | What it does |
+|---|---|
+| `boolean isModuleEnabled(String moduleId)` | Whether one feature is running right now. An unknown id is simply not enabled. |
+| `Set<String> enabledModules()` | Every module that is running, unmodifiable. |
+
+Ids are the ones the owner writes in `config.yml`: `staffmode`, `vanish`, `freeze`, `staffchat`,
+`globalchat`, `mining`, `xrayvision` and the rest. The set changes at runtime — an owner may switch a
+module off without restarting — so read it when you need it rather than caching it.
+
+## Actions
+
+Each of these runs the same flow the staff member's own command runs, permission checks and player
+messages included. When one reports a `boolean` it is whether the flow ran, not whether it succeeded in
+some deeper sense: a refusal has already been said to the player.
+
+| Method | What it does |
+|---|---|
+| `boolean mayEnterStaffMode(Player)` | Whether they are allowed to open a session. Ask it to hide a button rather than have the player press it and be told no. |
+| `boolean enterStaffMode(Player)` | Opens a staff session. |
+| `void exitStaffMode(Player)` | Closes a session and gives the player their own inventory back. Recorded as an administrative exit, because something other than their own command ended it. |
+| `void setVanished(Player, boolean vanished, boolean silent)` | Hides or shows a player. `silent` skips the confirmation and the effect, for a vanish set by something other than their own hand. |
+| `void freeze(Player target, Player staff)` | Freezes a player. The staff member is named in the log and the broadcast. |
+| `void unfreeze(Player target, Player staff)` | Releases a frozen player. |
+| `void sendStaffChat(Player, String message)` | Sends one message to staff chat. The sender has to be allowed to use it. |
+| `void setGlobalChatMode(Player, GlobalChatMode)` | Sets how far a staff member's chat reaches. |
+
+## GlobalChatMode
+
+Each step includes the one before it, so a cycle only ever adds reach.
+
+| Constant | Reach |
+|---|---|
+| `OFF` | Only the chat around them, isolation included. |
+| `GLOBAL` | Every chat on this server, whatever isolated it. |
+| `NETWORK` | That, plus every chat line of every other server on the network. |
+
+`bypasses()` is `true` for anything but `OFF`, and it is the reason a chat plugin cares: a staff member
+above `OFF` reads the chats a match, an arena or an event isolates, so a plugin that hides lines from
+other players has to let these through.
 
 ## Events
 
-Both are plain Bukkit events, fired on the player's thread after the change is applied, and neither
-is cancellable.
+Two events, in `net.exylia.lib.api.staff.event`. Both fire after the change or the action has already
+happened, on the thread of the player they are about, and **neither is cancellable** — they report,
+they do not gate. Because they fire afterwards, receiving one is a guarantee: the service already
+answers the new way by the time your listener runs. To refuse a change, gate the permission that
+allows it.
 
-### StaffStateChangeEvent
+| Event | Fires when | Carries |
+|---|---|---|
+| `StaffStateChangeEvent` | A piece of a player's staff state flipped. | `getPlayer()`, `getKind()`, `isEnabled()` |
+| `StaffActionEvent` | A staff member did something worth counting. | `getStaff()`, `getAction()`, `getTarget()` |
 
-A piece of a player's staff state flipped. `getPlayer()`, `getKind()` and `isEnabled()`.
+ExyliaStaff's own modules use these instead of calling each other — the hotbar redraws its vanish item,
+the log counts a freeze, the scoreboard updates a line — which is why they live in the public API
+rather than inside the plugin. Anything that wants an audit trail, a webhook or a per-staff scoreboard
+listens to the same two.
 
-| Kind | Fired by |
+### StaffStateChangeEvent.Kind
+
+| Kind | Meaning |
 |---|---|
-| `STAFF_MODE` | Entering, resuming after a join, leaving for any reason. |
-| `VANISH` | Every vanish change, including the silent ones from staff mode and a join restore. |
-| `FROZEN` | Freeze and release, on the frozen player. |
-| `STAFF_CHAT` | The toggle, and when it is switched off by duty end or a lost permission. |
-| `GLOBAL_CHAT` | Every mode change; `isEnabled()` is `true` for global and for network. |
-| `MINING_ALERTS` | The alerts toggle. |
-| `XRAY_VISION` | Every actual on or off. |
-| `SPECTATOR` | The spectator view toggle. |
+| `STAFF_MODE` | A staff session opened or closed. |
+| `VANISH` | The player was hidden or shown. |
+| `FROZEN` | The player was frozen or released. |
+| `STAFF_CHAT` | Their normal chat now goes to staff chat, or no longer does. |
+| `GLOBAL_CHAT` | Their chat reach changed; `isEnabled()` is false only for off. |
+| `MINING_ALERTS` | They started or stopped receiving suspicious-mining alerts. |
+| `XRAY_VISION` | They started or stopped seeing ores through stone. |
+| `SPECTATOR` | Their staff session entered or left spectator. |
+
+Every module that owns a per-player switch reports it here rather than defining an event of its own,
+so this list grows as modules are added. A listener that cares about one kind filters; one that
+switches over all of them should have a default arm.
 
 ```java
 @EventHandler
@@ -63,31 +160,15 @@ public void onState(StaffStateChangeEvent event) {
 
 ### StaffActionEvent
 
-A staff member did something worth counting. `getStaff()`, `getAction()` and a nullable
-`getTarget()`. The staff log increments the session's counter and the audit records a row; no module
-calls either directly.
+`getAction()` is a short id such as `freeze`, `report_resolve` or `punish`. New ids appear as modules
+are added, so treat an unfamiliar one as an action this version of the plugin has and yours does not
+know about, rather than as an error. `getTarget()` is `null` for an action about nobody in particular.
 
-| Action | When |
-|---|---|
-| `freeze`, `unfreeze` | By a player, not the console. |
-| `inspect`, `enderchest`, `container` | After a mirror opened. `container` has no target. |
-| `teleport` | After landing, local or cross-server. Jump and phase have no target. |
-| `report_resolve`, `report_dismiss` | Per report, resolve-all included. |
-| `helpop_reply`, `helpop_close` | Manual close only, not a timeout. |
-| `punish` | After the command ran, whatever its outcome. |
-| `mining_reset` | By a player. |
-| `xray_toggle` | Only when the change is remembered. |
+## What it does not expose
 
-Fire your own from another plugin and it is counted and audited like the rest:
+No menu openers, no editor flows, no punishment or report rows, no configuration writes. Reports,
+helpop, inspect and the punishment history are read and driven from inside the plugin, and the staff
+log is filled by `StaffActionEvent` rather than by a method you call.
 
-```java
-Bukkit.getPluginManager().callEvent(new StaffActionEvent(staff, "rollback", target.getUniqueId()));
-```
-
-## Actions and menus
-
-Every `staff:<name>` action the hotbar and the menus run is registered with the library's action
-registry under the namespace `staff`, so a menu of another plugin may run `staff:freeze_toggle` or
-`staff:reports_open`. `StaffKeys.TARGET` and `StaffKeys.TARGET_ID` are the context keys that name
-the player an action is about; `StaffKeys.target(context)` reads them, or the entity the click
-landed on.
+If an integration genuinely needs something that is not here, ask on
+[Discord](https://discord.exylia.net) — a method added to a service is a minor release.

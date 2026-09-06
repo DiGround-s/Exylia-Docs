@@ -1,133 +1,270 @@
 ---
-title: "Developer API"
-description: "PracticeAPI, the actions your menus can call, and how another plugin takes a player away from practice."
+title: "API"
+description: "Reading arenas, kits, matches, queues, parties and ranking, and asking whether a player is free before you move them."
+badge: "dev"
 ---
 
-## PracticeAPI
-
-`net.exylia.exyliaPracticeCore.api.PracticeAPI` is a static facade over everything the plugin does.
-Compile against the plugin jar; do not shade it.
-
-### State
+`PracticeService` is how another plugin reads and drives ExyliaPracticeCore: what a player is doing,
+what is being fought where, and the same flows the player's own commands run.
 
 ```java
-PlayerState  getPlayerState(UUID uuid)
-boolean      isAvailable(Player player)
-boolean      isInGame(UUID uuid)
-boolean      isInQueue(UUID uuid)
-boolean      isSpectating(UUID uuid)
-boolean      requireAvailable(Player player)     // messages the player if not
-boolean      requireQueueJoinable(Player player)
+ExyliaAPI.get(PracticeService.class).ifPresent(practice ->
+    practice.matchOf(player.getUniqueId())
+            .ifPresent(match -> player.sendMessage("Fighting on " + match.kitId())));
 ```
 
-The nine states are `AVAILABLE`, `IN_PARTY`, `IN_QUEUE`, `LOADING_MATCH`, `IN_GAME`, `SPECTATING`,
-`EDITING_KIT`, `IN_PVP_ZONE` and `EXTERNAL`.
-
-<Callout type="note" title="Nothing is stored">
-A player's state is derived on every call from the ExyliaLib claim registry and from party
-membership. There is no state map to fall out of step, and the answer is safe to ask for from any
-thread.
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
 </Callout>
 
-### Queue and matches
+<Callout type="warning" title="Ask before you move a player">
+Practice owns a player for as long as they are queued, fighting, watching or editing a kit, and every
+one of those is broken by teleporting them somewhere else. `isAvailable(UUID)` is the one question
+another mode has to ask first; `state(UUID)` says why the answer was no.
+</Callout>
 
-```java
-boolean joinQueue(Player player, String kitId)
-boolean leaveQueue(Player player)
-boolean quickQueue(Player player)
-boolean requeue(Player player)
-boolean isInQueueForKit(UUID uuid, String kitId)
+<Callout type="note" title="Queries are cheap, actions are not">
+Everything returning a value reads from the plugin's cache and is safe from a menu redraw or a
+placeholder — the two `CompletableFuture` methods are the exception, and both name themselves.
+Everything else runs the same flow the player's own command runs, including permission checks,
+cooldowns and the messages the player sees, so call those on the main thread and no more often than a
+player could trigger them. An action returns whether the plugin *accepted* it; the player has already
+been told why not.
+</Callout>
 
-Optional<Game> getGame(Player player)
-boolean        leave(Player player)     // forfeits, leaves a queue, exits a zone
-void           sendToLobby(Player player)
-```
+## Arenas
 
-### Duels and parties
+| Method | What it does |
+|---|---|
+| `Optional<Arena> arena(String arenaId)` | An arena by id. Empty when no arena has it. |
+| `List<Arena> arenas()` | Every arena, enabled or not, as a snapshot of the cache. Fine for a menu, wasteful in a loop. |
 
-```java
-boolean sendDuelRequest(Player sender, String targetName, String kitId, int rounds, String arenaId)
-void    acceptDuelRequest(Player player)
-void    declineDuelRequest(Player player)
-void    cancelDuelRequest(Player player)
-boolean canStartDuelWith(Player sender, Player target)
+## Kits
 
-Optional<Party> getParty(UUID uuid)
-boolean createParty(Player player)
-boolean inviteToParty(Player leader, Player target)
-boolean joinParty(Player player, String leaderName)
-boolean startPartyFfa(Player leader, String kitId)
-boolean startPartySplit(Player leader, String kitId)
-boolean queuePartyForDuel(Player leader, String kitId)
-```
+| Method | What it does |
+|---|---|
+| `Optional<Kit> kit(String kitId)` | A kit by id. Empty when no kit has it. |
+| `List<Kit> kits()` | Every kit, enabled or not. |
+| `List<Kit> kitsPlayableIn(String arenaId)` | The kits playable in an arena. Not the same as filtering `Kit.compatibleArenas()` yourself: a kit that names no arenas may be played in any. Empty when the arena does not exist. |
+| `List<KitCategory> kitCategories()` | Every kit category, enabled or not. |
+| `List<KitLoadout> loadouts(UUID player, String kitId)` | A player's saved loadouts for a kit. Read from the copy loaded when they joined, so an offline player has none. |
+| `boolean applyKit(Player player, String kitId)` | Gives a player a kit as a match would: clears what they held, applies the kit's effects and rules, and uses their own loadout when they have saved one. `false` when no kit has that id. |
 
-### Kits and arenas
+## Player state
 
-```java
-Optional<KitEntity>          getKit(String kitId)
-List<KitEntity>              getAllKits()
-List<KitEntity>              getCompatibleKits(String arenaId)
-Optional<KitCategoryEntity>  getKitCategory(String categoryId)
-void                         applyKit(Player player, KitEntity kit)
-List<PlayerKitEntity>        getPlayerKitSlots(Player player, String kitId)
-int                          getMaxKitSlots(Player player)
+| Method | What it does |
+|---|---|
+| `PracticeState state(UUID player)` | What the player is doing. `AVAILABLE` for anybody the plugin is not holding. |
+| `boolean isAvailable(UUID player)` | Whether nothing has a claim on them. Not the same as comparing `state(UUID)` to `AVAILABLE`, because a player can also be held by a plugin that is not this one. |
+| `boolean isInMatch(UUID player)` | Whether they are in a match. True from the moment it starts being built, and true for a spectator watching from inside it — check `MatchInfo.isActive()` when you need them to actually be fighting. |
+| `boolean isInQueue(UUID player)` | Whether they are queued for at least one kit. |
+| `void sendToLobby(Player player)` | Moves them to the practice lobby and nothing else. |
+| `boolean leave(Player player)` | Takes them out of whatever they are in, forfeiting a match. Answers whether the request was *accepted*, not whether it has finished; `false` for a state with no way out, such as a match still loading or a PvP zone. |
 
-Optional<ArenaEntity>                            getArena(String arenaId)
-List<ArenaEntity>                                getAllArenas()
-Optional<ArenaInstance>                          acquireInstance(String arenaId)
-CompletableFuture<Optional<ArenaAcquireResult>>  acquireOrClone(String arenaId)
-void                                             releaseInstance(ArenaInstance i, boolean regenerate)
-```
+## Matches
 
-`acquireOrClone` is how another gamemode can borrow a practice arena: take an instance, use it,
-release it. Releasing with `regenerate` restores the blocks from the schematic.
+| Method | What it does |
+|---|---|
+| `Optional<MatchInfo> matchOf(UUID player)` | The match they are in, fighting or watching from inside. Empty when they are in none. |
+| `Optional<MatchInfo> match(String matchId)` | A match by id. Empty once it has ended. |
+| `Collection<MatchInfo> activeMatches()` | Every match running right now, in no particular order. |
+| `boolean spectate(Player spectator, String matchId)` | Sends a player in to watch. Refused for a match that has not started or has ended, for one against bots, and for one whose fighters have turned spectators off. |
+| `boolean spectatePlayer(Player spectator, Player target)` | The same, for whatever another player is fighting. Watching somebody who is themselves a spectator is refused rather than silently following them. |
+| `boolean stopSpectating(Player spectator)` | Takes a spectator out. `false` when they were not watching anything. |
 
-### Statistics
+## Queue
 
-```java
-Optional<PlayerSeasonStatsEntity> getKitStats(UUID uuid, String kitId)
-Optional<PlayerSeasonStatsEntity> getGlobalStats(UUID uuid)
-int                               getMmr(UUID uuid, String kitId)
-RankInfo                          getRankInfo(UUID uuid, String kitId)
+| Method | What it does |
+|---|---|
+| `Set<String> queuedKits(UUID player)` | The kits they are waiting on. A player may wait in several queues at once and takes the first match that comes up. |
+| `int queueSize(String kitId)` | How many players are waiting on a kit. `0` for one nobody is waiting on. |
+| `boolean joinQueue(Player player, String kitId)` | Puts them in a queue. Refused when the player is not available, when their statistics have not finished loading, when the queue is locked for a season rotation, or when the kit is not queueable. |
+| `boolean leaveQueue(Player player)` | Takes them out of every queue. Refused once their match has been found, because at that point they are no longer waiting and letting go would leave them free to walk into another mode mid-load. |
 
-CompletableFuture<List<PlayerSeasonStatsEntity>> getLeaderboard(String kitId, LeaderboardStatsType type)
-CompletableFuture<Optional<UUID>>                resolvePlayerUuid(String playerName)
-CompletableFuture<Boolean>                       setPlayerStat(UUID uuid, String kitId, String field, String value)
-CompletableFuture<Boolean>                       modifyPlayerStat(UUID uuid, String kitId, String field, double delta)
-```
+## Duels
 
-Pass `PlayerSeasonStatsEntity.GLOBAL_KEY` — the literal `"global"` — as the kit id for the overall
-ladder.
+| Method | What it does |
+|---|---|
+| `boolean sendDuelRequest(Player sender, Player target, String kitId, int rounds)` | Sends a duel request. The arena is left to the plugin, which picks one the kit may be played in; `rounds` is `1` for a single fight. Both players are told what happened. |
+| `void acceptDuelRequest(Player player, Player sender)` | Accepts the request from `sender`. |
+| `void declineDuelRequest(Player player, Player sender)` | Declines the request from `sender`. |
+| `List<String> pendingDuelSenders(Player target)` | Who has a request waiting for them. Names rather than UUIDs, and only the ones still online: a request from somebody who has logged out cannot be accepted. |
 
-### Managers
+## Parties
 
-For anything the facade does not cover, the managers themselves are reachable:
-`getArenaManager`, `getKitManager`, `getKitService`, `getGameManager`, `getGameService`,
-`getQueueManager`, `getLobbyManager`, `getStatsManager`, `getEloService`, `getRankRegistry`,
-`getPlayerSettingsManager`, `getGameStatsManager`.
+| Method | What it does |
+|---|---|
+| `Optional<Party> partyOf(UUID player)` | Their party. Empty when they are in none. |
+| `boolean createParty(Player player)` | Creates a party led by the player. |
+| `boolean inviteToParty(Player leader, Player target)` | Invites a player to the leader's party. |
+| `boolean leaveParty(Player player)` | Removes them from their party. A leader leaving hands the party over rather than ending it. |
+| `boolean disbandParty(Player leader)` | Ends the party. |
 
-## Taking a player from practice
+## Statistics and ranking
 
-Do not call into this plugin. Claim the player through ExyliaLib's session registry and the lobby
-reacts on its own:
+| Method | What it does |
+|---|---|
+| `Optional<PlayerStats> stats(UUID player, String kitId)` | Their counters on one kit, this season. Empty when they have never finished a match on it. |
+| `Optional<PlayerStats> globalStats(UUID player)` | Their counters across every kit, this season. Empty when they have never finished a match. |
+| `int elo(UUID player, String kitId)` | Their ELO on a kit. Answers with the server's starting ELO for a player who has never played it, because that is what they would be matched at. |
+| `Rank rank(UUID player, String kitId)` | Where their ELO puts them on the visible ladder. The lowest rank for a player who has never played. |
+| `CompletableFuture<List<PlayerStats>> leaderboard(String kitId, LeaderboardType type)` | The top of a kit's board, best first. A database read, cached briefly after each one — do not call it per row of a menu. Pass `PlayerStats.GLOBAL_KIT` for the overall board. |
+| `CompletableFuture<List<MatchRecord>> matchHistory(UUID player, String kitId)` | Their recent matches, newest first. A database read, cached briefly, reaching back only as far as the server's retention window. Pass `PlayerStats.GLOBAL_KIT` for every kit. |
+
+## Taking a player away from practice
+
+Do not call into the plugin to free a player. Claim them through ExyliaLib's session registry and the
+lobby reacts on its own:
 
 ```java
 Optional<Claim> claim = Sessions.of(myPlugin).claim(player, "MY_MODE");
 if (claim.isEmpty()) return;   // somebody refused to let go
 ```
 
-The moment the claim lands, this plugin hides the player's scoreboard, strips their lobby items and
-takes them out of the lobby's visibility set. Dropping the claim puts all of it back — but only if
-nobody else has taken them in the meantime, so handing a player from one mode straight to another does
-not flash a lobby kit in between.
+The moment the claim lands, practice hides the player's scoreboard, strips their lobby items and takes
+them out of the lobby's visibility set. Dropping the claim puts all of it back — but only if nobody
+else has taken them in the meantime, so handing a player from one mode straight to another does not
+flash a lobby kit in between. Asking for a player practice is holding forfeits their match, leaves
+their queue or exits their PvP zone first; a state with no way out refuses the claim.
 
-Asking for a player this plugin is holding forfeits their match, leaves their queue or exits their PvP
-zone first. A state with no way out refuses the claim.
+## Types
 
-## Actions
+Every record is a snapshot taken at the moment of the lookup. A match changes several times a second
+and stops existing shortly after it ends, so ask again rather than holding one — and look fighters up
+by UUID at the moment you act on them.
 
-The plugin registers **213 actions** under the `practice:` namespace, usable from any ExyliaLib menu
-or item on the server:
+### `Arena`
+
+`id`, `displayName`, `enabled`, `priority`, `iconMaterial`, `usages`. Spawn points, regions and the
+schematics an arena is regenerated from are not here: they are what the plugin needs to run a match,
+not what another plugin needs to know.
+
+`allows(ArenaUsage usage)` tests one usage.
+
+### `ArenaUsage`
+
+`QUEUE` (matchmaking), `DUEL` (player-sent duels), `PARTY` (party FFA and team fights), `BOT` (fights
+against bots). An arena that declares none accepts everything, and `Arena.usages()` reports the full
+set in that case rather than an empty one.
+
+### `Kit`
+
+`id`, `displayName`, `description`, `enabled`, `ranked`, `queueEnabled`, `duelEnabled`,
+`partyEnabled`, `priority`, `iconMaterial`, `categories`, `compatibleArenas` (empty for any arena).
+
+The four mode flags are separate rather than a set because a server turns them on and off
+independently: a kit can be duellable but not queueable while an admin tunes it. The items a kit hands
+out are not here — they only mean anything applied to a player, which is what `applyKit` is for.
+
+### `KitCategory`
+
+`id`, `displayName`, `description`, `enabled`, `priority`, `iconMaterial`. Presentation only: a
+category decides where a kit is drawn, never what it may be played in. A kit can be in several, or in
+none.
+
+### `KitLoadout`
+
+`kitId`, `slotIndex`, `name`, `iconMaterial`. Only the label: the items themselves are a private
+inventory layout, and the plugin already gives them to their owner when the match starts.
+
+### `PracticeState`
+
+Only `AVAILABLE` means the player is free. Every other value is something that would be broken by
+moving them.
+
+| Value | Meaning |
+|---|---|
+| `AVAILABLE` | Standing in the lobby, in nothing. |
+| `IN_PARTY` | In a party that has not queued for anything yet. |
+| `IN_QUEUE` | Waiting for a match. |
+| `LOADING_MATCH` | A match is being built around them. |
+| `IN_GAME` | Fighting. |
+| `SPECTATING` | Watching a match. |
+| `EDITING_KIT` | Editing a kit loadout. |
+| `EXTERNAL` | Held by another plugin, which said so by claiming them. |
+| `IN_PVP_ZONE` | Inside an open PvP zone in the lobby world. |
+
+### `MatchInfo`
+
+`id`, `kitId`, `arenaId`, `mode`, `status`, `ranked`, `currentRound`, `totalRounds`, `players`,
+`alivePlayers`, `spectators`, `startedAt` (epoch milliseconds, `0` while the match is still loading)
+and `durationMillis`.
+
+`isActive()` is what anything acting on live fighters should check, rather than the match merely
+existing: it exists while the arena is being prepared and for a moment after the last hit lands. The
+bot modes report one player and an opponent that does not exist, because a bot is not a player and
+this plugin does not model it.
+
+### `MatchMode`
+
+`DUEL_1V1`, `PARTY_FFA`, `PARTY_SPLIT`, `PARTY_DUEL`, `BOT_DUEL`, `BOT_PARTY`.
+
+`againstBots()` is true for the last two. Those record nothing — no statistics, no ELO movement, no
+history row — so an integration that counts matches should skip them rather than wonder why the
+numbers never move.
+
+### `MatchStatus`
+
+`LOADING`, `STARTING`, `ACTIVE`, `ROUND_ENDING`, `POINT_RESETTING`, `ENDING`, `ENDED`. A match exists
+before anybody can be hit in it and for a moment after the last hit lands, so check for `ACTIVE`
+rather than for the match being present.
+
+### `MatchRecord`
+
+One player's side of one finished match: `matchId`, `playerUuid`, `opponentName`, `kitId`, `arenaId`,
+`result`, `ranked`, `eloBefore`, `eloAfter`, `eloChange`, `playedAt`, `durationMillis`, `kills`,
+`deaths`, `damageDealt`, `bestCombo`.
+
+One match produces one of these per player, so the same fight is a `WIN` here and a `LOSS` in the
+opponent's copy — join them on `matchId` to see both halves. Rows are pruned after the server's
+retention window; everything derived from a match was already committed to `PlayerStats` when it
+ended.
+
+### `MatchResult`
+
+`WIN`, `LOSS`, `DRAW`. Recorded per player, not per match.
+
+### `Party`
+
+`id`, `leader`, `members` (the leader included), `open`, `maxSize`, with `size()` and
+`isMember(UUID)`.
+
+A party holds nothing by itself — its members are still free until it queues for something, which is
+why `state(UUID)` reports `IN_PARTY` rather than refusing to let another mode take one of them.
+
+### `PlayerStats`
+
+One player's counters on one kit, in one season: `playerUuid`, `playerName`, `kitId`, `season`,
+`kills`, `deaths`, `wins`, `losses`, `draws`, `currentStreak`, `bestStreak`, `elo`, `peakElo`,
+`rankedGamesPlayed`, `damageDealt`, `damageTaken`, `bestCombo`, `timePlayed` (milliseconds),
+`winRate` (0 to 1) and `kdr`.
+
+Seasons reset: these are the numbers since the current season began. A row appears the first time the
+player finishes a match on the kit, so a player with no row simply has not played it. The overall
+standing is the same record stored under the kit id `PlayerStats.GLOBAL_KIT` — the literal `global` —
+which is what lets one query answer both.
+
+### `Rank`
+
+`id`, `displayName`, `divisionName`, `divisionNumber`, `icon`, `lp`, `lpMax`.
+
+Derived, not stored: the server's ranks file cuts the ELO range into named bands and each band into
+divisions, so a rank is a rendering of `PlayerStats.elo()` rather than something a player holds. The
+names and the icon are written in MiniMessage — a rank is typically a gradient — so send them through
+a formatter rather than printing them literally. Not every rank has divisions: when one does not,
+`divisionName` is empty and `divisionNumber` and `lpMax` are `0`, and you should show the raw ELO
+because `lp` has nothing to be out of.
+
+### `LeaderboardType`
+
+What a board is sorted by, one indexed column each: `RANK` (ELO), `KILLS`, `DEATHS`, `KDR`, `WINS`,
+`LOSSES`, `WIN_RATE`, `BEST_STREAK`, `CURRENT_STREAK`, `DAMAGE_DEALT`, `TIME_PLAYED`.
+
+## Actions, from another plugin's menus
+
+The plugin registers its actions in ExyliaLib's shared registry under the `practice:` namespace, so
+any ExyliaLib menu on the server can call them:
 
 ```yaml
 actions:
@@ -137,25 +274,26 @@ actions:
 
 The player-facing ones are the useful set outside this plugin: `open_queue_categories`, `join_queue`,
 `leave_queue`, `open_stats`, `open_history`, `open_settings`, `open_kit_editor`,
-`open_spectate_games`, `open_party_hub`, `open_party_game_menu`, `leave_game`, `duel_send_request`.
+`open_spectate_games`, `open_party_hub`, `leave_game` and `duel_send_request`. Every action that
+changes an arena, a kit or somebody's data checks `exyliapractice.admin` at registration, so naming
+one in a player-facing file gives nothing away.
 
-<Callout type="warning" title="Most admin actions are gated by navigation, not by permission">
-Only 49 of the 213 check `exyliapractice.admin` themselves — the entry points, such as `open_admin`,
-`open_data_management`, `open_admin_stats` and `reload`. The leaf actions behind them do not:
-`data_do_clear_all_stats`, `data_do_reset_all_elo`, `data_import`, `delete_arena`, `create_kit`,
-`set_lobby` and the rest run for whoever clicked them.
+## Bots
 
-In the shipped setup that is safe, because those ids only appear inside admin menus that can only be
-opened through a checked action. But the action namespace is server-wide: naming one of them in a
-lobby item, a player menu, or another plugin's menu would hand it to everybody. Never put a
-`practice:data_*`, `practice:delete_*`, `practice:create_*` or `practice:set_*` id in a player-facing
-file.
-</Callout>
+Bots are a separate plugin, ExyliaPracticeBotV3, with its own service in the same artifact:
+`net.exylia.lib.api.practicebot.PracticeBotService`, reached through `PracticeBots.get()`. It spawns a
+bot from a `BotSpec` — owner, spawn point, combat mode, difficulty, whether it respawns, optionally a
+kit and a skin — hands back a `BotHandle`, finds the bot behind an entity or a player, and reports how
+many exist against the configured cap. It fires one event, `PracticeBotDeathEvent`, so nobody has to
+watch entity deaths and work out which corpses were bots; it is not cancellable, because by the time
+it runs the bot is already gone, and it is called on the thread the bot was running on.
 
-## Events
+A server without the bot plugin simply answers empty, which is the point of a soft integration.
 
-The plugin fires no custom Bukkit events. What another plugin listens to instead is ExyliaLib's
-session registry:
+## What it does not expose
+
+ExyliaPracticeCore publishes no events of its own. What another plugin listens to instead is
+ExyliaLib's session registry, which reports every mode on the server rather than just this one:
 
 ```java
 Sessions.watch(myPlugin,
@@ -163,5 +301,12 @@ Sessions.watch(myPlugin,
     claim -> { /* somebody was released */ });
 ```
 
-That is the same mechanism this plugin's own lobby uses, and it reports every mode on the server, not
-just practice.
+The service is curated rather than a mirror of the plugin. Menu openers, the kit editor, arena
+instance handling and regeneration, season rotation, administrative writes to somebody's statistics
+and raw configuration rows are left out on purpose: they are the plugin running itself, and a public
+method that reached into them would be a way to break a match quietly.
+
+The separate HTTP integration that publishes results and ranks to `practice-api.exylia.net` is not
+part of this — see [Web API](/docs/exyliapractice/web-api).
+
+If something you genuinely need is still missing, ask on [Discord](https://discord.exylia.net).

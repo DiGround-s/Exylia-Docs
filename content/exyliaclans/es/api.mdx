@@ -1,125 +1,192 @@
 ---
 title: "API"
-description: "El jar de API por reflexión para plugins de terceros, y el puente de clanes de ExyliaLib que ya lee cada plugin de Exylia."
+description: "Leer clanes, miembros, rangos, terrenos y DTR, y ejecutar los mismos flujos que ejecutan los comandos del jugador."
+badge: "dev"
 ---
 
-Hay dos formas de preguntarle algo a ExyliaClans, y casi siempre quieres la segunda.
-
-## El puente de clanes — nada que hacer
-
-ExyliaClans se registra en el registro `Clans` de ExyliaLib con prioridad 100 al activarse. Cualquier cosa
-del ecosistema que pregunte *¿están estos dos en el mismo bando?* recibe la respuesta de ExyliaClans, sin
-estar configurada para ello y sin importar nada de este plugin.
-
-Por eso el friendly fire de una arena de ExyliaFFA, una comprobación de equipo de ExyliaCapture y una de
-party de ExyliaPracticeCore ya coinciden con el clan real del jugador. Si escribes un plugin sobre
-ExyliaLib, lee `net.exylia.lib.clan.Clans` y listo.
-
-El snapshot que expone el puente lleva el id, el nombre — usado también como tag, porque aquí los clanes
-no tienen uno aparte —, el líder, los miembros, los moderadores (todo miembro cuyo rango pueda `INVITE`),
-los conectados, el nivel, el saldo, el tope efectivo de miembros, los aliados y los rivales.
-
-## El jar de API
-
-Para un plugin que **no** esté sobre ExyliaLib, `ExyliaClans-API-1.0.0.jar` es un jar independiente sin
-dependencias propias. Habla con el plugin por reflexión, así que compila y funciona esté o no instalado
-ExyliaClans.
-
-```groovy
-dependencies {
-    compileOnly files('libs/ExyliaClans-API-1.0.0.jar')
-}
-```
-
-```yaml
-softdepend: [ExyliaClans]
-```
-
-### Disponibilidad
+`ClansService` es la forma en que otro plugin lee y maneja ExyliaClans: quién está en qué clan, qué
+puede hacer ahí, cómo progresa el clan, si su terreno se puede raidear ahora mismo — y, cuando lo
+quieras, las mismas acciones que ejecutan los comandos del propio jugador.
 
 ```java
-if (!ExyliaClansAPI.isAvailable()) return;
+ExyliaAPI.get(ClansService.class).ifPresent(clans ->
+    clans.clanOf(player.getUniqueId())
+         .ifPresent(clan -> player.sendMessage("Clan: " + clan.name())));
 ```
 
-Todo lo demás devuelve un valor vacío y seguro cuando el plugin no está — `false`, `0`,
-`Optional.empty()`, una lista vacía — así que la comprobación es una cortesía, no un requisito.
-
-### Qué expone
-
-```java
-boolean                  isInClan(UUID player);
-boolean                  isLeader(UUID player);
-Optional<String>         getClanId(UUID player);
-Optional<String>         getClanName(UUID player);
-Optional<ClanData>       getClan(UUID player);
-Optional<ClanData>       getClanById(String clanId);
-Optional<ClanData>       getClanByName(String name);
-Collection<ClanData>     getAllClans();
-List<UUID>               getClanMemberUuids(String clanId);
-
-boolean                  areAllies(String clanIdA, String clanIdB);
-boolean                  areSameClan(UUID a, UUID b);
-boolean                  isFriendlyFireEnabled(UUID player);
-
-double                   getClanKdr(String clanId);
-long                     getClanKills(String clanId);
-long                     getClanDeaths(String clanId);
-
-boolean                  isRaidable(UUID player);
-double                   getDtr(String clanId);
-```
-
-`ClanData` es un record:
-
-```java
-record ClanData(
-    String id, String name, UUID leaderId,
-    double balance, boolean friendlyFire,
-    List<UUID> memberUuids,
-    double kdr, long kills, long deaths
-) {
-    int     getMemberCount();
-    boolean isLeader(UUID uuid);
-    boolean isMember(UUID uuid);
-}
-```
-
-### Ejemplo
-
-```java
-public boolean canDamage(Player attacker, Player victim) {
-    if (!ExyliaClansAPI.isAvailable()) return true;
-    if (!ExyliaClansAPI.areSameClan(attacker.getUniqueId(), victim.getUniqueId())) return true;
-    return ExyliaClansAPI.isFriendlyFireEnabled(attacker.getUniqueId());
-}
-```
-
-<Callout type="note" title="El jar de API es de solo lectura">
-Responde preguntas; no crea clanes, ni mueve miembros, ni edita saldos, ni escribe terrenos. Todo lo que
-cambia estado pasa por los comandos, los menús o `/clanadmin`, que es lo que mantiene en sintonía el log,
-los avisos, las cachés y las regiones de WorldGuard.
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
+Exylia y están en la [página de la API pública](/docs/exylialib/api).
 </Callout>
 
-## Acciones desde los menús de otro plugin
+## Antes de usarlo — el puente de clanes
 
-Como las acciones están registradas en el registro compartido de ExyliaLib bajo el namespace
-`exyliaclans:`, cualquier menú de ExyliaLib — de cualquier plugin — puede llamarlas:
+Si tu pregunta es *¿están estos dos en el mismo bando?*, no quieres este service.
 
-```yaml
-items:
-  clans:
-    slot: 22
-    material: SHIELD
-    name: "{primary}&lCLANS"
-    actions:
-      - "exyliaclans:open_main_menu"
+ExyliaClans se registra en el puente de clanes de ExyliaLib con prioridad 100 al activarse. Todo lo que
+le pregunte a `net.exylia.lib.clan.Clans` recibe la respuesta de ExyliaClans, sin estar configurado
+para ello y sin saber que ExyliaClans existe — por eso el friendly fire de una arena de ExyliaFFA, una
+comprobación de equipo de ExyliaCapture y una de party de ExyliaPracticeCore ya coinciden con el clan
+real del jugador.
+
+```java
+if (Clans.areInSameClan(attacker.getUniqueId(), victim.getUniqueId())) return;
+if (Clans.areAllied(attacker.getUniqueId(), victim.getUniqueId())) return;
 ```
 
-Esa es la forma soportada de poner un botón de clanes en un menú de hub. La lista completa está en
-[Menús](/docs/exyliaclans/menus#acciones).
+El puente es pequeño a propósito — mismo clan, aliados, rivales, el clan de un jugador, sus miembros y
+sus miembros conectados — y responde igual en un servidor que use otro plugin de clanes distinto.
+Úsalo para las relaciones. Usa `ClansService` para todo lo que el puente no modela: rangos, progresión,
+estadísticas, DTR, terrenos y todas las acciones de abajo.
 
-## Placeholders desde cualquier sitio
+<Callout type="warning" title="Las consultas son baratas, las acciones no">
+Todo lo que devuelve un valor lee de la caché del plugin y es seguro desde el redibujado de un menú o
+desde un placeholder. Todo lo que devuelve `void` ejecuta el mismo flujo que el comando del propio
+jugador — comprobaciones de permiso, cooldowns, escrituras en base de datos y los mensajes que ve el
+jugador —, así que llámalo en el hilo principal y no más seguido de lo que un jugador podría
+provocarlo.
+</Callout>
 
-Todos los `%exyliaclans_…%` se resuelven por el registro de ExyliaLib con o sin PlaceholderAPI, así que un
-scoreboard, un holograma o la configuración de otro plugin pueden leer el estado de un clan sin escribir
-código. Ver [Placeholders](/docs/exyliaclans/placeholders).
+## Pertenencia
+
+| Método | Qué hace |
+|---|---|
+| `boolean isInClan(UUID player)` | Si el jugador pertenece a algún clan. |
+| `boolean isLeader(UUID player)` | Si el jugador lidera su clan. |
+| `Optional<Clan> clanOf(UUID player)` | Su clan. Vacío si no está en ninguno. |
+| `Optional<Clan> clanById(String clanId)` | Un clan por id. Vacío si ningún clan lo tiene. |
+| `Optional<Clan> clanByName(String name)` | Un clan por el nombre que escriben los jugadores, sin distinguir mayúsculas. Vacío si ningún clan se llama así. |
+| `Collection<Clan> allClans()` | Todos los clanes, como snapshot de la caché. Vale para una tabla, sobra dentro de un bucle. |
+| `Optional<ClanMember> memberOf(UUID player)` | Su registro de pertenencia. Vacío si no está en ningún clan. |
+| `List<ClanMember> membersOf(String clanId)` | Todos los miembros de un clan. Vacío si el clan no existe. |
+| `Optional<ClanRole> roleOf(UUID player)` | Su rango dentro del clan. Vacío si no está en ninguno. |
+| `String roleNameOf(UUID player)` | El nombre del rango, para mostrar. Cadena vacía si no está en ningún clan. |
+| `int memberCount(UUID player)` | Cuántos jugadores hay en el clan de ese jugador. `0` si no está en ninguno. |
+
+## Relaciones
+
+| Método | Qué hace |
+|---|---|
+| `boolean areAllies(String clanIdA, String clanIdB)` | Si dos clanes son aliados. |
+| `boolean areRivals(String clanIdA, String clanIdB)` | Si dos clanes son rivales. |
+| `boolean sameClan(UUID playerA, UUID playerB)` | Si dos jugadores comparten clan. `false` si alguno no tiene clan, así que dos jugadores sin clan nunca cuentan como compañeros. |
+| `boolean friendlyFireEnabled(UUID player)` | Si su clan deja que los miembros se hagan daño. `false` si está apagado *o* si el jugador no tiene clan. |
+| `int allyCount(UUID player)` | Cuántos aliados tiene su clan. `0` si no está en ninguno. |
+
+## Progresión
+
+Todo lo que se deriva del nivel se calcula aquí en vez de guardarse en el record `Clan`, para que leer
+un clan siga siendo un acierto de caché.
+
+| Método | Qué hace |
+|---|---|
+| `int level(String clanId)` | El nivel del clan. `1` si el clan no existe. |
+| `long exp(String clanId)` | La experiencia acumulada. |
+| `long expForNextLevel(String clanId)` | Lo que cuesta el siguiente nivel. `0` si el clan no existe o ya está en el nivel máximo. |
+| `int maxMembers(String clanId)` | El tope de miembros en su nivel actual. |
+| `int maxAlliances(String clanId)` | El tope de alianzas en su nivel actual. |
+| `int maxRivals(String clanId)` | El tope de rivalidades en su nivel actual. |
+
+## Estadísticas
+
+| Método | Qué hace |
+|---|---|
+| `Optional<ClanStats> stats(String clanId)` | Las kills, muertes y tiempo jugado del clan. Vacío si el clan no existe. |
+
+## Raideo
+
+| Método | Qué hace |
+|---|---|
+| `boolean isRaidable(String clanId)` | Si el terreno del clan se puede raidear ahora mismo. |
+| `DtrState dtrState(String clanId)` | En qué punto del ciclo de DTR está. `NORMAL` si el clan no existe o el servidor va sin DTR. |
+| `double dtr(String clanId)` | Su DTR actual. |
+| `double maxDtr(String clanId)` | El DTR máximo que puede alcanzar con su tamaño y nivel actuales. |
+
+## Terrenos
+
+| Método | Qué hace |
+|---|---|
+| `Optional<ClanClaim> claimOf(String clanId)` | El terreno del clan. Vacío si no tiene ninguno. |
+
+## Acciones
+
+Cada una de estas ejecuta el mismo flujo que el comando del propio jugador, con sus comprobaciones de
+permiso y sus mensajes. No informan nada de vuelta: al jugador se le dice qué pasó, y quien necesite
+saberlo lee el estado después.
+
+| Método | Qué hace |
+|---|---|
+| `void createClan(Player player, String name)` | Crea un clan liderado por el jugador, con el nombre dado. |
+| `void disbandClan(Player leader)` | Disuelve el clan del líder. |
+| `void leaveClan(Player player)` | Saca al jugador de su clan. |
+| `void invite(Player inviter, Player target)` | Invita a un jugador al clan de quien invita. |
+| `void kick(Player actor, UUID target)` | Expulsa a un miembro del clan de quien actúa. |
+| `void transferLeader(Player leader, UUID newLeader)` | Cede el liderazgo a otro miembro. |
+| `void deposit(Player player, double amount)` | Mueve dinero del jugador al banco del clan. |
+| `void withdraw(Player player, double amount)` | Mueve dinero del banco del clan al jugador. |
+| `void sendClanChat(Player player, String message)` | Manda un mensaje al chat del clan del jugador. |
+| `void setHome(Player player)` | Fija el home del clan donde está parado el jugador. |
+| `void teleportHome(Player player)` | Manda al jugador al home de su clan. |
+
+## Tipos
+
+Cada record es un snapshot del momento de la consulta, no una vista viva. El plugin reemplaza sus
+objetos en cada cambio, así que vuelve a preguntar en vez de guardarte uno entre ticks.
+
+### `Clan`
+
+`id`, `name`, `leader`, `balance`, `open`, `friendlyFire`, `dtr`, `exp`. Solo los campos guardados: el
+nivel, el número de miembros, el DTR máximo y si el clan es raideable son métodos del service.
+
+### `ClanMember`
+
+`player`, `clanId`, `roleId`. Un jugador pertenece como mucho a un clan, así que esto es toda su
+identidad de clan. Resuelve `roleId` con `roleOf(UUID)`.
+
+### `ClanRole`
+
+`id`, `clanId`, `name`, `weight` (más alto manda sobre más bajo), `defaultRole`, `permissions`.
+
+`has(String permission)` comprueba uno, sin distinguir mayúsculas. Son los permisos de clan del propio
+plugin — regulan acciones dentro del clan, no comandos del servidor — y el conjunto crece entre
+versiones: trata un nombre desconocido como uno que esta versión no tiene, no como un error. Ver
+[Rangos](/docs/exyliaclans/roles).
+
+### `ClanStats`
+
+`clanId`, `kills`, `deaths`, `playTimeSeconds`, sumados entre todos los miembros.
+
+`kdr()` devuelve kills por muerte. Un clan que nunca murió devuelve su número de kills en vez de
+infinito, porque una tabla tiene que ordenarlo y un menú tiene que imprimirlo.
+
+### `ClanClaim`
+
+`id`, `clanId`, `world`, `minX`, `minZ`, `maxX`, `maxZ`, `baseY`. Los bordes son coordenadas de bloque
+inclusivas y el terreno abarca toda la altura del mundo.
+
+`contains(int x, int z)` comprueba una columna; `contains(Location location)` comprueba una ubicación,
+mundo incluido.
+
+### `DtrState`
+
+| Valor | Significado |
+|---|---|
+| `NORMAL` | Por encima de cero y sin regenerar: el estado habitual. |
+| `FROZEN` | Perdió un miembro hace poco, así que el DTR queda congelado antes de recuperarse. |
+| `REGENERATING` | Recuperándose hacia su máximo. |
+| `RAIDABLE` | En cero o por debajo: el terreno del clan se puede raidear. |
+
+## Lo que no expone
+
+ExyliaClans no publica eventos, y el service está curado, no es un espejo del plugin. Los abridores de
+menú, el editor de rangos, las escrituras de terreno, la gestión de aliados y rivales, los baneos y
+todo lo que está bajo `/clanadmin` quedan afuera a propósito: esos son los caminos que mantienen en
+sintonía el log, los avisos, las cachés y las regiones de WorldGuard, y un método público que se los
+saltara sería una forma de corromper un clan en silencio.
+
+Dos cosas cubren casi todo lo que falta sin escribir código. Las acciones `exyliaclans:` funcionan
+desde cualquier menú de ExyliaLib, de cualquier plugin — ver [Menús](/docs/exyliaclans/menus#acciones)
+— y todos los `%exyliaclans_…%` se resuelven con o sin PlaceholderAPI, así que un scoreboard o un
+holograma leen el estado del clan directamente. Ver [Placeholders](/docs/exyliaclans/placeholders).
+
+Si de verdad te falta algo, pídelo en [Discord](https://discord.exylia.net).

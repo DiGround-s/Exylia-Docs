@@ -1,113 +1,128 @@
 ---
 title: "API"
-description: "ArmorTrimAPI: registrar presets, crear objetos, engrabar armadura, cambiar la elección de un jugador y redibujarlo."
+description: "Leer el catálogo de trims, las mitades que el jugador combina a mano, el trim que eligió y los trims escritos en la armadura."
+badge: "dev"
 ---
 
-Todo está en una clase, `net.exylia.exyliaArmorTrims.api.ArmorTrimAPI`.
+`ArmorTrimService` es por donde otro plugin lee y maneja ExyliaArmorTrims: los presets, los patrones y
+materiales que el jugador combina a mano, el trim que eligió, y los trims escritos en la armadura
+misma.
 
 ```java
-import net.exylia.exyliaArmorTrims.api.ArmorTrimAPI;
-
-ArmorTrimAPI api = ArmorTrimAPI.get();
+ExyliaAPI.get(ArmorTrimService.class).ifPresent(trims -> {
+    trims.select(player, ArmorPiece.CHESTPLATE, "sentry/netherite");
+    trims.trimItem("ruby").ifPresent(item -> player.getInventory().addItem(item));
+});
 ```
 
-`get()` lanza `IllegalStateException` mientras el plugin no está activo, así que añade
-`softdepend: [ExyliaArmorTrims]` a tu `plugin.yml` y llámalo desde `onEnable` o después.
-
-## Registrar trims
-
-```java
-import net.exylia.exyliaArmorTrims.trim.TrimDefinition;
-import net.exylia.exyliaArmorTrims.trim.TrimLook;
-
-api.register(TrimDefinition.preset(
-        "ruby",                              // id: permiso y valor guardado
-        "{error}&lRUBY",                     // nombre
-        java.util.Set.of(),                  // piezas: vacío son las cuatro
-        new TrimLook("rib", "redstone"),     // patrón y material
-        null));                              // icono, o null para el de config.yml
-```
-
-| Método | Devuelve | Qué hace |
-|---|---|---|
-| `register(TrimDefinition)` | — | Añade o reemplaza un preset. Sobrevive a un reload. |
-| `unregister(String id)` | `boolean` | Quita uno, venga del código o del archivo. |
-| `trim(String stored)` | `Optional<TrimDefinition>` | Resuelve un id de preset o una pareja `patrón/material`. |
-| `exists(String id)` | `boolean` | Si un id resuelve. |
-| `registry()` | `TrimRegistry` | El registro: `presets()`, `ids()`, `patterns()`, `materials()`, `onChange(listener)`. |
-
-<Callout type="note" title="Código y archivo conviven">
-Una recarga reemplaza solo las entradas que venían de `trims.yml`. Un preset registrado aquí se queda
-hasta que se desregistre o pare el servidor, y `/armortrimsadmin list` lo muestra como a cualquier
-otro.
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
+Exylia y están en la [página de la API pública](/docs/exylialib/api).
 </Callout>
 
-## Objetos
+Todo se direcciona por **id de trim**, comparado sin distinguir mayúsculas. Ese id es o un preset que
+nombró el dueño del servidor, o la forma `patrón/material` de una combinación: la barra los distingue,
+y ninguna clave de registro lleva una. Un id que no nombra ninguno de los dos no es un error, así que
+las búsquedas devuelven vacío y las escrituras devuelven `false`.
 
-| Método | Devuelve | Qué hace |
-|---|---|---|
-| `trimItem(String stored, Player viewer)` | `Optional<ItemStack>` | El objeto de trim de ese trim, dibujado para ese jugador. |
-| `remover(Player viewer)` | `ItemStack` | Un removedor. |
-| `isTrimItem(ItemStack)` | `boolean` | Si un stack es un objeto de trim. |
-| `isRemover(ItemStack)` | `boolean` | Si es un removedor. |
-| `trimId(ItemStack)` | `Optional<String>` | El trim que lleva un objeto de trim, o el que lleva una armadura. |
-| `hasTrim(ItemStack armor)` | `boolean` | Si una pieza lleva trim. |
+## El catálogo
 
-## Engrabar armadura
-
-```java
-ApplyResult result = api.apply(chestplate, "ruby");
-if (result.success()) { /* ... */ }
-```
-
-| Método | Devuelve | Qué hace |
-|---|---|---|
-| `apply(ItemStack armor, String stored)` | `ApplyResult` | Escribe el trim en la armadura. |
-| `apply(ItemStack armor, ItemStack trimItem)` | `ApplyResult` | Lo mismo, tomando el trim de un objeto. El objeto no se gasta. |
-| `remove(ItemStack armor, Player receiver)` | `ApplyResult` | Lo quita y se lo devuelve al jugador como objeto. |
-| `strip(ItemStack armor)` | `ApplyResult` | Lo quita y no devuelve nada. |
-
-Ninguna comprueba permisos: eso es cosa de quien llame. Todas comprueban antes de escribir, así que
-una llamada que falla deja los dos objetos exactamente como estaban.
-
-### ApplyResult
-
-| Valor | Qué significa |
+| Método | Qué hace |
 |---|---|
-| `APPLIED` · `REMOVED` | Salió bien. `success()` devuelve `true`. |
-| `NOT_ARMOR` | No era una pieza de armadura. |
-| `UNSUPPORTED_PIECE` | El preset no entra en esa pieza. |
-| `UNKNOWN_TRIM` | El valor no resuelve a ningún trim. |
-| `INVALID_ITEM` | El objeto no era un objeto de trim. |
-| `ALREADY_TRIMMED` | La pieza ya llevaba trim. |
-| `NO_TRIM` | No había nada que quitar. |
-| `INVENTORY_FULL` | No cabía el objeto devuelto. |
-| `NO_PERMISSION` | El jugador no puede usar ese trim. |
+| `trims()` | Todos los presets que declara el servidor, en el orden en que los dibuja el menú. Solo presets: las combinaciones son demasiadas para listarlas. |
+| `trim(String trimId)` | Un trim como `Optional<ArmorTrim>`, aceptando un id de preset o una combinación `patrón/material`. Vacío cuando el id no nombra ninguno. |
+| `exists(String trimId)` | Si el catálogo declara ese preset. Solo presets: una combinación vale siempre que valgan sus dos mitades, así que para eso usa `trim`. |
+| `patterns()` | Los patrones que el jugador puede combinar a mano, en orden de menú. |
+| `materials()` | Los materiales que el jugador puede combinar a mano, en orden de menú. |
 
-## La elección del jugador
+## Permisos
 
-Existe solo cuando el modo usa el menú; con `mode: item`, `selections()` devuelve `null`.
+| Método | Qué hace |
+|---|---|
+| `canUse(Player, String trimId)` | Si puede llevar el trim en al menos una pieza. |
+| `canUse(Player, String trimId, ArmorPiece)` | Si puede llevarlo en esa pieza concreta. |
 
-| Método | Devuelve | Qué hace |
-|---|---|---|
-| `selections()` | `TrimSelections` | La capa por jugador, o `null`. |
-| `wear(Player, ArmorPiece, String stored)` | `ApplyResult` | Pone el trim, o lo quita si ya estaba. `null` en la pieza son todas las que admita. |
-| `bare(Player, ArmorPiece)` | `ApplyResult` | Quita la elección de una pieza, o de todas con `null`. |
-| `chosen(Player, ArmorPiece)` | `Optional<String>` | Lo que eligió para esa ranura, lleve lo que lleve. |
+Los dos responden con la regla del propio servidor, que incluye el ajuste que apaga los permisos por
+completo: una tienda que pregunta recibe la misma respuesta que daría el menú, no una comprobación
+cruda de nodo. La forma por pieza existe aparte porque un rango se vende ranura a ranura: quien tiene
+el nodo del casco lleva el trim en la cabeza y en ningún otro sitio.
 
-`wear` sí respeta permisos, porque es la misma puerta que usa el menú.
+## Lo que eligió el jugador
+
+| Método | Qué hace |
+|---|---|
+| `mode()` | De dónde salen los trims que dibuja este servidor, como `TrimMode`. |
+| `selected(UUID player, ArmorPiece)` | El id de trim elegido para esa ranura, como `Optional<String>`. Vacío cuando no eligió ninguno, el menú está apagado, o su selección todavía se está leyendo. |
+| `select(Player, ArmorPiece, String trimId)` | Fija la elección de esa ranura. `true` cuando quedó guardada. |
+| `clear(Player, ArmorPiece)` | Quita el trim elegido de una ranura. `true` cuando había algo que quitar. |
+| `clearAll(Player)` | Quita todos los trims elegidos. `true` cuando había algo que quitar. |
+
+`selected` es una elección, no un resultado: sigue puesta con la ranura vacía, y el trim vuelve a
+aparecer en cuanto el jugador se equipa una armadura que encaje.
+
+<Callout type="warning" title="select fija, y no pide nodo">
+`select` fija en vez de alternar: llamarlo dos veces deja el trim puesto. **No pasa por permiso**,
+porque el ajuste del propio dueño del servidor dice que no debe hacerlo: un trim repartido por una
+caja o una recompensa es suyo se le haya concedido un nodo o no. Es la misma regla que sigue
+ExyliaArrows y lo contrario de ExyliaArmorSkin. Pregunta antes por
+`canUse(Player, String, ArmorPiece)` cuando sí quieras que decida el permiso.
+</Callout>
+
+## Trims en los objetos
+
+| Método | Qué hace |
+|---|---|
+| `trimOf(ItemStack armor)` | El id de trim escrito en esa armadura, como `Optional<String>`. Vacío cuando no lleva ninguno. |
+| `apply(ItemStack armor, String trimId)` | Escribe un trim en la armadura, en el sitio, conservando todo lo demás que tenía. `true` cuando se escribió. |
+| `strip(ItemStack armor)` | Quita el trim y no devuelve nada a cambio. `true` cuando había uno. |
+| `trimItem(String trimId)` | Un objeto de trim listo para entregar, como `Optional<ItemStack>`. Vacío cuando el id no nombra ningún trim. |
+| `isTrimItem(ItemStack)` | Si un objeto es uno de los objetos de trim del plugin. |
+
+Pregunta `isTrimItem` antes de que un cofre, una tienda o un intercambio traten un stack como botín
+normal: un objeto de trim se dibuja como le convenga y no es el material que aparenta.
 
 ## Redibujar
 
 | Método | Qué hace |
 |---|---|
-| `refresh(Player)` | Recalcula su aspecto y lo reenvía a todo el que lo vea. |
-| `refreshAll()` | Lo mismo para todos los conectados. |
+| `refresh(Player)` | Recalcula cómo se ve el jugador y lo reenvía a todos los que puedan verlo. |
 
-Útil tras cambiar permisos desde código: el aspecto se recalcula al equiparse armadura, y esto lo
-fuerza sin esperar.
+Solo hace falta cuando cambió algo que el service no conoce: un permiso concedido en caliente, un
+objeto cambiado por otro plugin. Todas las escrituras de arriba ya redibujan.
 
-## Piezas
+## Tipos
 
-`ArmorPiece` es `HELMET`, `CHESTPLATE`, `LEGGINGS` y `BOOTS`. `ArmorPiece.of(ItemStack)` dice de qué
-ranura es una pieza, y `ArmorPiece.parse("helmet")` lee un nombre.
+**`ArmorTrim`** — `id`, `name` (con los códigos de color dentro), `permission`, `pieces`, `pattern`,
+`material` y `preset`. `supports(ArmorPiece)` responde si encaja en una ranura. Un preset es una
+entrada que nombró el dueño y tiene un nodo propio; una combinación trae `permission` vacío, porque la
+conceden las dos mitades que hay detrás.
+
+**`TrimOption`** — una mitad de las que el jugador combina a mano: `id`, `name`, `permission`. Patrones
+y materiales comparten el record, y cuál es cada uno lo dice el método que te lo entregó. Existen
+porque una combinación se vende por mitades: dar un preset a un jugador no le regala en silencio su
+patrón para recombinarlo.
+
+**`ArmorPiece`** — `HELMET`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`. `slot()` da el `EquipmentSlot` de
+Bukkit, para que quien lea un inventario no mantenga un switch propio al día.
+
+**`TrimMode`** — de dónde sale el trim dibujado: `ITEM` (solo lo que un objeto de trim escribió en la
+armadura), `MENU` (solo lo que eligió quien la lleva; los objetos de trim no hacen nada) o `BOTH`.
+`usesItems()` y `usesMenu()` responden sin switch. Vale la pena preguntarlo antes de escribir nada: la
+mitad que un servidor no usa devuelve `false` o vacío en lugar de lanzar, así que una integración
+escrita para las dos funciona en cualquiera.
+
+<Callout type="tip" title="Las consultas son baratas, las acciones no">
+Todo lo que devuelve un valor lee la caché del plugin y es seguro desde un redibujado de menú o un
+placeholder. Todo lo que cambia una selección escribe en la base de datos y redibuja al jugador para
+todos los que lo ven: llama a eso desde el hilo principal, y no más seguido de lo que podría un
+jugador.
+</Callout>
+
+## Lo que no expone
+
+No hay eventos: ExyliaArmorTrims no publica ninguno. Los abridores de menú, el flujo de edición de la
+pestaña CUSTOM, los removedores y las filas crudas de configuración quedan fuera a propósito: un
+contrato público no se puede romper después, así que lleva lo que una integración necesita y nada que
+solo tuviera sentido dentro de una versión.
+
+Si de verdad te falta algo, pídelo en [Discord](https://discord.exylia.net).

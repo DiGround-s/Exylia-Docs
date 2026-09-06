@@ -1,145 +1,204 @@
 ---
 title: "API"
-description: "The static facade another plugin reads and acts through, and the six events."
+description: "Read arenas, sessions, duels and records, start or stop one, and listen for every pop and every round."
 badge: "dev"
 ---
 
-`net.exylia.exyliaTotemTrainer.api.TotemTrainerAPI` is static and reads the live registries. Every call
-returns at once, except `loadProfile`, which goes to the database for a player who is offline. Events
-live in `net.exylia.exyliaTotemTrainer.api.event`.
-
-## Declaring the dependency
-
-```yaml title="plugin.yml"
-softdepend:
-  - ExyliaTotemTrainer
-```
-
-`depend` works too. Either way the plugin's classes are reachable the ordinary way; the loader defines
-them in this plugin's own classloader, and Bukkit delegates between plugin classloaders for anything
-listed as a dependency. Every method throws `IllegalStateException` if ExyliaTotemTrainer is not enabled.
-
-## Reading
+`TotemTrainerService` is how another plugin finds out whether this one has hold of a player, reads a
+duel or a solo session, asks the database for a profile, and starts or stops either.
 
 ```java
-Optional<ProfileEntity> profile = TotemTrainerAPI.profile(player.getUniqueId());
-profile.ifPresent(row -> log(row.wins() + " wins, best pop " + row.bestPopMillis() + " ms"));
-
-Optional<PlayerContext> state = TotemTrainerAPI.state(player.getUniqueId()); // TRAINING or MATCH
-Optional<Match> match = TotemTrainerAPI.match(player.getUniqueId());
-Optional<TrainingSession> session = TotemTrainerAPI.training(player.getUniqueId());
-
-Collection<Match> running = TotemTrainerAPI.matches();
-Collection<ArenaEntity> arenas = TotemTrainerAPI.arenas();
-int load = TotemTrainerAPI.activeMatches("totem1");
+ExyliaAPI.get(TotemTrainerService.class).ifPresent(totems ->
+    totems.activityOf(player.getUniqueId())
+          .ifPresent(activity -> event.setCancelled(true)));
 ```
 
-`profile` is the cached row of an **online** player; it is empty while their load is still in flight
-right after they join. For anyone else:
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
+</Callout>
 
-```java
-TotemTrainerAPI.loadProfile(uuid).thenAccept(row -> {
-    // Safe from any thread. A player never seen gets a fresh, empty row.
-});
-```
+## What most integrations actually want
 
-| Method | Returns |
-|---|---|
-| `profile(UUID)` | `Optional<ProfileEntity>`: the cached row of an online player. |
-| `loadProfile(UUID)` | `CompletableFuture<ProfileEntity>`: memory, then the database, then a fresh row. Any thread. |
-| `match(UUID)` | `Optional<Match>`: the duel the player is in. |
-| `matches()` | Every running duel. |
-| `training(UUID)` | `Optional<TrainingSession>`: the solo session the player is in. |
-| `state(UUID)` | `Optional<PlayerContext>`: `TRAINING`, `MATCH`, or empty when this plugin has nothing to do with them. |
-| `arenas()` | Every configured arena, ready or not. |
-| `activeMatches(String arenaId)` | Duels running in that arena right now. |
+`activityOf(UUID)` is the one question worth asking before anything else. A player in training or in a
+duel has had their inventory and their location taken by this plugin, so teleporting them, giving them
+items or opening a menu for them will be undone or will break their session.
 
-## Acting
-
-```java
-// The player is told why when this returns false: unknown mode, an interval
-// that is not offered, already busy, or held by another plugin.
-boolean started = TotemTrainerAPI.startTraining(player, "chaos", 20);
-
-// A duel request, with the same settings a menu would build.
-GlobalDefaults.Mode mode = GlobalDefaults.training().modes().get("random");
-TotemRules rules = TotemRules.of("random", mode, 15, System.nanoTime());
-MatchSettings settings = new MatchSettings(rules, MatchFormat.of(3));
-boolean sent = TotemTrainerAPI.duel(challenger, target, settings);
-
-// Leaves training, or forfeits a duel; false when the player is in neither.
-boolean left = TotemTrainerAPI.leave(player);
-```
-
-`TotemRules.of` takes the mode id, its configuration block, the tick interval and a seed; the seed is what
-lets both sides of a duel draw the same interval sequence, so use a fresh one per request. `MatchFormat.of(n)`
-is a best-of-`n` with `n / 2 + 1` rounds to win. `duel` sends a **request**: the target still has to accept.
+Everything that returns a value copies what it found out of the plugin's live registries, so a
+`TotemMatch` is the match as it *was* rather than as it is. The actions run exactly what the player's
+own command runs — the checks, the claims and the messages they see — and return whether the plugin
+accepted the request, not how it turned out. What happened arrives as an event.
 
 <Callout type="warning" title="Threads">
-Call from the main thread — on Folia, from the thread that owns the player in question. `loadProfile`
-is the one exception and may be called from anywhere.
+Call the actions from the main thread, or on Folia from the thread that owns the player in question.
+The two `CompletableFuture` methods — `loadProfile` and the record queries — go to the database and are
+safe from anywhere.
 </Callout>
+
+## What the server offers
+
+| Method | What it does |
+|---|---|
+| `List<String> modes()` | The training modes this server has configured, in menu order. |
+| `List<TotemArena> arenas()` | Every arena duels are fought in. |
+| `Optional<TotemArena> arena(String arenaId)` | One arena, or empty when there is none by that id. |
+
+Modes are configuration rather than code, so the set differs between servers and an id that works on
+one is not guaranteed on another — check before offering one. Many matches share one arena at a time,
+so `arenas()` is not a list of free space; `TotemArena.isReady()` says which of them can host anything.
+
+## What a player is doing
+
+| Method | What it does |
+|---|---|
+| `Optional<PlayerActivity> activityOf(UUID)` | What this plugin is doing with a player. Empty means it has no hold on them. |
+| `Optional<TotemMatch> matchOf(UUID)` | The duel a player is in, or empty when they are in none. |
+| `Optional<TotemMatch> match(UUID matchId)` | One duel by its id, or empty once it has been cleaned up. |
+| `List<TotemMatch> matches()` | Every duel running right now. |
+| `int matchesIn(String arenaId)` | How many duels are being fought in one arena. A load figure, not an availability one. |
+| `Optional<TrainingSession> training(UUID)` | The solo session a player is in, or empty when they are not training. |
+| `List<TrainingSession> trainingSessions()` | Every solo session running right now. |
+| `Optional<UUID> pendingDuelFor(UUID)` | Who has challenged a player and is still waiting for an answer, or empty when nobody is. |
+
+## Records
+
+| Method | What it does |
+|---|---|
+| `Optional<TotemProfile> profile(UUID)` | The profile cached for somebody online. Empty for an offline player, and also while their load is still in flight. |
+| `CompletableFuture<TotemProfile> loadProfile(UUID)` | The profile, from the database when it is not in memory. A player who has never trained gets a fresh, empty one rather than nothing. |
+| `CompletableFuture<List<MatchRecord>> history(UUID)` | A player's last duels, newest first, as many as the server keeps. |
+| `CompletableFuture<List<TrainingRecord>> records(UUID)` | A player's best training results, one row per mode and speed. |
+| `CompletableFuture<List<TrainingRecord>> leaderboard(String modeId, RecordCategory category, int ticks)` | One mode's training board, longest-standing records first. `ticks` restricts it to one interval, or `0` for every speed at once. |
+
+`profile` being empty during a load is deliberate: a caller on the server thread should degrade rather
+than wait, and one that can wait should ask `loadProfile` instead. The board is served from a cache the
+plugin refreshes on its own, so a menu redraw is cheap and a cold board is one query rather than one
+per viewer.
+
+## Actions
+
+| Method | What it does |
+|---|---|
+| `boolean startTraining(Player, String modeId, int ticks)` | Puts a player into a solo session at that interval. |
+| `boolean duel(Player from, Player to, String modeId, int ticks, int bestOf)` | Sends a challenge. The target still has to accept, and the challenge expires on its own if nobody answers. |
+| `boolean acceptDuel(Player)` | Accepts the challenge waiting for a player. |
+| `boolean denyDuel(Player)` | Turns down the challenge waiting for a player. |
+| `boolean forfeit(UUID)` | Gives a duel up on somebody's behalf, handing the series to their opponent. |
+| `boolean cancelMatch(UUID matchId)` | Stops a duel with no winner and returns both players. For an administrator or another plugin that needs them back. |
+| `boolean leave(Player)` | Takes a player out of whatever this plugin has them in: leaving a duel is a forfeit, leaving training just ends the session. |
+
+A `false` from any of these is a refusal the player has already been told about — an unknown mode, being
+busy already, or no arena able to take them.
+
+## Types
+
+Everything here is an immutable record or an enum, and every collection inside one is a copy.
+
+| Type | What it is |
+|---|---|
+| `TotemArena` | A place duels are fought in: `id`, `displayName`, `enabled`, and the two spawns as `Optional<Location>`. `isReady()` is what decides whether it can host anything — an arena missing a spawn, or pointing at a world that is not loaded, cannot take a duel however enabled it is. |
+| `TotemMatch` | One duel as it was when you asked. `has(UUID)`, `opponentOf(UUID)`, `scoreOf(UUID)`, `durationMillis()` and `formatLabel()` (`BO5` and the like) save you the arithmetic. |
+| `MatchRound` | One played round: `number`, its clock, an `Optional` winner and a `Performance` per player, read with `summaryOf(UUID)`. |
+| `TrainingSession` | One player's solo session: `id`, `player`, `rules`, `arenaId`, `startedAt`. Solo is physical — the player is moved into an arena and hidden — so treat them as unavailable rather than merely busy. |
+| `TrainingRules` | Everything a session runs under, resolved from configuration once so a running session never re-reads the file. |
+| `Performance` | How a session, a round or one side of a match went. |
+| `TotemProfile` | A player's lifetime duel record and pop statistics, plus `averagePopMillis()`. |
+| `MatchRecord` | One participant's view of one finished duel, with both names frozen as they were. |
+| `TrainingRecord` | A player's bests for one mode at one tick interval. Kept per speed because a 10-tick run and a 30-tick run of the same mode are not the same achievement. |
+| `PlayerActivity` | `TRAINING` or `MATCH`. There is no constant for "nothing" — absence is the empty `Optional` from `activityOf`. |
+| `MatchState` | `WAITING`, `STARTING`, `ACTIVE`, `ROUND_END`, `ENDING`, `FINISHED`. It only moves forward, so `isOver()` never goes back to false. |
+| `PerformanceGrade` | `PERFECT`, `EXCELLENT`, `GOOD`, `OK`, `SLOW`, best first. |
+| `RecordCategory` | What a training board sorts by. |
+
+A few of these carry something that is not obvious from the field names.
+
+**`TrainingRules`** is three independent choices, which is why nothing in it is named after a mode:
+`totems` says how the inventory is stocked (`isStocked()`), a window says the interval is drawn rather
+than kept (`drawsInterval()`), and a speed-up says it shortens as hits add up (`speedsUp()`). A mode may
+do both of the last two; one that does neither runs flat. `ticks` is the interval the player chose, and
+a window is shifted so that interval sits at its centre — a 10..30 window on a 25-tick session draws
+from 15..35 — so a picked speed means the same thing in every mode. `intervalAt(int hits)` is the speed
+a scoreboard should show, computed without consuming any of the session's randomness. `seed` is what
+lets both sides of a duel draw the same sequence, and what makes a session replayable exactly.
+
+**`Performance`** counts `pops` and `fails`, keeps the best, worst, average and total reaction in
+milliseconds, the streak standing at the end and the best one, the duration, a `score` from 0 to 100 as
+[Grading](/docs/exyliatotemtrainer/grading) computes it, and a count per grade read with
+`gradeCount(PerformanceGrade)`. `bestSeconds()`, `averageSeconds()` and `durationSeconds()` are the same
+numbers in seconds. A `bestMillis` of zero means no pop was recorded rather than an instantaneous one —
+the distinction to make before dividing by anything.
+
+**`RecordCategory`** is `RATING`, `BEST_POPS`, `FASTEST_AVERAGE`, `BEST_STREAK` and `LONGEST_RUN`.
+Every one is a best rather than a total, which is what lets a board built over rows kept per tick speed
+read as a board over players. Only `RATING` compares across speeds honestly, because it carries the
+weight of the interval the score was set at; the rest are raw bests that a slower interval inflates on
+its own, so a board over every speed names the speed on each row. `ascending()` is `true` only for
+`FASTEST_AVERAGE`, where the smallest number wins.
+
+**`PerformanceGrade`** thresholds live in the server's configuration, so the same reaction can grade
+differently on two servers. Read the grade rather than re-deriving it from a reaction time.
 
 ## Events
 
-All six extend `TotemTrainerEvent`, are synchronous, fire on the thread that owns the player they are
-about, and none of them is cancellable.
+Seven events, in `net.exylia.lib.api.totemtrainer.event`. All of them extend `TotemTrainerEvent`, all
+are synchronous and fire on the thread that owns the player they are about — on Folia, that player's
+region thread — and **none of them is cancellable**. Every one reports something that has already been
+decided, so receiving one is a guarantee that it happened; there is nothing here to gate a duel or a
+session with.
 
-| Event | When | Carries |
+Every event that names a match carries a `TotemMatch`, and that is a snapshot: the live match belongs
+to this plugin's own classloader and its own thread, so a handle to it would be neither visible to the
+plugin holding one nor safe to read. Call `match(UUID)` when you need the current state.
+
+| Event | Fires when | Carries |
 |---|---|---|
 | `TrainingStartEvent` | A solo session was accepted; the player is about to be moved and equipped. | `player()`, `rules()` |
 | `TrainingEndEvent` | A solo session is over; the numbers are final and about to be stored. | `player()`, `rules()`, `summary()`, `reason()` |
 | `TotemPopEvent` | A totem popped and the player got the next one into a hand. | `player()`, `reactionMillis()`, `grade()`, `inMatch()` |
-| `MatchStartEvent` | Both players arrived in the arena; the first countdown starts next. | `match()` |
-| `RoundEndEvent` | A round was scored. | `match()`, `round()`; `round.winner()` is `null` for a replayed draw |
-| `MatchEndEvent` | The duel was decided or cancelled. | `match()`, `winner()` (`null` when cancelled), `cancelled()` |
+| `MatchStartEvent` | Both players arrived in the arena; the first round's countdown starts next. | `match()` |
+| `RoundEndEvent` | A round was scored. | `match()`, `round()` |
+| `MatchEndEvent` | The match is decided or cancelled. | `match()`, `winner()`, `cancelled()` |
 
-`TrainingEndEvent.Reason` is one of `FAILED` (no totem in hand when a hit landed), `COMPLETED` (a bounded
-mode ran out of totems), `LEFT` (`/totem leave`), `DISCONNECTED`, or `CANCELLED` (another plugin took the
+`TotemTrainerEvent` itself is the abstract base. It is never fired and has no handler list of its own,
+so it is not something to register a listener for — it is there so a helper can take any of the six,
+and so an `instanceof` check covers them all.
+
+`TotemPopEvent.reactionMillis()` is measured from the hit to the re-equip, not from the pop animation,
+and `inMatch()` is `false` in solo training.
+
+`TrainingEndEvent.Reason` is one of `FAILED` (no totem in hand when a hit landed), `COMPLETED` (a
+bounded mode ran out of totems), `LEFT`, `DISCONNECTED`, or `CANCELLED` (another plugin took the
 player, or the server is stopping).
 
+`MatchEndEvent.winner()` is `null` when `cancelled()` is true. It fires *before* ratings and history are
+written, which happens asynchronously afterwards — read the winner and the scores from the event, not
+from the profiles.
+
+### RoundEndEvent is where the per-round detail lives
+
+`TotemMatch` deliberately does not carry the rounds already played: a listing of matches would copy
+every player's per-round statistics for a screen that only wants the score. `RoundEndEvent` hands you
+the `MatchRound` as it is scored, which is the moment that detail is worth having.
+
+An empty `round().winner()` is a draw — both players dropped their totem in the same tick and nobody
+earned the round. A draw is replayed rather than moved past, and the drawn attempt is still a round: it
+happened and its pops count, it just does not advance the series, so a round number can appear twice.
+
 ```java
-public final class TotemHooks implements Listener {
-
-    @EventHandler
-    public void onPop(TotemPopEvent event) {
-        if (event.grade() == PerformanceGrade.PERFECT && !event.inMatch()) {
-            reward(event.player(), event.reactionMillis());
-        }
-    }
-
-    @EventHandler
-    public void onMatchEnd(MatchEndEvent event) {
-        if (event.cancelled()) {
-            return;
-        }
-        UUID winner = event.winner();
-        Match match = event.match();
-        announce(match.participant(winner).name() + " beat " + match.opponent(winner).name()
-                + " " + match.participant(winner).score() + "-" + match.opponent(winner).score());
+@EventHandler
+public void onPop(TotemPopEvent event) {
+    if (event.grade() == PerformanceGrade.PERFECT && !event.inMatch()) {
+        reward(event.player(), event.reactionMillis());
     }
 }
 ```
 
-<Callout type="note" title="MatchEndEvent fires before the result is written">
-Profiles and history are updated after the event, asynchronously. Read the winner and the scores from
-the event, not from the profiles.
-</Callout>
+## What it does not expose
 
-## Types
+No menu openers, no arena editor, no writes to modes or to the grading profile, and no way to edit a
+profile or a record row. Rounds are read through `RoundEndEvent` rather than off a match, and a duel is
+built by `duel(...)` with a mode id and a speed rather than by handing the plugin a rules object of
+your own.
 
-`PerformanceGrade` is `PERFECT`, `EXCELLENT`, `GOOD`, `OK`, `SLOW`, best first; `key()` is the lowercase
-configuration key.
-
-`PerformanceSummary` is the immutable result of a session, a round or a match side:
-
-| Field | Meaning |
-|---|---|
-| `pops()`, `fails()` | Counts. |
-| `bestMillis()`, `worstMillis()`, `averageMillis()`, `totalMillis()` | Reaction times in milliseconds. A `bestMillis` of zero means no pop was recorded. |
-| `currentStreak()`, `bestStreak()` | Pops in a row at the end, and the best run. |
-| `durationMillis()` | How long it lasted. |
-| `score()` | 0 to 100, as [Grading](/docs/exyliatotemtrainer/grading) computes it. |
-| `grades()` | How many pops earned each grade. |
-
-`bestSeconds()`, `averageSeconds()` and `durationSeconds()` are the same numbers in seconds.
+If an integration genuinely needs something that is not here, ask on
+[Discord](https://discord.exylia.net) — a method added to a service is a minor release.

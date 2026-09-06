@@ -1,0 +1,168 @@
+---
+title: "API pública"
+description: "Un solo artefacto por el que responde toda la suite: lo agregas, pides un service y escuchas sus eventos."
+badge: "guide"
+---
+
+Todos los plugins de Exylia publican su API de la misma forma. Hay un artefacto que agregar, una clase
+que llamar y una regla que respetar — y cuando lo sabes para uno, lo sabes para todos.
+
+## Agregarlo a tu proyecto
+
+La API se publica desde el repositorio de ExyliaLib a través de JitPack.
+
+```groovy title="build.gradle"
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compileOnly 'com.github.DiGround-s.ExyliaLib:exylia-api:v1.113.0'
+}
+```
+
+```kotlin title="build.gradle.kts"
+repositories {
+    maven("https://jitpack.io")
+}
+
+dependencies {
+    compileOnly("com.github.DiGround-s.ExyliaLib:exylia-api:v1.113.0")
+}
+```
+
+```xml title="pom.xml"
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>com.github.DiGround-s.ExyliaLib</groupId>
+        <artifactId>exylia-api</artifactId>
+        <version>v1.113.0</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
+```
+
+La versión es el tag del release de ExyliaLib, con la `v` incluida. Los jars de fuentes y javadoc se
+publican junto al artefacto, así que tu IDE te muestra la documentación de cada método sin que salgas
+del editor.
+
+<Callout type="danger" title="compileOnly no es una preferencia de estilo">
+`compileOnly` — `provided` en Maven — es obligatorio, y meter el artefacto dentro de tu propio jar lo
+rompe. Estas clases ya viajan dentro de `ExyliaLib.jar` en el servidor. Una segunda copia en tu jar la
+carga tu classloader, con lo cual pasa a ser una clase *distinta* de la que implementan los plugins, y
+cada búsqueda devuelve vacío. No hay mensaje de error: sencillamente nunca encuentra nada.
+</Callout>
+
+## Declarar la librería
+
+ExyliaLib tiene que habilitarse antes que tú, y tu plugin tiene que tener permiso para ver sus
+clases. Una línea en tu `plugin.yml` resuelve las dos cosas:
+
+```yaml title="plugin.yml"
+depend: [ ExyliaLib ]
+```
+
+Usa `softdepend` si tu plugin igual tiene que cargar en un servidor sin ExyliaLib. En ese caso protege
+cada llamada con el `Optional` que la búsqueda ya te devuelve.
+
+## Pedir un service
+
+Todo pasa por `net.exylia.lib.api.ExyliaAPI`.
+
+```java
+ExyliaAPI.get(ClansService.class)
+         .flatMap(clans -> clans.clanOf(player.getUniqueId()))
+         .ifPresent(clan -> player.sendMessage("Clan: " + clan.name()));
+```
+
+| Llamada | Para qué |
+|---|---|
+| `get(Service.class)` | Una integración blanda. Devuelve `Optional`, vacío si el plugin no está, está deshabilitado o todavía no terminó de habilitarse. |
+| `require(Service.class)` | Un `depend` duro contra el plugin que provee el service. Lanza `IllegalStateException` si no está. |
+| `isAvailable(Service.class)` | Un chequeo de disponibilidad, sin desenvolver nada. |
+
+<Callout type="warning" title="Pídelo donde lo usas, no en onEnable">
+Un service se registra cuando habilita *su* plugin, y el orden de carga del servidor no lo eliges tú.
+Pedirlo dentro de tu propio `onEnable` puede perfectamente preguntar antes de que el otro plugin haya
+arrancado. Resuélvelo en el punto de uso — la búsqueda es leer un mapa — o desde `ServerLoadEvent`.
+</Callout>
+
+## Escuchar eventos
+
+Los plugins que tienen algo a lo que valga la pena reaccionar publican eventos de Bukkit reales, en el
+mismo artefacto, bajo `net.exylia.lib.api.<plugin>.event`. Se registran como cualquier otro listener:
+
+```java
+@EventHandler
+public void onKitClaim(KitClaimEvent event) {
+    if (isTournamentRunning()) event.setCancelled(true);
+}
+```
+
+Cancelar significa que la acción no ocurre y que no se manda ningún mensaje — explicarle al jugador
+por qué te toca a ti. El javadoc de cada evento aclara si un evento no cancelado *garantiza* que la
+acción se completó: algunos sí, y otros van delante de un paso que todavía puede fallar, como un cobro
+o un warmup de teletransporte del que el jugador puede salir caminando.
+
+## Por qué el contrato vive en la librería
+
+Vale la pena saberlo, porque explica la regla del `compileOnly` y por qué hay un artefacto en vez de
+veinte.
+
+Todos los plugins de Exylia se distribuyen como un loader: el servidor carga un jar chico que después
+desencripta el plugin real dentro de un classloader propio. La delegación de dependencias de Bukkit
+llega hasta ese loader y ahí se detiene — así que una interfaz que viaje *adentro* de un plugin es
+invisible para cualquier otro plugin, digan lo que digan los `plugin.yml`, y una copia enviada en los
+dos son dos clases sin relación.
+
+ExyliaLib es el único jar que todos los plugins del servidor ya ven. Por eso el contrato vive ahí, y
+`exylia-api` son esas mismas clases empaquetadas para que compiles contra ellas.
+
+## Los services
+
+| Service | Plugin | Paquete |
+|---|---|---|
+| `ArmorSkinService` | ExyliaArmorSkin | `net.exylia.lib.api.armorskin` |
+| `ArmorTrimService` | ExyliaArmorTrims | `net.exylia.lib.api.armortrims` |
+| `ArrowsService` | ExyliaArrows | `net.exylia.lib.api.arrows` |
+| `CaptureService` | ExyliaCapture | `net.exylia.lib.api.capture` |
+| `ClansService` | ExyliaClans | `net.exylia.lib.api.clans` |
+| `ClassesService` | ExyliaClasses | `net.exylia.lib.api.classes` |
+| `EventsService` | ExyliaEvents | `net.exylia.lib.api.events` |
+| `FfaService` | ExyliaFFA | `net.exylia.lib.api.ffa` |
+| `HitEffectService` | ExyliaHitEffect | `net.exylia.lib.api.hiteffect` |
+| `KillEffectService` | ExyliaKillEffect | `net.exylia.lib.api.killeffect` |
+| `PracticeService` | ExyliaPracticeCore | `net.exylia.lib.api.practice` |
+| `ShieldsService` | ExyliaShields | `net.exylia.lib.api.shields` |
+| `StaffService` | ExyliaStaff | `net.exylia.lib.api.staff` |
+| `SurvivalService` | ExyliaSurvivalCore | `net.exylia.lib.api.survival` |
+| `TotemTrainerService` | ExyliaTotemTrainer | `net.exylia.lib.api.totemtrainer` |
+
+La página **API** de cada plugin documenta qué expone su service y qué deja afuera a propósito.
+
+## Lo que no está
+
+Cada service está curado, no es un espejo de los internos del plugin. Los abridores de menú, los flujos
+de editor, las escrituras administrativas y las filas crudas de configuración quedan afuera a
+propósito: un contrato público no se puede romper después, así que lleva lo que una integración
+realmente necesita y nada que solo tuviera sentido dentro de una versión de un plugin.
+
+Si te falta algo, pídelo en [Discord](https://discord.exylia.net) en vez de recurrir a reflection —
+agregar un método a un service es un release menor, y reflection contra un plugin con loader no
+funciona de entrada.
+
+## Versionado
+
+`exylia-api` sigue versionado semántico de forma independiente de la versión de ExyliaLib. Los métodos
+y services nuevos son releases menores y nunca te rompen. Quitar o cambiar uno sería un release mayor,
+que es justamente por qué la superficie se cura antes de publicarla y no después.
+
+Compilar contra un tag más viejo que el que corre el servidor está bien. Al revés no: un método
+agregado en una API más nueva no está en un `ExyliaLib.jar` viejo, y en runtime no encuentra nada.

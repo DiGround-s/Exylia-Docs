@@ -1,64 +1,130 @@
 ---
 title: "API"
-description: "Leer y aplicar diseños desde otro plugin."
+description: "Qué puede hacer otro plugin con los diseños de escudo: leer lo que alguien lleva, estamparlo en un objeto y consultar la biblioteca."
 badge: "dev"
 ---
 
-`ShieldsAPI` es estática y es la vía soportada para que otro plugin lea lo que alguien lleva puesto, o
-para estampar un diseño en un objeto.
-
-## Leer
+`ShieldsService` lee las ranuras de un jugador, estampa diseños en escudos y llega a la biblioteca
+compartida. Con una sola búsqueda tienes toda la superficie.
 
 ```java
-ShieldDesign active = ShieldsAPI.getActiveDesign(player);
-ShieldDesign inSlot = ShieldsAPI.getSlotDesign(player, 2);
-
-int slot   = ShieldsAPI.getActiveSlot(player);
-int max    = ShieldsAPI.getMaxSlots(player);
-int used   = ShieldsAPI.getSlotCount(player);
+ExyliaAPI.get(ShieldsService.class).ifPresent(shields ->
+    shields.activeDesign(player.getUniqueId())
+           .ifPresent(design -> player.sendMessage("Layers: " + design.layers().size())));
 ```
 
-`getActiveDesign` devuelve `null` cuando el jugador no lleva ninguno, así que quien lo dibuje tiene que
-decidir qué aspecto tiene "sin diseño".
+Un resultado vacío en la búsqueda significa que los diseños de escudo no forman parte de este
+servidor, no que algo haya fallado.
 
-## Aplicar
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
+Exylia y están en la [página de la API pública](/docs/exylialib/api).
+</Callout>
 
-```java
-ShieldsAPI.applyActiveDesign(player);
-ShieldsAPI.applyDesignToShield(shield, design);
-```
+## Los patrones y los colores son ids, no enums
 
-`applyActiveDesign` es lo que hay que llamar después de que tu propio plugin le dé un escudo a alguien —
-un kit, una caja, un equipamiento de arena. Sin eso el jugador lleva un escudo liso hasta que el
-siguiente cambio de inventario despierte al listener.
+Una capa es un patrón de estandarte vanilla dibujado en un color de tinte, y las dos mitades son los
+ids que usa la configuración del propio servidor: strings, no enums de Bukkit. No hay un conjunto
+cerrado sobre el que hacer un `switch`. `availablePatterns()` y `availableColors()` son lo que ofrece
+*este* servidor, el dueño los cura, y los permisos se arman con esos mismos ids
+(`exyliashields.pattern.<patrón>` y `exyliashields.color.<color>`).
 
-`applyDesignToShield` estampa un diseño en un `ItemStack` que tengas en la mano, que es el que se usa
-cuando el escudo aún no está en el inventario de nadie.
+Es a propósito. Una capa que nombra algo que el servidor en marcha no conoce sigue siendo una línea del
+diseño de alguien y no un error: las capas desconocidas se descartan cuando se dibuja el escudo, no
+cuando se lee.
 
-## Permisos
+## Las ranuras de un jugador
 
-```java
-boolean pattern = ShieldsAPI.hasPatternPermission(player, "stripe_bottom");
-boolean colour  = ShieldsAPI.hasColorPermission(player, "red");
-```
+Las ranuras viven en memoria mientras el jugador está conectado y se escriben cuando se va. Todo lo que
+aquí recibe un `UUID` lee esa memoria: un jugador desconectado, o cuya fila todavía no llegó, responde
+como si no tuviera nada, en vez de dejar al que llama esperando a una base de datos.
 
-Las mismas comprobaciones que hace el plugin, así que un menú tuyo apaga exactamente lo mismo que el
-suyo.
+Las ranuras se numeran desde cero. Los menús las muestran una más arriba, porque los jugadores cuentan
+desde uno y este contrato no.
 
-## Declarar la dependencia
+| Método | Qué hace |
+|---|---|
+| `Optional<ShieldDesign> activeDesign(UUID player)` | El diseño que lleva puesto. Vacío si la ranura activa está vacía o no está cargado. |
+| `int activeSlot(UUID player)` | La ranura que lleva puesta, contada desde cero. También cero para un jugador que no está cargado, porque cero es donde empieza todo el mundo — pregunta a `activeDesign` para distinguirlos. |
+| `Optional<ShieldDesign> designInSlot(UUID player, int slot)` | El diseño de una ranura. Vacío si la ranura está vacía, fuera de rango, o el jugador no está cargado. |
+| `int slotCount(UUID player)` | En cuántas ranuras tiene diseños — el tamaño de su lista guardada, huecos de diseños borrados incluidos. `0` si no está cargado. |
+| `int maxSlots(Player player)` | Cuántas ranuras le permiten sus permisos, contando desde el `exyliashields.max_slots.<n>` más alto que tenga. Quien no tenga ninguno no puede usar ninguna ranura. |
 
-```yaml title="plugin.yml"
-softdepend:
-  - ExyliaShields
-```
+## Lo que ofrece el servidor
 
-```java
-if (Bukkit.getPluginManager().isPluginEnabled("ExyliaShields")) {
-    ShieldsAPI.applyActiveDesign(player);
-}
-```
+| Método | Qué hace |
+|---|---|
+| `List<String> availablePatterns()` | Los ids de patrón con los que este servidor deja dibujar, en el orden del menú. Una lista curada, no todos los patrones vanilla. |
+| `List<String> availableColors()` | Los ids de color con los que este servidor deja dibujar, en el orden del menú. |
+| `int maxLayers()` | Cuántas capas puede llevar un diseño. |
+| `boolean mayUsePattern(Player player, String patternId)` | Si un jugador puede dibujar con un patrón. |
+| `boolean mayUseColor(Player player, String colorId)` | Si un jugador puede dibujar con un color. |
+
+Los permisos se vuelven a comprobar cada vez que el jugador entra, y las capas cuyo derecho perdió se
+descartan de lo que había armado. Un diseño leído de una ranura ya viene filtrado — las dos
+comprobaciones `mayUse` son para quien está armando uno.
+
+## Dibujar en los escudos
+
+| Método | Qué hace |
+|---|---|
+| `void selectSlot(Player player, int slot)` | Pone al jugador en una de sus ranuras y redibuja el escudo que lleva. Lo mismo que hacer clic en la ranura del menú, mensaje incluido. |
+| `void applyActiveDesign(Player player)` | Dibuja lo que lleva puesto en el escudo que tiene en las manos. Primero la mano secundaria, después la principal; si no lleva escudo, no se toca nada. |
+| `void applyDesign(ItemStack shield, ShieldDesign design)` | Dibuja un diseño en un escudo, en el sitio. Lo que no sea un escudo se deja como está. |
+| `void stripDesign(ItemStack shield)` | Le quita todos los patrones a un escudo y lo deja liso. |
+
+`applyActiveDesign` es lo que hay que llamar después de darle un escudo a un jugador — un kit, una
+caja, un equipamiento de arena. Un objeto que llegó de otro lado no lleva ningún diseño hasta que algo
+se lo dibuja.
+
+Las capas que nombran un patrón o un color que este servidor no tiene se saltan en vez de rechazarse:
+una línea desconocida no es razón para dibujar un escudo en blanco.
 
 <Callout type="warning" title="Hilo principal">
-Aplicar un diseño escribe en el inventario de un jugador. Llámalo desde el hilo del propio jugador — en
-Folia, el de su región.
+Dibujar en un escudo que lleva un jugador escribe en su inventario. Llámalo desde el hilo del propio
+jugador — en Folia, el de su región.
 </Callout>
+
+## La biblioteca compartida
+
+La biblioteca es una tabla, no una caché, así que los dos métodos que la leen devuelven un
+`CompletableFuture`. Se completa fuera del hilo principal — cualquier cosa que toque el mundo desde ahí
+hay que reprogramarla de vuelta.
+
+| Método | Qué hace |
+|---|---|
+| `void importDesign(Player player, long libraryId)` | Copia un diseño publicado en la primera ranura libre del jugador. A quien no tenga ninguna libre se le avisa y no se copia nada. |
+| `CompletableFuture<Optional<PublishedDesign>> publishedDesign(long libraryId)` | Un diseño de la biblioteca. Vacío si la biblioteca no tiene esa fila, o tiene una de la que ya no se puede leer nada. |
+| `CompletableFuture<List<PublishedDesign>> mostUsedDesigns(int limit)` | Los diseños más copiados, primero los de más usos. Lo que lista el navegador in-game. |
+
+Una copia importada sigue atada a la fila de la que salió hasta que el jugador la edita, que es lo que
+hace que la cuenta de usos signifique algo. Cada copia se cuenta una vez por jugador, así que llevarse
+el mismo diseño dos veces no lo hace parecer el doble de popular.
+
+## Los tipos
+
+`ShieldDesign` lleva `libraryId()`, `baseColor()` y `layers()`: un color de base con capas dibujadas
+encima, de abajo hacia arriba. `libraryId()` es `0` cuando el diseño no es el diseño publicado de
+nadie; si no, es la fila que recibe `importDesign`, y sobrevive a las ediciones porque identifica la
+fila y no esta disposición concreta de capas. Puedes construir uno y pasárselo a `applyDesign`; el
+constructor copia la lista de capas, así que quien siga editando la lista que pasó no está editando un
+diseño que ya se está dibujando.
+
+`ShieldLayer` es un `pattern()` y un `color()` — `stripe_top` y `RED`, con los ids del propio servidor.
+
+`PublishedDesign` lleva `id()`, `owner()`, `ownerName()`, `uses()` y `design()`. `ownerName()` se
+guarda como texto en vez de consultarse, porque el jugador puede haberse cambiado el nombre desde
+entonces, y un navegador que muestra el nombre con el que el diseño se hizo popular es el honesto.
+
+Un diseño es una foto, no una vista viva. Cada edición dentro del plugin produce uno nuevo, así que lo
+que tienes es la disposición que había en la ranura cuando preguntaste — vuelve a leerlo en vez de
+guardarlo entre ticks.
+
+## Lo que no expone
+
+Editar queda afuera a propósito. Las ranuras las escribe el editor in-game, y publicar, renombrar o
+borrar una fila de la biblioteca son cosas del jugador que la posee — un contrato público no se puede
+romper después, así que lleva lo que una integración realmente necesita y no los flujos que solo
+tienen sentido dentro de los menús.
+
+Si te falta algo, pídelo en [Discord](https://discord.exylia.net).

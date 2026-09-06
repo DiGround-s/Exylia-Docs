@@ -1,92 +1,124 @@
 ---
 title: "API"
-description: "Leer la clase, la energía y las marcas de un jugador desde otro plugin."
+description: "Leer el catálogo de clases, sus habilidades y su energía, y qué lleva puesto, en qué está entrando y con cuántas marcas está un jugador."
 badge: "dev"
 ---
 
-A `ClassesAPI` se llega a través de la instancia del plugin:
+`ClassesService` es por donde otro plugin lee y maneja ExyliaClasses: el catálogo de clases, qué puede
+hacer y qué gasta cada una, y qué es un jugador ahora mismo.
 
 ```java
-ClassesAPI api = ExyliaClasses.getInstance().getClassesAPI();
+ExyliaAPI.get(ClassesService.class).ifPresent(classes ->
+    classes.classOf(player.getUniqueId())
+           .ifPresent(found -> player.sendMessage("Class: " + found.name())));
 ```
 
-## Leer un jugador
-
-```java
-boolean inClass = api.isInClass(player);
-
-Optional<ClassDefinition> current = api.getCurrentClass(player);
-String name = current.map(ClassDefinition::getDisplayName).orElse("None");
-
-double energy = api.getPlayerEnergy(player);   // 0 si no se le sigue
-int marks     = api.getPlayerMarks(player);    // 0 si no está marcado
-```
-
-`getCurrentClass` viene vacío tanto para un jugador sin estado como para uno cuyo estado existe pero no
-tiene clase, así que quien llama nunca tiene que distinguir esos dos casos.
-
-## Leer el listado
-
-```java
-Collection<ClassDefinition> all = api.getAllClasses();
-Optional<ClassDefinition> rogue = api.getClass("rogue");
-```
-
-Los ids son los nombres de archivo en minúsculas, así que `classes/Rogue.yml` es `"rogue"`.
-
-## Leer el estado directamente
-
-```java
-Optional<PlayerState> state = api.getPlayerState(player);
-```
-
-`PlayerState` lleva la clase actual, el valor de energía, el contador de marcas y el arma de marca. Es
-estado vivo, no una foto fija.
-
-## Cambiar un jugador
-
-```java
-api.removeFromClass(player);
-```
-
-La única mutación que ofrece la API. Retira las pasivas, las pasivas especiales, la barra de energía,
-las marcas y todos los cooldowns de habilidades que declarase la clase, y avisa al jugador.
-
-<Callout type="warning" title="Quitarla no impide que vuelva a entrar">
-La armadura sigue puesta, así que el siguiente cambio de armadura — o la siguiente recarga — lo mete
-directamente en un warmup de la misma clase. Para dejarlo fuera, quítale la armadura o revócale el
-permiso de la clase.
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
+Exylia y están en la [página de la API pública](/docs/exylialib/api).
 </Callout>
 
-## Qué lleva un ClassDefinition
+Las clases se direccionan por **id de clase**: el nombre del archivo de la clase, en minúsculas.
 
-| Método | Tipo |
+<Callout type="warning" title="Una clase se lleva puesta, no se elige">
+Un jugador está en una clase porque lo dice su armadura. Aquí nada asigna una directamente: `apply` le
+pide al plugin entrar en una clase igual que si se equipara la armadura, con su mensaje de rechazo y
+su warmup, y la clase termina sola en cuanto se quita una pieza. Un plugin que quiere a alguien en una
+clase le da la armadura que nombra `PlayerClass.equipment()`.
+</Callout>
+
+## El catálogo
+
+| Método | Qué hace |
 |---|---|
-| `getId()` | `String` |
-| `getDisplayName()` | `String` |
-| `getPermission()` | `String` — `"NONE"` cuando la clase es libre |
-| `hasPermission()` | `boolean` — falso para `NONE`, vacío o ausente |
-| `getEquipment()` | `Map<EquipmentSlot, Material>` |
-| `getPassiveEffects()` | `List<String>` — las líneas de efecto en bruto |
-| `getSpecialPassives()` | `List<SpecialPassive>` |
-| `getWarmup()` | `Warmup` |
-| `getEnergy()` | `Energy`, o `null` si la clase no tiene |
-| `getAbilities()` | `Map<Material, Ability>` |
-| `getHoldEffects()` | `Map<Material, HoldEffect>` |
-| `getWeapons()` | `Map<Material, Weapon>` — cada una un `MarkWeapon` o un `BackstabWeapon` |
+| `classes()` | Todas las clases que declara el servidor. Una foto: sirve para montar un menú, sobra dentro de un bucle. |
+| `classById(String classId)` | Una clase como `Optional<PlayerClass>`. Vacío cuando el catálogo no declara ese id. |
+| `exists(String classId)` | Si el catálogo declara ese id. |
+| `abilities(String classId)` | Qué puede hacer la clase. Vacío cuando la clase no existe o no tiene habilidades. |
+| `energy(String classId)` | El recurso que gasta, como `Optional<ClassEnergy>`. Vacío cuando la clase no existe o no gasta nada. |
 
-## Declarar la dependencia
+## Permisos
 
-```yaml title="plugin.yml"
-softdepend:
-  - ExyliaClasses
-```
+| Método | Qué hace |
+|---|---|
+| `canUse(Player, String classId)` | Si puede entrar en la clase. `false` cuando la clase no existe. |
 
-No hay eventos a los que escuchar, y no se persiste nada — la clase de un jugador existe solo mientras
-está conectado.
+Responde con la regla del propio servidor, así que una clase que el dueño dejó abierta vale para todos
+en vez de rechazarse por falta de un nodo que nadie declaró.
 
-<Callout type="note" title="Hilos">
-Todo esto lee estado en memoria y se puede llamar desde cualquier hilo. Actuar sobre el resultado —
-aplicar efectos, cambiar a un jugador — va en el hilo que posee a ese jugador, que en Folia es para lo
-que está `Tasks.runAtEntity` de ExyliaLib.
+## Qué es un jugador
+
+| Método | Qué hace |
+|---|---|
+| `isInClass(UUID player)` | Si ahora mismo está en una clase. |
+| `classOf(UUID player)` | Su clase como `Optional<PlayerClass>`. Vacío cuando no está en ninguna. |
+| `energyOf(UUID player)` | Cuánta energía tiene ahora mismo. `0` cuando no está en ninguna clase o su clase no gasta nada. |
+| `marks(UUID player)` | Cuántas marcas lleva. Cero es el estado normal. |
+| `isMarked(UUID player)` | Si está marcado. |
+| `warmingUp(Player)` | La clase en la que está entrando, como `Optional<PlayerClass>`. Vacío cuando no está en warmup. |
+| `classForEquipment(Player)` | La clase que nombra su armadura actual, esté o no en ella. Vacío cuando no nombra ninguna. |
+
+`energyOf` sube sola entre llamadas, al ritmo de recarga de la propia clase: léela al dibujar en vez
+de cachearla. `isMarked` no es lo mismo que `marks` por encima de cero: una marca también pertenece al
+arma que la puso, y la que se queda sin su arma deja de contar. Las marcas las pone en un jugador el
+arma de otro, y esa misma arma las gasta.
+
+Entre ponerse la armadura y que la clase surta efecto hay un retraso que configura el dueño, y quien
+está en él todavía no está en ninguna clase: por eso existe `warmingUp`, y por eso
+`classForEquipment` es lo que distingue "lleva la armadura equivocada" de "está en warmup".
+`classForEquipment` es además lo que pregunta una vista previa: en qué convertiría este set a alguien,
+antes de que se lo ponga.
+
+## Acciones
+
+| Método | Qué hace |
+|---|---|
+| `apply(Player, String classId)` | Le pide al jugador entrar en una clase. No devuelve nada. |
+| `remove(Player)` | Lo saca de su clase, con sus efectos pasivos, sus barras y sus cooldowns. |
+
+`apply` corre el mismo flujo que equipar la armadura: el permiso se comprueba y se rechaza en voz
+alta, y el warmup corre antes de que la clase surta efecto, así que cuando la llamada vuelve todavía
+no pasó nada — por eso no informa nada de vuelta. Lee `classOf` después si necesitas saberlo. La clase
+igual termina en cuanto la armadura del jugador deja de nombrarla, así que esto no es una forma de
+meter a alguien en una clase para la que no está vestido.
+
+`remove` no toca la armadura, así que volver a ponerse una pieza lo mete otra vez en la clase.
+
+## Tipos
+
+**`PlayerClass`** — `id`, `name` (con los códigos de color dentro), `permission` y `equipment`, un mapa
+de `EquipmentSlot` a `Material`. `gated()` responde si entrar en la clase necesita nodo siquiera; un
+`permission` vacío significa que la clase está abierta a todos. `equipment` es parte de la forma
+pública a propósito: un plugin de kits que reparte esas piezas repartió la clase, y uno que quita una
+pieza se la quitó.
+
+**`ClassAbility`** — `name`, `trigger` (el `Material` que el jugador sostiene para usarla, y también su
+clave dentro de la clase, así que no hay dos habilidades que compartan uno), `type`, `cooldown` en
+segundos, `energyCost` y `radius` en bloques. Lo que la habilidad aplica de verdad queda fuera: son
+líneas que el dueño escribe en la sintaxis del plugin. Lo que hay aquí es lo que necesita un menú, una
+tienda o un HUD para describir una habilidad sin reproducirla.
+
+**`ClassEnergy`** — `name` (maná, foco, furia), `symbol`, `max` y `regenPerTick`. Pertenece a la clase
+y no al jugador: todos los arqueros tienen el mismo techo y el mismo ritmo de recarga, y lo que tiene
+uno concreto ahora mismo es `energyOf`. `regenPerTick` está para que una barra se pueda predecir entre
+actualizaciones en vez de consultarla.
+
+**`AbilityType`** — a quién alcanza una habilidad: `SELF`, `TO_CLAN`, `TO_ALLY`, `TO_ENEMY`,
+`TO_CLAN_AND_ALLY`. Los valores que saben de clanes no significan nada en un servidor sin clanes: ahí
+no encuentran a nadie y la habilidad se comporta como `SELF`. `SELF` ignora el `radius`.
+
+<Callout type="tip" title="Las consultas son baratas, las acciones no">
+Todo lo que devuelve un valor lee la caché del plugin y es seguro desde un redibujado de menú o un
+placeholder. `apply` y `remove` corren el mismo flujo que corre un cambio de equipo del propio jugador
+— efectos de poción, cooldowns, barras, los mensajes que ve —, así que llama a eso desde el hilo
+principal.
 </Callout>
+
+## Lo que no expone
+
+No hay eventos: ExyliaClasses no publica ninguno. La ejecución de habilidades, los efectos pasivos,
+los internos de armas y marcas y las filas crudas de configuración quedan fuera a propósito: un
+contrato público no se puede romper después, así que lleva lo que una integración necesita y nada que
+solo tuviera sentido dentro de una versión.
+
+Si de verdad te falta algo, pídelo en [Discord](https://discord.exylia.net).

@@ -1,188 +1,119 @@
 ---
 title: "API"
-description: "ArmorSkinAPI: registrar skins y tipos de animación desde código, construir objetos de skin, aplicar y quitar skins y redibujar a un jugador."
+description: "Leer el catálogo de skins, el vestidor de un jugador y las skins escritas en la armadura."
+badge: "dev"
 ---
 
-Todo lo que necesita otro plugin está en una clase, `net.exylia.exyliaArmorSkin.api.ArmorSkinAPI`.
+`ArmorSkinService` es por donde otro plugin lee y maneja ExyliaArmorSkin: el catálogo, el vestidor en
+el que elige el jugador, y las skins escritas en la armadura misma.
 
 ```java
-import net.exylia.exyliaArmorSkin.api.ArmorSkinAPI;
-
-ArmorSkinAPI api = ArmorSkinAPI.get();
-```
-
-`get()` lanza `IllegalStateException` mientras el plugin no está activo, así que añade
-`softdepend: [ExyliaArmorSkin]` a tu `plugin.yml` y llámalo desde `onEnable` o después.
-
-## Skins
-
-```java
-import net.exylia.exyliaArmorSkin.skin.SkinDefinition;
-import org.bukkit.Color;
-
-SkinDefinition ruby = new SkinDefinition(
-        "ruby",                                   // id, comparado en minúsculas
-        "{error}&lRUBY",                          // nombre
-        java.util.Set.of(),                       // piezas: vacío significa las cuatro
-        new SkinDefinition.Look(Color.fromRGB(0xC0102A), "ward", "redstone"),
-        SkinDefinition.Effects.NONE);
-
-api.register(ruby);
-```
-
-| Método | Devuelve | Qué hace |
-|---|---|---|
-| `register(SkinDefinition)` | — | Añade o reemplaza una skin. Sobrevive a `/armorskinsadmin reload`. |
-| `unregister(String id)` | `boolean` | Quita una, venga del código o del archivo. |
-| `skin(String id)` | `Optional<SkinDefinition>` | Busca una. |
-| `exists(String id)` | `boolean` | Si un id resuelve. |
-| `registry()` | `SkinRegistry` | El registro en sí: `all()`, `ids()`, `onChange(listener)`. |
-
-<Callout type="note" title="Código y archivo conviven">
-Una recarga reemplaza solo las entradas que venían de `skins.yml`. Una skin registrada aquí se queda
-hasta que se desregistre o el servidor pare, y `/armorskinsadmin list` la muestra como a cualquier otra.
-</Callout>
-
-### Qué contiene una definición
-
-| Componente | Tipo | Notas |
-|---|---|---|
-| `id` | `String` | Se guarda en la armadura. Se compara sin espacios y en minúsculas. |
-| `name` | `String` | Admite tokens de paleta y códigos `&`. |
-| `pieces` | `Set<ArmorPiece>` | `HELMET`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`. **Un conjunto vacío pasa a ser las cuatro.** |
-| `look` | `Look` | `color`, `trimPattern`, `trimMaterial` — las claves de trim se resuelven al dibujar. `Look.PLAIN` para ninguno. |
-| `effects` | `Effects` | `onEquip`, `onUnequip`, `ambient`, `set`. `Effects.NONE` para ninguno, y un constructor de tres argumentos deja el bonus de set vacío. |
-| `animation` | `SkinAnimation` | Opcional, `null` para color fijo. |
-| `icon` | `String` | Material opcional del objeto de skin, `null` para usar `skin-item.material`. |
-
-Hay tres constructores: sin animación ni icono, con animación, y con los dos.
-
-`Effects.set` es un `SetBonus(EffectConfig onComplete, EffectConfig onBreak, Ambient ambient)`: lo que
-suena cuando todas las piezas que la skin encaja se llevan con ella, lo que suena mientras dura y lo
-que suena al terminar. `SetBonus.NONE` es el vacío.
-
-`permission()` devuelve el nodo que permite usar la skin, `exyliaarmorskin.skin.<id>` con el id en
-minúsculas. Es derivado, nunca almacenado, así que una skin registrada aquí tiene nodo como cualquier
-otra.
-
-## Tipos de animación
-
-```java
-import net.exylia.exyliaArmorSkin.skin.SkinAnimation;
-import net.exylia.exyliaArmorSkin.skin.animation.AnimationSpec;
-
-api.animations().register("strobe2", spec -> new SkinAnimation() {
-    @Override public long intervalTicks() { return spec.intervalTicks(); }
-    @Override public org.bukkit.Color colorAt(long frame, org.bukkit.Color base) {
-        return frame % 2 == 0 ? org.bukkit.Color.WHITE : org.bukkit.Color.BLACK;
-    }
+ExyliaAPI.get(ArmorSkinService.class).ifPresent(skins -> {
+    skins.select(player, ArmorPiece.HELMET, "sakura");
+    skins.skinItem("sakura").ifPresent(item -> player.getInventory().addItem(item));
 });
 ```
 
-Un tipo registrado se puede usar al momento desde `animations.yml` como `type: strobe2`, y desde
-código:
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
+Exylia y están en la [página de la API pública](/docs/exylialib/api).
+</Callout>
 
-```java
-SkinAnimation animation = api.animations()
-        .create("rainbow", new AnimationSpec(2, java.util.List.of(), java.util.Map.of()))
-        .orElseThrow();
-```
+Todo se direcciona por **id de skin**, comparado sin distinguir mayúsculas. Un id que el catálogo no
+declara no es un error — una recarga puede quitar uno mientras una caja todavía lo reparte —, así que
+las búsquedas devuelven vacío y las escrituras devuelven `false`.
 
-| Método de `animations()` | Qué hace |
-|---|---|
-| `register(String, Function<AnimationSpec, SkinAnimation>)` | Añade un tipo. |
-| `unregister(String)` | Quita uno. |
-| `has(String)` / `types()` | Qué tipos existen. |
-| `resolve(String)` | Primero un preset de `animations.yml`, si no un tipo directo con sus valores por defecto. |
-| `create(String type, AnimationSpec)` | Construye una desde un spec. |
-
-`AnimationSpec` es `(long intervalTicks, List<Color> colors, Map<String, String> options)`, con el
-intervalo con suelo de un tick y `option(name, fallback)` para leer números y booleanos.
-
-## Objetos
-
-| Método | Devuelve | Qué hace |
-|---|---|---|
-| `skinItem(String id, Player viewer)` | `Optional<ItemStack>` | El objeto de skin, renderizado para ese jugador. |
-| `remover(Player viewer)` | `ItemStack` | Un removedor. |
-| `isSkinItem(ItemStack)` | `boolean` | Si una pila es un objeto de skin. |
-| `isRemover(ItemStack)` | `boolean` | Si una pila es un removedor. |
-| `skinId(ItemStack)` | `Optional<String>` | El id de un objeto de skin **o** de una armadura con skin. |
-| `hasSkin(ItemStack armor)` | `boolean` | Si una pieza de armadura lleva skin. |
-
-## Aplicar y quitar
-
-```java
-ApplyResult result = api.apply(chestplate, "ruby");
-if (result.success()) {
-    // el peto sigue igual salvo por un valor de datos
-}
-```
+## El catálogo
 
 | Método | Qué hace |
 |---|---|
-| `apply(ItemStack armor, String skinId)` | Aplica una skin por id. |
-| `apply(ItemStack armor, ItemStack skinItem)` | Aplica la skin que lleva un objeto de skin. El objeto no se consume. |
-| `remove(ItemStack armor, Player receiver)` | Quita la skin y la devuelve como objeto. |
-| `strip(ItemStack armor)` | Quita la skin sin devolver nada. |
+| `skins()` | Todas las skins que declara el servidor, en el orden en que las dibuja el menú. Una foto: sirve para montar una tienda, sobra dentro de un bucle. |
+| `skin(String skinId)` | Una skin como `Optional<ArmorSkin>`. Vacío cuando el catálogo no declara ese id. |
+| `exists(String skinId)` | Si el catálogo declara ese id. |
 
-Todas las comprobaciones se hacen antes de escribir nada, así que una llamada que falla deja las dos
-pilas exactamente como estaban. La armadura se modifica in situ.
+## Permisos
 
-<Callout type="warning" title="La API ignora los permisos por skin, la visualización no">
-`apply()` nunca comprueba `exyliaarmorskin.skin.<id>`: es la herramienta con la que concedes una
-skin. Pero con `hide-without-permission: true`, a un portador sin ese nodo se le sigue mostrando la
-armadura real, así que concede el nodo junto con la skin salvo que la quieras invisible.
-</Callout>
-
-### `ApplyResult`
-
-| Valor | Significado |
+| Método | Qué hace |
 |---|---|
-| `APPLIED` | La skin se escribió. |
-| `REMOVED` | La skin se borró. |
-| `NOT_ARMOR` | La pila no es una pieza de armadura equipable — o es un objeto de skin. |
-| `UNSUPPORTED_PIECE` | La skin no incluye esa ranura. |
-| `UNKNOWN_SKIN` | No hay ninguna skin registrada con ese id. |
-| `INVALID_ITEM` | La pila pasada como objeto de skin no lo es, o no lleva id. |
-| `ALREADY_SKINNED` | La armadura ya lleva una skin. |
-| `NO_SKIN` | La armadura no lleva skin. |
-| `INVENTORY_FULL` | El receptor no tiene ranura libre; no se cambió nada. |
-| `NO_PERMISSION` | Al jugador le falta el nodo de la skin. Solo lo devuelve el arrastre en el inventario, nunca la API. |
+| `canUse(Player, String skinId)` | Si puede llevar la skin en al menos una pieza. |
+| `canUse(Player, String skinId, ArmorPiece)` | Si puede llevarla en esa pieza concreta. |
 
-`success()` es cierto para `APPLIED` y `REMOVED`.
+Los dos responden con la regla del propio servidor, que incluye el ajuste que apaga los permisos por
+completo: una tienda que pregunta recibe la misma respuesta que daría el vestidor, no una
+comprobación cruda de nodo. La forma por pieza existe aparte porque un rango se vende ranura a
+ranura: quien tiene el nodo del casco lleva la skin en la cabeza y en ningún otro sitio.
 
 ## El vestidor
 
-| Método | Devuelve | Qué hace |
-|---|---|---|
-| `wardrobe()` | `Wardrobe` o `null` | El vestidor, o `null` mientras `behaviour.mode` sea `item`. |
-| `wear(Player, ArmorPiece, String skinId)` | `ApplyResult` | Pone una skin en una ranura, o en todas las que el jugador pueda usar cuando la pieza es `null`. |
-| `undress(Player, ArmorPiece)` | `ApplyResult` | Limpia una ranura, o el vestidor entero cuando la pieza es `null`. |
-| `chosen(Player, ArmorPiece)` | `Optional<String>` | La skin elegida para esa ranura, lleve lo que lleve puesto. |
+| Método | Qué hace |
+|---|---|
+| `mode()` | De dónde salen las skins que dibuja este servidor, como `SkinMode`. |
+| `selected(UUID player, ArmorPiece)` | El id de skin elegido para esa ranura, como `Optional<String>`. Vacío cuando no eligió ninguna, el vestidor está apagado, o su vestidor todavía se está leyendo. |
+| `select(Player, ArmorPiece, String skinId)` | Fija la elección de esa ranura. `true` cuando quedó guardada. |
+| `clear(Player, ArmorPiece)` | Quita la skin elegida de una ranura. `true` cuando había algo que quitar. |
+| `clearAll(Player)` | Quita todas las skins elegidas. `true` cuando había algo que quitar. |
 
-Escriben en la fila del jugador, nunca en la armadura. Con el vestidor apagado, `wear` responde
-`UNKNOWN_SKIN`, `undress` responde `NO_SKIN` y `chosen` viene vacío.
+`selected` es una elección, no un resultado: sigue puesta con la ranura vacía, y la skin vuelve a
+aparecer en cuanto el jugador se equipa una armadura que encaje.
+
+<Callout type="warning" title="select fija, y aquí además comprueba">
+`select` fija en vez de alternar: llamarlo dos veces deja la skin puesta. En este plugin **sí pasa por
+permiso**: el vestidor ofrece una sola escritura, esa escritura aplica la regla del servidor, y a un
+jugador que no puede llevar la skin se le rechaza. Es lo contrario de ExyliaArmorTrims y ExyliaArrows,
+donde el ajuste del propio dueño dice que la selección nunca se limita por nodo. Pregunta antes por
+`canUse(Player, String, ArmorPiece)` si quieres saber el motivo antes de pedirlo.
+</Callout>
+
+## Skins en los objetos
+
+| Método | Qué hace |
+|---|---|
+| `skinOf(ItemStack armor)` | El id de skin escrito en esa armadura, como `Optional<String>`. Vacío cuando no lleva ninguna. |
+| `apply(ItemStack armor, String skinId)` | Escribe una skin en la armadura, en el sitio, conservando todo lo demás que tenía. `true` cuando se escribió. |
+| `strip(ItemStack armor)` | Quita la skin y no devuelve nada a cambio. `true` cuando había una. |
+| `skinItem(String skinId)` | Un objeto de skin listo para entregar, como `Optional<ItemStack>`. Vacío cuando el catálogo no declara esa skin. |
+| `isSkinItem(ItemStack)` | Si un objeto es uno de los objetos de skin del plugin. |
+
+Pregunta `isSkinItem` antes de que un cofre, una tienda o un intercambio traten un stack como botín
+normal: un objeto de skin se dibuja como le convenga y no es el material que aparenta.
 
 ## Redibujar
 
 | Método | Qué hace |
 |---|---|
-| `refresh(Player)` | Reconstruye los visuales de ese jugador desde su armadura real y se los reenvía. |
-| `refreshAll()` | Lo mismo para todos los conectados. |
+| `refresh(Player)` | Recalcula cómo se ve el jugador y lo reenvía a todos los que puedan verlo. |
 
-Llama a `refresh` después de cambiar una pieza equipada por detrás del plugin: el evento de cambio de
-armadura cubre equipar y desequipar, pero no un objeto que reescribiste in situ mientras estaba
-puesto.
+Solo hace falta cuando cambió algo que el service no conoce: un permiso concedido en caliente, un
+objeto cambiado por otro plugin. Todas las escrituras de arriba ya redibujan.
 
-## Qué se guarda en el objeto
+## Tipos
 
-Un valor de datos persistentes bajo el namespace del plugin:
+**`ArmorSkin`** — `id`, `name` (con los códigos de color dentro), `permission` (el nodo que concede la
+skin en todas las piezas donde encaja) y `pieces`. `supports(ArmorPiece)` responde si encaja en una
+ranura. Cómo se *ve* la skin no está a propósito: eso es el código de dibujo del plugin, y `skinItem`
+ya cubre lo que necesita un tercero.
 
-| Clave | En | Valor |
-|---|---|---|
-| `exyliaarmorskin:skin` | Armadura y objetos de skin | El id de la skin. |
-| `exyliaarmorskin:item` | Solo objetos de skin y removedores | `skin` o `remover`. |
+**`ArmorPiece`** — `HELMET`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`. `slot()` da el `EquipmentSlot` de
+Bukkit, para que quien lea un inventario no mantenga un switch propio al día.
 
-La armadura se distingue de un objeto de skin por la segunda clave: una pila que lleva las dos es un
-objeto de skin, nunca armadura con skin.
+**`SkinMode`** — de dónde sale la skin dibujada: `ITEM` (solo lo que un objeto de skin escribió en la
+armadura), `WARDROBE` (solo lo que eligió quien la lleva; los objetos de skin no hacen nada) o `BOTH`.
+`usesItems()` y `usesWardrobe()` responden sin switch. Vale la pena preguntarlo antes de escribir
+nada: la mitad que un servidor no usa devuelve `false` o vacío en lugar de lanzar, así que una
+integración escrita para las dos funciona en cualquiera.
+
+<Callout type="tip" title="Las consultas son baratas, las acciones no">
+Todo lo que devuelve un valor lee la caché del plugin y es seguro desde un redibujado de menú o un
+placeholder. Todo lo que cambia un vestidor escribe en la base de datos y redibuja al jugador para
+todos los que lo ven: llama a eso desde el hilo principal, y no más seguido de lo que podría un
+jugador.
+</Callout>
+
+## Lo que no expone
+
+No hay eventos: ExyliaArmorSkin no publica ninguno. Los abridores de menú, el flujo de edición del
+vestidor, las definiciones de animación y las filas crudas de configuración quedan fuera a propósito:
+un contrato público no se puede romper después, así que lleva lo que una integración necesita y nada
+que solo tuviera sentido dentro de una versión.
+
+Si de verdad te falta algo, pídelo en [Discord](https://discord.exylia.net).

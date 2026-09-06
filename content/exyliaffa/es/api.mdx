@@ -1,124 +1,169 @@
 ---
 title: "API"
-description: "Las tres fachadas públicas para integrar ExyliaFFA desde otro plugin."
+description: "Lee arenas, controla entradas y salidas, y saca de ExyliaFFA los contadores de kills y los ajustes del jugador."
 badge: "dev"
 ---
 
-La API es estática y está pensada para llamarse por reflexión desde otro classloader, que es
-exactamente como la usan ExyliaPracticeCore, ExyliaEvents y ExyliaSandBox.
-
-Paquete: `net.exylia.exyliaFFA.api`.
-
-## FFAAPI
-
-Todo lo relacionado con sesiones, kits y menús.
+`FfaService` es todo lo que otro plugin puede leer o accionar en ExyliaFFA: las arenas y quién está
+dentro, las entradas y expulsiones que ejecuta un comando, los contadores guardados detrás de un
+leaderboard y los ajustes que el jugador controla. Una sola búsqueda te da todo eso.
 
 ```java
-import net.exylia.exyliaFFA.api.FFAAPI;
-
-// Menús
-FFAAPI.openSelector(player);
-
-// Entrar
-FFAAPI.joinFFA(player, "nodebuff");
-FFAAPI.joinFFAWithSpawn(player, "nodebuff", spawnId);
-FFAAPI.joinFFAWithKit(player, "nodebuff", spawnId, kitId);
-
-// Reaparecer
-FFAAPI.respawnFFA(player);
-FFAAPI.respawnFFAWithSpawn(player, "nodebuff", spawnId);
-FFAAPI.respawnFFAWithKit(player, "nodebuff", spawnId, kitId);
-
-// Salir y espectar
-FFAAPI.leaveFFA(player);
-FFAAPI.spectateFFA(player, "nodebuff");
-FFAAPI.kickFFA(staff, target);
-
-// Invitaciones
-FFAAPI.inviteFFA(inviter, target);
-FFAAPI.acceptInvite(player, "DiGround");
-FFAAPI.declineInvite(player, "DiGround");
-
-// Kits
-FFAAPI.editKit(player);
-FFAAPI.saveKit(player);
-FFAAPI.cancelKit(player);
-FFAAPI.resetKit(player, kitId);
-
-// Estado
-boolean inFfa      = FFAAPI.isInFFA(player);
-boolean editing    = FFAAPI.isEditing(player);
-boolean available  = FFAAPI.isAvailable(player);
-String  reason     = FFAAPI.getUnavailableReason(player);
-int     streak     = FFAAPI.getCurrentStreak(player);
-
-Optional<FFASession> session = FFAAPI.getPlayerSession(player);
+ExyliaAPI.get(FfaService.class).ifPresent(ffa ->
+    ffa.arenaOf(player.getUniqueId())
+       .ifPresent(arena -> player.sendMessage("Fighting in " + arena)));
 ```
 
-Los tres escalones de entrada existen porque el flujo real tiene tres pasos: `joinFFA` abre el
-selector de spawn si hace falta, ese selector llama a `joinFFAWithSpawn`, y si además hay que elegir
-kit, se llega a `joinFFAWithKit`. Si tu integración ya sabe spawn y kit, llama directamente al
-tercero y no se abre ningún menú.
-
-<Callout type="note" title="isAvailable y getUnavailableReason">
-Van en pareja. `isAvailable` responde si el jugador puede entrar a un FFA ahora mismo — no está en
-cola de práctica, ni en un evento, ni en la sandbox —, y `getUnavailableReason` explica por qué no.
-Consulta la primera antes de invitar o teletransportar.
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
+Exylia y están en la [página de la API pública](/docs/exylialib/api).
 </Callout>
 
-## StatsAPI
+La arena, las estadísticas y los ajustes por jugador son un solo plugin desde fuera — un menú de
+estadísticas quiere los tres —, así que son una interfaz con tres secciones en vez de tres services
+que buscar por separado.
 
-```java
-import net.exylia.exyliaFFA.api.StatsAPI;
-import net.exylia.exyliaFFA.stats.model.StatsType;
-
-Optional<PlayerStatsEntity> stats = StatsAPI.getStats(player, "nodebuff");
-
-CompletableFuture<List<PlayerStatsEntity>> top =
-        StatsAPI.getLeaderboard("nodebuff", StatsType.KILLS);
-
-StatsAPI.resetPlayerStats(player, "nodebuff");
-StatsAPI.resetPlayerStats(uuid, "nodebuff");
-StatsAPI.resetArenaStats("nodebuff");
-```
-
-`getLeaderboard` devuelve un `CompletableFuture` porque consulta la base de datos: encadena con
-`thenAccept` y vuelve al hilo principal antes de tocar la API de Bukkit.
-
-## PlayerSettingsAPI
-
-```java
-import net.exylia.exyliaFFA.api.PlayerSettingsAPI;
-import net.exylia.exyliaFFA.settings.model.PlayerSetting;
-
-boolean on = PlayerSettingsAPI.isEnabled(player, PlayerSetting.SCOREBOARD);
-boolean onOffline = PlayerSettingsAPI.isEnabled(uuid, PlayerSetting.GLOW_LINKED_PLAYER);
-
-boolean nuevo = PlayerSettingsAPI.toggle(player, PlayerSetting.COMBAT_ACTION_BAR);
-
-PlayerSettingsAPI.openSettings(player);
-```
-
-Constantes de `PlayerSetting`: `SCOREBOARD`, `SPAWN_WAYPOINTS`, `COMBAT_ACTION_BAR`,
-`LINKED_ACTION_BAR`, `COMBAT_MESSAGES`, `KILL_STREAK_NOTIFICATIONS`, `KILL_STREAK_BROADCASTS`,
-`KILL_DEATH_BROADCASTS`, `GLOW_LINKED_PLAYER`, `SPECTATOR_ACTIONBAR_HINT`.
-
-## Declarar la dependencia
-
-```yaml title="plugin.yml"
-softdepend:
-  - ExyliaFFA
-```
-
-Con `softdepend`, tu plugin carga aunque ExyliaFFA no esté; comprueba la presencia antes de llamar:
-
-```java
-if (Bukkit.getPluginManager().isPluginEnabled("ExyliaFFA")) {
-    FFAAPI.openSelector(player);
-}
-```
-
-<Callout type="warning" title="Hilo principal">
-Salvo `getLeaderboard`, todos los métodos esperan ejecutarse en el hilo del jugador. En Folia, eso
-significa el hilo de la región donde está el jugador.
+<Callout type="warning" title="Las consultas son baratas, las acciones no">
+Todo lo que devuelve un valor lee una caché y puedes llamarlo desde el redibujado de un menú o desde
+un placeholder, salvo las dos excepciones documentadas que devuelven un `CompletableFuture` y van a
+la base de datos. Todo lo que devuelve `void` ejecuta el mismo flujo que el comando del propio
+jugador — comprobaciones de permisos, los mensajes que ve y a veces un menú que tiene que responder
+—, así que llámalo en el hilo principal y no más veces de las que un jugador podría provocarlo.
 </Callout>
+
+## Arenas y estado
+
+| Método | Qué hace |
+|---|---|
+| `Optional<FfaArena> arena(String arenaId)` | Una arena por su id. Vacío si ninguna tiene ese id. |
+| `List<FfaArena> arenas()` | Todas las arenas cargadas, incluidas las desactivadas — un menú quiere dibujarlas en gris, no esconderlas. |
+| `boolean isInFfa(UUID player)` | Si está en alguna arena, vivo o espectando. |
+| `Optional<String> arenaOf(UUID player)` | El id de la arena en la que está. Vacío si no está en ninguna. |
+| `boolean isAlive(UUID player)` | Si está peleando en vez de mirando. |
+| `boolean isSpectating(UUID player)` | Si está mirando en vez de peleando. |
+| `List<UUID> alivePlayers(String arenaId)` | Todos los vivos de una arena. Vacío si la arena no existe. |
+| `List<UUID> spectators(String arenaId)` | Todos los espectadores de una arena. Vacío si la arena no existe. |
+| `int aliveCount(String arenaId)` | Cuántos están vivos. `0` si la arena no existe. |
+| `int playerCount(String arenaId)` | Cuántos hay dentro, peleando y mirando juntos. |
+| `boolean isFull(String arenaId)` | Si llegó a su límite de jugadores. |
+| `int secondsUntilRegeneration(String arenaId)` | Segundos hasta que se regenera. `0` si nunca lo hace o si no existe. |
+| `boolean isProtected(Location location)` | Si una ubicación está dentro de la zona protegida de spawn de alguna arena. |
+| `boolean isAvailable(Player player)` | Si nada más del servidor tiene ahora mismo a ese jugador. |
+| `Optional<String> unavailableReason(Player player)` | Por qué no se le puede tomar, en palabras pensadas para un log. Vacío si está libre. |
+
+`isProtected` es la pregunta que quiere un listener de combate o de bloques. Hazla aquí en vez de
+rehacer la comprobación desde la configuración de la arena, y una forma o un radio que cambió un
+administrador se responde bien sin que tu código sepa siquiera que la geometría de la zona existe.
+
+`isAvailable` es una sola pregunta al registro de sesiones de todo el servidor, así que un modo que
+se añada más adelante — un evento, un duelo, la sandbox — queda cubierto sin que el método cambie. Un
+`true` no es una reserva: la entrada toma el hueco de forma atómica y es lo que decide de verdad.
+
+<Callout type="warning" title="Un UUID aquí no es un jugador desconectado">
+`isInFfa`, `arenaOf`, `isAlive`, `isSpectating` y `stats` reciben un `UUID`, pero el estado que hay
+detrás vive en los managers de sesión del plugin, que solo conocen a un `Player` conectado. Cada uno
+resuelve el id con `Bukkit.getPlayer(uuid)` y responde `false` o vacío cuando eso no devuelve nada.
+
+Para el estado de arena esa es la respuesta honesta: un jugador desconectado no está en ninguna
+arena. Para los contadores no lo es: un jugador desconectado sigue teniendo filas. Montar un
+leaderboard o consultar a alguien que no está conectado es `statsOf(UUID)`, que va a la base de
+datos, o `leaderboard(...)`, que ya es una consulta a la base de datos.
+</Callout>
+
+## Acciones
+
+Cada una ejecuta el mismo flujo que el comando del propio jugador, con sus comprobaciones de permisos
+y los mensajes que él ve. No informan de nada: al jugador se le dice qué pasó, y quien necesite
+saberlo debería leer el estado después.
+
+| Método | Qué hace |
+|---|---|
+| `void join(Player player, String arenaId)` | La entrada del propio jugador. Si la arena ofrece más de un spawn o más de un kit seleccionable, se le abre el menú que pregunta, y la entrada termina cuando responde. |
+| `void join(Player player, String arenaId, String spawnId, String kitId)` | La misma entrada con las dos decisiones ya tomadas, así que no aparece ningún menú sea cual sea la configuración de la arena. Un spawn o un kit desconocido cae en la selección propia de la arena en vez de fallar la entrada. |
+| `void leave(Player player)` | Lo saca de la arena en la que esté. |
+| `void spectate(Player player, String arenaId)` | Lo mete en una arena como espectador. |
+| `void respawn(Player player)` | Devuelve a la pelea a un jugador que está espectando. No hace nada si no está espectando, que es lo que responde su propio botón de reaparecer. |
+| `void kick(Player kicker, Player target)` | Saca a un jugador por autoridad de otro. Los permisos del que expulsa se comprueban igual que en su propio comando, así que esto no los salta. |
+| `void invite(Player inviter, Player target)` | Invita a un jugador a la arena del que invita. |
+
+## Estadísticas
+
+Los contadores se guardan por arena. `FfaService.GLOBAL_ARENA` — la cadena `global` — es el id de
+arena que guarda los totales del jugador sumando todas: el plugin escribe esa segunda fila en cada
+cambio de contador, así que un leaderboard de todo el servidor es la misma consulta que uno de arena
+y no una suma calculada al leer.
+
+| Método | Qué hace |
+|---|---|
+| `Optional<FfaStats> stats(UUID player, String arenaId)` | Los contadores de una arena desde la caché. Vacío si no hay nada cacheado para ese par, lo que incluye a cualquier jugador desconectado. |
+| `CompletableFuture<List<FfaStats>> statsOf(UUID player)` | Todas las filas del jugador, una por arena más sus totales. Va a la base de datos, así que responde por jugadores desconectados; el future se completa en un hilo de base de datos. |
+| `CompletableFuture<List<FfaStats>> leaderboard(String arenaId, FfaStatistic statistic)` | Los mejores de una arena por un contador, el mejor primero. Consulta salvo que el plugin tenga una copia caliente, y en cualquier caso se completa en un hilo de base de datos. |
+| `Optional<List<FfaStats>> cachedLeaderboard(String arenaId, FfaStatistic statistic)` | El leaderboard que ya está en memoria, sin consultar nunca. Vacío significa que todavía no se construyó, no que la arena no tenga jugadores. |
+| `int currentStreak(UUID player)` | Su racha de kills en vivo, el contador del que viven las recompensas por racha. `0` si no tiene ninguna. |
+| `void resetStats(UUID player, String arenaId)` | Pone a cero los contadores de una arena. Funciona con el jugador desconectado, y deja la fila en su sitio con todo a cero en vez de borrarla. |
+
+`currentStreak` no es `FfaStats.currentStreak()`. Ese es el valor guardado de una arena; este es lo
+que el jugador lleva ahora mismo, y una muerte o una salida lo reinician.
+
+Para un placeholder o el redibujado de un menú usa `cachedLeaderboard`: la diferencia entre «todavía
+no construido» y «sin jugadores» es justo lo que le permite imprimir un valor de relleno en vez de
+bloquear un tick con una consulta.
+
+## Ajustes del jugador
+
+| Método | Qué hace |
+|---|---|
+| `boolean isSettingEnabled(UUID player, FfaSetting setting)` | La respuesta del propio jugador para un ajuste. |
+| `boolean isSettingAvailable(FfaSetting setting)` | Si un administrador dejó la función encendida para todo el servidor. |
+| `boolean toggleSetting(Player player, FfaSetting setting)` | Lo invierte y devuelve el valor que queda. |
+
+Las dos lecturas están separadas a propósito. Un jugador que nunca abrió el menú de ajustes los tiene
+todos encendidos — una elección ausente es un valor por defecto, no un «no» —, y un ajuste que un
+administrador apagó no es una elección que el jugador pueda hacer, diga lo que diga su respuesta. Lo
+que decida si mostrar o no una función tiene que preguntar las dos cosas; un menú de ajustes las
+necesita separadas, porque dibuja la respuesta del jugador sobre una fila que ya puso en gris.
+
+## Tipos
+
+**`FfaArena`** — una foto de la fila guardada: `id`, `displayName`, `maxPlayers`, `kitMode`,
+`enabled`, `regenerationSeconds` (`0` si nunca se regenera) y `permission` (vacío si puede entrar
+cualquiera). Todo lo que cambia mientras se pelea es un método del service, para que leer una arena
+siga siendo un acierto de caché. La región, la forma de la zona protegida y el conjunto de reglas no
+están a propósito: son los tipos de geometría del propio plugin, y `isProtected(Location)` es la
+pregunta que responden.
+
+**`FfaStats`** — `player`, `playerName`, `arenaId`, `kills`, `deaths`, `currentStreak`,
+`bestStreak`, `assists`, `damageDealt`, `playTimeSeconds`, `aliveTimeSeconds`, `kdr` y
+`killsPerMinute`. Dos cosas no se deducen de los nombres:
+
+- `arenaId` forma parte del record en vez de estar implícito. Un jugador tiene tantos de estos como
+  arenas haya jugado, más su fila de `GLOBAL_ARENA`.
+- `playerName` es `null` si el jugador nunca se conectó desde que se escribió la fila, y `kdr` y
+  `killsPerMinute` se guardan en vez de calcularse porque la base de datos ordena los leaderboards
+  por ellos. Siguen la regla que el plugin usa en todas partes: un jugador que nunca murió reporta su
+  número de kills en vez de infinito, para que un leaderboard pueda ordenarlo y un menú imprimirlo.
+
+**`FfaKitMode`** — cómo reparte kits una arena: `SELECTABLE` (elige el jugador, entre los kits que
+lleva la arena) o `RANDOM` (elige la arena en cada aparición).
+
+**`FfaStatistic`** — por qué se ordena un leaderboard: `KILLS`, `DEATHS`, `KDR`, `BEST_STREAK`,
+`ASSISTS`, `DAMAGE_DEALT`, `PLAY_TIME`, `ALIVE_TIME`, `KILLS_PER_MINUTE`. Cada uno nombra un
+componente de `FfaStats` y cada uno tiene un índice de base de datos detrás, y por eso ordenar es
+elegir de este conjunto y no escribir el nombre de un campo cualquiera.
+
+**`FfaSetting`** — los ajustes que controla el jugador: `SCOREBOARD`, `SPAWN_WAYPOINTS`,
+`COMBAT_ACTION_BAR`, `LINKED_ACTION_BAR`, `COMBAT_MESSAGES`, `KILL_STREAK_NOTIFICATIONS`,
+`KILL_STREAK_BROADCASTS`, `KILL_DEATH_BROADCASTS`, `GLOW_LINKED_PLAYER`,
+`SPECTATOR_ACTIONBAR_HINT`.
+
+## Lo que no expone
+
+ExyliaFFA no publica eventos.
+
+Los abridores de menú, el flujo del editor de kits y las escrituras administrativas de `/ffaadmin`
+quedan fuera a propósito, igual que la geometría cruda de las arenas y su conjunto de reglas. Las
+invitaciones se pueden enviar pero no responder desde aquí: aceptar y rechazar son decisiones del
+jugador invitado, tomadas desde su propio cliente.
+
+Si te falta algo, pídelo en [Discord](https://discord.exylia.net) — añadir un método a un service es
+un release menor.

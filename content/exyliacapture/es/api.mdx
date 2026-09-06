@@ -1,78 +1,146 @@
 ---
 title: "API"
-description: "El punto de entrada público para otros plugins."
+description: "Leer los eventos configurados y los que están corriendo, arrancar y parar uno, y leer las estadísticas de jugadores y clanes."
 badge: "dev"
 ---
 
-`net.exylia.exyliaCapture.api.CaptureAPI` es estática, y es la vía soportada para llegar al plugin
-desde otro.
-
-## Iniciar y detener
-
-```java
-import net.exylia.exyliaCapture.api.CaptureAPI;
-
-// Inicia un evento configurado por el id de su configuración.
-Optional<BaseCaptureEvent> started = CaptureAPI.startEvent("koth1");
-
-// Lo mismo, informando a un emisor como hace el comando de administración.
-CaptureAPI.startEvent(sender, "koth1");
-
-// Detiene un evento activo por su id de evento.
-boolean stopped = CaptureAPI.stopEvent(eventId);
-CaptureAPI.stopEvent(sender, eventId);
-```
-
-`startEvent` devuelve vacío cuando el evento no existe, está desactivado, está incompleto o ya está
-corriendo — las mismas comprobaciones que hace el scheduler.
-
-## Consultar estado
+`CaptureService` es por donde otro plugin lee y maneja ExyliaCapture: los eventos que configuró un
+administrador, los que están corriendo ahora mismo, arrancarlos y pararlos, y las estadísticas que
+dejan atrás.
 
 ```java
-Collection<BaseCaptureEvent> running = CaptureAPI.getActiveEvents();
-Optional<BaseCaptureEvent> event     = CaptureAPI.getEvent(eventId);
-boolean active                       = CaptureAPI.isEventActive("koth1");
-
-// Imprime los eventos activos a un emisor, como /captureadmin list.
-CaptureAPI.listEvents(sender);
+ExyliaAPI.get(CaptureService.class).ifPresent(capture ->
+    capture.activeEvents().forEach(event ->
+        getLogger().info(event.displayName() + " has " + event.participants() + " players")));
 ```
 
-<Callout type="note" title="El id de configuración y el de evento no son lo mismo">
-`isEventActive` y `startEvent` toman el id de la **configuración** — el que le pusiste en el panel.
-`getEvent` y `stopEvent` toman el id de la instancia que está corriendo.
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
+Exylia y están en la [página de la API pública](/docs/exylialib/api).
 </Callout>
 
-## Jugadores y estadísticas
-
-```java
-CapturePlayerStats stats = CaptureAPI.getPlayerStats(uuid);
-
-Optional<BaseCaptureEvent> suEvento = CaptureAPI.getEventByParticipant(uuid);
-```
-
-`getPlayerStats` devuelve los totales globales del jugador: victorias, capturas, puntos ganados,
-puntos de leaderboard y tiempo capturado. Un jugador sin historial devuelve un registro a cero, no
-null.
-
-`getEventByParticipant` responde en qué evento activo está participando un jugador, si es que está en
-alguno — la forma directa de que tu propio plugin no estorbe mientras alguien está en un evento.
-
-## Declarar la dependencia
-
-```yaml title="plugin.yml"
-softdepend:
-  - ExyliaCapture
-```
-
-Con `softdepend` tu plugin carga aunque ExyliaCapture no esté, así que comprueba antes de llamar:
-
-```java
-if (Bukkit.getPluginManager().isPluginEnabled("ExyliaCapture")) {
-    CaptureAPI.startEvent("koth1");
-}
-```
-
-<Callout type="warning" title="Hilo principal">
-Estos métodos inician y detienen eventos, lo que genera entidades, hologramas y tareas. Llámalos desde
-el hilo del servidor — en Folia, desde el hilo dueño de la región donde está el evento.
+<Callout type="warning" title="CaptureEvent no es un evento de Bukkit">
+En este plugin un "evento" es un **modo de juego que se está jugando** — un KOTH, una conquista, un
+payload —, no algo para lo que registres un listener. `CaptureEvent` es un record común que describe
+una partida de uno de esos modos, y ExyliaCapture no publica ningún evento de Bukkit. Nada de esta
+página se escucha: todo se lee y se llama.
 </Callout>
+
+Una **config** es un evento que montó un administrador; una **partida** es una ocurrencia suya. Existe
+como mucho una partida de cada config a la vez, y la partida lleva el id de su config: por eso
+`start(String)`, `stop(String)` y `event(String)` toman la misma cadena, y una config se puede volver
+a arrancar en cuanto su partida terminó.
+
+## Eventos configurados
+
+| Método | Qué hace |
+|---|---|
+| `config(String configId)` | Una config como `Optional<CaptureConfig>`. Vacío cuando ninguna config tiene ese id. |
+| `configs()` | Todas las configs de evento, habilitadas o no. |
+| `startableConfigs()` | Las configs que se podrían arrancar ahora mismo: habilitadas, completas y sin partida en curso. |
+| `eventTypes()` | Todos los tipos de evento que el plugin sabe correr, como `Set<String>` de ids de tipo. |
+
+Una config a la que le falta su zona queda fuera de `startableConfigs()` pero sigue apareciendo en
+`configs()`, para que un menú de administración pueda mostrarla como incompleta en vez de esconderla.
+
+<Callout type="note" title="Los tipos de evento son un registro, no un enum">
+`CaptureConfig.type()` es un `String` porque los tipos son un registro con el que se puede extender el
+plugin: KOTH, conquista, payload y el resto son lo que viene de fábrica, no lo que es posible, y un
+modo registrado por otro plugin también aparece ahí. Compara un tipo contra `eventTypes()` y no contra
+una constante tuya.
+</Callout>
+
+## Eventos en curso
+
+| Método | Qué hace |
+|---|---|
+| `event(String eventId)` | Un evento en curso como `Optional<CaptureEvent>`. Vacío cuando no hay nada corriendo con ese id. |
+| `activeEvents()` | Todos los eventos que están corriendo ahora mismo. Vacío cuando no hay ninguno. |
+| `isRunning(String configId)` | Si esa config tiene una partida en curso. |
+| `eventOf(UUID player)` | El evento en el que participa un jugador, como `Optional<CaptureEvent>`. Vacío cuando no participa en ninguno. |
+| `participants(String eventId)` | Todos los que participan, como `List<UUID>`. Vacío cuando no hay nada corriendo con ese id. |
+| `points(String eventId, UUID player)` | Lo que lleva puntuado un jugador. `0` cuando el evento no está corriendo o no puntúa por puntos. |
+| `scores(String eventId)` | La puntuación de todos, como `Map<UUID, Integer>`. Vacío en un modo que no puntúa por puntos. |
+
+Un jugador cuenta como participante desde el primer momento en que pisa una zona, y sigue contando
+hasta que el evento termina: por eso `eventOf` responde también por alguien que ya se fue caminando,
+que es lo que necesita una recompensa o un scoreboard. `scores` es una foto de los marcadores, así que
+se puede ordenar y dibujar sin que el siguiente tick la cambie por debajo.
+
+## Acciones
+
+| Método | Qué hace |
+|---|---|
+| `start(String configId)` | Arranca una partida de una config. Devuelve el id de la partida nueva, o vacío cuando no pudo arrancar. |
+| `stop(String eventId)` | Termina una partida antes de tiempo. `true` cuando había algo corriendo con ese id. |
+
+`start` se niega cuando la config está deshabilitada, incompleta o ya corriendo, y lo dice en el log
+del plugin en vez de lanzar: una automatización que arranca eventos por horario no tendría que atrapar
+nada.
+
+`stop` termina el evento igual que lo termina que se le acabe el reloj: se resuelve un ganador con las
+puntuaciones que haya y se reparten las recompensas. A propósito no hay forma de cancelar uno sin
+recompensas: un evento parado en el que jugadores participaron sigue siendo un evento en el que
+participaron.
+
+## Estadísticas
+
+| Método | Qué hace |
+|---|---|
+| `stats(UUID player)` | Los totales de un jugador en todos los eventos. |
+| `stats(UUID player, String configId)` | Los totales de un jugador en un evento. |
+| `clanStats(String clanId)` | Los totales de un clan en todos los eventos. |
+| `topPlayers(int limit)` | Los mejores jugadores en general, como `CompletableFuture<List<CaptureStats>>`, el mejor primero. |
+| `topPlayers(String configId, int limit)` | Lo mismo para un evento. |
+| `topClans(int limit)` | Los mejores clanes en general, como `CompletableFuture<List<CaptureClanStats>>`, el mejor primero. |
+| `cachedTopPlayers()` | El podio que el plugin mantiene caliente para sus propios placeholders, el mejor primero. |
+| `cachedTopClans()` | Lo mismo para clanes. |
+
+`stats` lee la caché y nunca falla: un jugador sin fila recibe una con todos los contadores a cero, y
+la fila real se busca en segundo plano para la llamada siguiente.
+
+<Callout type="tip" title="Los futures son lo único que consulta">
+`topPlayers` y `topClans` van a la base de datos y completan en un hilo de base de datos. Para un
+placeholder o un redibujado de menú usa mejor `cachedTopPlayers()` y `cachedTopClans()`: diez filas
+refrescadas por temporizador, y vacías hasta que corre el primer refresco, que es justo la distinción
+que necesita un placeholder — puede imprimir un valor de reserva en vez de bloquear un tick con una
+consulta.
+</Callout>
+
+## Tipos
+
+**`CaptureConfig`** — `id` (que además es con lo que se arranca el evento), `displayName`, `type` (del
+registro), `enabled`, `iconMaterial` y `maxDurationMillis`, que vale `0` cuando el evento corre hasta
+que alguien gane. La zona, las tablas de recompensas y los ajustes propios del modo quedan fuera: son
+la geometría y los tipos de recompensa del propio plugin, y no hay nada ahí sobre lo que un tercero
+pueda actuar sin ser también dueño del modo.
+
+**`CaptureEvent`** — una foto de una partida: `id` (el id de su config), `displayName`, `type`,
+`state`, `elapsedMillis`, `remainingMillis`, `infiniteDuration` y `participants`, la cantidad de
+jugadores que estuvieron dentro de una zona al menos una vez. El plugin tickea una partida varias veces
+por segundo, así que los tiempos de aquí son los que había en el momento de la consulta: vuelve a
+preguntar en vez de guardarte una entre ticks.
+
+**`CaptureStats`** — `player`, `eventConfigId`, `wins`, `captures`, `timeCapturedSeconds`, `points` y
+`leaderboardPoints`. Una sola forma cubre los dos alcances: `eventConfigId` va vacío para los totales
+de todos los eventos y nombra la config en la fila de un evento. Un jugador que nunca participó igual
+tiene uno de estos con todos los contadores a cero, así que un menú o un placeholder nunca tiene que
+manejar una fila ausente.
+
+**`CaptureClanStats`** — `clanId`, `wins`, `captures`, `points`, `leaderboardPoints`. Solo se escribe
+cuando un evento corre en modo clan, que necesita un plugin de clanes instalado: sin él cada evento
+puntúa de forma individual y estos se quedan a cero.
+
+**`CaptureState`** — en qué punto de su vida está una partida: `IDLE` (construida y sin arrancar, o ya
+terminada y a punto de olvidarse), `RUNNING` (el reloj corre y las zonas están vivas) o `ENDING` (hay
+ganador y se están repartiendo las recompensas).
+
+## Lo que no expone
+
+No hay eventos de Bukkit: ExyliaCapture no publica ninguno, y los "eventos" de arriba son modos de
+juego. La geometría de las zonas, las tablas de recompensas, las escrituras del programador de
+horarios, los menús de administración y las filas crudas de configuración quedan fuera a propósito: un
+contrato público no se puede romper después, así que lleva lo que una integración necesita y nada que
+solo tuviera sentido dentro de una versión.
+
+Si de verdad te falta algo, pídelo en [Discord](https://discord.exylia.net).

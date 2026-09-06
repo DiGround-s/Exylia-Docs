@@ -1,85 +1,136 @@
 ---
 title: "API"
-description: "Qué puede hacer otro plugin con los efectos de golpe."
+description: "Qué puede hacer otro plugin con los efectos de golpe: el catálogo, lo que eligió un jugador y lo que lleva un arma."
+badge: "dev"
 ---
 
+`HitEffectService` lee el catálogo de ExyliaHitEffect, cambia lo que lleva un jugador y ata efectos a
+las armas. Con una sola búsqueda tienes toda la superficie.
+
 ```java
-HitEffectAPI api = ExyliaHitEffect.getInstance().api();
+ExyliaAPI.get(HitEffectService.class).ifPresent(effects ->
+    effects.chosenEffect(player.getUniqueId())
+           .ifPresent(effect -> player.sendMessage("Hit effect: " + effect.name())));
 ```
 
-Todo trabaja con **ids de efecto** — las claves que declara `effects.yml`, comparadas sin importar
-mayúsculas.
+Un resultado vacío en la búsqueda significa que los efectos de golpe no forman parte de este servidor,
+no que algo haya fallado.
+
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
+Exylia y están en la [página de la API pública](/docs/exylialib/api).
+</Callout>
+
+## Todo funciona con ids
+
+Los efectos y las categorías se nombran por las claves que declara `effects.yml`. Los ids están
+normalizados — minúsculas, letras, dígitos y guiones bajos — y se comparan sin importar mayúsculas, así
+que el id que una tienda guardó el mes pasado sigue resolviendo después de que el dueño lo reescribiera
+con otras mayúsculas.
 
 <Callout type="note" title="Aquí no se comprueba ningún permiso">
-Un plugin que llama esto ya decidió que el jugador puede tener el efecto: una caja, una recompensa de
-rango, una tienda. Que lo anule un nodo que el comprador todavía no tiene no es lo que pidió.
+Un plugin que llama esto ya decidió que el jugador puede tener el efecto: una caja abierta, un rango
+comprado, una recompensa reclamada. Que lo anule un nodo que el comprador todavía no tiene no es lo que
+pidió. `mayUse` está para quien sí quiera la comprobación, en sus propios términos.
 </Callout>
 
 ## El catálogo
 
 | Método | Qué hace |
 |---|---|
-| `effects()` | Todos los efectos declarados, en el orden del archivo. |
-| `effect(String id)` | Uno, como `Optional<EffectDefinition>`. |
-| `exists(String id)` | Si el id nombra alguno. |
+| `List<HitEffect> effects()` | Todos los efectos declarados, en el orden del archivo. Es una foto: sirve para armar una página de tienda, sobra dentro de un bucle que podría pedir un id. |
+| `Optional<HitEffect> effect(String effectId)` | Un efecto por id. Vacío si el archivo no declara ninguno con ese id. |
+| `boolean effectExists(String effectId)` | Si el efecto existe. La forma barata de `effect`, para validar lo que escribió un jugador o lo que nombró una config. |
+| `List<HitEffectCategory> categories()` | Todas las categorías, en el orden en que se dibujan las pestañas. |
+| `Optional<HitEffectCategory> category(String categoryId)` | Una categoría por id. Vacío si el archivo no declara ninguna con ese id. |
+| `List<HitEffect> effectsIn(String categoryId)` | Los efectos de una categoría, en el orden en que se dibujan. Vacío si la categoría no existe. |
+| `boolean mayUse(Player player, String effectId)` | Si un jugador puede usar un efecto: su propio permiso, el de todos los efectos a la vez o el de su categoría entera. Un id desconocido nunca está permitido, así que un id viejo se lee como bloqueado y no como gratis. |
 
-Un `EffectDefinition` lleva `id()`, `categoryId()`, `name()`, `icon()`, `description()`,
-`priority()`, `steps()` y `weapons()`, además de `permission()`, `mayUse(Player)` y
-`fits(Material)`.
+## Lo que eligió un jugador
 
-## Lo que lleva un jugador
-
-| Método | Qué hace |
-|---|---|
-| `chosen(Player)` | El efecto que lo sigue, vacío si no eligió ninguno. |
-| `choose(Player, String id)` | Se lo pone. Devuelve `false` si el id no nombra nada. |
-| `clear(Player)` | Se lo quita. |
-
-## La lista de favoritos
+Todo lo que recibe un `UUID` lee lo que hay en memoria de un jugador conectado. Alguien cuya fila
+todavía no llegó responde como si no hubiera elegido nada, en vez de dejar al que llama esperando a una
+base de datos.
 
 | Método | Qué hace |
 |---|---|
-| `favourites(Player)` | Lo que marcó, en su propio orden. Vacío mientras su fila sigue cargando. |
-| `isFavourite(Player, String id)` | Si un efecto está marcado. |
-| `toggleFavourite(Player, String id)` | Lo marca, o lo desmarca. |
-| `clearFavourites(Player)` | Vacía la lista. |
+| `Optional<HitEffect> chosenEffect(UUID player)` | El efecto que eligió en el menú. Vacío si no eligió ninguno. |
+| `boolean chooseEffect(Player player, String effectId)` | Pone el efecto que reproducen sus golpes. `false` si ningún efecto lleva ese id, y entonces no se cambió nada. |
+| `void clearEffect(Player player)` | Lo deja sin efecto elegido. |
+| `List<HitEffect> favourites(UUID player)` | Los efectos que marcó, en el orden en que los marcó — el suyo, no el del catálogo. Vacío si no tiene ninguno o no está cargado. |
+| `boolean isFavourite(UUID player, String effectId)` | Si marcó un efecto. |
+| `boolean toggleFavourite(Player player, String effectId)` | Marca un efecto, o lo desmarca si ya estaba marcado. `false` si ningún efecto lleva ese id. |
+| `void clearFavourites(Player player)` | Vacía sus favoritos. |
 
-## Armas y objetos
+## Lo que lleva un arma
 
 | Método | Qué hace |
 |---|---|
-| `boundTo(ItemStack)` | El efecto atado a un objeto, vacío si no lleva ninguno. |
-| `bind(ItemStack, String id)` | Ata uno; el objeto se modifica en el sitio. |
-| `unbind(ItemStack)` | Lo desata sin devolver nada; también en el sitio. |
-| `token(String id, Player viewer)` | Una ficha lista para entregar. |
-| `remover(Player viewer)` | Un removedor. |
+| `boolean weaponBindingEnabled()` | Si en este servidor se reproducen los efectos atados a las armas. Si no, atar uno escribe un valor que nunca va a sonar — así que pregunta antes de ofrecerlo. |
+| `boolean playerChoiceEnabled()` | Si en este servidor se reproduce el efecto que el jugador eligió en el menú. |
+| `boolean fitsWeapon(String effectId, Material weapon)` | Si el efecto acepta ese tipo de objeto. Un efecto que no declara armas encaja con todas. |
+| `Optional<HitEffect> boundEffect(ItemStack weapon)` | El efecto que lleva un arma. Vacío si no lleva ninguno. |
+| `HitEffectBindResult bind(ItemStack weapon, String effectId)` | Ata un efecto. El objeto se modifica en el sitio, y solo después de que pasen todas las comprobaciones. |
+| `HitEffectBindResult unbind(ItemStack weapon)` | Le quita el efecto sin devolver nada, para quien entrega la ficha por su cuenta. También en el sitio. |
+| `Optional<ItemStack> token(String effectId, Player viewer)` | El objeto que entrega una caja o una tienda: aplicarlo a un arma ata el efecto. Se dibuja para ese jugador, porque el nombre y el lore llevan placeholders. Vacío si ningún efecto lleva ese id. |
+| `ItemStack remover(Player viewer)` | El removedor. Aplicarlo a un arma le quita el efecto y devuelve la ficha. |
 
-`bind` y `unbind` responden con un `ApplyResult`:
+`bind` y `unbind` escriben sobre la copia del stack que les pasas. Pásales una copia y no un objeto que
+siga dentro de una vista de inventario abierta: lo que ve el jugador se redibuja cuando devuelves el
+stack a su sitio.
+
+## HitEffectBindResult
+
+Todas las comprobaciones corren antes de escribir nada, así que cualquier resultado que no sea `BOUND`
+o `UNBOUND` significa que los dos objetos quedaron exactamente como estaban. `isSuccess()` es cierto
+para esos dos y para nada más.
 
 | Valor | Significado |
 |---|---|
-| `BOUND` / `UNBOUND` | Salió bien. `isSuccess()` es cierto solo para estos dos. |
-| `NOT_A_WEAPON` | El objeto no puede llevar un efecto. |
-| `WRONG_WEAPON` | Es un arma, pero no una que encaje con ese efecto. |
-| `UNKNOWN_EFFECT` | El id no nombra nada declarado. |
-| `ALREADY_BOUND` | El arma ya lleva uno. |
-| `NO_EFFECT` | No lleva ninguno. |
-| `INVENTORY_FULL` | La ficha no tenía dónde ir. |
-| `NO_PERMISSION` | El jugador no tiene el efecto. |
-| `INVALID_ITEM` | El objeto usado no era de este plugin. |
+| `BOUND` | El arma ahora lleva el efecto. |
+| `UNBOUND` | El arma ya no lleva ningún efecto. |
+| `NOT_A_WEAPON` | El objeto no es algo a lo que se pueda atar un efecto. |
+| `WRONG_WEAPON` | Es un arma, pero no una con la que este efecto declare encajar. |
+| `UNKNOWN_EFFECT` | Ningún efecto lleva ese id, que es también como se lee un id viejo. |
+| `ALREADY_BOUND` | El arma ya lleva un efecto; desátalo antes de atar otro. |
+| `NO_EFFECT` | El arma no lleva ningún efecto, así que no había nada que quitar. |
+| `FAILED` | Rechazado por un motivo que este contrato no nombra. |
 
-## Un ejemplo
+<Callout type="tip" title="Escribe una rama por defecto">
+Hoy nada produce `FAILED`. Está para que un motivo que se agregue más adelante dentro del plugin te
+llegue como un valor que puedes manejar, y no como una excepción lanzada contra quien haya preguntado
+— que en un servidor vivo es un plugin de terceros sin forma de recuperarse. Maneja los resultados que
+te importan y deja que el resto caiga en una sola rama.
+</Callout>
 
-```java
-HitEffectAPI api = ExyliaHitEffect.getInstance().api();
+## Los records
 
-// Premio de caja: entregar una ficha en vez de dar un nodo.
-api.token("crit_spark", player).ifPresent(token ->
-        player.getInventory().addItem(token));
+`HitEffect` lleva `id()`, `categoryId()`, `name()`, `icon()`, `description()`, `priority()` y
+`permission()` — la descripción con las palabras del archivo, el icono tal como lo nombra el archivo, y
+el permiso que concede ese efecto suelto, para que una tienda pueda venderlo sin saber cómo se arma el
+nodo.
 
-// Un kit que ya viene con el efecto en la espada.
-ItemStack sword = kit.sword();
-if (api.bind(sword, "shockwave").isSuccess()) {
-    player.getInventory().addItem(sword);
-}
-```
+`HitEffectCategory` lleva `id()`, `name()`, `icon()`, `priority()` y `permission()`. Su permiso concede
+todos los efectos de la categoría de una vez, que es lo que permite vender un rango como "todos los
+efectos infernales" en vez de como una lista de ids que crece cada vez que el dueño agrega uno.
+
+Los dos son fotos de lo que decía el archivo cuando preguntaste. Una recarga reemplaza el catálogo
+entero, así que un efecto guardado de una recarga a otra es la descripción vieja de un id que quizá ya
+no exista — vuelve a pedirlo en vez de guardarlo.
+
+## El plugin gemelo
+
+[`KillEffectService`](/docs/exyliakilleffect/api) es el mismo contrato para los efectos que se
+reproducen al matar. Los dos son idénticos en forma a propósito: mismos nombres de método, mismo
+orden, mismos resultados. Una integración escrita contra uno se pasa al otro cambiando los tipos.
+
+## Lo que no expone
+
+Lo que el efecto dibuja de verdad — los pasos de partículas que compila el motor de secuencias — no
+está aquí. Es la implementación de esa versión del efecto, cambia cada vez que el dueño edita una
+línea, y no significa nada fuera del plugin que lo reproduce. Los abridores de menú, el editor
+in-game y las escrituras administrativas quedan afuera por lo mismo: un contrato público no se puede
+romper después, así que lleva lo que una integración realmente necesita y nada que solo tuviera
+sentido dentro de una versión.
+
+Si te falta algo, pídelo en [Discord](https://discord.exylia.net).
