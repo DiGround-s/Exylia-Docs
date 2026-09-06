@@ -19,7 +19,7 @@ export function Footer({ lang }: { lang: Lang }) {
 
           <div>
             <p className="eyebrow mb-4">{f.docs[lang]}</p>
-            <ul className="flex flex-col gap-2.5">
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5 sm:grid-cols-1 lg:grid-cols-2">
               {documentedPlugins.map((p) => (
                 <li key={p.id}>
                   <Link
@@ -55,8 +55,8 @@ export function Footer({ lang }: { lang: Lang }) {
                 </a>
               </li>
               <li>
-                <a href={SITE.spigot} target="_blank" rel="noopener noreferrer" className="text-[13.5px] text-white/45 transition-colors hover:text-white">
-                  SpigotMC ↗
+                <a href={SITE.store} target="_blank" rel="noopener noreferrer" className="text-[13.5px] text-white/45 transition-colors hover:text-white">
+                  {f.store[lang]} ↗
                 </a>
               </li>
             </ul>

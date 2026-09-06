@@ -45,9 +45,17 @@ export type Plugin = {
   /** Minecraft versions the plugin targets. */
   minecraft: string;
   tags: Localized[];
+  /**
+   * Wide 2:1 key art, served from the plugin bucket. Every plugin declares one
+   * even when the file is not uploaded yet: the banner components fall back to
+   * the monogram on a load error, so a missing image degrades instead of
+   * breaking the layout.
+   */
+  banner: string;
+  /** BuiltByBit resource page. Absent for what is not sold on its own. */
+  purchase?: string;
   /** Sidebar structure. Empty for plugins whose docs are not written yet. */
   nav: NavGroup[];
-  links?: { label: string; href: string }[];
 };
 
 export const SITE = {
@@ -55,7 +63,8 @@ export const SITE = {
   url: "https://docs.exylia.net",
   discord: "https://discord.exylia.net",
   hub: "https://exylia.net",
-  spigot: "https://link.exylia.net/@services",
+  /** Every resource on BuiltByBit, where the licences are actually sold. */
+  store: "https://link.exylia.net/@services",
   description: {
     en: "Official documentation for Exylia's Minecraft plugins: installation guides, configuration reference, commands, permissions, placeholders and API.",
     es: "Documentación oficial de los plugins de Exylia: guías de instalación, configuración, comandos, permisos, placeholders y API.",
@@ -283,6 +292,44 @@ const SHIELDS_NAV: NavGroup[] = [
     label: { en: "Reference", es: "Referencia" },
     pages: [
       page("commands", "commands", "comandos"),
+      page("api", "api", "api"),
+      page("faq", "faq", "faq"),
+    ],
+  },
+];
+
+const PRACTICEBOT_NAV: NavGroup[] = [
+  {
+    label: { en: "Getting started", es: "Empezar" },
+    pages: [
+      page("introduction", "introduction", "introduccion"),
+      page("installation", "installation", "instalacion"),
+      page("first-steps", "first-steps", "primeros-pasos"),
+    ],
+  },
+  {
+    label: { en: "Configuring", es: "Configurar" },
+    pages: [
+      page("modes", "modes", "modos"),
+      page("difficulty", "difficulty", "dificultad"),
+      page("equipment", "equipment", "equipamiento"),
+      page("menus", "menus", "menus"),
+    ],
+  },
+  {
+    label: { en: "Systems", es: "Sistemas" },
+    pages: [
+      page("behaviour", "behaviour", "comportamiento"),
+      page("limits", "limits", "limites"),
+      page("compatibility", "compatibility", "compatibilidad"),
+    ],
+  },
+  {
+    label: { en: "Reference", es: "Referencia" },
+    pages: [
+      page("commands", "commands", "comandos"),
+      page("permissions", "permissions", "permisos"),
+      page("configuration", "configuration", "configuracion"),
       page("api", "api", "api"),
       page("faq", "faq", "faq"),
     ],
@@ -629,6 +676,8 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Gamemode", es: "Modo de juego" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/ffa/ExyliaFFABanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-ffa-core-ffa-kitpvp-system.95568/",
     tags: [
       { en: "Arenas", es: "Arenas" },
       { en: "Kits", es: "Kits" },
@@ -636,10 +685,6 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: FFA_NAV,
-    links: [
-      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliapractice",
@@ -653,6 +698,8 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Gamemode", es: "Modo de juego" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/practice/ExyliaPracticeCoreBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-practicecore-ranked-duels.123130/",
     tags: [
       { en: "Queue", es: "Colas" },
       { en: "ELO", es: "ELO" },
@@ -660,10 +707,6 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: PRACTICE_NAV,
-    links: [
-      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliacapture",
@@ -680,6 +723,8 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Events", es: "Eventos" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/capture/ExyliaCaptureBanner.webp",
+    purchase: "https://builtbybit.com/resources/exyliacapture-koth-conquest-dtc-more.105758/",
     tags: [
       { en: "KOTH", es: "KOTH" },
       { en: "Conquest", es: "Conquest" },
@@ -687,10 +732,6 @@ export const plugins: Plugin[] = [
       { en: "Clans", es: "Clanes" },
     ],
     nav: CAPTURE_NAV,
-    links: [
-      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliakilleffect",
@@ -704,16 +745,14 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/kill-effect/ExyliaKillEffectBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-killeffects-eula-friendly.79398/",
     tags: [
       { en: "Displays", es: "Displays" },
       { en: "Cosmetic", es: "Cosmético" },
       { en: "Folia", es: "Folia" },
     ],
     nav: effectsNav(),
-    links: [
-      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliahiteffect",
@@ -727,16 +766,14 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/hit-effect/ExyliaHitEffectBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-hiteffect-eula-friendly.79413/",
     tags: [
       { en: "Displays", es: "Displays" },
       { en: "Combat", es: "Combate" },
       { en: "Folia", es: "Folia" },
     ],
     nav: effectsNav(),
-    links: [
-      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliaarmortrims",
@@ -750,16 +787,14 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/armor-trims/ExyliaArmorTrimsBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-armortrim-eula-friendly.79414/",
     tags: [
       { en: "Trims", es: "Trims" },
       { en: "Cosmetic", es: "Cosmético" },
       { en: "Folia", es: "Folia" },
     ],
     nav: ARMORTRIMS_NAV,
-    links: [
-      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliaarmorskin",
@@ -773,6 +808,8 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/armor-skin/ExyliaArmorSkinBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-armorskin-eula-friendly.123499/",
     tags: [
       { en: "Skins", es: "Skins" },
       { en: "Cosmetic", es: "Cosmético" },
@@ -780,10 +817,6 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: ARMORSKIN_NAV,
-    links: [
-      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliaarrows",
@@ -797,16 +830,14 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/arrows/ExyliaArrowsBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-arrows-eula-friendly.99752/",
     tags: [
       { en: "Displays", es: "Displays" },
       { en: "Projectiles", es: "Proyectiles" },
       { en: "Folia", es: "Folia" },
     ],
     nav: effectsNav(),
-    links: [
-      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliashields",
@@ -820,16 +851,14 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/shields/ExyliaShieldsBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-shields-eula-friendly.99717/",
     tags: [
       { en: "Shields", es: "Escudos" },
       { en: "Editor", es: "Editor" },
       { en: "Folia", es: "Folia" },
     ],
     nav: SHIELDS_NAV,
-    links: [
-      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliaclans",
@@ -843,6 +872,8 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Social", es: "Social" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/clans/ExyliaClansBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-clans.123502/",
     tags: [
       { en: "Clans", es: "Clanes" },
       { en: "Claims", es: "Terrenos" },
@@ -850,10 +881,6 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: CLANS_NAV,
-    links: [
-      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliaclasses",
@@ -867,6 +894,8 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Gamemode", es: "Modo de juego" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/classes/ExyliaClassesBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-classes-modern-hcf-classes-pvp.81542/",
     tags: [
       { en: "Classes", es: "Clases" },
       { en: "HCF", es: "HCF" },
@@ -874,10 +903,6 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: CLASSES_NAV,
-    links: [
-      { label: "BuiltByBit", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliaevents",
@@ -891,6 +916,8 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Events", es: "Eventos" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/events/ExyliaEventsBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-events-core-22-minigames.95715/",
     tags: [
       { en: "Minigames", es: "Minijuegos" },
       { en: "Teams", es: "Equipos" },
@@ -898,10 +925,6 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: EVENTS_NAV,
-    links: [
-      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliasurvivalcore",
@@ -918,6 +941,8 @@ export const plugins: Plugin[] = [
     status: "beta",
     category: { en: "Survival", es: "Survival" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/survival/ExyliaSurvivalCoreBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-survivalcore.123501/",
     tags: [
       { en: "Survival", es: "Survival" },
       { en: "Modular", es: "Modular" },
@@ -925,10 +950,6 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: SURVIVALCORE_NAV,
-    links: [
-      { label: "SpigotMC", href: "https://link.exylia.net/@services" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exylialib",
@@ -942,6 +963,7 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Library", es: "Librería" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/lib/ExyliaLibBanner.webp",
     tags: [
       { en: "Config", es: "Config" },
       { en: "Menus", es: "Menús" },
@@ -949,9 +971,28 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: LIB_NAV,
-    links: [
-      { label: "Discord", href: "https://discord.exylia.net" },
+  },
+  {
+    id: "exyliapracticebot",
+    name: "ExyliaPracticeBot",
+    tagline: { en: "A sparring partner that fights back", es: "Un rival de entrenamiento que responde" },
+    summary: {
+      en: "A PvP training bot each player spawns for themselves: seven combat models from sword to crystal, mace and boxing, five skill rungs that change reaction, aim and discipline, gear and buffs tuned from a menu, and a public API other plugins spawn it through.",
+      es: "Un bot de entrenamiento de PvP que cada jugador genera para sí mismo: siete modelos de combate, de espada a crystal, mace y boxeo, cinco niveles de habilidad que cambian reacción, puntería y disciplina, equipo y buffs ajustables desde un menú, y una API pública desde la que otros plugins lo generan.",
+    },
+    version: "1.2.2",
+    status: "stable",
+    category: { en: "Gamemode", es: "Modo de juego" },
+    minecraft: "1.21.9+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/bot/ExyliaPracticeBotBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-practicebot-crystal-mace-pvp.90881/",
+    tags: [
+      { en: "PvP", es: "PvP" },
+      { en: "Training", es: "Entrenamiento" },
+      { en: "Bots", es: "Bots" },
+      { en: "Folia", es: "Folia" },
     ],
+    nav: PRACTICEBOT_NAV,
   },
   {
     id: "exyliatotemtrainer",
@@ -965,6 +1006,8 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Gamemode", es: "Modo de juego" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/totem-trainer/ExyliaTotemTrainerBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-totemtrainer.124009/",
     tags: [
       { en: "Totems", es: "Tótems" },
       { en: "Duels", es: "Duelos" },
@@ -972,10 +1015,6 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: TOTEMTRAINER_NAV,
-    links: [
-      { label: "BuiltByBit", href: "https://builtbybit.com/resources/exylia-totemtrainer.124009/" },
-      { label: "Discord", href: "https://discord.exylia.net" },
-    ],
   },
   {
     id: "exyliastaff",
@@ -989,6 +1028,8 @@ export const plugins: Plugin[] = [
     status: "stable",
     category: { en: "Moderation", es: "Moderación" },
     minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/staff/ExyliaStaffBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-staff.123500/",
     tags: [
       { en: "Staff mode", es: "Modo staff" },
       { en: "Vanish", es: "Vanish" },
@@ -998,9 +1039,48 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: STAFF_NAV,
-    links: [{ label: "Discord", href: "https://discord.exylia.net" }],
   },
 ];
+
+/**
+ * The order the catalogue reads in — broadest first, the library last.
+ *
+ * Keyed by the English category so the grouping survives a translation, and
+ * exhaustive on purpose: a category added to a plugin without a place here
+ * lands at the end rather than disappearing.
+ */
+export const CATEGORY_ORDER = [
+  "Gamemode",
+  "Events",
+  "Cosmetic",
+  "Social",
+  "Survival",
+  "Moderation",
+  "Library",
+] as const;
+
+export type CategoryGroup = { key: string; label: Localized; plugins: Plugin[] };
+
+/** The catalogue, split by category and ordered by `CATEGORY_ORDER`. */
+export function groupByCategory(list: Plugin[] = plugins): CategoryGroup[] {
+  const groups = new Map<string, CategoryGroup>();
+  for (const plugin of list) {
+    const key = plugin.category.en;
+    const group = groups.get(key) ?? { key, label: plugin.category, plugins: [] };
+    group.plugins.push(plugin);
+    groups.set(key, group);
+  }
+  const rank = (key: string) => {
+    const i = CATEGORY_ORDER.indexOf(key as (typeof CATEGORY_ORDER)[number]);
+    return i === -1 ? CATEGORY_ORDER.length : i;
+  };
+  return [...groups.values()].sort((a, b) => rank(a.key) - rank(b.key));
+}
+
+/** How many pages a plugin publishes, across both languages' shared structure. */
+export function pageCount(plugin: Plugin): number {
+  return plugin.nav.reduce((n, group) => n + group.pages.length, 0);
+}
 
 export function getPlugin(id: string): Plugin | undefined {
   return plugins.find((p) => p.id === id);

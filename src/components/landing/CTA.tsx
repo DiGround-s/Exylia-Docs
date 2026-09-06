@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { SITE, type Lang } from "@/content/registry";
 import { dict } from "@/content/dictionary";
@@ -55,13 +54,15 @@ export function CTA({ lang }: { lang: Lang }) {
               </svg>
             </a>
           </Magnetic>
-          <Link
-            href={`/${lang}/docs/exyliaffa/${lang === "es" ? "faq" : "faq"}`}
+          <a
+            href={SITE.store}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex h-12 items-center rounded-full px-5 text-[14.5px] font-medium text-white/60 transition-colors hover:text-white"
           >
             {l.ctaSecondaryLink[lang]}
             <span className="ml-2 text-white/25">↗</span>
-          </Link>
+          </a>
         </motion.div>
       </div>
     </section>

@@ -24,6 +24,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       canonical: `/${lang}/docs/${entry.id}`,
       languages: Object.fromEntries(LANGS.map((code) => [code, `/${code}/docs/${entry.id}`])),
     },
+    openGraph: {
+      title: entry.name,
+      description: entry.summary[lang],
+      images: [entry.banner],
+    },
   };
 }
 

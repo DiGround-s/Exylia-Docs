@@ -6,6 +6,8 @@ import type { NavSection } from "@/lib/docs";
 import type { Lang, Plugin } from "@/content/registry";
 import { dict } from "@/content/dictionary";
 import { Magnetic } from "@/components/motion/Primitives";
+import { PluginBanner } from "@/components/PluginBanner";
+import { SITE } from "@/content/registry";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -33,6 +35,20 @@ export function PluginOverview({
   return (
     <div className="pb-6">
       <header className="pb-12">
+        <motion.div
+          initial={{ opacity: 0, scale: 1.01 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, ease: EASE }}
+          className="mb-10"
+        >
+          <PluginBanner
+            plugin={plugin}
+            priority
+            rounded="rounded-xl"
+            className="aspect-[2/1] w-full sm:aspect-[3/1]"
+          />
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -79,18 +95,27 @@ export function PluginOverview({
             </Link>
           </Magnetic>
 
-          {plugin.links?.map((link) => (
+          {plugin.purchase && (
             <a
-              key={link.href}
-              href={link.href}
+              href={plugin.purchase}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-11 items-center rounded-full border border-white/12 px-4 text-[13.5px] font-medium text-white/65 transition-colors hover:border-white/30 hover:text-white"
             >
-              {link.label}
+              {dict.docs.buy[lang]}
               <span className="ml-2 text-white/25">↗</span>
             </a>
-          ))}
+          )}
+
+          <a
+            href={SITE.discord}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-11 items-center rounded-full px-4 text-[13.5px] font-medium text-white/45 transition-colors hover:text-white"
+          >
+            {dict.docs.support[lang]}
+            <span className="ml-2 text-white/25">↗</span>
+          </a>
         </motion.div>
 
         <motion.dl
