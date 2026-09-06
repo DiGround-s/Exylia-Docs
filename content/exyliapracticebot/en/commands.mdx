@@ -1,0 +1,102 @@
+---
+title: "Commands"
+description: "One root command, its five player subcommands, its three admin ones, and what each refusal says."
+---
+
+There is one command. `/bot` is the whole surface: typed on its own it opens the main menu, and
+everything else is a subcommand of it. There are no aliases.
+
+The root itself requires `exyliapracticebot.use`, so a player without that node does not see the
+command at all — subcommand permissions are checked on top of it.
+
+## Player commands
+
+Everything here needs `exyliapracticebot.use` and has to be typed by a player: each one works on the
+bot that belongs to whoever typed it, so the console has nothing to act on.
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/bot` | `exyliapracticebot.use` | Opens the main menu. |
+| `/bot spawn` | `exyliapracticebot.use` | Spawns your bot with your saved settings, one block above where you are standing. |
+| `/bot remove` | `exyliapracticebot.use` | Removes your bot. |
+| `/bot tpme` | `exyliapracticebot.use` | Brings the bot to you. |
+| `/bot tpto` | `exyliapracticebot.use` | Sends you to the bot. |
+| `/bot reset` | `exyliapracticebot.use` | Puts every one of your settings back to its default. |
+
+`/bot reset` also updates a bot that is already out: the new settings are pushed to it rather than
+waiting for the next spawn. The reset row is saved to the database straight away.
+
+`/bot tpme` and `/bot tpto` are asynchronous teleports — the confirmation arrives once the teleport has
+actually happened, not when the command is typed.
+
+<Callout type="note" title="The menu does the same things">
+`spawn`, `remove`, `tpme`, `tpto` and `reset` all have a button on the main menu, wired to the same
+code. The commands exist so none of it depends on a menu file staying as it shipped. See
+[Menus](/docs/exyliapracticebot/menus).
+</Callout>
+
+### What each refusal says
+
+The lines below are the defaults from `messages.yml`; every one of them is editable, and each ships
+with a sound and, in one case, a particle. The key is what matters — the text is yours.
+
+| Refused | Key | Default line |
+|---|---|---|
+| Spawning in a world that is not in `worlds` | `bot.world-not-allowed` | *You can't spawn a bot in this world. Please use /rtp first* |
+| Spawning when you already have one | `bot.already-has-bot` | *You already have a bot. Use /bot remove first.* |
+| Spawning when the server is at its bot ceiling | `bot.limit-reached` | *The server is already running `%limit%` bots. Try again in a moment.* |
+| `remove`, `tpme` or `tpto` with no bot out | `bot.no-bot` | *You don't have an active bot.* |
+
+`%limit%` is the configured `max-bots` value, not a count of who is using them. See
+[Limits](/docs/exyliapracticebot/limits).
+
+A successful spawn answers with `bot.spawned`, a removal with `bot.removed`, the two teleports with
+`bot.teleported-bot-to-you` and `bot.teleported-to-bot`, and a reset with `bot.settings-reset`.
+
+## Admin commands
+
+Everything here needs `exyliapracticebot.admin` and runs from the console as well as in game.
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/bot reload` | `exyliapracticebot.admin` | Reloads the plugin's files. |
+| `/bot export` | `exyliapracticebot.admin` | Writes every table the plugin owns into one dump file. |
+| `/bot import <filename>` | `exyliapracticebot.admin` | Reads a dump back in. |
+
+### Reload
+
+Two named steps. `configs` re-reads `config.yml` and `messages.yml` and re-applies the message prefix;
+`menus` compiles every menu file again. The menus step also runs on its own when ExyliaLib itself is
+reloaded, so a menu edit picked up by an ExyliaLib reload does not need a second command here.
+
+Reload does not touch player data — that lives in the database and is already what the plugin holds in
+memory — and it does not remove bots that are out. A bot keeps running with the settings it was given.
+
+### Export and import
+
+Both go through ExyliaLib's transfer module, both run on a background thread, and both answer with a
+report line when they finish: green when the transfer succeeded, red when it did not, and the line
+itself names the outcome, how many tables, how many rows and how long it took.
+
+`export` writes into `dumps/` inside the plugin's own data folder, creating it if it is not there. The
+file is named for the plugin, the database engine and the moment it was taken —
+`ExyliaPracticeBotV3-<engine>-<yyyyMMdd-HHmmss>.exyliadump.gz` — so two exports never overwrite each
+other.
+
+`import` takes exactly one argument: the **name of a file inside that same `dumps/` folder**, extension
+included, as export wrote it.
+
+```text
+/bot export
+/bot import ExyliaPracticeBotV3-h2-20260906-141355.exyliadump.gz
+```
+
+It is a name, not a path you choose: whatever you type is resolved under `dumps/`, so a dump copied
+from another server has to be dropped in there first. Being a single argument, it also cannot contain
+spaces — which the generated names never do.
+
+<Callout type="warning" title="Import refuses to write over rows that already exist">
+The import runs without the transfer module's force flag. If the table it is importing into already
+holds rows, nothing is written and the report says which table and how many rows stopped it. That is
+the safe half of the module on purpose: use it to move a database, not to merge two.
+</Callout>

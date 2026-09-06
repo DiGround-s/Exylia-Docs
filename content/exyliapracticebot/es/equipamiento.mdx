@@ -1,0 +1,166 @@
+---
+title: "Equipamiento"
+description: "La armadura, el arma, la mano secundaria, el knockback y los buffs de poción que lleva un bot, de dónde sale su primer kit y qué cambia cada uno en un combate."
+---
+
+Un bot se viste con catorce ajustes: cuatro piezas de armadura, un encantamiento para cada una, un
+arma, una mano secundaria, un nivel de knockback, fuerza, velocidad y resistencia al fuego. Todos son
+un botón en `/bot` — la columna de armadura a la izquierda del menú principal, las manos a la derecha,
+la resistencia al fuego en **Ajuste fino**. Nada de esto es un número que tengas que equilibrar: el
+modo que elegiste ya vistió al bot, y estas son las piezas que cambias después.
+
+## Lo que puedes cambiar
+
+| Ajuste | Valores | Dónde |
+|---|---|---|
+| Casco, peto, grebas, botas | `NONE`, `DIAMOND`, `NETHERITE` | Menú principal, clic izquierdo en la pieza |
+| El encantamiento de cada pieza | `NONE`, `PROTECTION`, `BLAST_PROTECTION` | Menú principal, clic derecho en la pieza |
+| Mano principal | `SWORD`, `AXE`, `MACE`, `TOTEM` | Menú principal, clic izquierdo en **Mano principal** |
+| Knockback en esa arma | `NONE`, `KNOCKBACK_1`, `KNOCKBACK_2` | Menú principal, clic derecho en **Mano principal** |
+| Mano secundaria | `NONE`, `TOTEM`, `SHIELD` | Menú principal, **Mano secundaria** |
+| Fuerza | `NONE`, `STRENGTH_1`, `STRENGTH_2` | Menú principal, clic izquierdo en **Pociones** |
+| Velocidad | `NONE`, `SPEED_1`, `SPEED_2` | Menú principal, clic derecho en **Pociones** |
+| Resistencia al fuego | encendida o apagada | Ajuste fino |
+
+Cada botón avanza por su lista y vuelve al principio al terminarla, así que una pieza que te pasaste
+está a tres clics más y no a un menú de distancia. Los nombres que lees en los botones — *Diamond*,
+*Protection IV*, *Strength II* — son etiquetas de `messages.yml` y se pueden renombrar o recolorear;
+los valores de arriba son los que guarda el plugin.
+
+## De dónde sale el primer kit
+
+A un jugador que nunca abrió `/bot` lo viste lo que diga `bot.mode` en `config.yml`. Cada modo tiene un
+kit, y es el kit alrededor del cual ese modo está equilibrado:
+
+| Modo | Armadura | Encantamiento | Mano principal | Mano secundaria | Fuerza | Velocidad |
+|---|---|---|---|---|---|---|
+| `NONE` | Diamante | Protección | Espada | Escudo | — | — |
+| `SWORD` | Diamante | Protección | Espada | Escudo | — | — |
+| `POT_PVP` | Diamante | Protección | Espada | Escudo | Fuerza II | Velocidad II |
+| `UHC` | Diamante | Protección | Hacha | Escudo | — | — |
+| `CRYSTAL_PVP` | Netherita | Protección contra explosiones | Espada | Tótem | — | — |
+| `MACE_PVP` | Netherita | Protección | Maza | Tótem | — | — |
+| `BOXING` | — | — | Espada | — | — | — |
+
+Un kit es uniforme: las cuatro piezas son del mismo tier con el mismo encantamiento, que es lo que hace
+que elegir un modo sea una decisión y no ocho. Mezclar tiers después es una elección por pieza y sigue
+siéndolo. Dos de los kits van desnudos a propósito — UHC no lleva buffs de poción porque en UHC lo que
+bebes es lo que preparaste, y boxeo no lleva armadura ni nada en la mano secundaria porque nadie recibe
+daño.
+
+<Callout type="warning" title="Cambiar de modo no vuelve a vestir al bot">
+El kit se aplica cuando se crean los ajustes de un jugador por primera vez y cada vez que se
+reinician. Ciclar **Modo** en el menú después cambia las técnicas con las que pelea el bot y deja el
+equipo exactamente como lo dejaste. Si quieres recuperar el kit propio de un modo, usa **Reiniciar
+ajustes** o [`/bot reset`](/docs/exyliapracticebot/comandos) — eso devuelve cada ajuste al valor por
+defecto del servidor, kit incluido.
+</Callout>
+
+## Armadura
+
+Tres tiers por ranura, elegidos por ranura.
+
+| Valor | Qué lleva el bot |
+|---|---|
+| `NONE` | La ranura se deja vacía. |
+| `DIAMOND` | La pieza de diamante de esa ranura. |
+| `NETHERITE` | La pieza de netherita de esa ranura. |
+
+Cada pieza es irrompible, así que una sesión larga nunca desgasta el kit del bot.
+
+## Encantamiento
+
+Un encantamiento por pieza, a nivel IV.
+
+| Valor | Qué lleva la pieza |
+|---|---|
+| `NONE` | Nada. |
+| `PROTECTION` | Protección IV. |
+| `BLAST_PROTECTION` | Protección contra explosiones IV — con lo que se pelea un combate de cristales. |
+
+## Mano principal
+
+El arma decide cada cuánto puede golpear el bot, porque el bot espera su barra de ataque igual que un
+jugador. Todos los modos que trae el plugin pelean con las mecánicas de combate modernas, así que el
+enfriamiento de abajo es el real.
+
+| Valor | Ítem | Carga completa |
+|---|---|---|
+| `SWORD` | Espada de netherita | 12.5 ticks |
+| `AXE` | Hacha de netherita | 20 ticks |
+| `MACE` | Maza | 33.3 ticks |
+| `TOTEM` | Tótem de la inmortalidad | 4 ticks |
+
+Tres de ellos cambian más que la cadencia:
+
+- Un **hacha** rompe un escudo levantado, y el bot lo sabe — es el arma que lleva el kit de UHC.
+- Una **maza** gana el bonus de impacto vanilla cuando el bot te cae encima desde altura, que es todo
+  `MACE_PVP`.
+- Un **tótem** no es un arma. El bot lo sostiene, pega casi nada y golpea cuatro veces por segundo, que
+  es un bot que está ahí para recibir.
+
+El arma se construye irrompible y con Irrompibilidad III. El daño de ataque no se lee del ítem: es el
+deslizador `attack_damage` de **Ajuste fino**, y el escalado por enfriamiento y los golpes críticos que
+aplica vanilla van encima.
+
+## Knockback
+
+El knockback es un encantamiento del arma, así que se mueve con el arma.
+
+| Valor | Nivel |
+|---|---|
+| `NONE` | Sin encantar |
+| `KNOCKBACK_1` | Empuje I |
+| `KNOCKBACK_2` | Empuje II |
+
+## Mano secundaria
+
+| Valor | Qué sostiene el bot | Qué significa |
+|---|---|---|
+| `NONE` | Nada | Boxeo no lleva nada ahí, y tampoco nadie que quiera su movilidad. |
+| `TOTEM` | Tótem de la inmortalidad | El bot lo consume y se rearma con su reserva de tótems. |
+| `SHIELD` | Un escudo irrompible | Se levanta y se baja con un tempo, así que se puede leer — y tu hacha lo deshabilita durante los segundos que diga `shield_disable`. |
+
+Con cuántos tótems de repuesto se rearma el bot es el deslizador `totems` de **Ajuste fino**, no un
+ajuste de esta página; ver [Límites](/docs/exyliapracticebot/limites).
+
+## Fuerza y Velocidad
+
+Ambas son las pociones vanilla, aplicadas al bot de forma permanente y visibles en él — las partículas
+son cómo sabe un rival contra qué está peleando.
+
+| Valor | Efecto | Qué hace |
+|---|---|---|
+| `NONE` | — | El efecto se retira. |
+| `STRENGTH_1` | Fuerza I | +3 de daño en cada golpe. |
+| `STRENGTH_2` | Fuerza II | +6 de daño en cada golpe. |
+| `SPEED_1` | Velocidad I | Se mueve 1.2× más rápido. |
+| `SPEED_2` | Velocidad II | Se mueve 1.4× más rápido. |
+
+El daño y el movimiento los aplica la propia IA, exactamente como lo haría la poción; el efecto en el
+bot existe para que puedas verlo.
+
+`POT_PVP` es el único kit del plugin que empieza con alguna de las dos, y empieza con ambas a nivel II.
+
+## Resistencia al fuego
+
+Un efecto de Resistencia al Fuego permanente, que se activa desde **Ajuste fino**. Ningún kit empieza
+con él — está ahí para un sandbox donde la lava es parte de la práctica, que es lo que hace de ella la
+técnica `lava` del modo UHC.
+
+## Manzanas doradas
+
+Qué manzana come el bot no es un botón. Se decide por él:
+
+| Situación | Qué come |
+|---|---|
+| Pot PvP, sin kit enviado por otro plugin | Manzanas doradas encantadas si `advanced.pot-pvp.enchanted-apples` está encendido, normales si no. |
+| UHC, sin kit enviado | Manzanas doradas normales. UHC no tiene pociones arrojadizas, así que la manzana es la única cura que hay. |
+| Cualquiera de los dos, con kit enviado | La manzana que el kit lleve de verdad — encantada si hay alguna, normal si no. |
+
+## Cuando el equipo no es tuyo
+
+Otro plugin puede invocar un bot por la API con un kit propio, y ese kit manda por encima de todo lo de
+esta página: la armadura, el arma y la mano secundaria salen de los ítems, y lo que el bot puede gastar
+durante el combate se cuenta de ese mismo kit. Los ajustes guardados de un jugador son suyos y no
+deciden qué lleva puesto un rival de duelo. Ver [API](/docs/exyliapracticebot/api).

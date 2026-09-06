@@ -27,6 +27,7 @@ scripts/doc-drift.sh exyliaevents # just one
 | `exyliakilleffect` | `ExyliaKillEffect` | 1.0.10 | `31b0a76` 2026-09-03 | Current. |
 | `exylialib` | `ExyliaLib` | 1.95.0 | `e4cf0b7` 2026-09-03 | Current — chat rules, cosmetic rules, the display ceiling, region flags, log cleanup and the extra NPC motion. |
 | `exyliapractice` | `ExyliaPracticeCore` | 1.0.0 | `a8b3bf6` 2026-09-03 | Arena usages, the short `practice` identifier, `total_bot_players` and typed kit-rule durations documented. **Gap:** the Bot PvP module has no page at all — difficulties, its menus and `bot-name`/`bot-skin` are undocumented. |
+| `exyliapracticebot` | `ExyliaPracticeBotV3` | 1.2.2 | `20ca313` 2026-09-06 | Current — first full documentation: the seven combat models and their per-mode config, the five-rung skill ladder, the gear and buffs a player tunes, both menu files and the eleven `practicebot` actions, attack/follow and the three automatic removals, `max-bots` against the slider bounds, and the API. Written against the source, not the config comments: two of those are stale (see below). |
 | `exyliashields` | `ExyliaShields` | 1.0.4 | `83a54f9` 2026-09-01 | Current — the only change since was a database index. |
 | `exyliastaff` | `ExyliaStaff` | 1.1.0 | `0556cce` 2026-09-03 | Current — first full documentation: the sixteen modules, the hotbar, vanish levels, freeze across servers, report priority, the punishment ladder and its command templates, the nine mining factors, the staff log and the admin panel. Left out on purpose: the reports history screen (not registered by the module in 1.1.0), `%staff_reports_mine%` (always 0) and `exyliastaff.inspect.ip` (declared, unused). |
 | `exyliasurvivalcore` | `ExyliaSurvivalCore` | 1.0.6 | `1e1dc33` 2026-09-02 | Current for the two pages that exist (placeholders, permissions). The plugin is not finished, and the rest of its documentation is deliberately unwritten. |
@@ -53,6 +54,20 @@ ExyliaLib `befa514` — release tag `v1.113.0`, the tag JitPack builds and the o
 The source of truth for these pages is
 `~/Java/Exylia/ExyliaLib/exylia-api/src/main/java/net/exylia/lib/api/`, not the plugin repositories:
 the interfaces carry the javadoc that says why each method behaves as it does.
+
+### Two stale strings in ExyliaPracticeBotV3
+
+Found while writing this set and documented as behaviour rather than as promised. Both claim that
+picking a combat mode applies that mode's kit. It does not: `Loadout.of(mode).applyTo(settings)` runs
+only from the `BotSettings` constructor — first creation and `/bot reset` — and from
+`PracticeBotServiceImpl` on an API spawn. `set_mode` and `cycle mode` call `setMode` and nothing else,
+which is the intended behaviour: `Loadout`'s javadoc and the menu item's own lore both say the kit
+stays as the player left it.
+
+- `MessagesDefaults` default for `bot.mode-changed`: *"Mode set to %mode% » kit applied."*
+- `BotDefaults`' `@Comment` on `bot.mode`: *"Picking a mode applies that mode's kit AND its combat model."*
+
+The pages describe what the code does. If the strings are corrected, nothing here needs rewriting.
 
 ## How a review goes
 

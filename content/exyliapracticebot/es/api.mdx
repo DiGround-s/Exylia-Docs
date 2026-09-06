@@ -1,0 +1,286 @@
+---
+title: "API"
+description: "Generar un bot desde otro plugin, apuntarlo a alguien, vestirlo con tu propio kit y enterarte cuando muere."
+badge: "dev"
+---
+
+`PracticeBotService` es con lo que otro plugin pide un bot: una forma de pelear, a un nivel de destreza,
+en el sitio que elijas. Todo lo que un jugador ajusta desde `/bot` — treinta y pico opciones,
+deslizadores, piezas de armadura — se queda fuera del contrato a propósito. Tú pides una pelea; el bot
+decide cómo de bien se ejecuta.
+
+```java
+PracticeBots.get().ifPresent(bots ->
+    bots.spawn(BotSpec.duel(player, arena.spawn(), CombatMode.CRYSTAL_PVP, Difficulty.HARD))
+        .thenAccept(bot -> match.track(bot)));
+```
+
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de Exylia
+y viven en la [página de la API pública](/docs/exylialib/api).
+</Callout>
+
+Todo lo de abajo vive en `net.exylia.lib.api.practicebot`, dentro del artefacto `exylia-api` de
+ExyliaLib — no en el jar del plugin de bots. Eso es lo que hace que la interfaz sea una sola clase y no
+dos: el razonamiento completo está en la [página de la API pública](/docs/exylialib/api).
+
+## Comprobar que está
+
+`PracticeBots.get()` es la puerta de entrada, y es un `Optional` porque de verdad puede venir vacío:
+
+- el plugin no está instalado,
+- está instalado pero deshabilitado,
+- o todavía está arrancando y aún no registró su servicio.
+
+Todo el que llame tiene que contemplarlo, y esa es justo la gracia de una dependencia blanda: una
+integración con una es una función que quizá no esté, no un error que reportar.
+
+```java
+if (!PracticeBots.available()) {
+    // Ofrece otra cosa. No lo registres en el log.
+}
+```
+
+`available()` es la misma pregunta cuando solo quieres un sí o un no.
+
+## Generar un bot
+
+`spawn(BotSpec)` devuelve un `CompletableFuture<BotHandle>`.
+
+<Callout type="warning" title="El future no se completa en el hilo principal">
+Generar una entidad tiene que ocurrir en el hilo dueño de la región donde aparece, que rara vez es el de
+quien llama. El future se completa **en ese hilo**, así que agenda tu propio trabajo desde ahí en vez de
+dar por hecho dónde estás — en un servidor con hilos, tocar el resto del mundo desde ese callback es
+exactamente el bug que este aviso previene.
+</Callout>
+
+Falla, en lugar de devolver vacío, en dos casos:
+
+| Fallo | Cuándo |
+|---|---|
+| `BotLimitReachedException` | El servidor ya está corriendo todos los bots que permite. No merece un stack trace: es la respuesta esperada en un servidor ocupado. `capacity()` en la excepción es el tope que se alcanzó — dile al jugador que lo intente en un momento. |
+| `IllegalStateException` | El dueño se desconectó entre la petición y el spawn. |
+
+```java
+bots.spawn(spec)
+    .thenAccept(bot -> scheduler.runAtEntity(bot.entityId(), () -> ready(bot)))
+    .exceptionally(failure -> {
+        Throwable cause = failure.getCause() != null ? failure.getCause() : failure;
+        if (cause instanceof BotLimitReachedException full) {
+            player.sendMessage("El servidor está corriendo " + full.capacity() + " bots. Prueba en un momento.");
+        }
+        return null;
+    });
+```
+
+`active()` y `capacity()` están ahí para que puedas preguntar antes de ofrecer una pelea que no puedes
+empezar. Cada bot piensa una vez por tick y busca su propia ruta, así que el techo es real y no una
+formalidad. Ver [Límites](/docs/exyliapracticebot/limites).
+
+## El servicio
+
+| Método | Qué hace |
+|---|---|
+| `CompletableFuture<BotHandle> spawn(BotSpec spec)` | Genera un bot. Se completa en el hilo dueño de la región donde apareció. |
+| `Optional<BotHandle> byEntity(UUID entityId)` | El bot que conduce una entidad, o vacío si esa entidad no es un bot. La consulta detrás de todo "¿eso le acaba de pasar a un bot?". |
+| `Optional<BotHandle> byOwner(Player owner)` | El bot que tiene un jugador, o vacío. |
+| `int active()` | Cuántos bots existen ahora mismo. |
+| `int capacity()` | Cuántos pueden existir a la vez — el tope configurado del servidor. |
+
+## Qué generar: `BotSpec`
+
+Un record inmutable. `owner`, `spawn`, `mode` y `difficulty` son obligatorios; uno nulo se rechaza al
+construirlo, igual que una ubicación de spawn sin mundo.
+
+| Componente | Qué es |
+|---|---|
+| `Player owner` | De quién es el bot. Decide a quién se le avisa cuando reaparece y quién tiene que estar conectado para que exista — **no** contra quién pelea. |
+| `Location spawn` | Dónde aparece. Un duelo quiere el spawn del otro extremo, no los pies del jugador. |
+| `CombatMode mode` | Cómo pelea, y por tanto qué lleva. |
+| `Difficulty difficulty` | Cómo de bien pelea. |
+| `boolean respawn` | Si vuelve solo tras morir. `false` para cualquier cosa que lleve su propia partida: un bot que reaparece en silencio a mitad de la limpieza es una segunda pelea que nadie empezó. |
+| `String name` | Cómo se llama sobre su cabeza, o `null` para el nombre configurado del plugin. Vale la pena ponerlo en un duelo — por defecto el bot se llama como su dueño, y eso son dos de ti cruzando la arena. |
+| `String skin` | De quién lleva la skin, por nombre de jugador, o `null` para la configurada. |
+| `BotKit kit` | Con qué pelea, o `null` para que el modo lo vista. |
+| `BotLimits limits` | Hasta dónde llega por la pelea, o `null` para las distancias configuradas del plugin. |
+
+Tres atajos cubren casi todas las llamadas:
+
+```java
+new BotSpec(owner, spawn, mode, difficulty, respawn);                 // vestido por su modo
+new BotSpec(owner, spawn, mode, difficulty, respawn, name, skin);     // con nombre y skin
+BotSpec.duel(owner, spawn, mode, difficulty);                         // pelea contra su dueño, no reaparece
+BotSpec.duel(owner, spawn, mode, difficulty, name, skin);             // lo mismo, con identidad propia
+```
+
+`withKit(BotKit)` y `withLimits(BotLimits)` devuelven una copia con esa única cosa cambiada, así que un
+spec construido una vez por arena se termina de rellenar por partida.
+
+## Un kit manda sobre el modo
+
+Un modo viene con su propio equipo, y eso está bien para el `/bot` del propio plugin: quien pide crystal
+PvP en un sandbox quiere aquello alrededor de lo que crystal PvP está balanceado. Está mal para una
+partida de práctica, donde se supone que los dos lados pelean con el mismo kit — el que montaron los
+administradores del servidor, con su armadura, sus encantamientos y su cuenta de pociones.
+
+Así que cuando un spec lleva un `BotKit`, gana el kit. El modo pasa a ser solo la *escuela* con la que
+pelea el bot: qué técnicas conoce, cómo se mueve, cuándo se retira. Lo que lleva en las manos sale de
+los ítems.
+
+En concreto, un kit no vacío reemplaza la mano principal, la mano secundaria, la cuenta de tótems y el
+daño del arma que el modo asumía, leyendo cada cosa de los propios ítems — y borra los buffs gratis del
+modo. Fuerza, Velocidad y resistencia al fuego son el atajo de un equipo para pociones que un bot de
+sandbox nunca se iba a beber; un kit que quiera al bot buffeado pone las pociones en el kit.
+
+```java
+BotSpec spec = BotSpec.duel(player, arena.spawn(), CombatMode.POT_PVP, Difficulty.HARD)
+                      .withKit(BotKit.of(kit.contents()))
+                      .withLimits(BotLimits.unlimited());
+```
+
+Así es exactamente como ExyliaPracticeCore lleva sus partidas contra bots: el kit de la arena, las
+distancias de la arena, y el modo decidiendo solo cómo se juega la pelea.
+
+### `BotKit`
+
+41 huecos en la disposición que Bukkit le da a un jugador: `0-35` almacenamiento (`0-8` la hotbar),
+`36-39` armadura empezando por las botas, tal y como los ordena `getArmorContents()`, y `40` la mano
+secundaria. Es el mismo array que un plugin de práctica ya guarda por kit, así que no hay que traducir
+nada al salir. Una longitud distinta se rechaza.
+
+| Miembro | Qué hace |
+|---|---|
+| `BotKit.of(ItemStack[] playerLayout)` | Un kit a partir de un array de 41 huecos. Los nulos son huecos vacíos. |
+| `BotKit.ofInventory(PlayerInventory)` | El kit que un jugador lleva ahora mismo — "pelea contra mí con lo que tengo puesto". |
+| `contents()`, `storage()`, `hotbar()`, `armour()` | Copias, en esa disposición. |
+| `boots()`, `leggings()`, `chestplate()`, `helmet()`, `offHand()` | Un hueco cada uno. |
+| `count(Material)` / `has(Material)` | Cuánto tiene el kit de algo, contando el tamaño de las pilas. Ocho manzanas doradas son una pelea distinta de treinta y dos. |
+| `isEmpty()` | Si todos los huecos están vacíos — un kit al que no habría que mandar a nadie. Un kit vacío se ignora y el modo viste al bot. |
+
+Los ítems se copian en profundidad al entrar y al salir. Un kit es la descripción de una pelea; quien
+siguiera editando el array que entregó estaría editando una pelea que ya empezó.
+
+No nombras la mano principal. El bot descubre qué ítems puede sostener, cuáles puede beber y cuáles no
+significan nada para él — quien tuviera que decidirlo estaría adivinando una pregunta que el otro lado
+responde mejor, y habría que actualizarlo cada vez que el bot aprende a usar algo nuevo.
+
+### `BotLimits`
+
+Dos distancias, en bloques, y la razón de que estén en la API: las cifras del propio plugin están
+afinadas para un muñeco que está de pie junto a su dueño, y una partida es lo contrario en las dos cosas.
+
+| Miembro | Qué significa |
+|---|---|
+| `engageDistance` | Cómo de cerca tiene que estar el objetivo para que el bot pelee. Cero o menos significa en cualquier lado. |
+| `leashDistance` | Cuánto puede alejarse el objetivo antes de que retiren al bot del campo. Cero o menos significa nunca. |
+| `BotLimits.unlimited()` | Las dos apagadas. Lo que quiere una partida: la arena es el límite y la partida es el reloj. |
+| `engagesAnywhere()` / `leashless()` | Las mismas dos preguntas, hechas a una instancia. |
+
+Si no se envían, se aplican los valores configurados del plugin y no cambia nada para nadie. Si se
+envían, son los que rigen al bot — un bot generado al otro lado de la arena con los límites de sandbox
+se queda quieto esperando a que se le acerquen, y uno cuyo rival cruza el mapa se elimina en silencio a
+mitad de la pelea.
+
+## El handle
+
+`BotHandle` es el bot visto desde fuera — un handle, no el bot. La entidad que conduce y la máquina de
+estados que decide sus golpes se quedan dentro del plugin que lo posee. No vuelve a ser válido una vez
+que el bot ya no está: guárdalo mientras dure la pelea, suéltalo después, y consulta `isAlive()` en vez
+de darlo por hecho.
+
+| Método | Qué hace |
+|---|---|
+| `UUID entityId()` | El id de entidad del cuerpo que conduce. Un UUID pelado a propósito — el tipo de entidad no es parte de este contrato y ya ha cambiado antes. |
+| `Player owner()` | De quién es el bot. Nunca cambia. |
+| `Player target()` | Contra quién pelea ahora mismo. Empieza siendo el dueño. |
+| `void setTarget(Player target)` | Lo apunta a otro, desde el siguiente tick que piense. Todo lo que había decidido sobre el rival anterior — la ruta que caminaba, el combo en el que creía estar — se descarta. Se ignora si es nulo o si ya es el objetivo. |
+| `boolean isAlive()` | Si el bot sigue existiendo y peleando. |
+| `double health()` / `double maxHealth()` | Una foto tomada en el propio tick del bot, no una lectura en vivo: como mucho un tick o dos vieja, algo que ninguna barra de vida nota. `0` cuando el bot ya no está. |
+| `void remove()` | Lo elimina. Se puede llamar dos veces, y sobre un bot que ya murió. |
+
+<Callout type="warning" title="Elimínalo antes de reiniciar la arena">
+Cualquier cosa que meta un bot en una arena debería llamar a `remove()` antes de devolver la arena, no
+después. Una arena que se reinicia se lleva por delante toda entidad que esté dentro, sin avisar a quien
+la tuviera.
+</Callout>
+
+Que `health()` sea una foto es deliberado. Las entidades pertenecen al hilo dueño de su región, y algo
+que dibuja una barra de vida cada par de ticks desde otro sitio no tiene por qué meter mano en una.
+
+## Modos y dificultades
+
+`CombatMode` es cómo pelea, `Difficulty` es cómo de bien. Juntos son toda la superficie de configuración
+que un usuario normal llega a tocar.
+
+| Modo | Qué es |
+|---|---|
+| `NONE` | Cuerpo a cuerpo vanilla y nada más. Sin técnicas, sin consumibles. |
+| `SWORD` | Espada y escudo, a lo llano: combos, w-taps, strafes, pocos crits. |
+| `POT_PVP` | Combate con espada a lo 1.8: crits, w-taps, strafes, gapples y pociones de curación. |
+| `UHC` | Hacha y escudo: roturas de guardia, gapples, telarañas, lava y agua. |
+| `CRYSTAL_PVP` | Obsidiana, cristales del End, anclas de reaparición, tótems y trampas. |
+| `MACE_PVP` | Lanzamientos con carga de viento rematados con la maza. |
+| `BOXING` | Los golpes se cuentan, no se aplican. Práctica pura de combos. |
+
+| Dificultad | Qué es |
+|---|---|
+| `EASY` | Reacciona tarde, falla la puntería, golpea antes de tiempo, se olvida de resetear el sprint. |
+| `NORMAL` | Un habitual decente del servidor. Acierta casi todas las técnicas, aún comete errores. |
+| `HARD` | Entrena a diario. Espaciado justo, combos limpios, castiga cada curación. |
+| `INSANE` | Perfecto al frame. Solo tiene sentido con un escudo o un tótem en la mano. |
+| `EXTREME` | Más allá de perfecto al frame: ve el mundo un tick tarde, no falla, no se equivoca. Está pensado para ser injusto. |
+
+`CombatMode.playable()` son todos los modos menos `NONE`, en orden de declaración — monta un selector
+con eso y crece solo el día que se añada un modo. `next()` y `previous()` recorren los dos enums para un
+botón cíclico.
+
+Los dos tienen un `parse(String)` que absorbe los nombres que usaban versiones y configuraciones
+anteriores, y ninguno lanza nunca: un nombre desconocido se lee como `NONE` en un modo y como `NORMAL`
+en una dificultad. Nada persiste un ordinal, así que el orden de declaración puede cambiar sin romper
+una fila guardada.
+
+## Eventos
+
+Un evento, `net.exylia.lib.api.practicebot.event.PracticeBotDeathEvent`. Extiende `Event` y **no es
+cancelable** — no implementa `Cancellable` y no hay nada que frenar. Para cuando se ejecuta el bot ya no
+está; el handle está ahí para decir cuál era y de quién era, no para guardarlo.
+
+| Método | Qué trae |
+|---|---|
+| `BotHandle bot()` | El bot que murió. Ya eliminado: solo su identidad sigue sirviendo. |
+| `Player lastTarget()` | Contra quién peleaba cuando murió. |
+
+<Callout type="warning" title="Se dispara en el hilo del propio bot">
+En un servidor con hilos ese no es el hilo principal, y el evento se marca como asíncrono en
+consecuencia. Agenda cualquier cosa que toque el resto del mundo.
+</Callout>
+
+Se dispara al morir, reaparezca o no el bot — y también cuando el bucle de tick de un bot falla, porque
+un bot así abandona el mundo y hay que reportarlo como ido en vez de dejarlo de pie como una estatua
+invulnerable en la arena de alguien. **No** se dispara con las eliminaciones normales: `remove()`, la
+muerte del dueño, el cambio de mundo o alejarse más allá de la correa. Una partida que necesite saber de
+eso vigila sus propias condiciones, o llama a `remove()` ella misma.
+
+```java
+@EventHandler
+public void onBotDeath(PracticeBotDeathEvent event) {
+    matches.byBot(event.bot().entityId())
+           .ifPresent(match -> match.finish(event.lastTarget()));
+}
+```
+
+Compara con `event.bot().entityId()` en vez de guardar el handle: es lo único de un bot muerto que
+todavía vale algo.
+
+## Lo que no expone
+
+Ningún acceso a las treinta y pico opciones que un jugador ajusta desde `/bot`, ninguna forma de leer o
+escribir la fila guardada de alguien, ningún abridor de menús, y ningún evento aparte de la muerte de
+arriba. Una integración pide una forma de pelear a un nivel de destreza y deja que el bot decida el
+resto — un método público por cada deslizador sería un contrato que se rompe cada vez que la IA aprende
+algo.
+
+`BotKit` y `BotLimits` son más nuevos que el resto: llegaron en ExyliaLib `1.84.0` y `1.86.0`, mientras
+que todo lo demás está desde `1.73.0`. Compila contra un `exylia-api` reciente si los quieres.
+
+Si de verdad te falta algo, pregunta en [Discord](https://discord.exylia.net).

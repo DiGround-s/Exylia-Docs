@@ -1,0 +1,201 @@
+---
+title: "Difficulty"
+description: "The five rungs of the ladder, the numbers behind each one, and what each of them feels like to fight."
+---
+
+Difficulty is one knob instead of thirty. A bot does not feel human because a die decided it would
+strafe this tick; it feels human because it sees the fight late, aims imperfectly, respects its own
+attack cooldown, and executes techniques it has actually decided to execute. Every one of those
+numbers is derived from a single rung.
+
+```yaml title="plugins/ExyliaPracticeBot/config.yml"
+bot:
+  mode: POT_PVP
+  difficulty: NORMAL
+```
+
+The [mode](/docs/exyliapracticebot/modes) decides which techniques exist. Difficulty decides how
+well they are executed — and it applies to every mode identically, so `HARD` means the same standard
+of play whether the bot is holding a sword or a crystal.
+
+<Callout type="note" title="Older spellings still parse">
+`Difficulty.parse` is case-insensitive, trims whitespace and absorbs the names earlier versions
+used: `NOOB`/`ROOKIE` → `EASY`, `MEDIUM` → `NORMAL`, `PRO`/`SWEAT` → `HARD`, `GOD`/`ELITE` →
+`INSANE`, `IMPOSSIBLE`/`NIGHTMARE` → `EXTREME`. Anything unrecognised falls back to `NORMAL`, so a
+typo in `bot.difficulty` is a middling bot rather than a startup error.
+</Callout>
+
+## The five rungs
+
+### `EASY` — reacts late, misses
+
+It is deciding on a world half a second old, its head turns at nine degrees a tick, and its hit cone
+is as narrow as the ladder gets — so a bot that arrived late genuinely swings through empty air.
+It swings at half a charge, throws away about one swing in six on purpose, gives up a combo after a
+quarter of a second, and panics: with patience at 0.20 it will start a golden apple in the middle of your
+combo, which is exactly the mistake that loses a round. Strafe hard and it will not be looking at
+you.
+
+### `NORMAL` — a decent server regular
+
+Reaction is down to six ticks and the head turns twice as fast, which is enough for the cone to
+start doing its work rather than the reaction. It lands most techniques — a little over half — waits
+for two thirds of a charge, and holds a combo for nearly half a second. It still throws away about one
+swing in fourteen, and it still eats at the wrong moment about half the time. This is the rung where
+a fight is decided by your play rather than by its errors.
+
+### `HARD` — practises daily
+
+Three ticks of reaction, a head that turns 44 degrees a tick, and technique at 0.85: the guard
+breaks, the webs and the double taps mostly land. It waits for four fifths of a charge, sits at 94 %
+of its reach — far enough out that it can hit you and be stepped away from — and holds a combo for
+two thirds of a second. Mistakes are down to one in fifty. It punishes every heal, and it will not
+be caught eating.
+
+### `INSANE` — frame perfect
+
+Two ticks of reaction, a hand that barely wobbles, and technique at its ceiling: every optional
+technique this bot knows, it lands. It swings at 99 % charge, which means it never wastes a hit, and
+its crystal is armed and popped inside a handful of ticks. A wasted swing happens once in 250.
+Bring a shield or a totem.
+
+### `EXTREME` — a wall, not a fair fight
+
+Technique is already maxed at `INSANE` — mastery has a ceiling and that rung is at it. What
+`EXTREME` buys past there is everything with no ceiling: it sees the world one tick old, its
+crosshair barely moves, it never blunders at all, it re-decides its tactic every two ticks, and its
+crystal is armed and gone in the time it takes to blink. It is meant to be unfair. It is a wall to
+measure yourself against.
+
+## The ladder, in numbers
+
+| | `EASY` | `NORMAL` | `HARD` | `INSANE` | `EXTREME` |
+|---|---|---|---|---|---|
+| Reaction, ticks | 10 | 6 | 3 | 2 | 1 |
+| Aim noise, degrees | 2.4 | 1.4 | 0.7 | 0.35 | 0.15 |
+| Turn rate, degrees/tick | 9.0 | 20.0 | 44.0 | 62.0 | 95.0 |
+| Cooldown discipline | 0.50 | 0.66 | 0.80 | 0.99 | 1.00 |
+| Technique | 0.20 | 0.55 | 0.85 | 1.00 | 1.00 |
+| Mistake chance | 0.160 | 0.070 | 0.020 | 0.004 | 0.000 |
+| Decision, ticks | 14 | 9 | 5 | 3 | 2 |
+| Patience | 0.20 | 0.45 | 0.78 | 0.95 | 1.00 |
+| Spacing | 0.88 | 0.90 | 0.94 | 0.97 | 0.99 |
+| Combo, ticks | 5 | 9 | 13 | 16 | 20 |
+| Crystal arm, ticks | 13 | 8 | 4 | 2 | 1 |
+
+## What each of those controls
+
+**Reaction, ticks.** How stale the world the AI decides on is — one tick is 50 ms, so `EASY` fights
+half a second in the past and `EXTREME` one twentieth of one. Everything in the humanising layer
+hangs off this number, which is why it is the one that changes how a rung *feels* rather than how it
+performs on paper.
+
+**Aim noise, degrees.** The drive of the crosshair's tremor. Deliberately small: a real hand shakes
+by a fraction of a degree, and a bot whose crosshair swings whole degrees does not read as a weak
+player, it reads as a broken one. What makes a weak player weak is reacting late and turning slowly.
+
+**Turn rate, degrees per tick.** How fast the head can turn. Paired with reaction time this is the
+whole reason strafing works against a low rung and does not work against a high one — and it is
+briefly boosted when the bot needs to look at something urgently, like a crystal it has decided to
+set off.
+
+**Cooldown discipline.** The minimum attack charge it will swing at, 0 to 1. At `EASY`'s 0.50 half
+of every hit's damage is thrown away on a bar that was not full; at `INSANE` and above nothing is.
+
+**Technique.** Mastery of the optional techniques, 0 to 1, and it multiplies every one of them. A
+guard break rolled at 0.9 lands 90 % of the time at `INSANE` and 18 % of the time at `EASY` — the
+same technique, in worse hands.
+
+**Mistake chance.** The chance per swing of missing on purpose. Not a rounding error: at `EASY` it
+is one swing in six that simply does not connect, on top of everything the aim model already gets
+wrong.
+
+**Decision, ticks.** How often the tactical layer re-decides — whether to press, to space, to heal,
+to burst. A rung that re-decides every 14 ticks commits to a bad plan for most of a second; one that
+re-decides every two changes its mind before you have finished the movement that would have punished
+it.
+
+**Patience.** Willingness to wait for a safe moment instead of panicking. It gates two things:
+backing off after being comboed or while losing a trade, and — in pot PvP and UHC — refusing to
+start a thirty-two-tick golden apple in the middle of your combo.
+
+**Spacing.** The fraction of its reach it likes to sit at, multiplied by the mode's own reach
+factor. It rises with skill on purpose: a good player fights at the end of their sword, where they
+can hit and be stepped away from. Sitting well inside reach is not a weak player's spacing, it is a
+free hit every cooldown.
+
+**Combo, ticks.** How long it keeps chasing after a knockback hit. A quarter of a second at `EASY`
+and a full second at `EXTREME` — the difference between a bot you can walk away from and one that is
+still on you when you land.
+
+**Crystal arm, ticks.** The delay between arming a crystal and popping it, and by extension the
+whole chain: it lays obsidian for about half that time first, plus however long the shield still
+needs to become real. `EASY` takes most of a second per crystal; `EXTREME` does it in three ticks.
+It also halves the time to get a fresh totem into the bot's hand after one pops — crystal PvP reacts
+in half the time, because that swap is the one thing a crystal player drills, but nothing skips the
+hands: a bot that re-arms inside a single tick is not a window anybody can punish, and a bot nobody
+can punish is not practice.
+
+## The hit cone: why a weak bot actually misses
+
+A swing connects when the crosshair is inside a cone around the target — and the cone is not the
+same width for everybody.
+
+| | `EASY` | `NORMAL` | `HARD` | `INSANE` | `EXTREME` |
+|---|---|---|---|---|---|
+| Hit cone, degrees | 16 | ~24 | ~31 | ~33 | 35 |
+
+It scales with **reflex, not with mastery**: the cone is what turns a head that arrived late into a
+swing that missed, and how late a head arrives is reaction time and turn rate. One cone for
+everybody was what made a weak bot hit like a strong one — at 35 degrees the crosshair can be most
+of a body-width off and the swing still lands, so late reactions, a slow head and a wobbling hand
+all cost nothing. An `EASY` bot has to be genuinely looking at you to hit you; an `EXTREME` one
+connects from wherever its crosshair ended up.
+
+Inside one block horizontally the cone is not applied at all. Standing inside somebody is not an aim
+problem, and a cone measured from an eye a foot away would reject hits vanilla would land.
+
+Three more things scale off the same reflex figure rather than off a table:
+
+- **The hand on the mouse.** Aim is a second-order system, not a slew limit — it accelerates, and it
+  does not stop the instant the crosshair arrives. At the bottom of the ladder it is well under
+  critically damped, so an `EASY` bot swings its crosshair past you and has to come back for it. At
+  the top the flick simply lands.
+- **Key hold time.** The shortest time a movement key combination stays held: six ticks at `EASY`,
+  down to two at the top. Without a floor there the bot re-solves its heading every tick and slides
+  around on a perfectly smooth curve, which no amount of good technique elsewhere can make look
+  human.
+- **Swing distance.** The distance each individual swing is thrown from is re-rolled every time,
+  from 80 % of reach upward at `EASY` and from 99 % at `EXTREME`. A bot that attacks at exactly its
+  maximum reach every single time is reporting its own hitbox maths out loud.
+
+<Callout type="tip" title="Two bots on the same rung are two different people">
+On top of the rung, every bot is dealt a hand when it is built — steady (half of them), sharp
+(three in ten) or heavy (two in ten). A sharp hand reacts a fifth faster, turns 12 % quicker and
+wobbles a quarter less; a heavy one is a fifth slower and heavier on the mouse. Nobody configures it
+and nobody sees it, and the spread is deliberately narrower than one rung of the ladder — a hand is
+a personality, not a second difficulty slider. Reaction time is fixed either way to at least one
+tick, and it is jittered per decision, so no two reactions are exactly the same length.
+</Callout>
+
+## Names and one-line summaries
+
+What players read for each rung is `messages.yml`, not the enum:
+
+```yaml title="plugins/ExyliaPracticeBot/messages.yml"
+placeholders:
+  difficulty:
+    easy: '{success_light}Easy'
+    normal: '{info}Normal'
+    hard: '{warning}Hard'
+    insane: '{error}Insane'
+    extreme: '{accent}&lExtreme'
+    easy-summary: 'Reacts late, misses, swings before the bar is full.'
+    normal-summary: 'A server regular. Still makes mistakes.'
+    hard-summary: 'Tight spacing, clean combos, punishes every heal.'
+    insane-summary: 'Frame perfect. Bring a shield or a totem.'
+    extreme-summary: 'No reaction time, no mistakes, no mercy.'
+```
+
+Changing the rung from the menu confirms with the `bot.difficulty-changed` message, which carries
+`%difficulty%`. Unlike a mode change, it never touches the kit.

@@ -1,0 +1,97 @@
+---
+title: "Introduction"
+description: "What ExyliaPracticeBot is, what it is not, and how this documentation is organised."
+---
+
+ExyliaPracticeBot is a sandbox PvP training partner. A player runs `/bot`, picks how it fights and how
+well it fights, spawns it where they are standing, and fights it. Seven combat modes decide the kit and
+the techniques; five difficulties decide how cleanly those techniques are executed. Everything else —
+armour, weapon, off hand, potions, reach, damage, health — is a knob in the same menu.
+
+## What a bot is
+
+A bot is a **mannequin** the plugin spawns and drives, tick by tick, on the server's own entity
+scheduler. It wears the owner's skin by default and carries their name above its head. It is not an
+NPC in a registry and it is not part of the world: the mannequin is spawned with persistence off, so a
+crash or a hard stop can never leave one standing in your map.
+
+**One bot per player.** The plugin keys every bot by its owner, and it fights its owner and nobody
+else. Only the owner can open its menu, and only another plugin holding the API can point it at
+somebody different.
+
+## What it is not
+
+<Callout type="warning" title="This is not a minigame">
+There are no arenas, no queues, no matchmaking, no ranking and nothing to win. The plugin spawns one
+bot for one player, wherever that player is standing, and takes it away when they are done. A full
+practice server — arenas, kits, queues, duels, parties, ELO — is
+[ExyliaPracticeCore](/docs/exyliapractice/introduction), a separate plugin.
+</Callout>
+
+The bot is a training dummy that fights back. It is meant to be spawned in a sandbox world, hit for a
+few minutes, retuned and hit again.
+
+## What is included
+
+<Cards>
+  <Card title="Modes" href="/docs/exyliapracticebot/modes">
+    Seven ways to fight: vanilla, sword, pot PvP, UHC, crystal PvP, mace PvP and boxing. A mode is a
+    kit and a combat model at once.
+  </Card>
+  <Card title="Difficulty" href="/docs/exyliapracticebot/difficulty">
+    Five rungs from Easy to Extreme. Reaction, aim, cooldown discipline, technique and mistakes all
+    come from this one setting.
+  </Card>
+  <Card title="Equipment" href="/docs/exyliapracticebot/equipment">
+    Armour and enchantments per piece, main hand, off hand, knockback, strength and speed.
+  </Card>
+  <Card title="Menus" href="/docs/exyliapracticebot/menus">
+    Two YAML screens the owner can restyle: the main menu and the fine-tuning screen.
+  </Card>
+  <Card title="Behaviour" href="/docs/exyliapracticebot/behaviour">
+    How it follows, when it engages, and every reason a bot is taken off the field.
+  </Card>
+  <Card title="Limits" href="/docs/exyliapracticebot/limits">
+    The server-wide bot ceiling and the bounds the menu clamps every slider to.
+  </Card>
+</Cards>
+
+## Requirements
+
+| Requirement | Detail |
+|---|---|
+| Server | Paper 1.21.9 or newer — the bot is a `Mannequin`, which Paper added in that version. Folia supported. |
+| Java | 21 |
+| Required dependencies | `packetevents`, `ExyliaLib` |
+
+<Callout type="note" title="About ExyliaLib">
+The typed configuration, the declarative YAML menus, the menu actions, the database, the task
+scheduler and the text and effects pipeline all come from ExyliaLib. The plugin is written on top of
+it and does not run without it. See [Installation](/docs/exyliapracticebot/installation).
+</Callout>
+
+## How to read this documentation
+
+<Steps>
+  <Step title="Getting started">
+    Installation, and a bot to fight within a couple of minutes.
+  </Step>
+  <Step title="Configuring">
+    Modes, difficulty, equipment and the menus. This is where most of the time goes.
+  </Step>
+  <Step title="Systems">
+    How the bot behaves, what limits it, and how it sits next to other plugins.
+  </Step>
+  <Step title="Reference">
+    Commands, permissions, every configuration key, the developer API and the FAQ.
+  </Step>
+</Steps>
+
+## Conventions
+
+- Values marked as **default** are what the plugin writes the first time it starts. If the file
+  already exists, your value is kept.
+- Times are seconds with decimals unless a key says ticks; 20 ticks are one second.
+- Health and damage are given in **half-hearts**, the same unit the config uses: `20.0` is ten hearts.
+- Colours use ExyliaLib palette tokens (`{primary}`, `{highlight}`, `{muted}`), which resolve to your
+  server's palette rather than to fixed hex values.

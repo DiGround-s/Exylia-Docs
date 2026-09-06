@@ -1,0 +1,100 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaPracticeBot, qué no es, y cómo está organizada esta documentación."
+---
+
+ExyliaPracticeBot es un compañero de entrenamiento de PvP en sandbox. Un jugador ejecuta `/bot`, elige
+con qué pelea y cómo de bien pelea, lo aparece donde está parado y lo golpea. Siete modos de combate
+deciden el kit y las técnicas; cinco dificultades deciden con qué limpieza se ejecutan esas técnicas.
+Todo lo demás —armadura, arma, mano secundaria, pociones, alcance, daño, vida— es una perilla del
+mismo menú.
+
+## Qué es un bot
+
+Un bot es un **maniquí** que el plugin aparece y conduce, tick a tick, sobre el planificador de
+entidades del propio servidor. Lleva la skin de su dueño por defecto y su nombre encima de la cabeza.
+No es un NPC en un registro ni forma parte del mundo: el maniquí se aparece con la persistencia
+apagada, así que ni un crash ni una parada dura pueden dejar uno plantado en tu mapa.
+
+**Un bot por jugador.** El plugin indexa cada bot por su dueño, y pelea contra su dueño y contra nadie
+más. Solo el dueño puede abrir su menú, y solo otro plugin con la API en la mano puede apuntarlo hacia
+alguien distinto.
+
+## Qué no es
+
+<Callout type="warning" title="Esto no es un minijuego">
+No hay arenas, ni colas, ni emparejamiento, ni ranking, ni nada que ganar. El plugin aparece un bot
+para un jugador, donde ese jugador esté parado, y se lo lleva cuando termina. Un servidor de practice
+completo —arenas, kits, colas, duelos, parties, ELO— es
+[ExyliaPracticeCore](/docs/exyliapractice/introduccion), un plugin aparte.
+</Callout>
+
+El bot es un muñeco de entrenamiento que devuelve los golpes. Está pensado para aparecerlo en un mundo
+sandbox, pegarle unos minutos, retocarlo y volver a pegarle.
+
+## Qué incluye
+
+<Cards>
+  <Card title="Modos" href="/docs/exyliapracticebot/modos">
+    Siete formas de pelear: vanilla, espada, pot PvP, UHC, crystal PvP, mace PvP y boxeo. Un modo es un
+    kit y un modelo de combate a la vez.
+  </Card>
+  <Card title="Dificultad" href="/docs/exyliapracticebot/dificultad">
+    Cinco escalones de Fácil a Extremo. Reacción, puntería, disciplina de cooldown, técnica y errores
+    salen todos de este único ajuste.
+  </Card>
+  <Card title="Equipamiento" href="/docs/exyliapracticebot/equipamiento">
+    Armadura y encantamientos por pieza, mano principal, mano secundaria, retroceso, fuerza y velocidad.
+  </Card>
+  <Card title="Menús" href="/docs/exyliapracticebot/menus">
+    Dos pantallas YAML que el dueño puede reestilizar: el menú principal y el de ajuste fino.
+  </Card>
+  <Card title="Comportamiento" href="/docs/exyliapracticebot/comportamiento">
+    Cómo te sigue, cuándo entra a pelear y cada motivo por el que un bot sale del campo.
+  </Card>
+  <Card title="Límites" href="/docs/exyliapracticebot/limites">
+    El techo de bots de todo el servidor y los rangos a los que el menú recorta cada slider.
+  </Card>
+</Cards>
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21.9 o superior — el bot es un `Mannequin`, que Paper añadió en esa versión. Folia soportado. |
+| Java | 21 |
+| Dependencias obligatorias | `packetevents`, `ExyliaLib` |
+
+<Callout type="note" title="Sobre ExyliaLib">
+La configuración tipada, los menús YAML declarativos, las acciones de menú, la base de datos, el
+planificador de tareas y la tubería de texto y efectos vienen todos de ExyliaLib. El plugin está
+escrito sobre ella y no funciona sin ella. Ver [Instalación](/docs/exyliapracticebot/instalacion).
+</Callout>
+
+## Cómo leer esta documentación
+
+<Steps>
+  <Step title="Empezar">
+    Instalación, y un bot al que pegar en un par de minutos.
+  </Step>
+  <Step title="Configurar">
+    Modos, dificultad, equipamiento y los menús. Aquí se va la mayor parte del tiempo.
+  </Step>
+  <Step title="Sistemas">
+    Cómo se comporta el bot, qué lo limita y cómo convive con otros plugins.
+  </Step>
+  <Step title="Referencia">
+    Comandos, permisos, cada clave de configuración, la API para desarrolladores y las preguntas
+    frecuentes.
+  </Step>
+</Steps>
+
+## Convenciones
+
+- Los valores marcados como **por defecto** son los que el plugin escribe la primera vez que arranca.
+  Si el archivo ya existe, se conserva tu valor.
+- Los tiempos son segundos con decimales salvo que una clave diga ticks; 20 ticks son un segundo.
+- La vida y el daño se dan en **medios corazones**, la misma unidad que usa la configuración: `20.0`
+  son diez corazones.
+- Los colores usan tokens de paleta de ExyliaLib (`{primary}`, `{highlight}`, `{muted}`), que se
+  resuelven contra la paleta de tu servidor y no contra valores hex fijos.

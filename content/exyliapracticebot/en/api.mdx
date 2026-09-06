@@ -1,0 +1,280 @@
+---
+title: "API"
+description: "Spawn a bot from another plugin, point it at somebody, dress it in your own kit, and hear about it when it dies."
+badge: "dev"
+---
+
+`PracticeBotService` is how another plugin asks for a bot: a way of fighting, at a level of skill, in a
+place you choose. Everything a player tunes from `/bot` — thirty-odd settings, sliders, armour pieces —
+stays out of the contract on purpose. You ask for a fight; the bot decides how well it is executed.
+
+```java
+PracticeBots.get().ifPresent(bots ->
+    bots.spawn(BotSpec.duel(player, arena.spawn(), CombatMode.CRYSTAL_PVP, Difficulty.HARD))
+        .thenAccept(bot -> match.track(bot)));
+```
+
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
+</Callout>
+
+Everything below lives in `net.exylia.lib.api.practicebot`, in ExyliaLib's `exylia-api` artifact — not
+in the bot plugin's own jar. That is what makes the interface one class rather than two: see the
+[public API page](/docs/exylialib/api) for the whole of that reasoning.
+
+## Checking it is there
+
+`PracticeBots.get()` is the way in, and it is an `Optional` because it can genuinely be empty:
+
+- the plugin is not installed,
+- it is installed but disabled,
+- or it is still enabling and has not registered its service yet.
+
+Every caller has to handle that, which is the point of a soft dependency — an integration with one is a
+feature that may simply not be there, not an error to report.
+
+```java
+if (!PracticeBots.available()) {
+    // Offer something else. Do not log this.
+}
+```
+
+`available()` is the same question when you only want a yes or no.
+
+## Spawning
+
+`spawn(BotSpec)` returns a `CompletableFuture<BotHandle>`.
+
+<Callout type="warning" title="The future does not complete on the main thread">
+Spawning an entity has to happen on the thread that owns the region it appears in, which is rarely the
+caller's. The future completes **on that thread**, so schedule your own work from it rather than
+assuming where you are — on a threaded server, touching the wider world from that callback is exactly
+the bug this warning exists for.
+</Callout>
+
+It fails, rather than returning empty, in two cases:
+
+| Failure | When |
+|---|---|
+| `BotLimitReachedException` | The server is already running as many bots as it allows. Not worth a stack trace: it is the expected answer on a busy server. `capacity()` on the exception is the cap that was hit — tell the player to try again in a moment. |
+| `IllegalStateException` | The owner logged out between the request and the spawn. |
+
+```java
+bots.spawn(spec)
+    .thenAccept(bot -> scheduler.runAtEntity(bot.entityId(), () -> ready(bot)))
+    .exceptionally(failure -> {
+        Throwable cause = failure.getCause() != null ? failure.getCause() : failure;
+        if (cause instanceof BotLimitReachedException full) {
+            player.sendMessage("The server is running " + full.capacity() + " bots. Try again shortly.");
+        }
+        return null;
+    });
+```
+
+`active()` and `capacity()` are there so you can ask before offering somebody a fight you cannot start.
+Every bot thinks once per tick and searches for a path of its own, so the ceiling is real rather than a
+formality. See [Limits](/docs/exyliapracticebot/limits).
+
+## The service
+
+| Method | What it does |
+|---|---|
+| `CompletableFuture<BotHandle> spawn(BotSpec spec)` | Spawns a bot. Completes on the thread owning the region it appeared in. |
+| `Optional<BotHandle> byEntity(UUID entityId)` | The bot driving an entity, or empty when that entity is not a bot. The lookup behind every "did that just happen to a bot?" question. |
+| `Optional<BotHandle> byOwner(Player owner)` | The bot a player owns, or empty. |
+| `int active()` | How many bots exist right now. |
+| `int capacity()` | How many may exist at once — the server's configured cap. |
+
+## What to spawn: `BotSpec`
+
+An immutable record. `owner`, `spawn`, `mode` and `difficulty` are required; a null one is rejected on
+construction, as is a spawn location with no world.
+
+| Component | What it is |
+|---|---|
+| `Player owner` | Whose bot it is. It decides who is told when the bot respawns and who has to be online for it to exist — **not** who it fights. |
+| `Location spawn` | Where it appears. A duel wants the far spawn, not the player's feet. |
+| `CombatMode mode` | How it fights, and therefore what it carries. |
+| `Difficulty difficulty` | How well it fights. |
+| `boolean respawn` | Whether it comes back on its own after dying. `false` for anything running its own match: a bot that quietly reappears mid-cleanup is a second fight nobody started. |
+| `String name` | What it is called above its head, or `null` for the plugin's configured name. Worth setting for a duel — the default names a bot after its owner, which means two of you across the arena. |
+| `String skin` | Whose skin it wears, by player name, or `null` for the configured one. |
+| `BotKit kit` | What it fights with, or `null` to let the mode dress it. |
+| `BotLimits limits` | How far it will go for the fight, or `null` for the plugin's configured distances. |
+
+Three shorthands cover most calls:
+
+```java
+new BotSpec(owner, spawn, mode, difficulty, respawn);                 // dressed by its mode
+new BotSpec(owner, spawn, mode, difficulty, respawn, name, skin);     // named and skinned
+BotSpec.duel(owner, spawn, mode, difficulty);                         // fights its owner, never respawns
+BotSpec.duel(owner, spawn, mode, difficulty, name, skin);             // the same, with its own identity
+```
+
+`withKit(BotKit)` and `withLimits(BotLimits)` return a copy with that one thing changed, so a spec built
+once per arena can be finished per match.
+
+## A kit outranks the mode
+
+A mode ships with a loadout of its own, and that is right for the plugin's own `/bot`: somebody asking
+for crystal PvP in a sandbox wants whatever crystal PvP is balanced around. It is wrong for a practice
+match, where both sides are supposed to be fighting the same kit — the one the server's admins built,
+with their armour, their enchantments, their potion count.
+
+So when a spec carries a `BotKit`, the kit wins. The mode is then only the *school* the bot fights
+with: which techniques it knows, how it moves, when it retreats. What it is holding comes off the items.
+
+Concretely, a non-empty kit replaces the mode's main hand, off hand, totem count and weapon damage,
+reading each of them back off the items themselves — and it clears the mode's free buffs. Strength,
+Speed and fire resistance are a loadout's shorthand for potions a sandbox bot was never going to drink;
+a kit that wants the bot buffed puts the potions in the kit.
+
+```java
+BotSpec spec = BotSpec.duel(player, arena.spawn(), CombatMode.POT_PVP, Difficulty.HARD)
+                      .withKit(BotKit.of(kit.contents()))
+                      .withLimits(BotLimits.unlimited());
+```
+
+That is exactly how ExyliaPracticeCore drives its bot matches: the arena's kit, the arena's distances,
+and the mode left to decide only how the fight is played.
+
+### `BotKit`
+
+41 slots in the layout Bukkit gives a player: `0-35` storage (`0-8` the hotbar), `36-39` armour
+boots-first as `getArmorContents()` orders it, `40` the off hand. It is the same array a practice plugin
+already stores per kit, so nothing has to be translated on the way out. A wrong length is rejected.
+
+| Member | What it does |
+|---|---|
+| `BotKit.of(ItemStack[] playerLayout)` | A kit from a 41-slot array. Nulls are empty slots. |
+| `BotKit.ofInventory(PlayerInventory)` | The kit a player is carrying right now — "fight me with what I have on". |
+| `contents()`, `storage()`, `hotbar()`, `armour()` | Copies, in that layout. |
+| `boots()`, `leggings()`, `chestplate()`, `helmet()`, `offHand()` | One slot each. |
+| `count(Material)` / `has(Material)` | How many of something the kit holds, counting stack sizes. Eight golden apples is a different fight from thirty-two. |
+| `isEmpty()` | Whether every slot is empty — a kit nobody should be sent into. An empty kit is ignored and the mode dresses the bot instead. |
+
+Items are deep-copied on the way in and on the way out. A kit is a description of a fight; a caller that
+kept editing the array it handed over would be editing a fight that already started.
+
+You do not name the main hand. The bot works out which items it can hold, which it can drink and which
+mean nothing to it — a sender that had to decide would be guessing at a question the other side answers
+better, and would need updating every time the bot learns to use something new.
+
+### `BotLimits`
+
+Two distances, in blocks, and the reason they are in the API at all: the plugin's own figures are tuned
+for a dummy standing next to its owner, and a match is the opposite of that on both counts.
+
+| Member | What it means |
+|---|---|
+| `engageDistance` | How close the target has to be before the bot fights at all. Zero or less means anywhere. |
+| `leashDistance` | How far the target may get before the bot is taken off the field. Zero or less means never. |
+| `BotLimits.unlimited()` | Both off. What a match wants: the arena is the boundary and the match is the clock. |
+| `engagesAnywhere()` / `leashless()` | The same two questions, asked of an instance. |
+
+Left unsent, the plugin's configured values apply and nothing changes for anybody else. Sent, they are
+the ones the bot runs on — a bot spawned across an arena under sandbox limits stands still waiting to be
+approached, and one whose opponent runs the length of the map is quietly removed mid-fight.
+
+## The handle
+
+`BotHandle` is the bot from the outside — a handle, not the bot. The entity it drives and the state
+machine deciding its swings stay inside the plugin that owns it. It never becomes valid again once the
+bot is gone: hold it for as long as the fight lasts, drop it after, and check `isAlive()` rather than
+assuming.
+
+| Method | What it does |
+|---|---|
+| `UUID entityId()` | The entity id of the body it drives. A plain UUID on purpose — the entity type is not part of this contract and has changed before. |
+| `Player owner()` | Whose bot it is. Never changes. |
+| `Player target()` | Who it is fighting right now. Starts as the owner. |
+| `void setTarget(Player target)` | Points it at somebody else, from the next tick it thinks. Whatever it had decided about the previous opponent — its route, the combo it thought it was in — is dropped. Ignored when null or already the target. |
+| `boolean isAlive()` | Whether the bot still exists and is fighting. |
+| `double health()` / `double maxHealth()` | A snapshot taken on the bot's own tick, not a live read: at worst a tick or two stale, which no health bar can see. `0` once the bot is gone. |
+| `void remove()` | Removes it. Safe to call twice, and on a bot that already died. |
+
+<Callout type="warning" title="Remove before you reset the arena">
+Anything that put a bot inside an arena should `remove()` it before handing the arena back, not after.
+An arena being reset takes every entity standing in it with no warning to whoever owned them.
+</Callout>
+
+`health()` being a snapshot is deliberate. Entities belong to the thread that owns their region, and
+something drawing a health bar every couple of ticks from somewhere else has no business reaching into
+one.
+
+## Modes and difficulties
+
+`CombatMode` is how it fights, `Difficulty` is how well. Together they are the whole configuration
+surface a normal user ever touches.
+
+| Mode | What it is |
+|---|---|
+| `NONE` | Plain vanilla melee. No techniques, no consumables. |
+| `SWORD` | Sword and shield, played straight: combos, w-taps, strafes, few crits. |
+| `POT_PVP` | 1.8-flavoured sword combat: crits, w-taps, strafes, gapples, heal pots. |
+| `UHC` | Axe and shield: guard breaks, gapples, cobwebs, lava and water. |
+| `CRYSTAL_PVP` | Obsidian, end crystals, respawn anchors, totems, traps. |
+| `MACE_PVP` | Wind-charge launches into mace smashes. |
+| `BOXING` | Hits are counted, not dealt. Pure combo practice. |
+
+| Difficulty | What it is |
+|---|---|
+| `EASY` | Late reactions, sloppy aim, swings early, forgets to reset sprint. |
+| `NORMAL` | A decent server regular. Lands most techniques, still makes mistakes. |
+| `HARD` | Practises daily. Tight spacing, clean combos, punishes every heal. |
+| `INSANE` | Frame-perfect. Only sensible with a shield or a totem in hand. |
+| `EXTREME` | Past frame-perfect: one tick of lag on the world, no misses, no blunders. Meant to be unfair. |
+
+`CombatMode.playable()` is every mode except `NONE`, in declaration order — build a picker from it and
+it grows on its own the day a mode is added. `next()` and `previous()` step through both enums for a
+cycling button.
+
+Both have a `parse(String)` that absorbs the names older versions and configurations used, and neither
+ever throws: an unknown name reads as `NONE` for a mode and `NORMAL` for a difficulty. Nothing persists
+an ordinal, so the declaration order can change without breaking a stored row.
+
+## Events
+
+One event, `net.exylia.lib.api.practicebot.event.PracticeBotDeathEvent`. It extends `Event` and is
+**not cancellable** — there is no `Cancellable` on it and nothing to gate. By the time it runs the bot
+is already gone; the handle is there to say which one it was and who it belonged to, not to be kept.
+
+| Method | What it carries |
+|---|---|
+| `BotHandle bot()` | The bot that died. Already removed: only its identity is still good. |
+| `Player lastTarget()` | Who it was fighting when it died. |
+
+<Callout type="warning" title="It is fired on the bot's own thread">
+On a threaded server that is not the main thread, and the event is flagged async accordingly. Schedule
+anything that touches the wider world.
+</Callout>
+
+It fires on death, whether or not the bot was set to respawn — and also when a bot's own tick loop
+fails, because such a bot leaves the world and has to be reported gone rather than left standing as an
+invulnerable statue in somebody's arena. It does **not** fire for the ordinary removals: `remove()`,
+the owner dying, changing world, or walking past the leash. A match that needs to know about those
+watches its own conditions, or calls `remove()` itself.
+
+```java
+@EventHandler
+public void onBotDeath(PracticeBotDeathEvent event) {
+    matches.byBot(event.bot().entityId())
+           .ifPresent(match -> match.finish(event.lastTarget()));
+}
+```
+
+Compare `event.bot().entityId()` rather than holding the handle: it is the one thing about a dead bot
+that is still worth anything.
+
+## What it does not expose
+
+No access to the thirty-odd settings a player tunes from `/bot`, no way to read or write somebody's
+saved row, no menu openers, and no event other than the death above. An integration asks for a way of
+fighting at a level of skill and lets the bot decide the rest — a public method for every slider would
+be a contract that breaks every time the AI learns something.
+
+`BotKit` and `BotLimits` are newer than the rest: they arrived in ExyliaLib `1.84.0` and `1.86.0`, while
+everything else has been there since `1.73.0`. Build against a recent `exylia-api` if you want them.
+
+If something you genuinely need is still missing, ask on [Discord](https://discord.exylia.net).

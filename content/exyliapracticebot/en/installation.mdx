@@ -1,0 +1,139 @@
+---
+title: "Installation"
+description: "Dependencies, first boot, the files the plugin generates, and the one key that has to be set."
+---
+
+## Before you start
+
+ExyliaPracticeBot needs two plugins in `plugins/` **before** the first boot.
+
+| Plugin | What for |
+|---|---|
+| `packetevents` | Declared under `depend`. Without it the server never loads the plugin at all. |
+| `ExyliaLib` | Declared under `softdepend`. Configuration, menus, menu actions, database, tasks, text and effects. The plugin does not run without it. |
+
+<Callout type="note" title="Why one is hard and the other is soft — honestly">
+`depend` and `softdepend` are load-order rules, not a statement about how much each is needed.
+
+`packetevents` is a hard `depend` because it has to be loaded and initialised before anything on top of
+it starts: the packet-backed parts of ExyliaLib check for it once, on the first send, and never look
+again. The plugin's own code never calls the PacketEvents API directly.
+
+`ExyliaLib` is `softdepend` on purpose, and it is the one the plugin genuinely cannot run without: the
+loader that installs ExyliaLib is itself what has to load for that install to happen, and a hard
+`depend` would stop the plugin loading before the library could ever arrive. Soft here means "load me
+after it", not "optional".
+</Callout>
+
+There are no optional dependencies. The plugin registers no PlaceholderAPI placeholders, so
+PlaceholderAPI buys you nothing here.
+
+## Installing
+
+<Steps>
+  <Step title="Drop in the jar">
+    Copy `ExyliaPracticeBotV3.jar` into the server's `plugins/` folder, alongside `packetevents` and
+    `ExyliaLib`.
+  </Step>
+  <Step title="Start the server">
+    The first boot writes `config.yml`, `messages.yml`, the two menu files and the database table.
+  </Step>
+  <Step title="Check the console">
+    You are looking for `ExyliaPracticeBotV3 enabled!`. If the line never appears, `packetevents` is
+    missing — that is the only dependency that stops the plugin loading outright.
+  </Step>
+  <Step title="Allow a world">
+    Open `config.yml` and put your world into the `worlds` list. Until you do, `/bot spawn` is refused
+    everywhere. This is the step people miss; see below.
+  </Step>
+  <Step title="Spawn one">
+    `/bot` with `exyliapracticebot.use` opens the menu. See
+    [First steps](/docs/exyliapracticebot/first-steps).
+  </Step>
+</Steps>
+
+## Where bots may be spawned
+
+The `worlds` key at the top level of `config.yml` is the whitelist of worlds a bot may exist in. It is
+checked in three places — `/bot spawn`, the menu's spawn button, and the automatic respawn — so there
+is no way around it.
+
+```yaml title="plugins/ExyliaPracticeBotV3/config.yml"
+# Worlds where a bot may be spawned. Empty means nowhere.
+worlds:
+  - exylia_sandbox_badlands
+  - exylia_sandbox_desert
+  - exylia_sandbox_mushroom
+  - exylia_sandbox_plains
+  - exylia_sandbox_snowy
+```
+
+<Callout type="warning" title="The default list will not match your server">
+The file ships with five `exylia_sandbox_*` worlds, which are Exylia's own. On any other server none
+of those worlds exist, so the practical effect on a fresh install is the same as an empty list: **no
+world is allowed and every spawn is refused** with "You can't spawn a bot in this world" until you
+replace the list with your own world names. An empty list allows nothing at all — it is not a
+wildcard.
+</Callout>
+
+World names are matched exactly, as `world.getName()` reports them — the folder name, not a display
+name. After editing, `/bot reload` re-reads the file without a restart.
+
+## Generated files
+
+All of them live in `plugins/ExyliaPracticeBotV3/`.
+
+| File | Contents |
+|---|---|
+| `config.yml` | `bot.mode` and `bot.difficulty`, the world whitelist, respawn, interaction, everything under `advanced`, the slider `limits` and `max-bots`. |
+| `messages.yml` | Every player-facing line, plus the display labels for modes, difficulties, armour, enchantments, hands, knockback, strength and speed. |
+| `menus/user/main.yml` | The main screen: mode, difficulty, armour, hands, potions, the toggles, spawn, remove and reset. |
+| `menus/user/advanced.yml` | The fine-tuning screen: damage, reach, speeds, health, totems and the sandbox toggles. |
+| `database.yml` | Database engine, written by ExyliaLib. H2 by default, embedded, nothing to install. |
+| `dumps/` | Created by `/bot export`, and read by `/bot import <filename>`. |
+
+Both menu files are copied out of the jar once and never overwritten, so your edits survive updates.
+
+## Folia
+
+`plugin.yml` declares `folia-supported: true`, and the plugin is written for it: every bot ticks on the
+thread that owns its own region, spawning happens on the thread that owns the destination, and each bot
+holds a chunk ticket for the chunk it is standing in so it keeps thinking even when nobody is nearby.
+Nothing extra to configure.
+
+## Database
+
+By default the plugin uses **H2**: a file inside the plugin folder, with no server, no installation and
+no maintenance. It stores one row per player in `practicebot_players`, holding that player's bot
+settings.
+
+To share settings across servers, edit `database.yml`:
+
+```yaml title="plugins/ExyliaPracticeBotV3/database.yml"
+database:
+  type: mysql
+  settings:
+    max-pool-size: 0
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Supported engines: `h2`, `mysql`, `mariadb`, `postgresql` and `mongodb`. Only the block matching `type`
+is read. The file is ExyliaLib's; its full reference is in the
+[library's database page](/docs/exylialib/database).
+
+Nothing waits on the database while the plugin enables. A player's row is read when they join and
+written the moment a setting changes.
+
+## Updating
+
+Replace the jar and restart. Your edits to `config.yml`, `messages.yml` and both menu files are kept,
+and player settings live in the database. A config written by an older release is migrated in place on
+boot — the old `restrictions.allowed-worlds` key, for one, is moved to `worlds` rather than lost.
+
+Bots themselves never survive a restart: they are session objects, and every one is removed on
+shutdown.

@@ -1,0 +1,103 @@
+---
+title: "Comandos"
+description: "Un comando raíz, sus cinco subcomandos de jugador, los tres de administración y qué dice cada rechazo."
+---
+
+Hay un solo comando. `/bot` es toda la superficie: escrito solo abre el menú principal, y todo lo demás
+es un subcomando suyo. No tiene alias.
+
+La raíz en sí pide `exyliapracticebot.use`, así que un jugador sin ese nodo ni siquiera ve el comando —
+los permisos de los subcomandos se comprueban encima de ese.
+
+## Comandos de jugador
+
+Todo lo de aquí necesita `exyliapracticebot.use` y lo tiene que escribir un jugador: cada uno actúa
+sobre el bot de quien lo escribió, así que la consola no tiene sobre qué actuar.
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/bot` | `exyliapracticebot.use` | Abre el menú principal. |
+| `/bot spawn` | `exyliapracticebot.use` | Genera tu bot con tus ajustes guardados, un bloque por encima de donde estás. |
+| `/bot remove` | `exyliapracticebot.use` | Elimina tu bot. |
+| `/bot tpme` | `exyliapracticebot.use` | Trae el bot hasta ti. |
+| `/bot tpto` | `exyliapracticebot.use` | Te lleva hasta el bot. |
+| `/bot reset` | `exyliapracticebot.use` | Devuelve todos tus ajustes a su valor por defecto. |
+
+`/bot reset` también actualiza un bot que ya esté fuera: los ajustes nuevos se le aplican en el momento,
+sin esperar al siguiente spawn. La fila reiniciada se guarda en la base de datos al instante.
+
+`/bot tpme` y `/bot tpto` son teletransportes asíncronos — la confirmación llega cuando el teletransporte
+ya ocurrió, no cuando escribes el comando.
+
+<Callout type="note" title="El menú hace lo mismo">
+`spawn`, `remove`, `tpme`, `tpto` y `reset` tienen un botón en el menú principal, conectado al mismo
+código. Los comandos existen para que nada de esto dependa de que un archivo de menú siga como vino.
+Ver [Menús](/docs/exyliapracticebot/menus).
+</Callout>
+
+### Qué dice cada rechazo
+
+Las líneas de abajo son las que trae `messages.yml` por defecto; todas son editables, y cada una viene
+con un sonido y, en un caso, una partícula. Lo que importa es la clave — el texto es tuyo.
+
+| Se rechaza | Clave | Línea por defecto |
+|---|---|---|
+| Generar un bot en un mundo que no está en `worlds` | `bot.world-not-allowed` | *You can't spawn a bot in this world. Please use /rtp first* |
+| Generar uno cuando ya tienes | `bot.already-has-bot` | *You already have a bot. Use /bot remove first.* |
+| Generar uno con el servidor en su tope de bots | `bot.limit-reached` | *The server is already running `%limit%` bots. Try again in a moment.* |
+| `remove`, `tpme` o `tpto` sin ningún bot fuera | `bot.no-bot` | *You don't have an active bot.* |
+
+`%limit%` es el valor configurado en `max-bots`, no una cuenta de quién los está usando. Ver
+[Límites](/docs/exyliapracticebot/limites).
+
+Un spawn correcto responde con `bot.spawned`, una eliminación con `bot.removed`, los dos teletransportes
+con `bot.teleported-bot-to-you` y `bot.teleported-to-bot`, y un reinicio con `bot.settings-reset`.
+
+## Comandos de administración
+
+Todo lo de aquí necesita `exyliapracticebot.admin` y funciona tanto desde la consola como en el juego.
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/bot reload` | `exyliapracticebot.admin` | Recarga los archivos del plugin. |
+| `/bot export` | `exyliapracticebot.admin` | Escribe todas las tablas del plugin en un único volcado. |
+| `/bot import <archivo>` | `exyliapracticebot.admin` | Vuelve a leer un volcado. |
+
+### Recarga
+
+Dos pasos con nombre. `configs` vuelve a leer `config.yml` y `messages.yml` y reaplica el prefijo de los
+mensajes; `menus` compila de nuevo cada archivo de menú. El paso de menús también corre por su cuenta
+cuando se recarga la propia ExyliaLib, así que un cambio de menú recogido por una recarga de ExyliaLib
+no necesita un segundo comando aquí.
+
+La recarga no toca los datos de jugador — viven en la base de datos y ya son lo que el plugin tiene en
+memoria — y tampoco elimina los bots que estén fuera. Un bot sigue corriendo con los ajustes que le
+dieron.
+
+### Exportar e importar
+
+Ambos pasan por el módulo de transferencia de ExyliaLib, ambos corren en un hilo aparte, y ambos
+responden con una línea de informe al terminar: en verde si la transferencia salió bien, en rojo si no,
+y la línea nombra el resultado, cuántas tablas, cuántas filas y cuánto tardó.
+
+`export` escribe dentro de `dumps/`, en la carpeta de datos del propio plugin, y la crea si no existe.
+El archivo se nombra con el plugin, el motor de base de datos y el momento en que se tomó —
+`ExyliaPracticeBotV3-<motor>-<yyyyMMdd-HHmmss>.exyliadump.gz` — así que dos exportaciones nunca se pisan.
+
+`import` recibe exactamente un argumento: el **nombre de un archivo dentro de esa misma carpeta
+`dumps/`**, con extensión incluida, tal y como lo escribió `export`.
+
+```text
+/bot export
+/bot import ExyliaPracticeBotV3-h2-20260906-141355.exyliadump.gz
+```
+
+Es un nombre, no una ruta que elijas: lo que escribas se resuelve dentro de `dumps/`, así que un volcado
+traído de otro servidor hay que dejarlo ahí primero. Al ser un único argumento, tampoco puede llevar
+espacios — cosa que los nombres generados nunca tienen.
+
+<Callout type="warning" title="La importación se niega a escribir sobre filas que ya existen">
+La importación corre sin la opción de forzado del módulo de transferencia. Si la tabla de destino ya
+tiene filas, no se escribe nada y el informe dice qué tabla y cuántas filas lo impidieron. Es la mitad
+segura del módulo, y a propósito: úsala para mover una base de datos, no para fusionar dos.
+</Callout>

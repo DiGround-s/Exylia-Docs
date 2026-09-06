@@ -1,0 +1,189 @@
+---
+title: "Menús"
+description: "Los dos archivos de menú editables, a qué está conectado cada botón, el vocabulario completo de acciones y los placeholders que puede leer un menú."
+---
+
+`/bot` abre una pantalla y esa pantalla abre una más. Las dos son archivos YAML que te pertenecen:
+
+| Archivo | Pantalla |
+|---|---|
+| `plugins/ExyliaPracticeBotV3/menus/user/main.yml` | El hub que abre `/bot`: modo, dificultad, armadura, manos, pociones y los botones de invocación. |
+| `plugins/ExyliaPracticeBotV3/menus/user/advanced.yml` | **Ajuste fino**: los deslizadores numéricos y los interruptores de sandbox. |
+
+Se copian del jar la primera vez que arranca el plugin y **nunca se sobrescriben** después, así que tus
+ediciones sobreviven a una actualización. `/bot reload` vuelve a leer ambos, junto con `config.yml` y
+`messages.yml`. El formato es el YAML declarativo de menús de ExyliaLib — ver la
+[página de menús de la librería](/docs/exylialib/menus) para las claves de ítem, el bloque de relleno,
+los sonidos y las animaciones.
+
+<Callout type="note" title="La carpeta user/ es deliberada">
+El id de un menú es su ruta bajo `menus/` sin la extensión, y por eso los dos archivos viven en
+`user/`. Es la disposición que usa cada plugin de Exylia, y deja sitio para un árbol `admin/` más
+adelante. Mover un archivo fuera de `user/` cambia su id y el plugin ya no lo encuentra.
+</Callout>
+
+## main.yml
+
+`size: 54`, `type: SIMPLE`, un relleno de cristal gris y refresco `ON_CLICK`, para que un botón muestre
+su nuevo valor en el momento en que lo pulsas.
+
+| Ítem | Ranura | Clic izquierdo | Clic derecho |
+|---|---|---|---|
+| `mode` | 3 | `cycle mode` | `cycle mode back` |
+| `difficulty` | 4 | `cycle difficulty` | `cycle difficulty back` |
+| `advanced` | 5 | `open_advanced_settings` | |
+| `helmet` | 10 | `cycle helmet` | `cycle helmet_enchant` |
+| `chestplate` | 19 | `cycle chestplate` | `cycle chestplate_enchant` |
+| `leggings` | 28 | `cycle leggings` | `cycle leggings_enchant` |
+| `boots` | 37 | `cycle boots` | `cycle boots_enchant` |
+| `main-hand` | 16 | `cycle main_hand` | `cycle knockback` |
+| `off-hand` | 25 | `cycle off_hand` | |
+| `potions` | 34 | `cycle strength` | `cycle speed` |
+| `teleport` | 43 | `tp_to_bot` | `tp_bot_to_me` |
+| `toggle-attack` | 22 | `toggle attack` | |
+| `toggle-follow` | 31 | `toggle follow` | |
+| `spawn` | 48 | `spawn` | |
+| `reset` | 49 | `reset_settings` | |
+| `remove` | 50 | `remove` | |
+
+## advanced.yml
+
+El mismo armazón, más `parent: "user/main"` — que es lo que hace funcionar el botón **Atrás** de la
+ranura 49.
+
+| Ítem | Ranura | Clic izquierdo | Clic derecho |
+|---|---|---|---|
+| `attack-damage` | 10 | `adjust attack_damage 0.5` | `adjust attack_damage -0.5` |
+| `toggle-anti-knockback` | 13 | `toggle anti_knockback` | |
+| `follow-distance` | 16 | `adjust follow_distance 0.5` | `adjust follow_distance -0.5` |
+| `attack-reach` | 19 | `adjust attack_reach 0.1` | `adjust attack_reach -0.1` |
+| `toggle-slow-falling` | 22 | `toggle slow_falling` | |
+| `max-health` | 25 | `adjust max_health 2` | `adjust max_health -2` |
+| `attack-speed` | 28 | `adjust attack_speed 0.1` | `adjust attack_speed -0.1` |
+| `toggle-fire-resistance` | 31 | `toggle fire_resistance` | |
+| `shield-disable` | 34 | `adjust shield_disable 0.5` | `adjust shield_disable -0.5` |
+| `movement-speed` | 37 | `adjust movement_speed 0.1` | `adjust movement_speed -0.1` |
+| `totems` | 40 | `adjust totems 1` | `adjust totems -1` |
+| `toggle-invincible` | 43 | `toggle invincible` | |
+| `back` | 49 | `back` | |
+
+`back` es una acción de la propia ExyliaLib, no de este plugin; necesita la clave `parent` de arriba y
+nada más.
+
+## Escribir una acción
+
+Las acciones van en la lista `actions` de un ítem, con el clic que las dispara como prefijo opcional:
+
+```yaml
+actions:
+  - "left: cycle helmet"
+  - "right: cycle helmet_enchant"
+```
+
+Una entrada sin prefijo se dispara con cualquier clic. Las acciones se escriben sin prefijo de espacio
+de nombres y se resuelven en el de este plugin, `practicebot`, así que `cycle mode` y
+`practicebot:cycle mode` son lo mismo.
+
+### El vocabulario completo
+
+| Acción | Qué hace |
+|---|---|
+| `spawn` | Invoca el bot del jugador donde está de pie. Se niega en un mundo fuera de `worlds`, y se niega si ya tiene uno. |
+| `remove` | Manda al bot fuera. |
+| `tp_to_bot` | Teletransporta al jugador hasta su bot. |
+| `tp_bot_to_me` | Teletransporta al bot hasta el jugador. |
+| `open_advanced_settings` | Abre `user/advanced`. |
+| `reset_settings` | Devuelve cada ajuste al valor por defecto del servidor, kit incluido. |
+| `set_mode <modo>` | Fija el modo directamente. Un nombre no reconocido cae en `NONE`. |
+| `set_difficulty <dificultad>` | Fija la dificultad directamente. Un nombre no reconocido cae en `NORMAL`. |
+| `toggle <campo>` | Invierte un booleano. |
+| `cycle <campo> [back]` | Avanza un ajuste a su siguiente valor, o al anterior con `back`. |
+| `adjust <campo> <delta>` | Suma `delta` a un número, con recorte y redondeo. |
+
+`set_mode` y `set_difficulty` están para un menú que quiera un botón por modo en lugar de un botón que
+cicla. Ver [Modos](/docs/exyliapracticebot/modos) y
+[Dificultad](/docs/exyliapracticebot/dificultad) para los nombres que aceptan.
+
+<Callout type="warning" title="Las listas de campos son cerradas">
+`toggle`, `cycle` y `adjust` aceptan exactamente los campos de abajo. Un nombre que no esté en su lista
+hace fallar la acción — el clic no hace nada y el ajuste queda intacto. No hay forma de añadir un campo
+desde el YAML.
+</Callout>
+
+### `toggle <campo>`
+
+| Campo | Ajuste |
+|---|---|
+| `attack` | Si el bot devuelve los golpes o no. |
+| `follow` | Si sigue a su dueño. |
+| `invincible` | Nunca muere. |
+| `anti_knockback` | Ignora el empuje por completo. |
+| `slow_falling` | Caída Lenta permanente. |
+| `fire_resistance` | Resistencia al Fuego permanente. |
+
+### `cycle <campo> [back]`
+
+| Campo | Recorre |
+|---|---|
+| `helmet`, `chestplate`, `leggings`, `boots` | `NONE` → `DIAMOND` → `NETHERITE` |
+| `helmet_enchant`, `chestplate_enchant`, `leggings_enchant`, `boots_enchant` | `NONE` → `PROTECTION` → `BLAST_PROTECTION` |
+| `main_hand` | `SWORD` → `AXE` → `MACE` → `TOTEM` |
+| `off_hand` | `NONE` → `TOTEM` → `SHIELD` |
+| `knockback` | `NONE` → `KNOCKBACK_1` → `KNOCKBACK_2` |
+| `strength` | `NONE` → `STRENGTH_1` → `STRENGTH_2` |
+| `speed` | `NONE` → `SPEED_1` → `SPEED_2` |
+| `mode` | Los siete modos de combate |
+| `difficulty` | Las cinco dificultades |
+
+Todas las listas vuelven al principio al terminar. `back` solo significa algo para `mode` y
+`difficulty` — el resto es lo bastante corto como para que adelante sea la única dirección que alguien
+necesita, y ahí el argumento se ignora.
+
+### `adjust <campo> <delta>`
+
+| Campo | Ajuste |
+|---|---|
+| `attack_damage` | Daño de un golpe cargado del todo y no crítico. |
+| `attack_reach` | Bloques desde los que puede golpear. |
+| `attack_speed` | Multiplicador sobre la cadencia que eligió el modo. |
+| `movement_speed` | Multiplicador sobre la velocidad al andar y al correr. |
+| `follow_distance` | Cómo de cerca se queda cuando no está peleando. |
+| `max_health` | Vida máxima, en medios corazones. |
+| `totems` | Tótems de repuesto por vida. |
+| `shield_disable` | Segundos que un hachazo mantiene su escudo abajo. |
+
+`delta` puede ser negativo, y así es como los archivos que trae el plugin escriben sus botones de
+bajada. Cada resultado se recorta al par correspondiente del bloque `limits` de `config.yml` y luego se
+redondea a un decimal, así que un botón con un delta más fino que `0.1` parecerá no hacer nada.
+`totems` se redondea a un número entero después del recorte. Ver
+[Límites](/docs/exyliapracticebot/limites).
+
+## Placeholders
+
+Un archivo de menú puede leer los ajustes actuales del jugador con estos nombres. `%name%` es la
+etiqueta que se imprime y `%name_material%` es el ícono que se dibuja — que es cómo la columna de
+armadura muestra la pieza que el bot lleva de verdad y cambia bajo el cursor.
+
+| Placeholder | Contiene |
+|---|---|
+| `%bot_active%` | Si el jugador tiene un bot fuera, como ON u OFF. |
+| `%mode%`, `%mode_material%`, `%mode_summary%` | La etiqueta del modo, su ícono y la línea que explica con qué pelea. |
+| `%difficulty%`, `%difficulty_material%`, `%difficulty_summary%` | Los mismos tres para la dificultad. |
+| `%attack_mode%`, `%follow_owner%`, `%invincible%`, `%anti_knockback%`, `%slow_falling%`, `%fire_resistance%` | Los seis interruptores, como ON u OFF. |
+| `%helmet%`, `%helmet_material%`, `%helmet_enchant%`, `%helmet_enchant_material%` | Una pieza de armadura: su etiqueta, su ícono, la etiqueta de su encantamiento y el ícono de ese encantamiento. Los mismos cuatro existen para `chestplate`, `leggings` y `boots`. |
+| `%main_hand%`, `%main_hand_material%` | El arma y su ítem. |
+| `%off_hand%`, `%off_hand_material%` | La mano secundaria y su ítem. |
+| `%knockback%`, `%strength%`, `%speed%` | Las tres etiquetas de encantamiento y poción. |
+| `%attack_damage%`, `%attack_reach%`, `%attack_speed%`, `%movement_speed%`, `%follow_distance%`, `%max_health%`, `%shield_disable%` | Los siete deslizadores, siempre con un decimal. |
+| `%totems%` | La reserva de tótems, o la etiqueta `unlimited` cuando está por debajo de cero. |
+
+Cada etiqueta sale del bloque `placeholders` de `messages.yml`, así que renombrar *Diamond* o
+recolorear *Strength II* es trabajo de ese archivo y nunca de este. `%bot_active%` no lo usa ninguno de
+los dos archivos que trae el plugin; está ahí para un dueño que quiera que **Invocar** y **Quitar**
+digan en qué estado están.
+
+<Callout type="danger" title="Son placeholders de menú y nada más">
+El plugin **no registra ninguna expansión de PlaceholderAPI**. Cada nombre de arriba lo resuelve el
+menú que se está dibujando y no existe en ningún otro sitio — ni en un scoreboard, ni en un holograma,
+ni en el mensaje de otro plugin. No hay ningún `%practicebot_...%` que puedas poner en ninguna parte.
+</Callout>

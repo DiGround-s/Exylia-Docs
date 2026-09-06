@@ -1,0 +1,141 @@
+---
+title: "Instalación"
+description: "Dependencias, primer arranque, los archivos que genera el plugin y la única clave que hay que tocar."
+---
+
+## Antes de empezar
+
+ExyliaPracticeBot necesita dos plugins en `plugins/` **antes** del primer arranque.
+
+| Plugin | Para qué |
+|---|---|
+| `packetevents` | Declarado en `depend`. Sin él el servidor no carga el plugin en absoluto. |
+| `ExyliaLib` | Declarado en `softdepend`. Configuración, menús, acciones de menú, base de datos, tareas, texto y efectos. El plugin no funciona sin ella. |
+
+<Callout type="note" title="Por qué una es dura y la otra blanda — la verdad">
+`depend` y `softdepend` son reglas de orden de carga, no una declaración de cuánto se necesita cada una.
+
+`packetevents` es un `depend` duro porque tiene que estar cargado e inicializado antes de que arranque
+nada que se apoye en él: las partes de ExyliaLib basadas en paquetes lo comprueban una sola vez, en el
+primer envío, y no vuelven a mirar. El código propio del plugin nunca llama a la API de PacketEvents.
+
+`ExyliaLib` está en `softdepend` a propósito, y es la que el plugin realmente no puede dejar de tener:
+el loader que instala ExyliaLib es justo lo que tiene que cargar para que esa instalación ocurra, y un
+`depend` duro impediría que el plugin cargara antes de que la librería pudiera llegar. Aquí "soft"
+significa "cárgame después de ella", no "opcional".
+</Callout>
+
+No hay dependencias opcionales. El plugin no registra ningún placeholder de PlaceholderAPI, así que
+PlaceholderAPI no te aporta nada aquí.
+
+## Instalar
+
+<Steps>
+  <Step title="Coloca el jar">
+    Copia `ExyliaPracticeBotV3.jar` en la carpeta `plugins/` del servidor, junto a `packetevents` y
+    `ExyliaLib`.
+  </Step>
+  <Step title="Arranca el servidor">
+    En el primer arranque se escriben `config.yml`, `messages.yml`, los dos archivos de menú y la tabla
+    de la base de datos.
+  </Step>
+  <Step title="Revisa la consola">
+    Buscas `ExyliaPracticeBotV3 enabled!`. Si esa línea no aparece nunca, falta `packetevents` — es la
+    única dependencia que impide que el plugin cargue de entrada.
+  </Step>
+  <Step title="Permite un mundo">
+    Abre `config.yml` y pon tu mundo en la lista `worlds`. Hasta que lo hagas, `/bot spawn` se rechaza
+    en todas partes. Este es el paso que la gente se salta; ver más abajo.
+  </Step>
+  <Step title="Aparece uno">
+    `/bot` con `exyliapracticebot.use` abre el menú. Ver
+    [Primeros pasos](/docs/exyliapracticebot/primeros-pasos).
+  </Step>
+</Steps>
+
+## Dónde se pueden aparecer bots
+
+La clave `worlds`, en el nivel superior de `config.yml`, es la lista blanca de mundos en los que un bot
+puede existir. Se comprueba en tres sitios —`/bot spawn`, el botón de aparecer del menú y el respawn
+automático—, así que no hay forma de rodearla.
+
+```yaml title="plugins/ExyliaPracticeBotV3/config.yml"
+# Worlds where a bot may be spawned. Empty means nowhere.
+worlds:
+  - exylia_sandbox_badlands
+  - exylia_sandbox_desert
+  - exylia_sandbox_mushroom
+  - exylia_sandbox_plains
+  - exylia_sandbox_snowy
+```
+
+<Callout type="warning" title="La lista por defecto no coincidirá con tu servidor">
+El archivo viene con cinco mundos `exylia_sandbox_*`, que son los de Exylia. En cualquier otro servidor
+ninguno de esos mundos existe, así que el efecto práctico en una instalación nueva es el mismo que una
+lista vacía: **ningún mundo está permitido y todo intento de aparecer se rechaza** con "You can't spawn
+a bot in this world" hasta que sustituyas la lista por los nombres de tus mundos. Una lista vacía no
+permite nada — no es un comodín.
+</Callout>
+
+Los nombres de mundo se comparan exactamente como los reporta `world.getName()`: el nombre de la
+carpeta, no un nombre visible. Después de editar, `/bot reload` relee el archivo sin reiniciar.
+
+## Archivos generados
+
+Todos viven en `plugins/ExyliaPracticeBotV3/`.
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | `bot.mode` y `bot.difficulty`, la lista blanca de mundos, respawn, interacción, todo lo que hay bajo `advanced`, los `limits` de los sliders y `max-bots`. |
+| `messages.yml` | Cada línea que ve el jugador, más las etiquetas de modos, dificultades, armadura, encantamientos, manos, retroceso, fuerza y velocidad. |
+| `menus/user/main.yml` | La pantalla principal: modo, dificultad, armadura, manos, pociones, los interruptores, aparecer, quitar y reiniciar. |
+| `menus/user/advanced.yml` | La pantalla de ajuste fino: daño, alcance, velocidades, vida, tótems y los interruptores de sandbox. |
+| `database.yml` | Motor de base de datos, escrito por ExyliaLib. H2 por defecto, embebido, nada que instalar. |
+| `dumps/` | La crea `/bot export`, y la lee `/bot import <archivo>`. |
+
+Los dos archivos de menú se copian del jar una vez y nunca se sobrescriben, así que tus ediciones
+sobreviven a las actualizaciones.
+
+## Folia
+
+`plugin.yml` declara `folia-supported: true`, y el plugin está escrito para ello: cada bot tickea en el
+hilo dueño de su propia región, la aparición ocurre en el hilo dueño del destino, y cada bot mantiene
+un ticket de chunk sobre el chunk en el que está para seguir pensando aunque no haya nadie cerca. No
+hay nada extra que configurar.
+
+## Base de datos
+
+Por defecto el plugin usa **H2**: un archivo dentro de la carpeta del plugin, sin servidor, sin
+instalación y sin mantenimiento. Guarda una fila por jugador en `practicebot_players` con los ajustes
+de su bot.
+
+Para compartir los ajustes entre servidores, edita `database.yml`:
+
+```yaml title="plugins/ExyliaPracticeBotV3/database.yml"
+database:
+  type: mysql
+  settings:
+    max-pool-size: 0
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Motores soportados: `h2`, `mysql`, `mariadb`, `postgresql` y `mongodb`. Solo se lee el bloque que
+coincide con `type`. El archivo es de ExyliaLib; su referencia completa está en la
+[página de base de datos de la librería](/docs/exylialib/base-de-datos).
+
+Nada espera a la base de datos mientras el plugin se activa. La fila de un jugador se lee cuando entra
+y se escribe en el momento en que cambia un ajuste.
+
+## Actualizar
+
+Sustituye el jar y reinicia. Tus ediciones en `config.yml`, `messages.yml` y los dos archivos de menú
+se conservan, y los ajustes de los jugadores viven en la base de datos. Una configuración escrita por
+una versión anterior se migra en el sitio al arrancar — la antigua clave `restrictions.allowed-worlds`,
+por ejemplo, se mueve a `worlds` en vez de perderse.
+
+Los bots en sí nunca sobreviven a un reinicio: son objetos de sesión, y todos se retiran al apagar.

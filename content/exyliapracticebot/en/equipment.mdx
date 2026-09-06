@@ -1,0 +1,166 @@
+---
+title: "Equipment"
+description: "The armour, weapon, off hand, knockback and potion buffs a bot wears, where its first kit comes from, and what each one changes in a fight."
+---
+
+A bot is dressed by fourteen settings: four armour pieces, an enchantment for each of them, a weapon,
+an off hand, a knockback level, strength, speed and fire resistance. Every one of them is a button in
+`/bot` — the armour column down the left of the main menu, the hands down the right, fire resistance
+in **Fine tuning**. Nothing here is a number you have to balance: the mode you pick already dressed
+the bot, and these are the pieces you change afterwards.
+
+## What you can change
+
+| Setting | Values | Where |
+|---|---|---|
+| Helmet, chestplate, leggings, boots | `NONE`, `DIAMOND`, `NETHERITE` | Main menu, left-click the piece |
+| The enchantment on each piece | `NONE`, `PROTECTION`, `BLAST_PROTECTION` | Main menu, right-click the piece |
+| Main hand | `SWORD`, `AXE`, `MACE`, `TOTEM` | Main menu, left-click **Main hand** |
+| Knockback on that weapon | `NONE`, `KNOCKBACK_1`, `KNOCKBACK_2` | Main menu, right-click **Main hand** |
+| Off hand | `NONE`, `TOTEM`, `SHIELD` | Main menu, **Off hand** |
+| Strength | `NONE`, `STRENGTH_1`, `STRENGTH_2` | Main menu, left-click **Potions** |
+| Speed | `NONE`, `SPEED_1`, `SPEED_2` | Main menu, right-click **Potions** |
+| Fire resistance | on or off | Fine tuning |
+
+Every button steps forward through its list and wraps around at the end, so a piece you overshot is
+three more clicks away rather than a menu away. The names you read on the buttons — *Diamond*,
+*Protection IV*, *Strength II* — are labels in `messages.yml` and can be renamed or recoloured; the
+values above are the ones the plugin stores.
+
+## Where the first kit comes from
+
+A player who has never opened `/bot` is dressed by whatever `bot.mode` says in `config.yml`. Each mode
+has one kit, and it is the kit that mode is balanced around:
+
+| Mode | Armour | Enchantment | Main hand | Off hand | Strength | Speed |
+|---|---|---|---|---|---|---|
+| `NONE` | Diamond | Protection | Sword | Shield | — | — |
+| `SWORD` | Diamond | Protection | Sword | Shield | — | — |
+| `POT_PVP` | Diamond | Protection | Sword | Shield | Strength II | Speed II |
+| `UHC` | Diamond | Protection | Axe | Shield | — | — |
+| `CRYSTAL_PVP` | Netherite | Blast Protection | Sword | Totem | — | — |
+| `MACE_PVP` | Netherite | Protection | Mace | Totem | — | — |
+| `BOXING` | — | — | Sword | — | — | — |
+
+A kit is uniform: all four pieces are the same tier with the same enchantment, which is what makes
+picking a mode one decision instead of eight. Mixing tiers afterwards is a per-piece choice and stays
+one. Two of the kits are deliberately bare — UHC carries no potion buffs because in UHC what you drink
+is what you brewed, and boxing wears no armour and holds nothing in the off hand because nobody is
+taking damage.
+
+<Callout type="warning" title="Changing mode does not re-dress the bot">
+The kit is applied when a player's settings are first created and every time they are reset. Cycling
+**Mode** in the menu afterwards changes the techniques the bot fights with and leaves the gear exactly
+as you left it. If you want a mode's own kit back, use **Reset settings** or
+[`/bot reset`](/docs/exyliapracticebot/commands) — that puts every setting back to the server default,
+kit included.
+</Callout>
+
+## Armour
+
+Three tiers per slot, chosen per slot.
+
+| Value | What goes on the bot |
+|---|---|
+| `NONE` | The slot is left empty. |
+| `DIAMOND` | The diamond piece for that slot. |
+| `NETHERITE` | The netherite piece for that slot. |
+
+Every piece is unbreakable, so a long session never wears the bot's kit down.
+
+## Enchantment
+
+One enchantment per piece, at level IV.
+
+| Value | What goes on the piece |
+|---|---|
+| `NONE` | Nothing. |
+| `PROTECTION` | Protection IV. |
+| `BLAST_PROTECTION` | Blast Protection IV — what a crystal fight is fought in. |
+
+## Main hand
+
+The weapon decides how often the bot may swing, because the bot waits for its attack bar the way a
+player does. Every shipped mode fights under modern combat rules, so the cooldown below is the real
+one.
+
+| Value | Item | Full charge |
+|---|---|---|
+| `SWORD` | Netherite sword | 12.5 ticks |
+| `AXE` | Netherite axe | 20 ticks |
+| `MACE` | Mace | 33.3 ticks |
+| `TOTEM` | Totem of Undying | 4 ticks |
+
+Three of them change more than the cadence:
+
+- An **axe** breaks a raised shield, and the bot knows it — this is the weapon the UHC kit carries.
+- A **mace** earns the vanilla smash bonus when the bot lands on you from a height, which is the whole
+  of `MACE_PVP`.
+- A **totem** is not a weapon. The bot holds it, hits for almost nothing and swings four times a
+  second, which is a bot that is there to be hit.
+
+The weapon is built unbreakable with Unbreaking III. Attack damage is not read off the item: it is the
+`attack_damage` slider in **Fine tuning**, and the cooldown scaling and critical hits vanilla applies
+go on top of it.
+
+## Knockback
+
+Knockback is an enchantment on the weapon, so it moves with the weapon.
+
+| Value | Level |
+|---|---|
+| `NONE` | Not enchanted at all |
+| `KNOCKBACK_1` | Knockback I |
+| `KNOCKBACK_2` | Knockback II |
+
+## Off hand
+
+| Value | What the bot holds | What it means |
+|---|---|---|
+| `NONE` | Nothing | Boxing carries nothing there, and neither does anybody who wants their movement. |
+| `TOTEM` | Totem of Undying | The bot pops it and re-arms from its totem reserve. |
+| `SHIELD` | An unbreakable shield | Raised and dropped on a timer, so it can be read — and disabled by your axe for the number of seconds in `shield_disable`. |
+
+How many spare totems the bot re-arms with is the `totems` slider in **Fine tuning**, not a setting on
+this page; see [Limits](/docs/exyliapracticebot/limits).
+
+## Strength and Speed
+
+Both are the vanilla potions, applied to the bot permanently and shown on it — the swirls are how an
+opponent knows what they are fighting.
+
+| Value | Effect | What it does |
+|---|---|---|
+| `NONE` | — | The effect is removed. |
+| `STRENGTH_1` | Strength I | +3 damage on every hit. |
+| `STRENGTH_2` | Strength II | +6 damage on every hit. |
+| `SPEED_1` | Speed I | Moves 1.2× as fast. |
+| `SPEED_2` | Speed II | Moves 1.4× as fast. |
+
+The damage and the movement are applied by the AI itself, exactly as the potion would; the effect on
+the bot exists so you can see it.
+
+`POT_PVP` is the only shipped kit that starts with either of them, and it starts with both at level II.
+
+## Fire resistance
+
+A permanent Fire Resistance effect, toggled from **Fine tuning**. No shipped kit starts with it — it is
+there for a sandbox where lava is part of the practice, which is what the UHC mode's `lava` technique
+makes it.
+
+## Golden apples
+
+Which apple the bot eats is not a button. It is decided for it:
+
+| Situation | What it eats |
+|---|---|
+| Pot PvP, no kit sent by another plugin | Enchanted golden apples if `advanced.pot-pvp.enchanted-apples` is on, plain ones otherwise. |
+| UHC, no kit sent | Plain golden apples. UHC has no splash potions, so the apple is the only heal there is. |
+| Either mode, with a kit sent | Whichever apple the kit actually holds — enchanted if there are any in it, plain otherwise. |
+
+## When the gear is not yours
+
+Another plugin can spawn a bot through the API with a kit of its own, and that kit outranks everything
+on this page: the armour, the weapon and the off hand come from the items, and what the bot can spend
+during the fight is counted out of the same kit. A player's saved settings are theirs and have no say
+in what a duel opponent wears. See [API](/docs/exyliapracticebot/api).

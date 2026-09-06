@@ -1,0 +1,108 @@
+---
+title: "Límites"
+description: "Dos techos distintos: max-bots, cuántos bots corre el servidor a la vez, y el bloque limits, hasta dónde se puede empujar cada slider del menú."
+---
+
+El plugin tiene dos cosas que se llaman límite y no son la misma cosa. Una cuenta bots. La otra acota
+un número dentro de un bot. Confundirlas es como un servidor acaba con un tope que nadie quiso poner.
+
+| | `max-bots` | el bloque `limits` |
+|---|---|---|
+| Qué cuenta | Bots vivos en todo el servidor | Nada. Acota un ajuste |
+| A quién frena | Al siguiente jugador que escriba `/bot` | Al jugador que mueve un slider en el menú avanzado |
+| Qué pasa en el borde | La invocación se rechaza con un mensaje | El slider deja de moverse |
+
+## `max-bots` — cuántos bots existen
+
+Un número, al final de `config.yml`, para todo el servidor.
+
+```yaml title="plugins/ExyliaPracticeBotV3/config.yml"
+# How many bots may exist on the server at once.
+# Every bot thinks once per tick and searches for its own path,
+# so this is a real ceiling and not a formality. Raise it only
+# after watching the tick time with the current one full.
+max-bots: 16
+```
+
+Ese comentario no es relleno. Un bot no es un adorno sentado en un chunk: observa, decide, apunta, se
+mueve y golpea en cada tick, y cuando el terreno se le pone delante corre además su propia búsqueda
+acotada en cuadrícula. Dieciséis bots son dieciséis de esos por tick. El número que te dice si puedes
+subirlo es tu tiempo de tick con el techo actual lleno, no el techo en sí.
+
+Todas las invocaciones pasan por un mismo sitio, así que el techo vive en un solo sitio: `/bot spawn`,
+el botón de invocar del menú, una reaparición automática y un bot que pide otro plugin se cuentan
+igual. En el techo la invocación falla con `BotLimitReachedException`, y el jugador lee
+`bot.limit-reached`:
+
+```yaml title="plugins/ExyliaPracticeBotV3/messages.yml"
+bot:
+  limit-reached: "%prefix% {error}The server is already running %limit% bots. Try again in a moment."
+```
+
+`%limit%` es el techo que rechazó la invocación.
+
+<Callout type="note" title="Reemplazar tu propio bot siempre funciona">
+La cuenta se comprueba contra jugadores que aún no tienen bot. Si ya tienes uno, invocar otra vez lo
+reemplaza en vez de sumar al total, así que un servidor lleno nunca te deja fuera de tu propio bot.
+</Callout>
+
+`max-bots` se lee como mínimo `1`: ponerlo a cero o en negativo no desactiva el plugin, te deja con un
+techo de uno.
+
+## El bloque `limits` — hasta dónde llega un slider
+
+Cada ajuste numérico del menú avanzado es un par de botones que suma o resta un paso. Este bloque es
+donde se para cada uno de ellos.
+
+```yaml title="plugins/ExyliaPracticeBotV3/config.yml"
+# Bounds the in-game menu clamps its sliders to.
+limits:
+  min-attack-speed: 0.25
+  max-attack-speed: 4.0
+  min-movement-speed: 0.25
+  max-movement-speed: 3.0
+  min-attack-reach: 1.0
+  max-attack-reach: 6.0
+  min-follow-distance: 1.0
+  max-follow-distance: 12.0
+  min-attack-damage: 0.5
+  max-attack-damage: 40.0
+  min-max-health: 1.0
+  max-max-health: 40.0
+  min-shield-disable: 0.0
+  max-shield-disable: 20.0
+  # Totems stop at -1, which is the unlimited setting.
+  min-totems: -1.0
+  max-totems: 16.0
+```
+
+| Slider | Rango | Qué acota |
+|---|---|---|
+| Velocidad de ataque | `0.25` – `4.0` | El multiplicador sobre la cadencia que eligió el modo. |
+| Velocidad de movimiento | `0.25` – `3.0` | El multiplicador sobre andar y correr. `1.0` es un jugador vanilla. |
+| Alcance de ataque | `1.0` – `6.0` | Bloques desde los que puede golpear. Un jugador vanilla tiene `3.0`. |
+| Distancia de seguimiento | `1.0` – `12.0` | Cuán cerca se queda fuera de combate. |
+| Daño de ataque | `0.5` – `40.0` | Un golpe a carga completa y sin crítico, en medios corazones. |
+| Vida máxima | `1.0` – `40.0` | Vida máxima, en medios corazones. |
+| Escudo deshabilitado | `0.0` – `20.0` | Segundos que un hachazo mantiene su escudo abajo. |
+| Tótems | `-1.0` – `16.0` | Tótems de repuesto por vida. |
+
+Dos cosas sobre cómo aterriza un slider en su valor:
+
+- **Redondea a un decimal.** Se aplica un paso, se recorta al rango y luego se redondea, así que un
+  slider nunca acumula una fracción arrastrada por muchas veces que lo muevas.
+- **Los tótems tocan fondo en `-1`, y `-1` significa ilimitado.** No es un suelo de "ninguno": `0` es
+  ninguno, el tótem del kit y nada después. Un paso por debajo es un bot que no se queda nunca sin
+  ellos, que el menú muestra como `∞`.
+
+<Callout type="warning" title="Estos límites son los del menú, no los del config">
+`limits` se aplica cuando un jugador mueve un slider. No vuelve a recortar lo que escribas bajo
+`advanced` en `config.yml`. Un valor por defecto fuera de sus propios límites se usa tal cual, y el
+primer toque en el menú lo mete dentro del rango y lo deja ahí.
+</Callout>
+
+Subir un máximo es una decisión de diseño sobre tu servidor, no de rendimiento: un bot con cuarenta
+medios corazones y seis bloques de alcance cuesta el mismo tiempo de tick que uno por defecto. La
+clave que cuesta tiempo de tick es `max-bots`. Ver
+[Comportamiento](/docs/exyliapracticebot/comportamiento) para qué hace un bot con su tick, y
+[Configuración](/docs/exyliapracticebot/configuracion) para todas las claves del archivo.

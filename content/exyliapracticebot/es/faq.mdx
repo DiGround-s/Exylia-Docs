@@ -1,0 +1,104 @@
+---
+title: "Preguntas frecuentes"
+description: "Las preguntas que más se repiten."
+---
+
+## El plugin no carga
+
+`packetevents` es una dependencia dura. Sin él en `plugins/`, el servidor no carga el plugin y no verás
+`ExyliaPracticeBotV3 enabled!` en la consola. `ExyliaLib` figura como blanda solo para que el loader
+pueda instalarla — el plugin la sigue necesitando para funcionar. Comprueba que están las dos.
+
+## ¿Por qué el plugin necesita PacketEvents?
+
+Por orden de carga, y por la librería que hay debajo. El código propio del plugin nunca llama a la API
+de PacketEvents; lo hacen las funciones de ExyliaLib basadas en paquetes, y esa comprobación ocurre una
+sola vez, en el primer uso. Declararlo como `depend` duro es lo que garantiza que PacketEvents esté
+cargado e inicializado antes de que arranque nada que se apoye en él.
+
+## "You can't spawn a bot in this world"
+
+El mundo en el que estás no está en la lista `worlds` de `config.yml`. La lista viene con los mundos
+`exylia_sandbox_*` de Exylia, así que en cualquier otro servidor no hay nada permitido hasta que la
+sustituyas por los nombres de tus mundos — una lista vacía no permite nada, no es un comodín. Los
+nombres se comparan exactamente como el servidor nombra el mundo. `/bot reload` recoge el cambio.
+
+## "You already have a bot. Use /bot remove first."
+
+Un bot por jugador, siempre. El plugin indexa cada bot por su dueño, así que pedir un segundo se
+rechaza en vez de reemplazar el primero en silencio. `/bot remove`, o el botón rojo del menú.
+
+## "The server is already running N bots. Try again in a moment."
+
+Eso es `max-bots`, el techo de todo el servidor, `16` por defecto. Es un techo real y no una
+formalidad: cada bot piensa una vez por tick y ejecuta su propia búsqueda de camino, así que el coste
+es por bot y se paga cada tick. Súbelo solo después de mirar tu tiempo de tick con el actual lleno.
+
+Los respawns automáticos pasan por la misma comprobación que una aparición nueva, así que un respawn
+nunca puede colarse por encima de un tope que habría rechazado una aparición.
+
+## Mi bot desapareció solo
+
+Hay cuatro motivos, y cada uno te dice cuál fue:
+
+| Lo que dijo | Por qué |
+|---|---|
+| "Bot removed: you died." | Su dueño murió. |
+| "Bot removed: you changed worlds." | Su dueño se fue a otro mundo. |
+| "Bot removed: you went too far away." | La distancia entre vosotros pasó de 200 bloques — la correa. |
+| *(nada)* | Te desconectaste o te expulsaron. El bot se va contigo. |
+
+Los tres primeros se comprueban de forma continua; la correa se mide cada tick entre el bot y el
+jugador contra el que pelea.
+
+## ¿Los bots sobreviven a un reinicio?
+
+No, y a propósito. Un bot es un objeto de sesión: todos se retiran cuando el plugin se apaga, y el
+maniquí se aparece con la persistencia apagada para que ni un crash ni un cierre forzado —cualquier
+cosa que se salte el hook de apagado— pueda dejar uno plantado en tu mundo para que lo herede el
+siguiente arranque.
+
+## ¿Mis ajustes sobreviven a un reinicio?
+
+Sí. Los ajustes se guardan por jugador, indexados por UUID, en la tabla `practicebot_players`: modo,
+dificultad, cada pieza de armadura y su encantamiento, manos, retroceso, fuerza, velocidad y todos los
+sliders de la pantalla de ajuste fino. La fila se lee cuando entras y se escribe en el momento en que
+cambias un ajuste, así que tampoco se pierde nada en un crash. Apunta `database.yml` a MySQL, MariaDB,
+PostgreSQL o MongoDB y esos mismos ajustes siguen al jugador entre servidores.
+
+`/bot reset` devuelve todos ellos al valor por defecto del servidor.
+
+## ¿Pueden dos jugadores compartir un bot?
+
+No. Un bot pertenece a un único dueño, pelea contra ese dueño y contra nadie más, y solo ese dueño
+puede abrir su menú con clic derecho agachado. Otro jugador a su lado no es un objetivo. La única forma
+de que un bot mire a alguien que no sea su dueño es que otro plugin lo reapunte a través de la API para
+desarrolladores.
+
+## ¿Por qué volvió mi bot después de matarlo?
+
+Porque `respawn.enabled` está activo, con `respawn.delay-seconds` en `2.0`. Recibes "Bot died!
+Respawning..." y luego "Bot respawned!". Apaga `respawn.enabled` para que un bot muerto siga muerto
+hasta que aparezcas otro. Un respawn se cancela si sales del mundo permitido, te desconectas, o el
+servidor está en su tope de bots.
+
+## No hay forma de matarlo
+
+`advanced.health.invincible` está activo, o lo están los tótems. Con la invencibilidad puesta la vida
+se rellena cada tick, y `advanced.health.totems` vale `-1` por defecto, lo que significa que el bot se
+rearma con un tótem indefinidamente. Los dos están en la pantalla de ajuste fino.
+
+## ¿Dónde está el mensaje de muerte cuando me mata el bot?
+
+Se suprime a propósito. Si lo último que te golpeó fue un bot, el mensaje público de muerte se
+descarta: que un muñeco de entrenamiento mate a alguien no es noticia del servidor.
+
+## ¿Funciona en Folia?
+
+Sí. `folia-supported: true`, y está escrito para ello: cada bot tickea en el hilo dueño de su región,
+la aparición se planifica en el hilo dueño del destino, y cada bot mantiene un ticket de chunk sobre el
+chunk en el que está para seguir pensando sin nadie cerca.
+
+## ¿Dónde consigo soporte?
+
+En el [Discord de Exylia](https://discord.exylia.net).

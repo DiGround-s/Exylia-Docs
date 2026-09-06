@@ -1,0 +1,151 @@
+---
+title: "Comportamiento"
+description: "Qué hace un bot cuando nadie lo está configurando: cuándo pelea, cuándo te sigue, las tres formas en que se va solo y cómo esquiva el terreno."
+---
+
+Un bot es un maniquí con su propio tick. En cuanto existe piensa una vez por tick, en el planificador
+de la propia entidad, y todo lo de abajo pasa sin que nadie toque un menú.
+
+## Ataque y Seguimiento
+
+Dos interruptores deciden qué hace un bot con su tick. Los dos están activados por defecto, y los dos
+viven en el menú avanzado.
+
+| Interruptor | Activado | Desactivado |
+|---|---|---|
+| **Ataque** | Pelea contra quien tenga apuntado. | No entra nunca en combate ni golpea. Sigue recibiendo daño, sigue siguiéndote y sigue muriendo. |
+| **Seguimiento** | Acorta distancia: a tus talones fuera de combate, a distancia de golpe en una pelea. | Se queda donde está. Fuera de combate nunca camina hacia ti; en una pelea aguanta su sitio en vez de perseguir. |
+
+Desactivar **Ataque** te deja un objetivo en movimiento que no devuelve nada. Desactivar
+**Seguimiento** te deja un saco de golpes que se queda exactamente donde lo dejaste. Desactivar los
+dos te deja una estatua que se cura sola.
+
+## Cuándo decide pelear
+
+Un bot entra en combate cuando se cumplen las tres cosas:
+
+- **Ataque** está activado.
+- Su objetivo está dentro de la **distancia de enganche**, `26` bloques.
+- Su objetivo no está en modo espectador.
+
+Hasta entonces está en reposo, y el reposo no es no hacer nada:
+
+- Te alcanza cuando **Seguimiento** está activado y estás más lejos que la distancia de seguimiento
+  (`advanced.movement.follow-distance`, `3.0` bloques por defecto) más un poco de holgura, para que
+  no ande arrastrándose hacia delante y hacia atrás en el borde de la banda.
+- Baja el escudo, deja de agacharse y mira alrededor cada uno o dos segundos.
+- Si nada lo golpea durante cinco segundos y no está comiendo, se cura al máximo. Un maniquí no tiene
+  hambre y nunca regenera solo, así que sin esto un bot de práctica solo podría ir a peor.
+
+<Callout type="tip" title="Veintiséis bloques son un paseo">
+Invoca un bot, aléjate y te seguirá sin pelear. Vuelve dentro de los veintiséis bloques y empieza.
+Así arrancas una serie cuando tú quieres y no cuando quiere el bot.
+</Callout>
+
+## Cuando lo golpeas
+
+El escudo solo bloquea mientras está realmente levantado. La IA lo baja para golpear, así que un
+jugador que lee el ritmo se lleva un golpe gratis: para eso existe el timing de escudo.
+
+| Lo que haces | Lo que pasa |
+|---|---|
+| Golpear un escudo levantado de frente | Cero daño. Igual sale empujado, exactamente como un jugador bloqueando. |
+| Golpearlo con un hacha | Su escudo cae durante `advanced.defense.shield-disable-seconds`, `5.0` por defecto, con el sonido de rotura. |
+| Reventarlo con explosiones | La explosión solo se bloquea si el escudo apunta a donde estalló. |
+| Reventarle el tótem | Tarda un momento en meterse el siguiente en la mano, de uno en uno, como un jugador. Cuántos tiene lo decide `advanced.health.totems`. |
+| Matarlo | No suelta nada y no cae experiencia. Su equipo se lo dio el servidor, no se lo ganó. |
+
+Si un bot te dio el último golpe, tu mensaje de muerte se oculta: el servidor no anuncia en el chat
+que te ha matado un bot.
+
+## Las tres formas en que un bot se va solo
+
+Cada una tiene su propia línea en `messages.yml`, y cada una se mide contra quien el bot esté
+peleando en ese momento, no contra el jugador que lo invocó.
+
+| Qué pasó | Clave del mensaje | Texto por defecto |
+|---|---|---|
+| Moriste | `bot.removed-death` | "Bot removed: you died." |
+| Cambiaste de mundo | `bot.removed-world-change` | "Bot removed: you changed worlds." |
+| Te fuiste más allá de la correa, `200` bloques | `bot.removed-too-far` | "Bot removed: you went too far away." |
+
+Hay tres eliminaciones más que ocurren en silencio, sin mensaje, porque ya no queda nadie que lo lea:
+el objetivo se desconecta o lo expulsan, el maniquí del bot deja de ser una entidad válida, y el
+servidor se apaga. Un bot no sobrevive nunca a un reinicio.
+
+<Callout type="note" title="Por qué el objetivo y no el dueño">
+Un bot se mide contra el jugador al que pelea. Un dueño que murió y ahora mira desde el lobby puede
+haber dejado su bot a media pelea con otra persona, y quitarlo ahí acabaría esa pelea para un jugador
+que no hizo nada malo.
+</Callout>
+
+## Reaparición
+
+Un bot muerto vuelve solo cuando `respawn.enabled` está activado, que es lo que trae por defecto.
+
+```yaml title="plugins/ExyliaPracticeBotV3/config.yml"
+respawn:
+  enabled: true
+  delay-seconds: 2.0
+```
+
+Recibes `bot.respawning` — "Bot died! Respawning..." — al instante, y `bot.respawned` cuando ya está.
+La reaparición se cancela si te desconectas mientras tanto, y se salta si ya no estás en uno de los
+mundos listados en `worlds`. Además pasa por el mismo camino de invocación que `/bot spawn`, así que una
+reaparición no puede saltarse un tope del servidor por el que una invocación nueva habría sido
+rechazada. Ver [Límites](/docs/exyliapracticebot/limites).
+
+## Shift clic derecho
+
+Agáchate y haz clic derecho sobre tu propio bot para abrir su menú. Viene activado y es una sola
+clave:
+
+```yaml title="plugins/ExyliaPracticeBotV3/config.yml"
+interaction:
+  shift-click-opens-menu: true
+```
+
+Solo tu propio bot, y solo agachado. Hacer clic derecho sobre el bot de otra persona no hace nada, y
+un clic derecho normal sobre el tuyo tampoco.
+
+## Cómo se mueve
+
+El bot dirige recto hacia donde va. Ese es el caso normal y no cuesta nada: una dirección, un
+escalón de un bloque, un salto. Lo que lo rompe es el terreno, y el terreno es lo único para lo que
+existe la búsqueda en cuadrícula de `advanced.pathfinding`.
+
+La búsqueda entra cuando la conducción directa ha fallado de forma visible — el bot ha dejado de
+avanzar, o tiene delante un muro más alto que un escalón — y produce una lista corta de puntos de
+paso por los que caminar en vez de ir al objetivo directamente. Solo se usa cuando el bot se acerca o
+te sigue: retroceder y girar alrededor nunca se dirigen por una ruta hacia la persona de la que se
+está apartando.
+
+| Clave | Por defecto | Qué cambia |
+|---|---|---|
+| `enabled` | `true` | Desactivado, el bot solo dirige recto hacia su objetivo. Se meterá contra las paredes. |
+| `max-search-radius-horizontal` | `16` | Cuánto puede mirar a los lados. También la distancia a partir de la cual ni se molesta en buscar. |
+| `max-search-radius-vertical` | `10` | Cuánto puede mirar hacia arriba y hacia abajo. |
+| `max-expanded-nodes` | `200` | El tamaño de una búsqueda. Súbelo en arenas con terreno de verdad, a un coste por bot y por búsqueda. |
+| `max-search-time-micros` | `1500` | El techo duro de reloj de una búsqueda. Siempre vuelve dentro de esto, con una ruta parcial si es todo lo que encontró. |
+| `max-drop-height-safe` | `3` | Cuánto se deja caer por el camino. |
+| `max-drop-height-protected` | `10` | Lo mismo, para un bot con Caída Lenta o invencibilidad: no puede hacerse daño, así que puede tomar el atajo. |
+| `max-gap-jump-columns` | `1` | Cuán ancho es el hueco que salta. |
+| `stuck-check-interval-ticks` | `10` | Cada cuánto se pregunta si se ha movido. |
+| `stuck-progress-epsilon` | `0.5` | Cuántos bloques cuentan como haberse movido. |
+| `stuck-strikes-threshold` | `2` | Cuántas comprobaciones seguidas tiene que fallar para contar como atascado. |
+| `path-stale-distance` | `5.0` | Cuánto puede alejarse el objetivo de donde apuntaba la ruta antes de tirarla. |
+| `path-max-age-ticks` | `60` | Cuánto puede envejecer una ruta. Tres segundos. |
+| `checkpoint-reached-radius` | `0.6` | Cuán cerca es suficientemente cerca de un punto de paso. |
+| `consecutive-failed-searches-before-cooldown` | `3` | Cuántas búsquedas sin resultado hacen falta para que se rinda. |
+| `give-up-cooldown-ticks` | `60` | Cuánto camina recto hacia el objetivo en vez de buscar. Tres segundos. |
+
+<Callout type="warning" title="Sube el presupuesto antes que el radio">
+`max-expanded-nodes` y `max-search-time-micros` son las dos claves que cuestan tiempo de tick, y lo
+cuestan una vez por bot y por búsqueda. Ensanchar el radio sin ensanchar el presupuesto solo hace que
+la búsqueda se quede sin presupuesto más lejos de casa.
+</Callout>
+
+Un bot también mantiene abierto el chunk en el que está mientras exista. Una entidad solo ejecuta su
+trabajo programado mientras su chunk está ticando, y un bot en un chunk que nadie tica nunca se pone
+el equipo y nunca piensa: se queda ahí desnudo y quieto. Mantener vivo su propio chunk es lo que
+impide eso, y el ticket se devuelve en cuanto el bot desaparece.

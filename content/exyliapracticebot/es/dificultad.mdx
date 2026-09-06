@@ -1,0 +1,206 @@
+---
+title: "Dificultad"
+description: "Los cinco peldaños de la escalera, los números detrás de cada uno y qué se siente al pelear contra cada uno."
+---
+
+La dificultad es una sola perilla en lugar de treinta. Un bot no se siente humano porque un dado
+decidiera que iba a hacer strafe este tick; se siente humano porque ve la pelea tarde, apunta de
+forma imperfecta, respeta su propio cooldown de ataque y ejecuta técnicas que de verdad ha decidido
+ejecutar. Cada uno de esos números sale de un único peldaño.
+
+```yaml title="plugins/ExyliaPracticeBot/config.yml"
+bot:
+  mode: POT_PVP
+  difficulty: NORMAL
+```
+
+El [modo](/docs/exyliapracticebot/modos) decide qué técnicas existen. La dificultad decide con qué
+calidad se ejecutan, y se aplica igual a todos los modos, así que `HARD` significa el mismo nivel de
+juego lleve el bot una espada o un cristal.
+
+<Callout type="note" title="Los nombres antiguos siguen funcionando">
+`Difficulty.parse` ignora mayúsculas, recorta espacios y absorbe los nombres de versiones anteriores:
+`NOOB`/`ROOKIE` → `EASY`, `MEDIUM` → `NORMAL`, `PRO`/`SWEAT` → `HARD`, `GOD`/`ELITE` → `INSANE`,
+`IMPOSSIBLE`/`NIGHTMARE` → `EXTREME`. Lo que no reconoce cae en `NORMAL`, así que una errata en
+`bot.difficulty` es un bot mediocre, no un error de arranque.
+</Callout>
+
+## Los cinco peldaños
+
+### `EASY` — reacciona tarde, falla
+
+Decide sobre un mundo de medio segundo de antigüedad, su cabeza gira a nueve grados por tick y su
+cono de acierto es el más estrecho de la escalera, así que un bot que llegó tarde de verdad golpea el
+aire. Ataca a media carga, tira a la basura aproximadamente un golpe de cada seis a propósito,
+abandona un combo tras un cuarto de segundo y entra en pánico: con la paciencia a 0,20 empieza una
+manzana dorada en mitad de tu combo, que es exactamente el error que pierde una ronda. Haz strafe
+fuerte y no estará mirándote.
+
+### `NORMAL` — un habitual del servidor
+
+La reacción baja a seis ticks y la cabeza gira el doble de rápido, suficiente para que el cono empiece
+a hacer su trabajo en lugar de la reacción. Aterriza la mayoría de las técnicas — algo más de la
+mitad —, espera dos tercios de carga y mantiene un combo casi medio segundo. Todavía tira
+aproximadamente un golpe de cada catorce, y todavía come en mal momento la mitad de las veces. Este
+es el peldaño en el que la pelea la decide tu juego y no sus errores.
+
+### `HARD` — entrena a diario
+
+Tres ticks de reacción, una cabeza que gira 44 grados por tick y técnica a 0,85: las roturas de
+guardia, las telarañas y los dobles toques caen casi siempre. Espera cuatro quintos de carga, se
+sitúa al 94 % de su alcance — lo bastante lejos para golpearte y para que te alejes de él — y
+mantiene un combo dos tercios de segundo. Los errores bajan a uno de cada cincuenta. Castiga cada
+curación y no lo vas a pillar comiendo.
+
+### `INSANE` — perfecto al frame
+
+Dos ticks de reacción, una mano que apenas tiembla y la técnica en su techo: cada técnica opcional
+que este bot conoce, la ejecuta. Ataca al 99 % de carga, o sea que nunca desperdicia un golpe, y su
+cristal queda armado y detonado en un puñado de ticks. Un golpe perdido ocurre una vez de cada 250.
+Trae escudo o tótem.
+
+### `EXTREME` — un muro, no una pelea justa
+
+La técnica ya está al máximo en `INSANE`: el dominio tiene un techo y ese peldaño está en él. Lo que
+compra `EXTREME` más allá es todo lo que no tiene techo: ve el mundo con un tick de retraso, su
+punto de mira casi no se mueve, nunca comete un error, replantea su táctica cada dos ticks y su
+cristal queda armado y detonado en lo que dura un parpadeo. Está pensado para ser injusto. Es un muro
+contra el que medirte.
+
+## La escalera, en números
+
+| | `EASY` | `NORMAL` | `HARD` | `INSANE` | `EXTREME` |
+|---|---|---|---|---|---|
+| Reacción, ticks | 10 | 6 | 3 | 2 | 1 |
+| Ruido de puntería, grados | 2.4 | 1.4 | 0.7 | 0.35 | 0.15 |
+| Velocidad de giro, grados/tick | 9.0 | 20.0 | 44.0 | 62.0 | 95.0 |
+| Disciplina de cooldown | 0.50 | 0.66 | 0.80 | 0.99 | 1.00 |
+| Técnica | 0.20 | 0.55 | 0.85 | 1.00 | 1.00 |
+| Probabilidad de error | 0.160 | 0.070 | 0.020 | 0.004 | 0.000 |
+| Decisión, ticks | 14 | 9 | 5 | 3 | 2 |
+| Paciencia | 0.20 | 0.45 | 0.78 | 0.95 | 1.00 |
+| Espaciado | 0.88 | 0.90 | 0.94 | 0.97 | 0.99 |
+| Combo, ticks | 5 | 9 | 13 | 16 | 20 |
+| Armado de cristal, ticks | 13 | 8 | 4 | 2 | 1 |
+
+## Qué controla cada uno
+
+**Reacción, ticks.** Cómo de viejo es el mundo sobre el que decide la IA: un tick son 50 ms, así que
+`EASY` pelea medio segundo en el pasado y `EXTREME` una veinteava parte de eso. Todo lo demás de la
+capa que lo humaniza cuelga de este número, y por eso es el que cambia cómo *se siente* un peldaño y
+no solo cómo rinde sobre el papel.
+
+**Ruido de puntería, grados.** La amplitud del temblor del punto de mira. Deliberadamente pequeño:
+una mano real tiembla una fracción de grado, y un bot cuyo punto de mira se mueve grados enteros no
+se lee como un jugador débil, se lee como uno roto. Lo que hace débil a un jugador débil es
+reaccionar tarde y girar despacio.
+
+**Velocidad de giro, grados por tick.** Cómo de rápido puede girar la cabeza. Junto con la reacción,
+esto es toda la razón por la que el strafe funciona contra un peldaño bajo y no contra uno alto, y se
+acelera brevemente cuando el bot necesita mirar algo con urgencia, como un cristal que ha decidido
+detonar.
+
+**Disciplina de cooldown.** La carga mínima de ataque con la que golpeará, de 0 a 1. Con el 0,50 de
+`EASY` se tira la mitad del daño de cada golpe sobre una barra que no estaba llena; en `INSANE` y por
+encima no se tira nada.
+
+**Técnica.** El dominio de las técnicas opcionales, de 0 a 1, y multiplica todas y cada una. Una
+rotura de guardia sorteada a 0,9 cae el 90 % de las veces en `INSANE` y el 18 % en `EASY`: la misma
+técnica, en peores manos.
+
+**Probabilidad de error.** La probabilidad por golpe de fallar a propósito. No es un redondeo: en
+`EASY` es un golpe de cada seis que simplemente no conecta, encima de todo lo que el modelo de
+puntería ya hace mal.
+
+**Decisión, ticks.** Cada cuánto vuelve a decidir la capa táctica: presionar, espaciar, curarse,
+reventar. Un peldaño que replantea cada 14 ticks se aferra a un mal plan casi un segundo; uno que
+replantea cada dos cambia de idea antes de que termines el movimiento con el que lo ibas a castigar.
+
+**Paciencia.** La disposición a esperar un momento seguro en lugar de entrar en pánico. Controla dos
+cosas: retroceder tras recibir un combo o mientras pierde un intercambio y — en pot PvP y UHC —
+negarse a empezar una manzana dorada de treinta y dos ticks en mitad de tu combo.
+
+**Espaciado.** La fracción de su alcance a la que le gusta situarse, multiplicada por el factor de
+alcance del propio modo. Sube con la habilidad a propósito: un buen jugador pelea en la punta de su
+espada, donde puede golpear y donde te puedes alejar de él. Ponerse muy dentro del alcance no es el
+espaciado de un jugador débil, es un golpe gratis en cada cooldown.
+
+**Combo, ticks.** Cuánto sigue persiguiendo tras un golpe con knockback. Un cuarto de segundo en
+`EASY` y un segundo entero en `EXTREME`: la diferencia entre un bot del que puedes alejarte y uno que
+sigue encima de ti cuando aterrizas.
+
+**Armado de cristal, ticks.** El retraso entre armar un cristal y detonarlo y, por extensión, toda la
+cadena: primero pone obsidiana durante aproximadamente la mitad de ese tiempo, más lo que le falte al
+escudo para llegar a estar levantado de verdad. `EASY` tarda casi un segundo por cristal; `EXTREME`
+lo hace en tres ticks. También reduce a la mitad el tiempo de meterse un tótem nuevo en la mano
+después de que reviente uno: el crystal PvP reacciona en la mitad de tiempo, porque ese cambio es lo
+único que un jugador de crystal entrena, pero nada se salta las manos: un bot que se rearma dentro de
+un solo tick no es una ventana que nadie pueda castigar, y un bot al que nadie puede castigar no es
+práctica.
+
+## El cono de acierto: por qué un bot débil falla de verdad
+
+Un golpe conecta cuando el punto de mira está dentro de un cono alrededor del objetivo, y el cono no
+tiene el mismo ancho para todos.
+
+| | `EASY` | `NORMAL` | `HARD` | `INSANE` | `EXTREME` |
+|---|---|---|---|---|---|
+| Cono de acierto, grados | 16 | ~24 | ~31 | ~33 | 35 |
+
+Escala con **los reflejos, no con el dominio**: el cono es lo que convierte una cabeza que llegó
+tarde en un golpe que falló, y lo tarde que llega una cabeza es tiempo de reacción y velocidad de
+giro. Un solo cono para todos era lo que hacía que un bot débil pegara como uno fuerte: a 35 grados
+el punto de mira puede estar casi el ancho de un cuerpo desviado y el golpe sigue entrando, así que
+reaccionar tarde, girar despacio y temblar no cuestan nada. Un bot `EASY` tiene que estar mirándote
+de verdad para pegarte; uno `EXTREME` conecta desde donde sea que acabó su punto de mira.
+
+Dentro de un bloque en horizontal el cono no se aplica. Estar metido dentro de alguien no es un
+problema de puntería, y un cono medido desde un ojo a treinta centímetros rechazaría golpes que
+vainilla sí daría.
+
+Otras tres cosas escalan con esa misma cifra de reflejos y no con una tabla:
+
+- **La mano sobre el ratón.** La puntería es un sistema de segundo orden, no un límite de velocidad:
+  acelera, y no se detiene en el instante en que el punto de mira llega. En la parte baja de la
+  escalera está muy poco amortiguada, así que un bot `EASY` se pasa de largo y tiene que volver. En
+  la parte alta el flick simplemente cae donde tiene que caer.
+- **Tiempo de tecla.** El mínimo que se mantiene pulsada una combinación de movimiento: seis ticks en
+  `EASY` y dos en lo más alto. Sin ese suelo, el bot recalcula su rumbo cada tick y se desliza por
+  una curva perfectamente lisa, que es algo que ninguna buena técnica en otro sitio puede hacer que
+  parezca humano.
+- **Distancia del golpe.** La distancia desde la que se lanza cada golpe se vuelve a sortear cada
+  vez: desde el 80 % del alcance hacia arriba en `EASY` y desde el 99 % en `EXTREME`. Un bot que
+  ataca exactamente a su alcance máximo siempre está diciendo en voz alta las cuentas de su propia
+  hitbox.
+
+<Callout type="tip" title="Dos bots del mismo peldaño son dos personas distintas">
+Además del peldaño, a cada bot se le reparte una mano al crearlo: firme (la mitad), afilada (tres de
+cada diez) o pesada (dos de cada diez). Una mano afilada reacciona un quinto más rápido, gira un 12 %
+más deprisa y tiembla una cuarta parte menos; una pesada es un quinto más lenta y más torpe con el
+ratón. Nadie lo configura y nadie lo ve, y la horquilla es deliberadamente más estrecha que un
+peldaño de la escalera: una mano es una personalidad, no una segunda perilla de dificultad. La
+reacción nunca baja de un tick en ningún caso, y se sortea con variación en cada decisión, así que no
+hay dos reacciones exactamente iguales.
+</Callout>
+
+## Nombres y resúmenes de una línea
+
+Lo que leen los jugadores de cada peldaño está en `messages.yml`, no en el enum:
+
+```yaml title="plugins/ExyliaPracticeBot/messages.yml"
+placeholders:
+  difficulty:
+    easy: '{success_light}Easy'
+    normal: '{info}Normal'
+    hard: '{warning}Hard'
+    insane: '{error}Insane'
+    extreme: '{accent}&lExtreme'
+    easy-summary: 'Reacts late, misses, swings before the bar is full.'
+    normal-summary: 'A server regular. Still makes mistakes.'
+    hard-summary: 'Tight spacing, clean combos, punishes every heal.'
+    insane-summary: 'Frame perfect. Bring a shield or a totem.'
+    extreme-summary: 'No reaction time, no mistakes, no mercy.'
+```
+
+Cambiar de peldaño desde el menú lo confirma con el mensaje `bot.difficulty-changed`, que lleva
+`%difficulty%`. A diferencia de un cambio de modo, nunca toca el kit.

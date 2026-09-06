@@ -1,0 +1,150 @@
+---
+title: "Behaviour"
+description: "What a bot does when nobody is configuring it: when it fights, when it follows, the three ways it leaves on its own, and how it gets around terrain."
+---
+
+A bot is a mannequin with its own tick. Once it exists it thinks once per tick, on the entity's own
+scheduler, and everything below happens without anybody touching a menu.
+
+## Attack and Follow
+
+Two switches decide what a bot does with its tick. Both are on by default, and both live in the
+advanced menu.
+
+| Switch | On | Off |
+|---|---|---|
+| **Attack** | It fights whoever it is pointed at. | It never engages and never swings. It still takes damage, still follows, still dies. |
+| **Follow** | It closes the distance: to your heels out of combat, to fighting range in a fight. | It stands where it is. Out of combat it never walks to you; in a fight it holds its ground instead of chasing. |
+
+Turning **Attack** off gives you a moving target that hits back at nothing. Turning **Follow** off
+gives you a punching bag that stays exactly where you left it. Turning both off gives you a statue
+that heals itself.
+
+## When it decides to fight
+
+A bot engages when all three of these are true:
+
+- **Attack** is on.
+- Its target is within the **engage distance**, `26` blocks.
+- Its target is not in spectator mode.
+
+Until then it is idle, and idle is not nothing:
+
+- It keeps up with you when **Follow** is on and you are further away than the follow distance
+  (`advanced.movement.follow-distance`, `3.0` blocks by default) plus a little slack, so it does not
+  shuffle back and forth on the edge of the band.
+- It lowers its shield, stops sneaking, and glances around every second or two.
+- If nothing has hit it for five seconds and it is not eating, it heals back to full. A mannequin has
+  no hunger and never regenerates on its own, so without this a practice bot would only ever get
+  weaker.
+
+<Callout type="tip" title="Twenty-six blocks is a walk">
+Spawn a bot, walk away, and it will follow you without fighting. Walk back inside twenty-six blocks
+and it starts. That is how you begin a rep on your terms instead of the bot's.
+</Callout>
+
+## When you hit it
+
+The shield only blocks while it is genuinely raised. The AI lowers it to swing, so a player who
+reads the rhythm gets a free hit — that is the whole point of shield timing existing.
+
+| What you do | What happens |
+|---|---|
+| Hit a raised shield from the front | No damage. It still gets shoved, exactly like a blocking player. |
+| Hit it with an axe | Its shield goes down for `advanced.defense.shield-disable-seconds`, `5.0` by default, with the break sound. |
+| Blow it up | The blast is blocked only if the shield is pointed at where the blast went off. |
+| Pop its totem | It takes a beat to get the next one into its hand, one at a time, like a player. How many it has is `advanced.health.totems`. |
+| Kill it | Nothing drops and no experience falls. Its gear was issued by the server, not earned. |
+
+If a bot got the last hit on you, your death message is hidden — the server does not announce a bot
+kill in chat.
+
+## The three ways a bot leaves on its own
+
+Each has its own line in `messages.yml`, and each is measured against whoever the bot is currently
+fighting rather than the player who paid for it.
+
+| What happened | Message key | Default text |
+|---|---|---|
+| You died | `bot.removed-death` | "Bot removed: you died." |
+| You changed worlds | `bot.removed-world-change` | "Bot removed: you changed worlds." |
+| You went past the leash, `200` blocks | `bot.removed-too-far` | "Bot removed: you went too far away." |
+
+Three more removals happen quietly, with no message, because there is nobody left to read one: the
+target logs out or is kicked, the bot's mannequin stops being a valid entity, and the server shuts
+down. A bot never survives a restart.
+
+<Callout type="note" title="Why the target and not the owner">
+A bot is measured against the player it is fighting. An owner who died and is now spectating from the
+lobby may have left their bot mid-fight with somebody else, and taking it away there would end that
+fight for a player who did nothing wrong.
+</Callout>
+
+## Respawning
+
+A killed bot comes back on its own when `respawn.enabled` is on, which it is by default.
+
+```yaml title="plugins/ExyliaPracticeBotV3/config.yml"
+respawn:
+  enabled: true
+  delay-seconds: 2.0
+```
+
+You get `bot.respawning` — "Bot died! Respawning..." — immediately, and `bot.respawned` when it is
+back. The respawn is cancelled if you log out in the meantime, and it is skipped if you are no longer
+in one of the worlds listed under `worlds`. It also goes through the same spawn path as `/bot spawn`, so a
+respawn cannot walk past a server cap that a fresh spawn would have been refused by. See
+[Limits](/docs/exyliapracticebot/limits).
+
+## Shift right-click
+
+Sneak and right-click your own bot to open its menu. It is on by default and it is one key:
+
+```yaml title="plugins/ExyliaPracticeBotV3/config.yml"
+interaction:
+  shift-click-opens-menu: true
+```
+
+Only your own bot, only while sneaking. Right-clicking somebody else's bot does nothing, and neither
+does a plain right-click on yours.
+
+## How it moves
+
+The bot steers straight at whatever it is walking to. That is the common case and it costs nothing:
+a direction, a step up a single block, a jump. Terrain is what breaks it, and terrain is the only
+thing the grid search under `advanced.pathfinding` exists for.
+
+The search runs when direct steering has visibly failed — the bot has stopped making progress, or
+there is a wall in front of it taller than one step — and it produces a short list of checkpoints to
+walk through instead of the target itself. It is used only when the bot is closing in or following;
+backing off and circling are never steered by a path towards the person it is backing away from.
+
+| Key | Default | What it changes |
+|---|---|---|
+| `enabled` | `true` | Off means the bot only ever steers straight at its target. It will walk into walls. |
+| `max-search-radius-horizontal` | `16` | How far to the sides it may look. Also the range beyond which it does not bother searching at all. |
+| `max-search-radius-vertical` | `10` | How far up and down it may look. |
+| `max-expanded-nodes` | `200` | The size of one search. Raise it for arenas with real terrain, at a cost per bot per search. |
+| `max-search-time-micros` | `1500` | The hard wall-clock ceiling on one search. It always returns inside this, with a partial route if that is all it found. |
+| `max-drop-height-safe` | `3` | How far it will drop on the way. |
+| `max-drop-height-protected` | `10` | The same, for a bot with Slow Falling or invincibility on — it cannot hurt itself, so it may take the shortcut. |
+| `max-gap-jump-columns` | `1` | How wide a gap it will jump across. |
+| `stuck-check-interval-ticks` | `10` | How often it asks whether it has moved. |
+| `stuck-progress-epsilon` | `0.5` | How many blocks count as having moved. |
+| `stuck-strikes-threshold` | `2` | How many checks in a row it has to fail before it counts as stuck. |
+| `path-stale-distance` | `5.0` | How far the target may drift from where the route was aimed before the route is thrown away. |
+| `path-max-age-ticks` | `60` | How old a route may get. Three seconds. |
+| `checkpoint-reached-radius` | `0.6` | How close is close enough to a checkpoint. |
+| `consecutive-failed-searches-before-cooldown` | `3` | How many searches that find nothing it takes to give up. |
+| `give-up-cooldown-ticks` | `60` | How long it then walks straight at the target instead of searching. Three seconds. |
+
+<Callout type="warning" title="Raise the budget before the radius">
+`max-expanded-nodes` and `max-search-time-micros` are the two keys that cost tick time, and they cost
+it once per bot per search. Widening the radius without widening the budget only means the search
+runs out of budget further from home.
+</Callout>
+
+A bot also holds the chunk it is standing in open for as long as it exists. An entity only runs its
+scheduled work while its chunk is ticking, and a bot in a chunk nobody is ticking never applies its
+gear and never thinks: it stands there naked and still. Keeping its own chunk alive is what stops
+that, and the ticket is handed back the moment the bot is removed.

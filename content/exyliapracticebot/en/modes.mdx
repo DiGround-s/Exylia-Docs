@@ -1,0 +1,370 @@
+---
+title: "Modes"
+description: "The seven combat modes: the kit each one dresses in, what the bot actually does with it, and the config block that tunes it."
+---
+
+A mode is two decisions at once: **the kit the bot carries** and **the combat model it fights
+under**. Picking `CRYSTAL_PVP` puts netherite and blast protection on it *and* gives it obsidian,
+crystals, anchors and pearls; picking `SWORD` puts it back in diamond *and* takes every consumable
+away. That is why `bot.mode` and `bot.difficulty` are the only two keys in `config.yml` anybody has
+to understand — the mode decides which techniques exist, and
+[difficulty](/docs/exyliapracticebot/difficulty) decides how well they are executed.
+
+```yaml title="plugins/ExyliaPracticeBot/config.yml"
+bot:
+  mode: POT_PVP
+  difficulty: NORMAL
+```
+
+## The seven modes
+
+| Mode | What it is | Its own config block |
+|---|---|---|
+| `NONE` | Plain vanilla melee. No techniques, no consumables. The enum's zero value and a sandbox setting. | — |
+| `SWORD` | Sword and shield, played straight: combos, w-taps, strafes, almost no crits. | — |
+| `POT_PVP` | 1.8-flavoured sword combat on modern mechanics: crits, splash potions, golden apples. | `advanced.pot-pvp` |
+| `UHC` | Axe and shield: guard breaks, gapples, cobwebs, lava and water. | `advanced.uhc` |
+| `CRYSTAL_PVP` | Obsidian, end crystals, respawn anchors, ender pearls, totems, traps. | `advanced.crystal-pvp` |
+| `MACE_PVP` | Wind-charge launches into mace smashes. | — |
+| `BOXING` | Hits are counted, not dealt. Pure combo practice. | — |
+
+Only three modes have a block of their own. `advanced.attack`, `advanced.movement`,
+`advanced.health` and `advanced.defense` apply to every mode alike — see
+[configuration](/docs/exyliapracticebot/configuration).
+
+<Callout type="note" title="Older spellings still parse">
+`CombatMode.parse` is case-insensitive, trims whitespace and absorbs the names earlier versions
+used, so a config or a database row written by an older build still reads correctly:
+`POT`/`POTPVP`/`MEDIUM`/`PRO` → `POT_PVP`, `CRYSTAL`/`CRYSTALPVP` → `CRYSTAL_PVP`,
+`MACE`/`MACEPVP` → `MACE_PVP`, `VANILLA`/`SWORDPVP`/`SWORD_PVP` → `SWORD`,
+`UHCPVP`/`UHC_PVP` → `UHC`, `BOX`/`BOXINGPVP`/`COMBO` → `BOXING`, and `EASY` → `NONE`.
+Anything it does not recognise falls back to `NONE`, so a typo in `bot.mode` is a bot with a sword
+and no techniques rather than a startup error.
+</Callout>
+
+## The kit each mode dresses in
+
+A fresh bot starts on the kit of its mode, so nobody has to know that crystal PvP wants blast
+protection and a totem while pot PvP wants Strength II. **After that the gear is the player's:
+switching mode changes the techniques, never the kit**. The kit below is written onto the settings
+when they are first built — a player's first bot, and again after `/bot reset` — and when a bot is
+spawned through the [API](/docs/exyliapracticebot/api). Cycling the mode in the menu after that
+changes the techniques and the combat model and leaves the gear exactly as you set it. Armour is
+uniform, four pieces of the same tier with the same enchantment; mixing tiers afterwards is a
+per-piece choice in the [equipment](/docs/exyliapracticebot/equipment) menu.
+
+| Mode | Armour | Enchant | Main hand | Off hand | Potions |
+|---|---|---|---|---|---|
+| `NONE` | Diamond | Protection IV | Sword | Shield | — |
+| `SWORD` | Diamond | Protection IV | Sword | Shield | — |
+| `POT_PVP` | Diamond | Protection IV | Sword | Shield | Strength II, Speed II |
+| `UHC` | Diamond | Protection IV | Axe | Shield | — |
+| `CRYSTAL_PVP` | Netherite | Blast Protection IV | Sword | Totem | — |
+| `MACE_PVP` | Netherite | Protection IV | Mace | Totem | — |
+| `BOXING` | None | — | Sword | Empty | — |
+
+UHC carries no potion buffs on purpose: in UHC what you drink is what you brewed, and the bot brews
+nothing. Boxing carries no armour and nothing in the off hand because nobody is taking damage —
+armour would be scenery and a shield would be a way to stop the round happening.
+
+## The combat model
+
+Every shipped mode fights under the modern rules: the attack bar exists, damage scales with it, and
+a critical hit is a deliberate jump paid for with the sprint. What differs per mode is how much each
+of those is worth.
+
+| Mode | Shield timing | Reach factor | Crit chance | Orbit bias | Stays grounded |
+|---|---|---|---|---|---|
+| `NONE` | yes | 1.0 | 0.75 | 1.0 | — |
+| `SWORD` | yes | 1.0 | 0.12 | 1.7 | — |
+| `POT_PVP` | no | 0.92 | 1.0 | 0.8 | — |
+| `UHC` | yes | 1.0 | 0.35 | 1.2 | — |
+| `CRYSTAL_PVP` | yes | 0.55 | 0.0 | 1.0 | yes |
+| `MACE_PVP` | yes | 1.0 | 0.0 | 1.0 | — |
+| `BOXING` | no | 0.95 | 0.0 | 1.5 | — |
+
+Reach factor multiplies the distance the bot likes to hold, so a crystal bot stands roughly half as
+far out as a sword bot. Orbit bias multiplies how often it circles instead of walking straight in:
+above one is a format decided by movement, below one a format decided by pressure. "Stays grounded"
+is crystal PvP only — a blast under your feet hurts far more from above it, so the crit jump and the
+jump reset are taken away.
+
+Weapons keep their vanilla cadence: a sword charges in 12.5 ticks, an axe in 20, a mace in 33.3.
+`advanced.attack.speed-multiplier` multiplies whichever the mode chose.
+
+---
+
+## `NONE` — sandbox
+
+The zero value. Same kit as `SWORD`, no style of its own, and a high crit chance — 0.75, second only
+to pot PvP — because nothing in it argues against jumping. The API's `CombatMode.playable()` leaves
+it out of any list built for a player to choose from, but the in-game menu cycles through all seven,
+so it is reachable there. It is mostly what an unparseable name falls back to, and a plain dummy for
+a server that wants one.
+
+## `SWORD` — movement
+
+There is no consumable and no gimmick, so there is nothing for a style to own: the crits it hardly
+takes and the strafing it lives on belong to the brain, and every bot gets them. Which makes `SWORD`
+the honest read on [difficulty](/docs/exyliapracticebot/difficulty) — aim, reaction, spacing,
+sprint resets and cooldown discipline with nothing on top.
+
+The crit is deliberately rare here. Nine ticks of stalling and a dropped sprint buy one hit and a
+half, and cost the strafe the format is actually won with, so the bot circles more than in any other
+mode and jumps in almost none of them.
+
+## `POT_PVP` — the resource game
+
+The techniques that decide a pot fight are already in the brain. What the style owns is the resource
+game, and that is what separates a good pot player from a bad one.
+
+- **Splash first, eat second.** Instant Health II lands at the bot's own feet and costs it a tick
+  and no ground, so it is the heal the fight is played with. The golden apple is thirty-two ticks of
+  standing still for a payout that arrives afterwards, and it is only started from a position that
+  survives thirty-two ticks.
+- **Heal on your terms.** The apple — and only the apple — is worth backing out of reach for,
+  shield up, eaten there. A low-patience bot will start eating in the middle of a combo, which is
+  exactly the mistake that loses the round.
+- **Punish the heal.** The moment the opponent raises a hand to eat, the bot commits.
+- **Double pot.** Below four hearts one splash was never going to be enough, so the second follows
+  three or four ticks later rather than after the health bar is read again.
+
+```yaml title="plugins/ExyliaPracticeBot/config.yml"
+advanced:
+  pot-pvp:
+    apple-percent: 35.0
+    potion-percent: 70.0
+    enchanted-apples: false
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `apple-percent` | `35.0` | Health percentage at which it starts looking for a safe moment to eat. Keep it low: the apple is the heal of last resort, not the one the fight is played with. |
+| `potion-percent` | `70.0` | Health percentage at which it splashes Instant Health II immediately. This is the first-line heal and should sit well above `apple-percent`. |
+| `enchanted-apples` | `false` | Eat enchanted golden apples instead of normal ones. |
+
+Both percentages are the *centre* of a threshold, not the threshold: each bot rolls its own bias
+once and keeps it — up to six points either side for the potion, eight for the apple. Two bots on
+the same difficulty that both reach for a potion at exactly the same health are two copies of one
+script; two that reach at 64 % and 76 % are two players.
+
+A bot spawned with no kit carries 18 splash potions and 8 golden apples, and restocks after seven
+seconds with no hit landed either way — the way somebody walks back to their chest between rounds.
+
+## `UHC` — deciding where the fight happens
+
+UHC is the format with no brewing stand: there is one heal, it takes thirty-two ticks of standing
+still, and everything else in the kit is a way of deciding where the fight happens.
+
+- **The guard break is the read.** An axe swing puts a raised shield on cooldown, and the bot does
+  it on every swing it lands with an axe in hand. A bot whose main hand was changed in the menu
+  still knows the technique: it brings an axe out for one swing and puts it away.
+- **The web is a combo, not a trap.** It goes at their feet only inside 4.5 blocks, because a webbed
+  opponent one block away is four free hits and a webbed opponent six blocks away is four free
+  seconds to eat.
+- **The lava is a wall.** Dumped at their feet from 2.6 to 6.5 blocks out, and only against somebody
+  already below 55 % health — at full health a burn is four hearts and a reason to eat. It is
+  placed without a block update, so the source never flows anywhere, and it is picked back up two
+  seconds later.
+- **The water is the other half of the lava.** On fire or standing in it, the bot puts itself out
+  with a bucket at its own feet rather than burning to death next to its own trap.
+
+```yaml title="plugins/ExyliaPracticeBot/config.yml"
+advanced:
+  uhc:
+    apple-percent: 60.0
+    cobweb: true
+    lava: true
+    water: true
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `apple-percent` | `60.0` | Health percentage at which it eats a golden apple. UHC has no splash potions, so this sits far higher than the pot PvP equivalent. Carries the same per-bot bias of up to eight points either side. |
+| `cobweb` | `true` | Trap the opponent in a cobweb to hold them still for a combo. |
+| `lava` | `true` | Dump lava at the opponent's feet. |
+| `water` | `true` | Carry a water bucket, to put itself out and to wash lava away. |
+
+Everything the bot puts down is taken back up: a cobweb after three seconds, lava after two, water
+after one, and all of it immediately when the bot is removed. A bot spawned with no kit carries 6
+apples, 4 cobwebs, 2 lava buckets and 2 water buckets, and restocks after seven quiet seconds.
+
+## `CRYSTAL_PVP` — a rehearsed sequence
+
+Crystal PvP is not a chance to place a crystal every tick, it is a rehearsed sequence, so the bot
+runs a state machine and the difficulty only decides how fast the machine runs:
+
+```text
+IDLE   pick a spot beside the opponent and inside your own reach
+PREP   face it, sneak, lay obsidian - a crystal goes on nothing else
+ARM    set the crystal down
+POP    shield up, swing at it, take your share of the blast
+DTAP   second crystal into the knockback, past the invulnerability window
+RESET  sword back in hand, breathe
+```
+
+What makes it read as a crystal player rather than as a script:
+
+- **It never leaves the floor.** The crit jump and the jump reset — free value everywhere else —
+  are how a crystal player kills themselves, so this mode takes them away.
+- **It closes, it never kites.** The style never asks to retreat and never stops to eat. The health
+  bar is defended with totems and with the opponent being dead.
+- **It makes the height it needs.** Swing first; the hit lifts the opponent off the floor for a
+  moment; obsidian goes into the block they just vacated; they land on top of it a block higher and
+  the next crystal sits below them, which is where a crystal does its damage.
+- **Height decides the weapon.** Against somebody on flat ground the obsidian under a crystal is
+  between them and the blast, so the bot reaches for the anchor instead: it takes the floor out, and
+  the crater it leaves is where the next crystal goes.
+- **It answers your crystals.** An armed crystal within reach is somebody else's damage on a timer,
+  so the bot raises its shield and sets it off itself before you can.
+- **It builds defensively.** Two blasts from underneath in quick succession and it fills the block
+  the blast came out of, or puts one block of obsidian on the line between itself and the hole.
+- **Its own blast hurts it.** The explosion does not exclude the bot, so placement scoring and the
+  self-preservation floor are decisions with a real price.
+
+```yaml title="plugins/ExyliaPracticeBot/config.yml"
+advanced:
+  crystal-pvp:
+    range: 5.0
+    self-preservation-percent: 30.0
+    anchor: true
+    trap: true
+    ender-pearls: true
+    break-blocks: true
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `range` | `5.0` | Blocks from the opponent within which it will start a crystal chain. |
+| `self-preservation-percent` | `30.0` | Below this health it stops placing crystals right against itself. |
+| `anchor` | `true` | Also use charged respawn anchors. |
+| `trap` | `true` | Wall a low opponent in before detonating — one obsidian block per cycle, on a cardinal face, once they are under 40 % health. |
+| `ender-pearls` | `true` | Pearl at the opponent's feet to close the gap, from 6 blocks out to 30. It also throws one the moment it sees a pearl leave the opponent's hand: crystal PvP is an aggressive format, the bot chases and it does not kite. |
+| `break-blocks` | `true` | Real crystal PvP: the blasts destroy terrain and the obsidian the bot places stays where it put it. |
+
+<Callout type="danger" title="break-blocks genuinely destroys the arena">
+With `break-blocks: true` — the default — every crystal and anchor blast is a real explosion that
+breaks terrain, and the obsidian the bot lays is real obsidian: not tracked, not aged out, not
+tidied away. Over one fight the arena degrades exactly like a real one, and when the bot is removed
+the craters and the obsidian are still there. That is the point of the mode, and it is also why you
+do not run it in a world you care about. Turn it off and every block the bot places goes down
+without a block update and is reverted afterwards, and the blasts stop breaking anything — the tidy
+sandbox behaviour. The one thing that is cleaned up either way is a charged respawn anchor: it is
+the only thing the bot can leave behind that kills somebody later, so it is always removed with the
+bot.
+</Callout>
+
+## `MACE_PVP` — height is the damage
+
+The mace is worth nothing on the ground and everything at the end of a fall, so the whole mode is
+one loop: get height, stay over the target, land the smash. The damage scaling is vanilla, which
+means height really is what makes the hit hurt — the bot is not being handed a big number.
+
+- **The wind charge goes whenever the range is there.** It is cheap, it comes back in under two
+  seconds, and a mace on the ground is a slow sword. The launch needs line of sight and 5.5 blocks
+  or less.
+- **The pearl is saved.** A pearl lift puts the bot twelve blocks up against the charge's seven, and
+  costs most of a second of standing still before its feet leave the floor — so it waits for
+  somebody already committed: eating, looking away, or under 45 % health.
+- **It plants its feet first.** A short pause before the charge goes off under it. A launch nobody
+  can read is not practice.
+- **No two launches are the same height**, so the fall — and the damage at the end of it — varies
+  the way a real one does.
+- **A smash into a raised shield is a smash wasted**, so the axe goes first and the launch waits for
+  the wind-up it costs.
+
+`MACE_PVP` has no `advanced` block of its own: everything about it is the loop above, the global
+`advanced.attack` and `advanced.movement`, and the difficulty.
+
+## `BOXING` — hits, not damage
+
+Nobody takes damage. Every hit still lands with its own knockback, its own invulnerability window
+and its own sound — only the damage is gone, so a round is a hundred exchanges long instead of six
+and a dropped combo costs a count rather than the round. The bot's own health bar is scenery too:
+whatever you did to it is undone every tick, and fire is put out, so the round ends when somebody
+walks away and not before.
+
+<Callout type="warning" title="Boxing scores on the action bar, and deals no damage">
+The count goes to the boxing player's action bar, from the `boxing-score` message in
+`messages.yml`, with `%player_hits%` for the hits you landed and `%bot_hits%` for the hits it
+landed on you:
+
+```yaml title="plugins/ExyliaPracticeBot/messages.yml"
+bot:
+  boxing-score: '{secondary}Boxing {letters_black}▎ {letters}You {success}%player_hits% {letters_black}▎ {letters}Bot {error}%bot_hits%'
+```
+
+Eight seconds with no hit either way ends the round and the count starts again from zero. Nothing is
+stored: the action bar is the whole scoreboard.
+</Callout>
+
+The bot spends the entire round pressuring — no healing, no spacing, no shield, no crit, because
+none of them would do anything. It circles more than any mode but `SWORD`.
+
+---
+
+## A bot fights with the kit it is given
+
+This is the limitation that surprises people. **A mode's tactics are gated on the bot actually
+having the items for them**, and where those items come from depends on how the bot was spawned.
+
+<Callout type="warning" title="A crystal bot with no crystals just swings its sword">
+Spawn a bot through `/bot` and it has no kit: nothing is counted, and every style falls back to its
+own figures — the obsidian, the crystals, the potions and the pearls never run out. That is what a
+sandbox dummy is for.
+
+Spawn one through the [API](/docs/exyliapracticebot/api) with a `BotSpec` carrying a `BotKit` — a
+practice match handing the bot the same kit both sides fight — and the bot spends *that* kit and
+nothing else. Every end crystal, obsidian block, respawn anchor, ender pearl, wind charge, splash
+potion, golden apple, cobweb and bucket comes out of it and runs out. A kit with no end crystals is
+a crystal bot that never starts a chain; a kit with no wind charges is a mace bot that never leaves
+the ground; a kit with no axe cannot break your shield. What it does then is what is left: it swings
+whatever weapon the kit gave it.
+</Callout>
+
+The kit also decides the gear, which is why the kit table above only applies to a bot dressed by its
+mode. Given a kit, the bot wears it as it came — its enchantments, its durability, its names — and
+works out for itself which item to hold: a mace over an axe over a sword over a trident, better tier
+breaking a tie, judged by what wins a fight rather than by hotbar order. A shield or a totem in the
+kit's off hand is read as a shield or a totem; anything else in that slot is worth nothing to the
+AI. A kit with no weapon is a bot that punches, and that is not a reason to refuse a fight.
+
+Pot PvP and UHC restock between rounds — seven seconds with no hit either way and the ledger goes
+back to what the kit started as.
+
+## Names and one-line summaries
+
+What players read for each mode is `messages.yml`, not the enum:
+
+```yaml title="plugins/ExyliaPracticeBot/messages.yml"
+placeholders:
+  mode:
+    none: '{muted}Vanilla'
+    sword: '{letters}Sword'
+    pot-pvp: '{success}Pot PvP'
+    uhc: '{warning}UHC'
+    crystal-pvp: '{info}Crystal PvP'
+    mace-pvp: '{error}Mace PvP'
+    boxing: '{accent}Boxing'
+    none-summary: 'Sword and shield. No consumables, no tricks.'
+    sword-summary: 'Pure movement: strafes, w-taps, combos, almost no crits.'
+    pot-pvp-summary: 'Crits, w-taps, combos, gapples and heal pots.'
+    uhc-summary: 'Axe and shield: guard breaks, gapples, cobweb, lava and water.'
+    crystal-pvp-summary: 'Obsidian, crystals, double taps, anchors and traps.'
+    mace-pvp-summary: 'Wind charge launches into mace smashes.'
+    boxing-summary: 'Nobody takes damage. Hits are counted instead.'
+```
+
+Changing a mode from the menu confirms with the `bot.mode-changed` message, which carries `%mode%`.
+
+<Callout type="warning" title="The shipped mode-changed message overstates what happens">
+Its default wording ends in "kit applied", and switching mode from the menu does not apply a kit —
+only the settings' first build and `/bot reset` do. The menu item itself has it right ("Only the
+techniques change. Your kit stays as you left it."), so until the default message is corrected,
+reword `bot.mode-changed` to match:
+
+```yaml title="plugins/ExyliaPracticeBot/messages.yml"
+bot:
+  mode-changed: '%prefix% {letters}Mode set to %mode% {letters_black}» {letters}techniques only.'
+```
+</Callout>

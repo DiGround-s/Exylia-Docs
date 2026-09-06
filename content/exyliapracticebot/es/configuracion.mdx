@@ -1,0 +1,322 @@
+---
+title: "Configuración"
+description: "config.yml clave por clave, con todos sus valores por defecto, y qué guarda messages.yml."
+---
+
+Los dos archivos se generan en `plugins/ExyliaPracticeBotV3/` la primera vez que arranca el plugin, ya
+con los comentarios de abajo dentro. Edita los archivos de ahí, nunca las copias del jar, y ejecuta
+`/bot reload` después — vuelve a leer `config.yml`, `messages.yml` y los dos
+[archivos de menú](/docs/exyliapracticebot/menus). Los colores usan tokens de paleta como `{primary}` o
+`{success}`.
+
+El archivo es deliberadamente plano arriba: `bot.mode` y `bot.difficulty` son las dos únicas claves que
+alguien tiene que entender. El modo decide el kit y qué técnicas existen, la dificultad decide con qué
+soltura se ejecutan, y todo lo que hay bajo `advanced` ya trae un valor que funciona.
+
+## config.yml
+
+```yaml title="plugins/ExyliaPracticeBotV3/config.yml"
+config-version: 2
+
+bot:
+  mode: POT_PVP
+  difficulty: NORMAL
+  name: "{primary}%player%'s Bot"
+  skin: "%player%"
+
+worlds:
+  - exylia_sandbox_badlands
+  - exylia_sandbox_desert
+  - exylia_sandbox_mushroom
+  - exylia_sandbox_plains
+  - exylia_sandbox_snowy
+
+respawn:
+  enabled: true
+  delay-seconds: 2.0
+
+interaction:
+  shift-click-opens-menu: true
+
+advanced:
+  attack:
+    reach: 3.0
+    damage: 7.0
+    speed-multiplier: 1.0
+  movement:
+    speed-multiplier: 1.0
+    follow-distance: 3.0
+  health:
+    max: 20.0
+    invincible: false
+    totems: -1
+  defense:
+    shield-disable-seconds: 5.0
+    anti-knockback: false
+    slow-falling: false
+  pot-pvp:
+    apple-percent: 35.0
+    potion-percent: 70.0
+    enchanted-apples: false
+  crystal-pvp:
+    range: 5.0
+    self-preservation-percent: 30.0
+    anchor: true
+    trap: true
+    ender-pearls: true
+    break-blocks: true
+  uhc:
+    apple-percent: 60.0
+    cobweb: true
+    lava: true
+    water: true
+  pathfinding:
+    enabled: true
+    max-search-radius-horizontal: 16
+    max-search-radius-vertical: 10
+    max-expanded-nodes: 200
+    max-search-time-micros: 1500
+    max-drop-height-safe: 3
+    max-drop-height-protected: 10
+    max-gap-jump-columns: 1
+    stuck-check-interval-ticks: 10
+    stuck-progress-epsilon: 0.5
+    stuck-strikes-threshold: 2
+    path-stale-distance: 5.0
+    path-max-age-ticks: 60
+    checkpoint-reached-radius: 0.6
+    consecutive-failed-searches-before-cooldown: 3
+    give-up-cooldown-ticks: 60
+
+limits:
+  min-attack-speed: 0.25
+  max-attack-speed: 4.0
+  min-movement-speed: 0.25
+  max-movement-speed: 3.0
+  min-attack-reach: 1.0
+  max-attack-reach: 6.0
+  min-follow-distance: 1.0
+  max-follow-distance: 12.0
+  min-attack-damage: 0.5
+  max-attack-damage: 40.0
+  min-max-health: 1.0
+  max-max-health: 40.0
+  min-shield-disable: 0.0
+  max-shield-disable: 20.0
+  min-totems: -1.0
+  max-totems: 16.0
+
+max-bots: 16
+```
+
+`config-version` lo escribe y lo mantiene el plugin; no lo toques. Un archivo escrito por la versión 1
+se migra a esta disposición en el primer arranque en lugar de reemplazarse — cada valor que pudieras
+haber cambiado se mueve, y los deslizadores de probabilidad por modo se descartan a propósito, porque
+ahora la dificultad los deriva todos.
+
+### `bot`
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `mode` | `POT_PVP` | `NONE`, `SWORD`, `POT_PVP`, `UHC`, `CRYSTAL_PVP`, `MACE_PVP` o `BOXING`. Elegir un modo aplica el kit de ese modo **y** su modelo de combate. Un nombre no reconocido cae en `NONE`. Ver [Modos](/docs/exyliapracticebot/modos). |
+| `difficulty` | `NORMAL` | `EASY`, `NORMAL`, `HARD`, `INSANE` o `EXTREME`. El tiempo de reacción, la puntería, la disciplina de enfriamiento y la técnica salen todos de aquí. Un nombre no reconocido cae en `NORMAL`. Ver [Dificultad](/docs/exyliapracticebot/dificultad). |
+| `name` | `{primary}%player%'s Bot` | Nombre sobre el bot. `%player%` es su dueño. |
+| `skin` | `%player%` | Skin que lleva. `%player%` copia la skin del dueño. |
+
+El propio bloque de comentarios del archivo generado resume los siete:
+
+| Modo | Con qué pelea |
+|---|---|
+| `SWORD` | Espada y escudo, casi ningún crítico, todo movimiento. |
+| `POT_PVP` | Críticos en casi cada golpe, pociones arrojadizas y manzanas. |
+| `UHC` | Hacha y escudo, roturas de guardia, telaraña, lava, agua. |
+| `CRYSTAL_PVP` | Obsidiana, cristales, anclas, perlas y tótems. |
+| `MACE_PVP` | Cargas de viento y perlas hacia arriba, mazazos hacia abajo. |
+| `BOXING` | Los golpes se cuentan, no se aplican. Práctica de combos. |
+
+`NONE` es el ajuste vanilla puro: sin técnicas y sin consumibles.
+
+Las dos claves son el valor por defecto del *servidor*. Cada jugador tiene su propio modo y su propia
+dificultad desde el momento en que abre `/bot`, y cambiarlas después no toca a un jugador que ya guardó
+ajustes.
+
+### `worlds`
+
+Una lista simple de nombres de mundo: los mundos donde se puede invocar un bot. Un jugador que lo
+intente en cualquier otro sitio recibe el mensaje `world-not-allowed` y ningún bot.
+
+<Callout type="warning" title="Una instalación nueva no invoca nada hasta que edites esto">
+Los cinco valores por defecto son los mundos sandbox de Exylia y no existen en ningún otro servidor,
+así que recién instalado se rechaza toda invocación. Sustituye la lista por tus propios nombres de
+mundo antes de que nada funcione. Una **lista vacía no es un comodín** — vacía significa en ninguna
+parte.
+</Callout>
+
+En la versión 1 la clave era `restrictions.allowed-worlds`. Un archivo escrito por esa versión la ve
+movida a `worlds` automáticamente en el primer arranque, con la lista intacta.
+
+### `respawn`
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | Si un bot muerto vuelve por su cuenta. |
+| `delay-seconds` | `2.0` | Segundos antes de que lo haga. Se convierte a ticks y nunca baja de un tick. |
+
+### `interaction`
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `shift-click-opens-menu` | `true` | Hacer shift + clic derecho sobre tu propio bot abre su menú. |
+
+### `advanced`
+
+Perillas de sandbox y ajuste por modo. Se puede ignorar sin problema.
+
+<Callout type="note" title="Cuatro de estos son solo valores de partida">
+`advanced.attack`, `advanced.movement`, `advanced.health` y `advanced.defense` son los valores con los
+que empiezan los ajustes de un jugador y a los que los devuelve **Reiniciar ajustes**. A partir de ahí
+cada jugador tiene su propia copia y la mueve desde el menú de
+[**Ajuste fino**](/docs/exyliapracticebot/menus). Los bloques por modo de más abajo — `pot-pvp`,
+`crystal-pvp`, `uhc` — y `pathfinding` no son por jugador: los lee la IA en vivo y se aplican a todos
+los bots del servidor.
+</Callout>
+
+#### `advanced.attack`
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `reach` | `3.0` | Bloques desde los que puede golpear el bot. Los jugadores vanilla tienen 3.0. |
+| `damage` | `7.0` | Daño de un golpe cargado del todo y no crítico, en medios corazones. El escalado por enfriamiento y los críticos se aplican encima, exactamente como en vanilla. |
+| `speed-multiplier` | `1.0` | Multiplica la cadencia que eligió el **modo**; `1.0` la deja en paz. El modo ya elige el tempo correcto — una barra moderna para cristales y maza, una tasa de clics para pot PvP. Sube esto solo para empujar un modo más allá de lo que podría hacer un jugador. |
+
+#### `advanced.movement`
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `speed-multiplier` | `1.0` | Multiplica la velocidad al andar y al correr. `1.0` es un jugador vanilla. |
+| `follow-distance` | `3.0` | Cómo de cerca se queda cuando no está peleando. |
+
+#### `advanced.health`
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `max` | `20.0` | Vida máxima, en medios corazones. |
+| `invincible` | `false` | Nunca muere. Útil para practicar combos. |
+| `totems` | `-1` | Tótems de repuesto con los que se rearma el bot después de consumir uno, por vida. Los saca como un jugador: de uno en uno, con un tiempo para llevarse el siguiente a la mano. `0` significa que el de su kit es el único que tiene, y `-1` que nunca se le acaban. |
+
+#### `advanced.defense`
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `shield-disable-seconds` | `5.0` | Cuánto mantiene un hachazo el escudo del bot abajo. |
+| `anti-knockback` | `false` | Ignorar el empuje por completo. Apagado por defecto: el empuje es la mitad del PvP. |
+| `slow-falling` | `false` | Caída Lenta permanente. |
+
+#### `advanced.pot-pvp`
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `apple-percent` | `35.0` | Porcentaje de vida al que empieza a buscar un momento seguro para comer. Una manzana son treinta y dos ticks quieto, así que mantén esto bajo: es la cura de último recurso, no con la que se juega el combate. |
+| `potion-percent` | `70.0` | Porcentaje de vida al que lanza Curación Instantánea II de inmediato. Es la cura de primera línea del bot y debería quedar bastante por encima de `apple-percent` — una arrojadiza le cuesta un tick y ningún terreno. |
+| `enchanted-apples` | `false` | Comer manzanas doradas encantadas en lugar de normales. Se ignora cuando otro plugin le envió un kit al bot: come la manzana que haya en él. |
+
+#### `advanced.crystal-pvp`
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `range` | `5.0` | Bloques respecto al rival dentro de los cuales empieza una cadena de cristales. |
+| `self-preservation-percent` | `30.0` | Por debajo de esta vida deja de poner cristales pegados a sí mismo. |
+| `anchor` | `true` | Usar también anclas de resurrección cargadas. |
+| `trap` | `true` | Encerrar a un rival bajo de vida antes de detonar. |
+| `ender-pearls` | `true` | Perlar a los pies del rival para cerrar la distancia. El crystal PvP es un formato agresivo: el bot persigue, no kitea. |
+| `break-blocks` | `true` | Crystal PvP de verdad: las explosiones destruyen el terreno y la obsidiana que pone el bot se queda donde la puso. Apaga esto en un mundo que te importe — el bot recogerá lo suyo. |
+
+#### `advanced.uhc`
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `apple-percent` | `60.0` | Porcentaje de vida al que se come una manzana dorada. UHC no tiene pociones arrojadizas, así que la manzana es la única cura que hay y esto queda mucho más alto que el equivalente de pot PvP. |
+| `cobweb` | `true` | Atrapar al rival en una telaraña para dejarlo quieto y encadenar un combo. |
+| `lava` | `true` | Soltar lava a los pies del rival. Se coloca sin actualización de bloque, así que la fuente nunca fluye, y se recoge con un temporizador. |
+| `water` | `true` | Llevar un cubo de agua, para apagarse y para limpiar la lava. |
+
+#### `advanced.pathfinding`
+
+Búsqueda local en rejilla que se usa **solo** cuando la dirección directa no consigue pasar el terreno.
+En campo abierto el bot camina recto hacia su objetivo y nada de esto se ejecuta.
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | Apaga la búsqueda por completo; el bot entonces solo apunta recto a su objetivo. |
+| `max-search-radius-horizontal` | `16` | Bloques desde el bot que puede expandir la búsqueda, y la distancia a partir de la cual ni siquiera busca. |
+| `max-search-radius-vertical` | `10` | El mismo techo y suelo, en vertical. |
+| `max-expanded-nodes` | `200` | Nodos que puede expandir una búsqueda antes de rendirse. |
+| `max-search-time-micros` | `1500` | Microsegundos que puede durar una búsqueda antes de rendirse. Es la clave que mantiene a los bots de un servidor lleno fuera del tick. |
+| `max-drop-height-safe` | `3` | Bloques que el bot se dejará caer en una ruta. |
+| `max-drop-height-protected` | `10` | Lo mismo, para un bot que sobreviviría a la caída — uno con Caída Lenta o invencibilidad. |
+| `max-gap-jump-columns` | `1` | Cuántas columnas vacías de ancho puede tener un hueco para que la ruta lo salte. |
+| `stuck-check-interval-ticks` | `10` | Ticks entre dos comprobaciones de avance. |
+| `stuck-progress-epsilon` | `0.5` | Bloques que tiene que haberse movido en horizontal en ese intervalo para contar como avance. |
+| `stuck-strikes-threshold` | `2` | Comprobaciones fallidas seguidas antes de contar como atascado y pedir una ruta. |
+| `path-stale-distance` | `5.0` | Bloques que el objetivo puede alejarse de donde se construyó la ruta antes de tirarla. |
+| `path-max-age-ticks` | `60` | Ticks que se conserva una ruta pase lo que pase. |
+| `checkpoint-reached-radius` | `0.6` | Distancia horizontal a la que un punto de control cuenta como alcanzado. |
+| `consecutive-failed-searches-before-cooldown` | `3` | Búsquedas fallidas seguidas antes de dejar de intentarlo. |
+| `give-up-cooldown-ticks` | `60` | Ticks que espera antes de volver a intentarlo. |
+
+### `limits`
+
+Los límites a los que el menú del juego recorta sus deslizadores. Cada par es el suelo y el techo de un
+campo de [`adjust`](/docs/exyliapracticebot/menus), y un valor fuera de ellos no se puede alcanzar desde
+un menú.
+
+| Campo | Par de claves | Rango por defecto |
+|---|---|---|
+| `attack_speed` | `min-attack-speed` / `max-attack-speed` | 0.25 – 4.0 |
+| `movement_speed` | `min-movement-speed` / `max-movement-speed` | 0.25 – 3.0 |
+| `attack_reach` | `min-attack-reach` / `max-attack-reach` | 1.0 – 6.0 |
+| `follow_distance` | `min-follow-distance` / `max-follow-distance` | 1.0 – 12.0 |
+| `attack_damage` | `min-attack-damage` / `max-attack-damage` | 0.5 – 40.0 |
+| `max_health` | `min-max-health` / `max-max-health` | 1.0 – 40.0 |
+| `shield_disable` | `min-shield-disable` / `max-shield-disable` | 0.0 – 20.0 |
+| `totems` | `min-totems` / `max-totems` | −1.0 – 16.0 |
+
+Los tótems se detienen en `-1`, que es el ajuste ilimitado. Cada valor ajustado se redondea a un
+decimal después del recorte. Ver [Límites](/docs/exyliapracticebot/limites).
+
+### `max-bots`
+
+`16` por defecto. Cuántos bots pueden existir a la vez en el servidor. Cada bot piensa una vez por tick
+y busca su propia ruta, así que este es un techo real y no una formalidad — súbelo solo después de
+mirar el tiempo de tick con el actual lleno. Una invocación por encima del techo se rechaza con el
+mensaje `limit-reached`, y la API la rechaza con una `BotLimitReachedException`. Un valor por debajo de
+`1` se lee como `1`.
+
+## messages.yml
+
+Cada línea que ve un jugador, con la misma cabecera `config-version`. Los placeholders de color vienen
+de ExyliaCommons, así que recolorear la red nunca significa editar este archivo. Una línea puede abrir
+con una etiqueta de efecto que nunca llega a la pantalla — `[sound:NOMBRE|volumen|tono]` y
+`[particle:NOMBRE|cantidad]` — y los valores por defecto las usan por todas partes.
+
+| Sección | Contiene |
+|---|---|
+| `prefix` | `{primary}&lEXYLIA PRACTICEBOT &8•&r` por defecto. El `%prefix%` de cada línea se expande a esto. |
+| `bot` | Las dieciséis líneas que dice el plugin: `spawned`, `removed`, `no-bot`, `already-has-bot`, `world-not-allowed`, `removed-death`, `removed-world-change`, `removed-too-far`, `teleported-to-bot`, `teleported-bot-to-you`, `respawning`, `respawned`, `settings-reset`, `mode-changed` (`%mode%`), `difficulty-changed` (`%difficulty%`), `limit-reached` (`%limit%`) y `boxing-score` (`%player_hits%`, `%bot_hits%`, mostrada en la action bar durante una ronda de boxeo). |
+| `placeholders` | Las etiquetas que imprimen los menús: `enabled`, `disabled`, `unlimited`, y un bloque para cada uno de `armor`, `enchant`, `main-hand`, `off-hand`, `knockback`, `strength`, `speed`, `mode` y `difficulty`. |
+
+Los bloques `mode` y `difficulty` guardan dos cosas por valor: el nombre, y la línea de resumen que el
+menú muestra debajo — `pot-pvp` y `pot-pvp-summary`, `hard` y `hard-summary`. Esos resúmenes son lo que
+imprimen `%mode_summary%` y `%difficulty_summary%`, que es cómo un botón que cicla puede explicarse sin
+cuatro botones describiéndose cada uno a sí mismo.
+
+Renombrar o recolorear cualquier cosa de aquí cambia solo lo que leen los jugadores. Los valores que
+guarda el plugin son los nombres de enum de [Equipamiento](/docs/exyliapracticebot/equipamiento),
+[Modos](/docs/exyliapracticebot/modos) y [Dificultad](/docs/exyliapracticebot/dificultad), y no se ven
+afectados.
+
+## database.yml
+
+Lo escribe ExyliaLib la primera vez que arranca el plugin: H2 por defecto, con MySQL, MariaDB,
+PostgreSQL y MongoDB como alternativas. Una fila por jugador, con cada ajuste de la mitad por jugador de
+esta página. Ver la [página de base de datos de la librería](/docs/exylialib/base-de-datos).
