@@ -55,7 +55,7 @@ records, not the duel record: the numbers a mode produces are the ones worth com
 
 | Category | Sorts by | Default name |
 |---|---|---|
-| `best_score` | `bestScore`, highest first | Best score |
+| `rating` | `bestScore` weighted by the speed it was set at, highest first | Rating |
 | `best_pops` | `bestPops`, highest first | Most pops |
 | `fastest_average` | `bestAverageMillis`, **lowest** first | Fastest average |
 | `best_streak` | `bestStreak`, highest first | Best streak |
@@ -84,12 +84,14 @@ best sees themselves on the board they set it on.
 ### Opening a board
 
 `/totem leaderboard` opens the mode picker; `/totem leaderboard <mode>` opens that mode's board sorted
-by `best_score`; `/totem leaderboard <mode> <category>` sorts it by that category. An unknown mode
+by `rating`; `/totem leaderboard <mode> <category>` sorts it by that category. An unknown mode
 opens the picker instead of an empty board. Inside, the row of category buttons re-sorts the open
 board in place, and the top three rows wear medals.
 
-The same board is readable as placeholders: `%totem_top_<mode>_<category>_<n>%` and its `_value`
-twin. See [Placeholders](/docs/exyliatotemtrainer/placeholders).
+The same board is readable through PlaceholderAPI:
+`%exyliatotemtrainer_totem_top_<mode>_<category>_<n>%` answers the name at that position, and
+`%exyliatotemtrainer_totem_top_<mode>_<category>_<n>_value%` the number that put them there. See
+[Placeholders](/docs/exyliatotemtrainer/placeholders).
 
 ## Duel history
 

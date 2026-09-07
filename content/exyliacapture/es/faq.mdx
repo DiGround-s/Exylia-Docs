@@ -34,12 +34,13 @@ nada.
 
 ## Un placeholder se ve tal cual
 
-Casi siempre es la escritura del contador, que lleva `capture` dos veces:
-`%exyliacapture_capture_active_events%`.
+Casi siempre es un evento creado después de la última recarga. Las familias por evento se registran
+desde las configuraciones en memoria, así que `/captureadmin reload` es lo que hace que los
+placeholders de un evento nuevo resuelvan.
 
-La otra causa habitual es un evento creado después de la última recarga. Las familias por evento se
-registran desde las configuraciones en memoria, así que `/captureadmin reload` es lo que hace que los
-placeholders de un evento nuevo resuelvan. Ver [Placeholders](/docs/exyliacapture/placeholders).
+La otra causa es una escritura que el plugin nunca registró. Un nombre que no conoce se deja en
+pantalla tal cual está escrito en vez de quedar en blanco, y así se ve la errata. Todos los
+placeholders están escritos enteros en [Placeholders](/docs/exyliacapture/placeholders).
 
 ## El carro de Payload no se mueve
 

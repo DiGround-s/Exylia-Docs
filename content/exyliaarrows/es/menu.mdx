@@ -74,11 +74,37 @@ Cada lista elige una plantilla por fila. `item_template` es el estado normal y d
 
 ## Placeholders
 
-| Dónde | Disponibles |
-|---|---|
-| `categories` | `%category_id%` `%category_name%` `%category_material%` `%category_total%` `%category_owned%` `%category_status%` |
-| `grid` | `%effect_id%` `%effect_name%` `%effect_material%` `%effect_description%` `%effect_bows%` `%effect_favourite%` |
-| En cualquier sitio | `%current_effect%` `%favourites_count%` `%particle_visibility%` `%visibility_all%` `%visibility_none%` `%visibility_self_only%` `%visibility_others_only%` |
+Son los tokens propios del menú, que se rellenan mientras se dibuja la pantalla. No son placeholders
+de PlaceholderAPI y solo funcionan dentro de este archivo.
+
+| Placeholder | Dónde | Qué dibuja |
+|---|---|---|
+| `%category_id%` | `categories` | El id de la pestaña — `favourites` en la de favoritos. |
+| `%category_name%` | `categories` | El nombre visible de la pestaña. |
+| `%category_material%` | `categories` | El material con el que se dibuja su icono. |
+| `%category_total%` | `categories` | Cuántos efectos tiene la pestaña. |
+| `%category_owned%` | `categories` | Cuántos de esos tiene el jugador. |
+| `%category_status%` | `categories` | `menu.tab-open` o `menu.tab-closed`, según sea la pestaña que se está mirando. |
+| `%effect_id%` | `grid` | El id del efecto. |
+| `%effect_name%` | `grid` | Su nombre visible, con sus colores. |
+| `%effect_material%` | `grid` | El material con el que se dibuja. |
+| `%effect_description%` | `grid` | Su descripción de `effects.yml`. |
+| `%effect_bows%` | `grid` | A qué se puede atar, en palabras. |
+| `%effect_tier_id%` | `grid` | El id de su rareza. |
+| `%effect_tier%` | `grid` | El nombre de la rareza, en el color de la rareza. |
+| `%effect_tier_color%` | `grid` | Ese color por separado. |
+| `%effect_favourite%` | `grid` | `menu.favourite-on` o `menu.favourite-off`, según esté marcado o no. |
+| `%current_effect%` | En cualquier sitio | El efecto que lleva puesto, `menu.random-name` en aleatorio, o `menu.empty`. |
+| `%random_status%` | En cualquier sitio | `menu.random-on` o `menu.random-off`. |
+| `%favourites_count%` | En cualquier sitio | Cuántos efectos tiene marcados. |
+| `%keys%` | En cualquier sitio | Llaves de caja que tiene. |
+| `%unlocked_count%` | En cualquier sitio | Cuántos efectos ganó en la caja. |
+| `%catalogue_count%` | En cualquier sitio | Cuántos efectos declara el servidor. |
+| `%particle_visibility%` | En cualquier sitio | El modo de visibilidad actual del jugador, con el nombre que diga `particles.name-*`. |
+| `%visibility_all%` | En cualquier sitio | El nombre del modo «todos», para un botón que lo ofrezca. |
+| `%visibility_none%` | En cualquier sitio | El nombre del modo «nadie». |
+| `%visibility_self_only%` | En cualquier sitio | El nombre del modo «solo yo». |
+| `%visibility_others_only%` | En cualquier sitio | El nombre del modo «solo los demás». |
 
 ## Acciones
 

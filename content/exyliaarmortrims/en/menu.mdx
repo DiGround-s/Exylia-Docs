@@ -77,11 +77,38 @@ A locked entry **looks locked** rather than simply not being there.
 
 ## Placeholders in the file
 
-| Where | Available |
-|---|---|
-| `targets` | `%target%`, `%target_name%`, `%piece%`, `%piece_material%`, `%trim_name%`, `%trim_pattern%`, `%trim_material%`, `%engraved%`, `%pieces%` |
-| `grid` | `%entry_id%`, `%entry_name%`, `%entry_icon%`, `%preview_material%`, `%trim_pattern%`, `%trim_material%`, `%entry_worn%`, `%entry_worn_name%`, plus `%entry_pieces%` on presets |
-| Anywhere | `%tab%`, `%target%`, `%target_name%`, `%pattern%`, `%pattern_name%` |
+These are the menu's own tokens, filled in while the screen is drawn. They are not PlaceholderAPI
+placeholders and only work inside this file.
+
+The `targets` list holds two kinds of row — the full-set row first, then one row per piece — and each
+kind carries its own tokens.
+
+| Placeholder | Where | What it draws |
+|---|---|---|
+| `%target%` | `targets`, anywhere | What is being engraved: a piece key, or `set` for the full set. |
+| `%target_name%` | `targets`, anywhere | Its name from `menu`: `full-set`, or the piece's own name. |
+| `%engraved%` | `targets`, full-set row | How many of the four pieces carry a trim. |
+| `%pieces%` | `targets`, full-set row | How many pieces there are in total — four. |
+| `%piece%` | `targets`, piece rows | The piece's key: `helmet`, `chestplate`, `leggings` or `boots`. |
+| `%piece_material%` | `targets`, piece rows | The material the player is actually wearing in that slot. |
+| `%trim_name%` | `targets`, piece rows | The trim chosen for that piece, or `menu.empty`. |
+| `%trim_pattern%` | `targets`, piece rows | That trim's pattern, empty when the piece carries none. |
+| `%trim_material%` | `targets`, piece rows | That trim's metal, empty when the piece carries none. |
+| `%entry_id%` | `grid` | The row's id: a preset id, a pattern id, or a `pattern/material` pair. |
+| `%entry_name%` | `grid` | Its display name. |
+| `%entry_icon%` | `grid` | The material the row is drawn as. |
+| `%preview_material%` | `grid` | The armor piece the row is previewed in. |
+| `%trim_pattern%` | `grid` | The pattern this row would engrave. |
+| `%trim_material%` | `grid` | The metal this row would engrave. |
+| `%entry_worn%` | `grid` | The pieces the player already wears it on, empty when none. |
+| `%entry_worn_name%` | `grid` | The same, but `menu.empty` when none. |
+| `%entry_pieces%` | `grid` · presets | The pieces the preset fits. |
+| `%material_name%` | `grid` · materials | The metal's display name. |
+| `%pattern_name%` | `grid` · materials, anywhere | The chosen pattern's display name, or `menu.empty` before one is chosen. |
+| `%tab%` | Anywhere | The grid being shown: `presets`, `patterns` or `materials`. |
+| `%pattern%` | Anywhere | The chosen pattern's id, empty before one is chosen. |
+| `%presets_status%` | Anywhere | `menu.tab-open` or `menu.tab-closed` for the presets tab. |
+| `%custom_status%` | Anywhere | The same, for the custom tab. |
 
 ## Actions
 

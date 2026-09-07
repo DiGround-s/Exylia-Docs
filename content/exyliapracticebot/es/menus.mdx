@@ -167,14 +167,48 @@ armadura muestra la pieza que el bot lleva de verdad y cambia bajo el cursor.
 | Placeholder | Contiene |
 |---|---|
 | `%bot_active%` | Si el jugador tiene un bot fuera, como ON u OFF. |
-| `%mode%`, `%mode_material%`, `%mode_summary%` | La etiqueta del modo, su ícono y la línea que explica con qué pelea. |
-| `%difficulty%`, `%difficulty_material%`, `%difficulty_summary%` | Los mismos tres para la dificultad. |
-| `%attack_mode%`, `%follow_owner%`, `%invincible%`, `%anti_knockback%`, `%slow_falling%`, `%fire_resistance%` | Los seis interruptores, como ON u OFF. |
-| `%helmet%`, `%helmet_material%`, `%helmet_enchant%`, `%helmet_enchant_material%` | Una pieza de armadura: su etiqueta, su ícono, la etiqueta de su encantamiento y el ícono de ese encantamiento. Los mismos cuatro existen para `chestplate`, `leggings` y `boots`. |
-| `%main_hand%`, `%main_hand_material%` | El arma y su ítem. |
-| `%off_hand%`, `%off_hand_material%` | La mano secundaria y su ítem. |
-| `%knockback%`, `%strength%`, `%speed%` | Las tres etiquetas de encantamiento y poción. |
-| `%attack_damage%`, `%attack_reach%`, `%attack_speed%`, `%movement_speed%`, `%follow_distance%`, `%max_health%`, `%shield_disable%` | Los siete deslizadores, siempre con un decimal. |
+| `%mode%` | La etiqueta del modo. |
+| `%mode_material%` | El ítem con el que se dibuja el modo. |
+| `%mode_summary%` | La línea que explica con qué pelea el modo. |
+| `%difficulty%` | La etiqueta de la dificultad. |
+| `%difficulty_material%` | El ítem con el que se dibuja la dificultad. |
+| `%difficulty_summary%` | La línea que explica qué cambia la dificultad. |
+| `%attack_mode%` | Si el bot devuelve los golpes, como ON u OFF. |
+| `%follow_owner%` | Si sigue a su dueño, como ON u OFF. |
+| `%invincible%` | Si puede morir, como ON u OFF. |
+| `%anti_knockback%` | Si ignora el knockback, como ON u OFF. |
+| `%slow_falling%` | Si tiene Caída Lenta permanente, como ON u OFF. |
+| `%fire_resistance%` | Si tiene Resistencia al Fuego permanente, como ON u OFF. |
+| `%helmet%` | La etiqueta del casco. |
+| `%helmet_material%` | El casco que lleva el bot de verdad, como ítem. |
+| `%helmet_enchant%` | La etiqueta del encantamiento del casco. |
+| `%helmet_enchant_material%` | El ícono de ese encantamiento. |
+| `%chestplate%` | La etiqueta de la pechera. |
+| `%chestplate_material%` | La pechera que lleva el bot de verdad, como ítem. |
+| `%chestplate_enchant%` | La etiqueta del encantamiento de la pechera. |
+| `%chestplate_enchant_material%` | El ícono de ese encantamiento. |
+| `%leggings%` | La etiqueta de los pantalones. |
+| `%leggings_material%` | Los pantalones que lleva el bot de verdad, como ítem. |
+| `%leggings_enchant%` | La etiqueta del encantamiento de los pantalones. |
+| `%leggings_enchant_material%` | El ícono de ese encantamiento. |
+| `%boots%` | La etiqueta de las botas. |
+| `%boots_material%` | Las botas que lleva el bot de verdad, como ítem. |
+| `%boots_enchant%` | La etiqueta del encantamiento de las botas. |
+| `%boots_enchant_material%` | El ícono de ese encantamiento. |
+| `%main_hand%` | La etiqueta del arma. |
+| `%main_hand_material%` | El arma como ítem. |
+| `%off_hand%` | La etiqueta de la mano secundaria. |
+| `%off_hand_material%` | La mano secundaria como ítem. Una barrera cuando está vacía. |
+| `%knockback%` | El nivel de Empuje del arma, como etiqueta. |
+| `%strength%` | El nivel de Fuerza, como etiqueta. |
+| `%speed%` | El nivel de Velocidad, como etiqueta. |
+| `%attack_damage%` | Daño de un golpe cargado del todo, con un decimal. |
+| `%attack_reach%` | Alcance de ataque en bloques, con un decimal. |
+| `%attack_speed%` | El multiplicador de cadencia, con un decimal. |
+| `%movement_speed%` | El multiplicador de velocidad de movimiento, con un decimal. |
+| `%follow_distance%` | Distancia de seguimiento en bloques, con un decimal. |
+| `%max_health%` | Vida máxima en medios corazones, con un decimal. |
+| `%shield_disable%` | Segundos que un hachazo mantiene el escudo bajado, con un decimal. |
 | `%totems%` | La reserva de tótems, o la etiqueta `unlimited` cuando está por debajo de cero. |
 
 Cada etiqueta sale del bloque `placeholders` de `messages.yml`, así que renombrar *Diamond* o

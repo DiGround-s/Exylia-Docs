@@ -13,8 +13,8 @@ prioridad por debajo de la suya; un plugin que sigue en `AsyncPlayerChatEvent` q
 La tabla de [Integraciones](/docs/exyliachatcosmetics/integraciones) empareja cada caso.
 
 La etiqueta y el nombre coloreado son otra cosa: esos no se inyectan por ti. Si el mensaje sale
-coloreado pero no hay etiqueta delante del nombre, es que todavía no has puesto `%ecc_tag%` y
-`%ecc_nick%` en el formato de tu plugin de chat.
+coloreado pero no hay etiqueta delante del nombre, es que todavía no has puesto
+`%exyliachatcosmetics_tag%` y `%exyliachatcosmetics_nick%` en el formato de tu plugin de chat.
 
 ## Las etiquetas salen como la palabra con la que están escritas
 
@@ -126,7 +126,7 @@ dibujado del chat y de los placeholders solo lee memoria.
 Solo si un plugin de fuera del ecosistema de Exylia tiene que leer los placeholders. Están
 registrados en el módulo de placeholders de ExyliaLib y funcionan en cualquier texto de ExyliaLib sin
 PAPI; cuando PAPI está instalado, ExyliaLib los puentea todos automáticamente bajo
-`%exyliachatcosmetics_…%` y el corto `%ecc_…%`. No hay ninguna expansión que descargar.
+`%exyliachatcosmetics_<nombre>%`. No hay ninguna expansión que descargar.
 
 ## ¿Dónde consigo soporte?
 

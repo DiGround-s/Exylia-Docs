@@ -1,24 +1,32 @@
 ---
 title: "Placeholders"
-description: "Every placeholder the plugin answers, in both spellings, written in full."
+description: "Every placeholder the plugin answers, written in full in its PlaceholderAPI form."
 ---
 
-Every placeholder below is written in full, and clicking one copies it.
+Every placeholder below is written in full, in the form PlaceholderAPI understands, and clicking one
+copies it.
 
-## Two spellings
+## Why the name says it twice
 
-Inside this plugin's own files, the sidebars, the menus and the messages, a placeholder is written
-with the group `staff` and nothing in front of it:
+The plugin registers its placeholders under the group `staff`, and PlaceholderAPI puts the plugin's
+own identifier in front of whatever it hands over. So through PlaceholderAPI, in a scoreboard plugin,
+a tab plugin or anything else that asks, the name carries both:
+
+```text
+%exyliastaff_staff_reports_open%
+```
+
+Inside ExyliaStaff's own sidebars, menus and messages there is no PlaceholderAPI in the middle: the
+library resolves the registered name directly, so the same placeholder is written without the plugin
+name in front:
 
 ```text
 %staff_reports_open%
 ```
 
-Through PlaceholderAPI the plugin name goes in front. The group stays in the name either way:
-
-```text
-%exyliastaff_staff_reports_open%
-```
+Both spellings mean the same value. Which one to write depends only on who is reading the text: the
+short one in this plugin's own files, the long one everywhere else. The per-module pages use the
+short form, because the placeholders there sit next to that module's own YAML.
 
 Every value is a memory read; nothing here touches the database. A placeholder of a module that is
 off answers nothing.
@@ -27,79 +35,88 @@ off answers nothing.
 
 | Placeholder | Value |
 |---|---|
-| `%staff_mode%` | `true` while the viewer is in staff mode. |
-| `%staff_vanished%` | `true` while vanished. |
-| `%staff_frozen%` | `true` while frozen. |
-| `%staff_online%` | Players with `exyliastaff.staff` on this server. |
-| `%staff_in_mode%` | Players in staff mode on this server. |
-| `%staff_modules_enabled%` | Modules running. |
+| `%exyliastaff_staff_mode%` | `true` while the viewer is in staff mode. |
+| `%exyliastaff_staff_vanished%` | `true` while the viewer is vanished. |
+| `%exyliastaff_staff_frozen%` | `true` while the viewer is frozen. |
+| `%exyliastaff_staff_online%` | Players with `exyliastaff.staff` on this server. |
+| `%exyliastaff_staff_in_mode%` | Players in staff mode on this server. |
+| `%exyliastaff_staff_modules_enabled%` | Modules running. |
 
 ## Staff mode
 
 | Placeholder | Value |
 |---|---|
-| `%staff_staffmode_status%` | `true` with a session. |
-| `%staff_staffmode_time%` | Session time as a clock. Empty out of staff mode. |
-| `%staff_staffmode_spectator%` | `true` in spectator view. |
+| `%exyliastaff_staff_staffmode_status%` | `true` while the viewer has a session. |
+| `%exyliastaff_staff_staffmode_time%` | Session time as a clock. Empty out of staff mode. |
+| `%exyliastaff_staff_staffmode_spectator%` | `true` in spectator view. |
 
 ## Vanish
 
 | Placeholder | Value |
 |---|---|
-| `%staff_vanish_status%` | The `status-on` or `status-off` text. |
-| `%staff_vanish_count%` | Vanished staff on every server. |
+| `%exyliastaff_staff_vanish_status%` | The `status-on` or `status-off` text for the viewer. |
+| `%exyliastaff_staff_vanish_count%` | Vanished staff on every server. |
 
 ## Freeze
 
 | Placeholder | Value |
 |---|---|
-| `%staff_freeze_by%` | Who froze the viewer. |
-| `%staff_freeze_time%` | How long, as a clock, for the frozen player and for the staff member holding them. |
-| `%staff_freeze_target%` | Who the viewer has frozen on this server. |
+| `%exyliastaff_staff_freeze_by%` | Who froze the viewer. Empty otherwise. |
+| `%exyliastaff_staff_freeze_time%` | How long, as a clock, for the frozen player and for the staff member holding them. |
+| `%exyliastaff_staff_freeze_target%` | Who the viewer has frozen on this server. |
 
 ## Chat
 
 | Placeholder | Value |
 |---|---|
-| `%staff_staffchat_toggled%` | The `status-on` or `status-off` text. |
-| `%staff_staffchat_active%` | `true` or `false`. |
-| `%staff_globalchat_toggled%` | The `status-off`, `status-on` or `status-network` text. |
-| `%staff_globalchat_active%` | `true` in global or network mode. |
-| `%staff_globalchat_network%` | `true` in network mode. |
-| `%staff_globalchat_mode%` | `OFF`, `GLOBAL` or `NETWORK`. |
-| `%staff_stafflist_total%` | Staff online on every server. |
+| `%exyliastaff_staff_staffchat_toggled%` | The `status-on` or `status-off` text. |
+| `%exyliastaff_staff_staffchat_active%` | `true` while staff chat is on for the viewer. |
+| `%exyliastaff_staff_globalchat_toggled%` | The `status-off`, `status-on` or `status-network` text. |
+| `%exyliastaff_staff_globalchat_active%` | `true` in global or network mode. |
+| `%exyliastaff_staff_globalchat_network%` | `true` in network mode. |
+| `%exyliastaff_staff_globalchat_mode%` | `OFF`, `GLOBAL` or `NETWORK`. |
+| `%exyliastaff_staff_stafflist_total%` | Staff online on every server. |
 
 ## Reports, helpop, punishments
 
 | Placeholder | Value |
 |---|---|
-| `%staff_reports_open%` | Open reports on the network. |
-| `%staff_helpop_open%` | Unclaimed help requests. |
-| `%staff_helpop_claimed_by_me%` | Live requests the viewer has claimed. |
-| `%staff_punishments_total%` | Punishments the viewer has issued. |
-| `%staff_punishments_today%` | Of those, today. |
+| `%exyliastaff_staff_reports_open%` | Open reports on the network. |
+| `%exyliastaff_staff_helpop_open%` | Unclaimed help requests. |
+| `%exyliastaff_staff_helpop_claimed_by_me%` | Live requests the viewer has claimed. |
+| `%exyliastaff_staff_punishments_total%` | Punishments the viewer has issued. |
+| `%exyliastaff_staff_punishments_today%` | Of those, issued today. |
 
-## Mining and x-ray
+## Mining, x-ray and invisible players
 
 | Placeholder | Value |
 |---|---|
-| `%staff_mining_level%` | The viewer's own suspicion level name. |
-| `%staff_mining_score%` | The viewer's own score, decayed. |
-| `%staff_mining_alerts%` | The `status-on` or `status-off` text. |
-| `%staff_mining_alerts_active%` | `true` or `false`. |
-| `%staff_xrayvision_status%` | The `status-on` or `status-off` text. |
-| `%staff_xrayvision_active%` | `true` or `false`. |
+| `%exyliastaff_staff_mining_level%` | The viewer's own suspicion level name. |
+| `%exyliastaff_staff_mining_score%` | The viewer's own score, decayed to now. |
+| `%exyliastaff_staff_mining_alerts%` | The `status-on` or `status-off` text for mining alerts. |
+| `%exyliastaff_staff_mining_alerts_active%` | `true` while the viewer receives mining alerts. |
+| `%exyliastaff_staff_xrayvision_status%` | The `status-on` or `status-off` text for x-ray vision. |
+| `%exyliastaff_staff_xrayvision_active%` | `true` while the viewer has x-ray vision on. |
+| `%exyliastaff_staff_reveal_status%` | The `status-on` or `status-off` text for seeing invisible players. |
+| `%exyliastaff_staff_reveal_active%` | `true` while the viewer is being drawn the invisible players. |
+
+## Idle players
+
+| Placeholder | Value |
+|---|---|
+| `%exyliastaff_staff_afk_count%` | Idle players on this server, vanished staff excluded. |
+| `%exyliastaff_staff_afk_is%` | `true` while the viewer has been idle for longer than `afk-after-seconds`. |
 
 ## Staff log
 
 | Placeholder | Value |
 |---|---|
-| `%staff_stafflog_today%` | Minutes in staff mode today. |
-| `%staff_stafflog_week%` | Minutes over the last seven days. |
+| `%exyliastaff_staff_stafflog_today%` | Minutes in staff mode today. |
+| `%exyliastaff_staff_stafflog_week%` | Minutes over the last seven days. |
 
 ## In the sidebars
 
-The default staff sidebar mixes these with the library's server placeholders: `%server_tps%`,
-`%server_mspt%`, `%server_cpu_process:percent%`, `%server_ram_used%`, `%server_online%` and
-`%player_ping%`. Turning off the reports, helpop or vanish module leaves its placeholder unresolved
-on the board; edit the line out.
+The default staff sidebar is one of this plugin's own files, so it writes the short form and mixes it
+with the library's server placeholders: `%server_tps%`, `%server_mspt%`, `%server_cpu_process:percent%`,
+`%server_ram_used%`, `%server_online%` and `%player_ping%`. Turning off the reports, helpop or vanish
+module leaves its placeholder unresolved on the board; edit the line out.

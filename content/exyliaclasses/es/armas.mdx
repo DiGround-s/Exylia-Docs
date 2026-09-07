@@ -60,8 +60,8 @@ weapons:
 | Clave | Por defecto | Qué hace |
 |---|---|---|
 | `extra-damage` | `0` | El número que se escribe en los mensajes, la barra y los placeholders. |
-| `color` | `&f` | El color del icono, en `%classes_mark_color%` y `%classes_mark_display%`. |
-| `icon` | `◆` | El icono, en `%classes_mark_icon%`. Las clases que vienen lo repiten una vez por nivel. |
+| `color` | `&f` | El color del icono. A la barra de marca se le pasa como `%mark_color%`; fuera del plugin se lee con `%exyliaclasses_classes_mark_color%`, o junto al icono con `%exyliaclasses_classes_mark_display%`. |
+| `icon` | `◆` | El icono. A la barra de marca se le pasa como `%mark_icon%`; fuera del plugin se lee con `%exyliaclasses_classes_mark_icon%`. Las clases que vienen lo repiten una vez por nivel. |
 | `remove-invisibility` | `false` | Quita la Invisibilidad al objetivo al aplicarle el brillo. Solo hace algo con `give-glow: true`. |
 | `attacked-effects` | ninguno | Líneas de efecto aplicadas al objetivo. |
 | `attacker-effects` | ninguno | Líneas de efecto aplicadas al tirador. |
@@ -94,8 +94,9 @@ weapons:
 
 <Callout type="danger" title="extra-damage es un número, no daño">
 El sistema de marcas no modifica el daño. `extra-damage` es lo que se escribe en los mensajes de marca,
-en la barra de marca y en `%classes_mark_extra_damage%` — el bonus en sí se espera que salga de tu
-propio montaje leyendo esos placeholders. Las marcas tampoco cambian el daño de la flecha.
+en la barra de marca como `%extra_damage%`, y en `%exyliaclasses_classes_mark_extra_damage%` para
+todo lo que lea el plugin a través de PlaceholderAPI — el bonus en sí se espera que salga de tu
+propio montaje leyendo ese número. Las marcas tampoco cambian el daño de la flecha.
 </Callout>
 
 <Callout type="note" title="Las marcas son del objetivo, no de una pareja de jugadores">

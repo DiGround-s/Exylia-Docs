@@ -11,9 +11,12 @@ every other Exylia cosmetic plugin asks.
 
 A chat line has two halves, and this plugin hands them to you separately.
 
-**Identity** — the tag and the coloured name — is yours to place. Put `%ecc_tag%` and `%ecc_nick%`
-(or their `_legacy` / `_section` forms) wherever your chat plugin's format wants them. Nothing is
-injected on your behalf, because only your format knows where the name belongs.
+**Identity** — the tag and the coloured name — is yours to place. Put `%exyliachatcosmetics_tag%` and
+`%exyliachatcosmetics_nick%` wherever your chat plugin's format wants them, or the legacy spellings —
+`%exyliachatcosmetics_tag_legacy%` with `%exyliachatcosmetics_nick_legacy%`, or
+`%exyliachatcosmetics_tag_section%` with `%exyliachatcosmetics_nick_section%` — if your chat plugin
+reads one of those instead. Nothing is injected on your behalf, because only your format knows where
+the name belongs.
 
 **The message body** — the colour, the shadow, the font, the decorations a player types with — is
 styled by the hook set in `config.yml` under `chat.hook`. That is the half no format can express,
@@ -69,9 +72,9 @@ join, on reload and on the thirty-second expiry sweep instead of the moment a ra
 ## PlaceholderAPI
 
 A soft dependency. Every placeholder is registered with ExyliaLib's own placeholder module, and
-ExyliaLib bridges the lot into PlaceholderAPI automatically under both identifiers —
-`%exyliachatcosmetics_…%` and the short `%ecc_…%`. There is nothing to install beyond PAPI itself and
-no expansion to download. Inside any ExyliaLib text the same names work with PAPI absent.
+ExyliaLib bridges the lot into PlaceholderAPI automatically under
+`%exyliachatcosmetics_<name>%`. There is nothing to install beyond PAPI itself and no expansion to
+download. Inside any ExyliaLib text the same names work with PAPI absent.
 
 ## Redis and several servers
 

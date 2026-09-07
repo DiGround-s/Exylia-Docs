@@ -60,43 +60,138 @@ placeholders resolve inside a sidebar line.
 
 | Token | Answers |
 |---|---|
+| `%server_online%` | Players online on the server |
 | `%queue%` | Players queued server-wide |
 | `%fighting%` | Players in a match server-wide |
-| `%wins%`, `%kdr%`, `%win_rate%` | The reader's global counters |
-| `%mmr%`, `%rank%`, `%rank_division%`, `%rank_name%`, `%rank_lp%`, `%rank_lp_max%`, `%rank_icon%` | Their global rank |
-| `%members%`, `%max%`, `%leader%` | Party only |
+| `%wins%` | The reader's global wins |
+| `%kdr%` | Their global kill/death ratio, one decimal |
+| `%win_rate%` | Their global win rate as a percentage |
+| `%mmr%` | Their global rating |
+| `%rank%` | The rank's name on its own: `Copper` |
+| `%rank_division%` | The division on its own: `II`. Empty for a rank that has none |
+| `%rank_name%` | The rank and its division together: `Copper II` |
+| `%rank_lp%` | LP inside the current division |
+| `%rank_lp_max%` | The division's width in LP |
+| `%rank_icon%` | The rank's icon |
+| `%members%` | How many players are in the party. `party` only |
+| `%max%` | The party's maximum size. `party` only |
+| `%leader%` | The party leader's name. `party` only |
 
 ### Queue
-
-Everything from the lobby, plus:
 
 | Token | Answers |
 |---|---|
 | `%kit%` | The first kit queued for, with `+N` when there are more |
 | `%time%` | How long they have been waiting |
+| `%queue%` | Players queued server-wide |
+| `%fighting%` | Players in a match server-wide |
+| `%wins%` | The reader's global wins |
+| `%kdr%` | Their global kill/death ratio, one decimal |
+| `%win_rate%` | Their global win rate as a percentage |
+| `%mmr%` | Their rating on the first kit queued for |
+| `%rank%` | That kit's rank name on its own |
+| `%rank_division%` | That rank's division on its own |
+| `%rank_name%` | That rank and its division together |
+| `%rank_lp%` | LP inside that division |
+| `%rank_lp_max%` | That division's width in LP |
+| `%rank_icon%` | That rank's icon |
 
-The rank tokens here are the rating on **that first kit**, not the global one.
+The rank tokens here are the rating on **that first kit**, not the global one. `%server_online%` is
+not filled in on this sidebar; the queue board is built without it.
 
 ### In a match
 
 | Token | Answers |
 |---|---|
-| `%kit%`, `%arena%` | Names |
+| `%kit%` | The kit's name |
+| `%arena%` | The arena's name |
 | `%time%` | Match duration |
-| `%my_points%`, `%their_points%`, `%points_to_win%` | Points |
-| `%hits%`, `%opp_hits%`, `%hits_to_win%` | Hits **received** by each side |
-| `%round%`, `%total_rounds%`, `%my_wins%`, `%their_wins%` | Duel rounds |
-| `%my_ping%`, `%opp_ping%` | Latency |
-| `%alive%`, `%total%` | FFA survivor count |
-| `%team_a_alive%`, `%team_b_alive%` | Team match survivor counts |
-| `%opponent%`, `%opp_mmr%`, `%opp_rank%`, `%opp_rank_name%`, `%opp_rank_lp%`, `%opp_rank_lp_max%`, `%opp_rank_icon%` | The opponent, 1v1 only |
+| `%my_points%` | The reader's points |
+| `%their_points%` | The opponent's points |
+| `%points_to_win%` | The kit's `points-to-win` |
+| `%hits%` | Hits **received** by the reader |
+| `%opp_hits%` | Hits **received** by the opponent |
+| `%hits_to_win%` | The kit's `hits-to-win` |
+| `%round%` | The current duel round |
+| `%total_rounds%` | How many rounds the duel is played over |
+| `%my_wins%` | Rounds the reader has won |
+| `%their_wins%` | Rounds the opponent has won |
+| `%my_ping%` | The reader's latency |
+| `%opp_ping%` | The opponent's latency |
+| `%alive%` | Players still alive |
+| `%total%` | Players the match started with |
+| `%team_a_alive%` | Team A survivors |
+| `%team_b_alive%` | Team B survivors |
+| `%mmr%` | The reader's rating on the kit being played |
+| `%rank%` | Their rank name on that kit, on its own |
+| `%rank_division%` | That rank's division on its own |
+| `%rank_name%` | That rank and its division together |
+| `%rank_lp%` | LP inside that division |
+| `%rank_lp_max%` | That division's width in LP |
+| `%rank_icon%` | That rank's icon |
+| `%opponent%` | The opponent's name, 1v1 only |
+| `%opp_mmr%` | The opponent's rating on the kit, 1v1 only |
+| `%opp_rank%` | The opponent's rank name on its own |
+| `%opp_rank_division%` | Their division on its own |
+| `%opp_rank_name%` | Their rank and division together |
+| `%opp_rank_lp%` | Their LP inside that division |
+| `%opp_rank_lp_max%` | That division's width in LP |
+| `%opp_rank_icon%` | Their rank's icon |
 
-The reader's own rank tokens in a match are their rating **on the kit being played**.
+The reader's own rank tokens in a match are their rating **on the kit being played**. The opponent
+tokens are filled in for a 1v1 and answer `?` or `0` in every other mode.
+
+Three more are filled in only when the match is against bots:
+
+| Token | Answers |
+|---|---|
+| `%bot_mode%` | The combat mode the bots are fighting in |
+| `%bot_difficulty%` | The difficulty they were spawned at |
+| `%bots_alive%` | How many bots are still alive |
 
 ### Spectating
 
-Instead of *my* and *their*, spectator sidebars use `%player1_*%` and `%player2_*%`:
-`name`, `ping`, `points`, `hits`, `wins`, plus the full set of rank tokens for each.
+A spectator sidebar names the two sides rather than the reader, so it has no `%my_*%` or `%their_*%`
+tokens at all:
+
+| Token | Answers |
+|---|---|
+| `%kit%` | The kit's name |
+| `%arena%` | The arena's name |
+| `%time%` | Match duration |
+| `%round%` | The current duel round |
+| `%total_rounds%` | How many rounds the duel is played over |
+| `%points_to_win%` | The kit's `points-to-win` |
+| `%hits_to_win%` | The kit's `hits-to-win` |
+| `%alive%` | Players still alive |
+| `%total%` | Players the match started with |
+| `%team_a_alive%` | Team A survivors |
+| `%team_b_alive%` | Team B survivors |
+| `%player1_name%` | The first player's name |
+| `%player1_ping%` | Their latency |
+| `%player1_points%` | Their points |
+| `%player1_hits%` | Hits they have **received** |
+| `%player1_wins%` | Rounds they have won |
+| `%player1_rank%` | Their rank name on its own |
+| `%player1_rank_division%` | Their division on its own |
+| `%player1_rank_name%` | Their rank and division together |
+| `%player1_rank_lp%` | Their LP inside that division |
+| `%player1_rank_lp_max%` | That division's width in LP |
+| `%player1_rank_icon%` | Their rank's icon |
+| `%player2_name%` | The second player's name |
+| `%player2_ping%` | Their latency |
+| `%player2_points%` | Their points |
+| `%player2_hits%` | Hits they have **received** |
+| `%player2_wins%` | Rounds they have won |
+| `%player2_rank%` | Their rank name on its own |
+| `%player2_rank_division%` | Their division on its own |
+| `%player2_rank_name%` | Their rank and division together |
+| `%player2_rank_lp%` | Their LP inside that division |
+| `%player2_rank_lp_max%` | That division's width in LP |
+| `%player2_rank_icon%` | That rank's icon |
+
+The two player sets are filled in for a spectated 1v1 only. There is no `%player1_mmr%` or
+`%player2_mmr%`: the rating itself is not part of a spectator context, only the rank it maps to.
 
 ## The match action bar
 

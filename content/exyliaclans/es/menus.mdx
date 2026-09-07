@@ -67,20 +67,606 @@ Por eso un material mal escrito sale como un botón que falta y no como un menú
 
 ## Placeholders por pantalla
 
-Cada pantalla aporta sus propios valores encima de los globales. Algunos de los más útiles:
+Cada pantalla aporta sus propios valores encima de los globales. Lo que sigue es todo, pantalla por
+pantalla: un nombre que no aparece bajo una pantalla no lo aporta esa pantalla, y un nombre que nadie
+resuelve se queda en el ítem como texto plano.
 
-| Pantalla | Aporta |
+Una pantalla paginada aporta dos clases de valor. Los que tiene la pantalla resuelven en cualquier parte
+del archivo — el título, los botones fijos, su lore. Los que tiene una fila resuelven solo dentro de la
+sección paginada, una vez por entrada. Donde una pantalla tiene ambos, se listan por separado.
+
+### `main_no_clan`
+
+| Placeholder | Muestra |
 |---|---|
-| `main_clan` | `%clan_name%`, `%leader%`, `%members%`, `%max_members%`, `%online_members%`, `%balance%`, `%status%`, `%ff%`, `%allies%`, `%rivals%`, `%home%`, `%dtr%`, `%max_dtr%`, `%dtr_state%`, `%dtr_detail%`, `%clan_level%`, `%max_level%`, `%clan_exp%`, `%level_progress%`, `%clan_kills%`, `%clan_deaths%`, `%clan_kdr%`, `%clan_playtime%`, `%chat_channel%`, `%mail_unread_badge%` |
-| `members` / `members_view` | `%member_name%`, `%member_role%`, `%member_status%`, `%member_kills%`, `%member_deaths%`, `%member_kdr%`, `%member_playtime%`, `%member_action%` |
-| `roles` / `role_manage` | `%role_name%`, `%role_weight%`, `%role_members%`, `%role_default%`, `%role_id%`, y `%perm_<nombre>_status%` / `%perm_<nombre>_mat%` por permiso |
-| `allies` / `rivals` | `%ally_name%` / `%rival_name%` más los miembros, conectados, bajas, muertes, KDR y tiempo jugado de ese clan |
-| `leaderboard` | `%clan_rank%`, `%stat_name%`, `%stat_value%`, `%stat_material%`, `%stat_type_name%` |
-| `level` | `%current_level%`, `%current_exp%`, `%exp_needed%`, `%progress_bar%`, `%level_members_bonus%`, `%level_alliances_bonus%`, `%level_rivals_bonus%`, `%level_status%` |
-| `logs` | `%log_entry%`, `%log_action%`, `%log_detail%`, `%log_date%`, `%log_date_relative%` |
-| `mail_inbox` / `mail_view` | `%mail_subject%`, `%mail_sender%`, `%mail_body%`, `%mail_sent_relative%`, `%mail_expires%`, `%mail_read_status%`, `%unread_count%`, `%mail_pin_label%` |
-| `lfc_*` / `lfp_*` | `%cat_display_name%`, `%cat_status%`, `%cat_type_hint%`, `%option_name%`, `%tier_name%`, `%tier_color%`, `%profile_summary%` / `%posting_summary%`, `%application_status%` |
-| Cualquier pantalla paginada | `%current_page%`, `%total_pages%` |
+| `%open_clans%` | Cuántos clanes están abiertos para entrar |
+
+### `main_clan`
+
+| Placeholder | Muestra |
+|---|---|
+| `%clan_name%` | El nombre visible del clan |
+| `%leader%` | El nombre del líder |
+| `%members%` | Cuántos miembros tiene |
+| `%online_members%` | Cuántos de ellos están conectados |
+| `%max_members%` | El tope de miembros, bonus de nivel incluido |
+| `%balance%` | El banco, formateado como dinero |
+| `%status%` | Abierto o cerrado, con la redacción de `messages.yml` |
+| `%ff%` | Fuego amigo, activado o desactivado |
+| `%allies%` | Cuántos clanes aliados |
+| `%rivals%` | Cuántos rivales |
+| `%home%` | Si el home está puesto |
+| `%role%` | El rango del propio jugador en el clan |
+| `%dtr%` | DTR actual, un decimal — `N/A` con el módulo apagado |
+| `%max_dtr%` | El máximo de DTR, un decimal |
+| `%dtr_state%` | El estado en palabras: normal, congelado, regenerando o raideable |
+| `%dtr_detail%` | La cuenta atrás que acompaña a congelado, regenerando o raideable; vacío en normal |
+| `%clan_level%` | Nivel actual |
+| `%max_level%` | El nivel más alto configurado |
+| `%clan_exp%` | EXP actual |
+| `%level_progress%` | Una barra de diez segmentos hacia el siguiente nivel, con el porcentaje |
+| `%clan_kills%` | Bajas del clan |
+| `%clan_deaths%` | Muertes del clan |
+| `%clan_kdr%` | KDR del clan, dos decimales |
+| `%clan_playtime%` | Tiempo jugado total del clan, formateado |
+| `%chat_channel%` | El canal en el que habla el jugador |
+| `%mail_unread_badge%` | El distintivo de correo sin leer, vacío cuando no hay nada sin leer |
+
+### `clan_info`
+
+| Placeholder | Muestra |
+|---|---|
+| `%clan_name%` | El nombre visible del clan |
+| `%leader%` | El nombre del líder |
+| `%members%` | Cuántos miembros tiene |
+| `%online_members%` | Cuántos de ellos están conectados |
+| `%max_members%` | El tope de miembros, bonus de nivel incluido |
+| `%balance%` | El banco, formateado como dinero |
+| `%status%` | Abierto o cerrado |
+| `%ff%` | Fuego amigo, activado o desactivado |
+| `%home%` | El mundo y las coordenadas del home, con el servidor delante cuando está en otro; si no, la redacción de «sin poner» |
+| `%allies%` | Cuántos clanes aliados |
+| `%dtr%` | DTR actual, un decimal |
+| `%max_dtr%` | El máximo de DTR, un decimal |
+| `%dtr_state%` | El estado de DTR en palabras |
+| `%dtr_detail%` | La cuenta atrás de ese estado, vacío en normal |
+| `%clan_kills%` | Bajas del clan |
+| `%clan_deaths%` | Muertes del clan |
+| `%clan_kdr%` | KDR del clan, dos decimales |
+| `%clan_playtime%` | Tiempo jugado total del clan, formateado |
+| `%members_action%` | La acción del botón de miembros — la pantalla de gestión en tu clan, la de solo lectura en el de otro |
+| `%members_lore%` | La pista que acompaña a ese botón |
+| `%ally_action%` | La acción del botón de aliados, para este clan |
+| `%ally_lore%` | La pista que acompaña a ese botón |
+
+### `settings`
+
+| Placeholder | Muestra |
+|---|---|
+| `%status%` | Abierto o cerrado |
+| `%status_material%` | `LIME_WOOL` si está abierto, `RED_WOOL` si está cerrado |
+| `%ff%` | Fuego amigo, activado o desactivado |
+| `%ff_material%` | `FIRE_CHARGE` con el fuego amigo activado, `SNOWBALL` con él desactivado |
+
+### `confirm`
+
+| Placeholder | Muestra |
+|---|---|
+| `%confirm_title%` | El título de lo que se está confirmando |
+| `%confirm_line1%` | La pregunta |
+| `%confirm_line2%` | El detalle debajo |
+| `%confirm_action%` | La acción del botón de confirmar |
+| `%cancel_action%` | La acción del botón de cancelar, que es la pantalla a la que se vuelve |
+
+### `members`, `members_view` y `mail_member_select`
+
+Una sola clase dibuja las tres: `members` para tu clan, `members_view` para el de otro y
+`mail_member_select` al elegir destinatario. La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%clan_kills%` | Bajas del clan |
+| `%clan_deaths%` | Muertes del clan |
+| `%clan_kdr%` | KDR del clan, dos decimales |
+| `%clan_playtime%` | Tiempo jugado total del clan, formateado |
+| `%clan_online%` | Cuántos miembros están conectados |
+| `%clan_id%` | El id del clan — solo en `members_view`, donde el clan no es el del jugador |
+
+Cada fila aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%member_name%` | El nombre del miembro |
+| `%member_uuid%` | Su UUID |
+| `%member_role%` | El nombre de su rango |
+| `%member_status%` | Conectado con el tiempo de sesión, o desconectado con cuánto hace que se le vio |
+| `%member_kills%` | Sus bajas en este clan |
+| `%member_deaths%` | Sus muertes en este clan |
+| `%member_kdr%` | Su KDR, dos decimales |
+| `%member_playtime%` | Su tiempo jugado en este clan, formateado |
+| `%member_action%` | La acción de la fila — la pantalla de gestión, o elegir destinatario; vacía cuando no puede hacer ninguna de las dos |
+| `%member_action_lore%` | La pista que la acompaña, vacía cuando la fila no hace nada |
+
+### `member_manage`
+
+| Placeholder | Muestra |
+|---|---|
+| `%member_name%` | El nombre del miembro |
+| `%member_uuid%` | Su UUID, que los botones pasan a sus acciones |
+| `%member_role%` | El nombre de su rango |
+| `%member_status%` | Conectado con el tiempo de sesión, o desconectado con cuánto hace que se le vio |
+| `%member_kills%` | Sus bajas en este clan |
+| `%member_deaths%` | Sus muertes en este clan |
+| `%member_kdr%` | Su KDR, dos decimales |
+| `%member_playtime%` | Su tiempo jugado en este clan, formateado |
+
+### `banned`
+
+Cada fila aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%banned_name%` | El nombre del jugador baneado |
+| `%banned_uuid%` | Su UUID completo |
+| `%banned_short_uuid%` | Los ocho primeros caracteres, seguidos de puntos suspensivos |
+
+### `clan_invitations`
+
+Cada fila es un clan que ha invitado al jugador:
+
+| Placeholder | Muestra |
+|---|---|
+| `%clan_name%` | El nombre visible de ese clan |
+| `%clan_id%` | Su id, para las acciones de aceptar y rechazar |
+| `%clan_members%` | Cuántos miembros tiene |
+
+### `clan_pending_invites`
+
+Cada fila es un jugador al que este clan ha invitado:
+
+| Placeholder | Muestra |
+|---|---|
+| `%player_name%` | El nombre del jugador invitado |
+| `%player_uuid%` | Su UUID |
+| `%player_action%` | La acción que cancela la invitación, vacía sin el permiso `INVITE` |
+| `%player_action_lore%` | La pista que la acompaña, vacía cuando la fila no hace nada |
+
+### `roles`
+
+La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%can_create%` | `true` o `false`, si el jugador puede crear un rango |
+
+Cada fila es un rango, del más pesado al más ligero:
+
+| Placeholder | Muestra |
+|---|---|
+| `%role_name%` | El nombre del rango |
+| `%role_weight%` | Su peso |
+| `%role_members%` | Cuántos miembros lo tienen |
+| `%role_default%` | La etiqueta de rango por defecto, o la redacción de no serlo |
+| `%role_action%` | La acción que abre su pantalla de gestión, vacía cuando el jugador no puede editarlo |
+| `%role_action_lore%` | La pista que la acompaña, o el aviso de que el rango de líder no se edita |
+
+### `role_manage`
+
+| Placeholder | Muestra |
+|---|---|
+| `%role_id%` | El id del rango, que los interruptores de permiso pasan a su acción |
+| `%role_name%` | Su nombre |
+| `%role_weight%` | Su peso |
+| `%role_members%` | Cuántos miembros lo tienen |
+| `%role_default%` | Sí o no, si es el rango por defecto |
+| `%role_default_mat%` | `LIME_DYE` si lo es, `GRAY_DYE` si no |
+| `%edit_action_lore%` | La pista de clic para alternar, vacía cuando el jugador no puede editar este rango |
+| `%perm_<permiso>_status%` | Si ese permiso está activado, en palabras |
+| `%perm_<permiso>_mat%` | El material configurado para activado o desactivado |
+
+`<permiso>` es cualquiera de los veintiséis permisos de rango en minúsculas — `%perm_invite_status%`,
+`%perm_manage_roles_mat%`, `%perm_view_logs_status%` y así con cada nombre de
+[Rangos](/docs/exyliaclans/roles).
+
+### `assign_role`
+
+La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%member_name%` | El miembro cuyo rango se está cambiando |
+| `%member_uuid%` | Su UUID |
+
+Cada fila es un rango más ligero que el del propio jugador:
+
+| Placeholder | Muestra |
+|---|---|
+| `%role_name%` | El nombre del rango, con la marca de rango actual delante cuando el miembro ya lo tiene |
+| `%role_weight%` | Su peso |
+| `%role_members%` | Cuántos miembros lo tienen |
+| `%role_default%` | Sí o no, si es el rango por defecto |
+| `%role_action%` | La acción que lo asigna, vacía cuando no se puede asignar |
+| `%role_action_lore%` | El aviso de que ya lo tiene, la pista de clic para asignar, o vacío |
+
+### `bank`
+
+| Placeholder | Muestra |
+|---|---|
+| `%clan_name%` | El nombre visible del clan |
+| `%balance%` | El banco, formateado como dinero |
+
+### `level`
+
+La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%current_level%` | El nivel del clan |
+| `%max_level%` | El nivel más alto configurado |
+| `%current_exp%` | EXP actual |
+| `%next_level_exp%` | La EXP en la que empieza el siguiente nivel, o la redacción de máximo en el tope |
+| `%exp_needed%` | Cuánta EXP falta todavía, o la redacción de máximo en el tope |
+| `%progress_bar%` | Una barra de diez segmentos hacia el siguiente nivel, con el porcentaje |
+
+Cada fila es un nivel configurado:
+
+| Placeholder | Muestra |
+|---|---|
+| `%level_material%` | El material de actual, alcanzado o bloqueado |
+| `%level_name%` | El nombre de actual, alcanzado o bloqueado, con el número dentro |
+| `%level_required_exp%` | La EXP que pide ese nivel |
+| `%level_members_bonus%` | Plazas de miembro extra que concede |
+| `%level_alliances_bonus%` | Plazas de alianza extra que concede |
+| `%level_rivals_bonus%` | Plazas de rival extra que concede |
+| `%level_progress_bar%` | La barra de progreso, solo en la fila del nivel actual; vacía en todas las demás |
+| `%level_status%` | Máximo, actual, completado o bloqueado |
+
+### `leaderboard`
+
+La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%stat_type%` | El contador por el que se ordena, con su nombre de enum — `KILLS`, `BALANCE` y demás |
+
+Cada fila de la sección `clans` es un clan del ranking:
+
+| Placeholder | Muestra |
+|---|---|
+| `%clan_rank%` | Su posición, de `1` en adelante |
+| `%clan_name%` | Su nombre visible |
+| `%clan_members%` | Cuántos miembros tiene |
+| `%clan_online%` | Cuántos están conectados |
+| `%clan_kills%` | Sus bajas |
+| `%clan_deaths%` | Sus muertes |
+| `%clan_kdr%` | Su KDR, dos decimales |
+| `%clan_playtime%` | Su tiempo jugado, formateado |
+| `%clan_balance%` | Su banco, formateado como dinero |
+| `%stat_type_name%` | El nombre del contador por el que se ordena la lista |
+| `%stat_value%` | El valor de este clan en ese contador, con su formato |
+
+Cada fila de la sección `stat_types` es uno de los siete contadores:
+
+| Placeholder | Muestra |
+|---|---|
+| `%stat_name%` | Su nombre — Online, Members, Kills, Deaths, KDR, Playtime, Balance |
+| `%stat_material%` | El material con el que se dibuja |
+| `%stat_type%` | Su nombre de enum, que el clic pasa a `lb_select_type` |
+
+### `logs`
+
+Cada fila es una entrada del registro, de la más reciente a la más antigua, doscientas como mucho:
+
+| Placeholder | Muestra |
+|---|---|
+| `%log_entry%` | La línea entera ya redactada, con actor y objetivo dentro |
+| `%log_action%` | La etiqueta de lo que pasó |
+| `%log_actor%` | Quién lo hizo, o la redacción de actor desconocido |
+| `%log_target%` | Sobre quién se hizo, vacío cuando la acción no tenía objetivo |
+| `%log_detail%` | El detalle de la entrada, o la redacción de sin detalle |
+| `%log_date%` | Su fecha completa |
+| `%log_date_relative%` | Cuánto hace |
+
+### `allies`
+
+La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%back_action%` | Adónde va el botón de volver — el menú principal, o la pantalla de información del clan que se está viendo |
+
+Cada fila es un clan aliado:
+
+| Placeholder | Muestra |
+|---|---|
+| `%ally_name%` | Su nombre visible |
+| `%ally_members%` | Cuántos miembros tiene |
+| `%ally_online%` | Cuántos están conectados |
+| `%ally_kills%` | Sus bajas |
+| `%ally_deaths%` | Sus muertes |
+| `%ally_kdr%` | Su KDR, dos decimales |
+| `%ally_playtime%` | Su tiempo jugado, formateado |
+| `%ally_action%` | Romper la alianza con el permiso para ello, si no abrir la información de ese clan |
+| `%ally_lore%` | La pista que acompaña a la que sea de las dos |
+
+### `rivals`
+
+La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%back_action%` | Adónde va el botón de volver |
+
+Cada fila es un clan rival:
+
+| Placeholder | Muestra |
+|---|---|
+| `%rival_name%` | Su nombre visible |
+| `%rival_members%` | Cuántos miembros tiene |
+| `%rival_online%` | Cuántos están conectados |
+| `%rival_kills%` | Sus bajas |
+| `%rival_deaths%` | Sus muertes |
+| `%rival_kdr%` | Su KDR, dos decimales |
+| `%rival_playtime%` | Su tiempo jugado, formateado |
+| `%rival_action%` | Quitar la rivalidad con el permiso para ello, si no abrir la información de ese clan |
+| `%rival_lore%` | La pista que acompaña a la que sea de las dos |
+
+### `browse_clans`
+
+Cada fila es un clan abierto en el que el jugador no está:
+
+| Placeholder | Muestra |
+|---|---|
+| `%clan_name%` | Su nombre visible |
+| `%clan_id%` | Su id, para la acción de entrar |
+| `%clan_members%` | Cuántos miembros tiene |
+| `%clan_online%` | Cuántos están conectados |
+| `%clan_kills%` | Sus bajas |
+| `%clan_deaths%` | Sus muertes |
+| `%clan_kdr%` | Su KDR, dos decimales |
+| `%clan_playtime%` | Su tiempo jugado, formateado |
+
+### `mail_inbox`
+
+La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%unread_count%` | Cuántos de los correos visibles no ha leído este jugador |
+| `%compose_clan_title%` | El nombre del botón de redactar, con otra redacción sin el permiso `SEND_CLAN_MAIL` |
+| `%compose_clan_action%` | La acción que redacta correo de clan, vacía sin ese permiso |
+| `%compose_clan_action_lore%` | La pista que la acompaña, o el aviso de que falta el permiso |
+
+Cada fila es un correo. Uno ya leído se dibuja con la plantilla `read`:
+
+| Placeholder | Muestra |
+|---|---|
+| `%mail_id%` | Su id, que las acciones de la fila pasan adelante |
+| `%mail_icon%` | `BOOK` para correo de clan, `PAPER` para directo |
+| `%mail_subject%` | Su asunto |
+| `%mail_sender%` | Quién lo envió |
+| `%mail_type_label%` | La etiqueta de clan o directo |
+| `%mail_sent_relative%` | Cuánto hace que se envió |
+| `%mail_read_status%` | La redacción de leído o sin leer |
+| `%mail_pinned_line%` | La línea de fijado, vacía cuando no lo está |
+
+### `mail_view`
+
+| Placeholder | Muestra |
+|---|---|
+| `%mail_id%` | Su id |
+| `%mail_icon%` | `BOOK` para correo de clan, `PAPER` para directo |
+| `%mail_type%` | `clan` o `direct`, para las condiciones |
+| `%mail_type_label%` | La etiqueta de clan o directo |
+| `%mail_subject%` | Su asunto, sin códigos de color |
+| `%mail_sender%` | Quién lo envió |
+| `%mail_sent_full%` | Su fecha completa |
+| `%mail_expires%` | Cuándo caduca, o `N/A` cuando no caduca |
+| `%mail_body%` | El mensaje, dentro de la plantilla del cuerpo |
+| `%mail_pin_display%` | La etiqueta del botón de fijar, redactada para fijado o sin fijar |
+| `%mail_pin_mat%` | `LIME_DYE` si está fijado, `GRAY_DYE` si no |
+| `%mail_pin_action%` | La acción que fija o desfija, vacía salvo que sea correo de clan y el jugador pueda gestionarlo |
+| `%mail_pin_action_lore%` | La pista que la acompaña, o el aviso de que falta el permiso |
+| `%mail_delete_action%` | La acción que lo borra, vacía salvo que el jugador participase en él o sea correo de clan |
+| `%mail_delete_action_lore%` | La pista de borrado, o el aviso de que falta el permiso |
+
+### `lfc_browse`
+
+La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%lfc_state%` | `none`, `active` o `expired`, para el perfil del propio jugador |
+| `%my_profile_status%` | La redacción de activo o caducado — solo se aporta cuando el jugador tiene perfil |
+| `%my_profile_posted%` | Cuánto hace que lo publicó |
+| `%my_profile_expires%` | Cuándo caduca |
+
+Cada fila es el perfil activo de otro jugador:
+
+| Placeholder | Muestra |
+|---|---|
+| `%profile_name%` | El nombre del jugador |
+| `%profile_posted%` | Cuánto hace que se publicó |
+| `%profile_expires%` | Cuándo caduca |
+| `%profile_summary%` | Sus respuestas, en un solo resumen |
+
+### `lfc_create`
+
+La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%submit_label%` | Publicar, o guardar cuando se está editando un perfil activo |
+
+Cada fila es una categoría por responder:
+
+| Placeholder | Muestra |
+|---|---|
+| `%cat_id%` | Su id, que la acción de la fila pasa adelante |
+| `%cat_display_name%` | Su nombre |
+| `%cat_icon%` | Su material configurado |
+| `%cat_status%` | Lo que el jugador ha respondido en ella hasta ahora |
+| `%cat_type_hint%` | Cómo se responde esta categoría — un interruptor, una opción, o un nivel por respuesta |
+
+### `lfp_browse`
+
+La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%lfp_state%` | `none`, `active` o `expired`, para el anuncio del clan del jugador |
+| `%lfp_manage_state%` | `none`, `create`, `active` o `expired` — lo mismo visto a través del permiso `MANAGE_LFP` |
+| `%has_clan%` | `yes` o `no` |
+| `%application_count%` | Cuántas solicitudes ha enviado el jugador |
+| `%my_posting_status%` | La redacción de activo o caducado — solo se aporta cuando el clan tiene anuncio |
+| `%my_posting_posted%` | Cuánto hace que se publicó |
+| `%my_posting_expires%` | Cuándo caduca |
+
+Cada fila es un anuncio activo:
+
+| Placeholder | Muestra |
+|---|---|
+| `%clan_name%` | El nombre del clan que lo publica |
+| `%clan_leader%` | Quién lo publicó |
+| `%posting_id%` | El id de ese clan, que la acción de solicitar pasa adelante |
+| `%posting_posted%` | Cuánto hace que se publicó |
+| `%posting_expires%` | Cuándo caduca |
+| `%posting_summary%` | Las respuestas del clan, en un solo resumen |
+| `%application_state%` | La redacción de pendiente cuando el jugador ya ha solicitado, si no la etiqueta de solicitar |
+
+### `lfp_create`
+
+La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%submit_label%` | Publicar, o guardar cuando se está editando un anuncio activo |
+| `%description%` | La descripción redactada hasta ahora, sin códigos de color |
+
+Cada fila es una categoría por responder:
+
+| Placeholder | Muestra |
+|---|---|
+| `%cat_id%` | Su id, que la acción de la fila pasa adelante |
+| `%cat_display_name%` | Su nombre |
+| `%cat_icon%` | Su material configurado |
+| `%cat_status%` | Lo que el jugador ha respondido en ella hasta ahora |
+| `%cat_type_hint%` | Cómo se responde esta categoría |
+
+### `lfp_applications`
+
+La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%pending_count%` | Cuántas solicitudes siguen pendientes |
+
+Cada fila es una solicitud a este clan:
+
+| Placeholder | Muestra |
+|---|---|
+| `%application_id%` | Su id, que la acción de la fila pasa adelante |
+| `%player_name%` | Quién solicitó |
+| `%application_status%` | Pendiente, aceptada, rechazada, o la redacción de estado desconocido |
+| `%application_date%` | Cuánto hace que se envió |
+| `%application_message%` | Lo que escribió, vacío cuando no escribió nada |
+
+### `lfp_application_detail`
+
+| Placeholder | Muestra |
+|---|---|
+| `%application_id%` | Su id, que las acciones de aceptar, rechazar y retirar pasan adelante |
+| `%player_name%` | Quién solicitó |
+| `%clan_name%` | El clan al que solicitó, o su id cuando el clan ya no está |
+| `%application_status%` | Pendiente, aceptada, rechazada, retirada, o la redacción de estado desconocido |
+| `%application_message%` | Lo que escribió, sin códigos de color |
+| `%application_return%` | `clan` o `player`, según la lista desde la que se abrió |
+| `%application_action_state%` | `clan_pending`, `player_pending` o `none` — qué botones debe mostrar la pantalla |
+
+### `lfp_my_applications`
+
+Cada fila es una solicitud enviada por el jugador:
+
+| Placeholder | Muestra |
+|---|---|
+| `%application_id%` | Su id, que la acción de la fila pasa adelante |
+| `%clan_name%` | El clan al que solicitó, o su id cuando el clan ya no está |
+| `%clan_id%` | El id de ese clan |
+| `%application_status%` | Pendiente, aceptada, rechazada, retirada, o la redacción de estado desconocido |
+| `%application_date%` | Cuánto hace que se envió |
+| `%application_message%` | Lo que escribió, vacío cuando no escribió nada |
+
+### `lfc_option_select` y `lfp_option_select`
+
+La pantalla que abre una categoría de selección única. Ambas aportan los mismos nombres. La pantalla
+aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%cat_display_name%` | El nombre de la categoría |
+| `%cat_id%` | Su id |
+
+Cada fila es una de sus opciones:
+
+| Placeholder | Muestra |
+|---|---|
+| `%cat_id%` | El id de la categoría, que la acción de la fila pasa adelante |
+| `%option_id%` | El id de la opción |
+| `%option_name%` | Su nombre |
+| `%option_icon%` | Su material configurado |
+| `%option_selected_lore%` | La marca de seleccionado en la opción elegida, vacía en todas las demás |
+
+### `lfc_tier_select` y `lfp_tier_select`
+
+La pantalla que abre una categoría de respuesta múltiple: una fila por respuesta, cada una con su propia
+lista de niveles. Ambas aportan los mismos nombres. La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%cat_display_name%` | El nombre de la categoría |
+| `%cat_id%` | Su id |
+
+Cada fila es una respuesta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%cat_id%` | El id de la categoría, que la acción de la fila pasa adelante |
+| `%mode_id%` | El id de la respuesta |
+| `%mode_name%` | Su nombre |
+| `%mode_icon%` | Su material configurado |
+| `%mode_current_tier%` | El nivel elegido para ella hasta ahora |
+
+### `lfc_mode_select` y `lfp_mode_select`
+
+La lista de niveles de una respuesta. Ambas aportan los mismos nombres. La pantalla aporta:
+
+| Placeholder | Muestra |
+|---|---|
+| `%cat_id%` | El id de la categoría |
+| `%mode_id%` | El id de la respuesta |
+| `%mode_name%` | El nombre de la respuesta |
+
+Cada fila es un nivel:
+
+| Placeholder | Muestra |
+|---|---|
+| `%cat_id%` | El id de la categoría, que la acción de la fila pasa adelante |
+| `%mode_id%` | El id de la respuesta, que se pasa con él |
+| `%tier_id%` | El id del nivel |
+| `%tier_display%` | Su nombre en su color configurado |
+| `%tier_icon%` | Su material configurado |
+| `%tier_selected_lore%` | La marca de seleccionado en el nivel elegido, vacía en todos los demás |
+
+### Cualquier pantalla paginada
+
+El módulo de menús los rellena por su cuenta, en el título y en los botones de página:
+
+| Placeholder | Muestra |
+|---|---|
+| `%current_page%` | La página que se está viendo |
+| `%total_pages%` | Cuántas páginas hay |
+| `%page%` | Lo mismo que `%current_page%` |
+| `%pages%` | Lo mismo que `%total_pages%` |
 
 Todos los `%exyliaclans_…%` globales funcionan también en un menú, y todo lo que dé PlaceholderAPI
 también.

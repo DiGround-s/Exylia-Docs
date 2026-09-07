@@ -78,11 +78,38 @@ usar. Así una entrada bloqueada **parece bloqueada** en vez de limitarse a no e
 
 ## Placeholders del archivo
 
-| Dónde | Disponibles |
-|---|---|
-| `targets` | `%target%`, `%target_name%`, `%piece%`, `%piece_material%`, `%trim_name%`, `%trim_pattern%`, `%trim_material%`, `%engraved%`, `%pieces%` |
-| `grid` | `%entry_id%`, `%entry_name%`, `%entry_icon%`, `%preview_material%`, `%trim_pattern%`, `%trim_material%`, `%entry_worn%`, `%entry_worn_name%`, y en presets `%entry_pieces%` |
-| En cualquier sitio | `%tab%`, `%target%`, `%target_name%`, `%pattern%`, `%pattern_name%` |
+Son los tokens propios del menú, que se rellenan mientras se dibuja la pantalla. No son placeholders
+de PlaceholderAPI y solo funcionan dentro de este archivo.
+
+La lista `targets` tiene dos tipos de fila — primero la del set completo y después una por pieza — y
+cada tipo lleva sus propios tokens.
+
+| Placeholder | Dónde | Qué dibuja |
+|---|---|---|
+| `%target%` | `targets`, cualquier sitio | Qué se está grabando: la clave de una pieza, o `set` para el set completo. |
+| `%target_name%` | `targets`, cualquier sitio | Su nombre según `menu`: `full-set`, o el nombre de la pieza. |
+| `%engraved%` | `targets`, fila del set | Cuántas de las cuatro piezas llevan trim. |
+| `%pieces%` | `targets`, fila del set | Cuántas piezas hay en total — cuatro. |
+| `%piece%` | `targets`, filas de pieza | La clave de la pieza: `helmet`, `chestplate`, `leggings` o `boots`. |
+| `%piece_material%` | `targets`, filas de pieza | El material que el jugador lleva puesto de verdad en esa ranura. |
+| `%trim_name%` | `targets`, filas de pieza | El trim elegido para esa pieza, o `menu.empty`. |
+| `%trim_pattern%` | `targets`, filas de pieza | El patrón de ese trim, vacío si la pieza no lleva ninguno. |
+| `%trim_material%` | `targets`, filas de pieza | El metal de ese trim, vacío si la pieza no lleva ninguno. |
+| `%entry_id%` | `grid` | El id de la fila: un id de preset, un id de patrón, o una pareja `patrón/material`. |
+| `%entry_name%` | `grid` | Su nombre visible. |
+| `%entry_icon%` | `grid` | El material con el que se dibuja la fila. |
+| `%preview_material%` | `grid` | La pieza de armadura en la que se previsualiza la fila. |
+| `%trim_pattern%` | `grid` | El patrón que grabaría esta fila. |
+| `%trim_material%` | `grid` | El metal que grabaría esta fila. |
+| `%entry_worn%` | `grid` | Las piezas en las que el jugador ya lo lleva, vacío si ninguna. |
+| `%entry_worn_name%` | `grid` | Lo mismo, pero `menu.empty` si ninguna. |
+| `%entry_pieces%` | `grid` · presets | Las piezas en las que encaja el preset. |
+| `%material_name%` | `grid` · materials | El nombre visible del metal. |
+| `%pattern_name%` | `grid` · materials, cualquier sitio | El nombre visible del patrón elegido, o `menu.empty` antes de elegir uno. |
+| `%tab%` | En cualquier sitio | La rejilla que se está mostrando: `presets`, `patterns` o `materials`. |
+| `%pattern%` | En cualquier sitio | El id del patrón elegido, vacío antes de elegir uno. |
+| `%presets_status%` | En cualquier sitio | `menu.tab-open` o `menu.tab-closed` para la pestaña de presets. |
+| `%custom_status%` | En cualquier sitio | Lo mismo, para la pestaña custom. |
 
 ## Acciones
 

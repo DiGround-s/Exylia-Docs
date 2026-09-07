@@ -164,14 +164,48 @@ the bot is wearing and changes under the cursor.
 | Placeholder | Holds |
 |---|---|
 | `%bot_active%` | Whether the player has a bot out, as ON or OFF. |
-| `%mode%`, `%mode_material%`, `%mode_summary%` | The mode's label, its icon, and the one line explaining what it fights with. |
-| `%difficulty%`, `%difficulty_material%`, `%difficulty_summary%` | The same three for the difficulty. |
-| `%attack_mode%`, `%follow_owner%`, `%invincible%`, `%anti_knockback%`, `%slow_falling%`, `%fire_resistance%` | The six toggles, as ON or OFF. |
-| `%helmet%`, `%helmet_material%`, `%helmet_enchant%`, `%helmet_enchant_material%` | One armour piece: its label, its icon, its enchantment's label and that enchantment's icon. The same four exist for `chestplate`, `leggings` and `boots`. |
-| `%main_hand%`, `%main_hand_material%` | The weapon and its item. |
-| `%off_hand%`, `%off_hand_material%` | The off hand and its item. |
-| `%knockback%`, `%strength%`, `%speed%` | The three enchantment and potion labels. |
-| `%attack_damage%`, `%attack_reach%`, `%attack_speed%`, `%movement_speed%`, `%follow_distance%`, `%max_health%`, `%shield_disable%` | The seven sliders, always to one decimal. |
+| `%mode%` | The mode's label. |
+| `%mode_material%` | The item the mode is drawn with. |
+| `%mode_summary%` | The one line explaining what the mode fights with. |
+| `%difficulty%` | The difficulty's label. |
+| `%difficulty_material%` | The item the difficulty is drawn with. |
+| `%difficulty_summary%` | The one line explaining what the difficulty changes. |
+| `%attack_mode%` | Whether the bot fights back, as ON or OFF. |
+| `%follow_owner%` | Whether it follows its owner, as ON or OFF. |
+| `%invincible%` | Whether it can die, as ON or OFF. |
+| `%anti_knockback%` | Whether it ignores knockback, as ON or OFF. |
+| `%slow_falling%` | Whether it has permanent Slow Falling, as ON or OFF. |
+| `%fire_resistance%` | Whether it has permanent Fire Resistance, as ON or OFF. |
+| `%helmet%` | The helmet's label. |
+| `%helmet_material%` | The helmet the bot is actually wearing, as an item. |
+| `%helmet_enchant%` | The helmet enchantment's label. |
+| `%helmet_enchant_material%` | That enchantment's icon. |
+| `%chestplate%` | The chestplate's label. |
+| `%chestplate_material%` | The chestplate the bot is actually wearing, as an item. |
+| `%chestplate_enchant%` | The chestplate enchantment's label. |
+| `%chestplate_enchant_material%` | That enchantment's icon. |
+| `%leggings%` | The leggings' label. |
+| `%leggings_material%` | The leggings the bot is actually wearing, as an item. |
+| `%leggings_enchant%` | The leggings enchantment's label. |
+| `%leggings_enchant_material%` | That enchantment's icon. |
+| `%boots%` | The boots' label. |
+| `%boots_material%` | The boots the bot is actually wearing, as an item. |
+| `%boots_enchant%` | The boots enchantment's label. |
+| `%boots_enchant_material%` | That enchantment's icon. |
+| `%main_hand%` | The weapon's label. |
+| `%main_hand_material%` | The weapon as an item. |
+| `%off_hand%` | The off hand's label. |
+| `%off_hand_material%` | The off hand as an item. A barrier when it is empty. |
+| `%knockback%` | The weapon's Knockback level, as a label. |
+| `%strength%` | The Strength level, as a label. |
+| `%speed%` | The Speed level, as a label. |
+| `%attack_damage%` | Damage of a fully charged hit, to one decimal. |
+| `%attack_reach%` | Attack reach in blocks, to one decimal. |
+| `%attack_speed%` | The attack speed multiplier, to one decimal. |
+| `%movement_speed%` | The movement speed multiplier, to one decimal. |
+| `%follow_distance%` | Follow distance in blocks, to one decimal. |
+| `%max_health%` | Maximum health in half-hearts, to one decimal. |
+| `%shield_disable%` | Seconds an axe hit keeps a shield down, to one decimal. |
 | `%totems%` | The totem reserve, or the `unlimited` label when it is below zero. |
 
 Every label comes from the `placeholders` block of `messages.yml`, so renaming *Diamond* or recolouring

@@ -69,10 +69,34 @@ carry no action of their own: clicking one does nothing.
 
 ## Placeholders
 
-| Where | Available |
-|---|---|
-| `targets` | `%target%` `%target_name%` `%piece%` `%piece_material%` `%skin_name%` `%skin_color%` `%skin_trim_pattern%` `%skin_trim_material%` `%dressed%` `%pieces%` |
-| `skins` | `%skin_id%` `%skin_name%` `%skin_icon%` `%skin_preview%` `%skin_color%` `%skin_trim_pattern%` `%skin_trim_material%` `%skin_pieces%` `%skin_worn%` `%skin_worn_name%` |
+These are the wardrobe's own tokens, filled in while the screen is drawn. They are not
+PlaceholderAPI placeholders and only work inside this file.
+
+The `targets` list holds two kinds of row — the full-set row first, then one row per piece — and each
+kind carries its own tokens.
+
+| Placeholder | Where | What it draws |
+|---|---|---|
+| `%target%` | `targets` | What the row dresses: a piece key, or `set` on the full-set row. |
+| `%target_name%` | `targets` | Its name from `wardrobe`: `full-set`, or the piece's own name. |
+| `%dressed%` | `targets`, full-set row | How many of the four pieces carry a skin. |
+| `%pieces%` | `targets`, full-set row | How many pieces there are in total — four. |
+| `%piece%` | `targets`, piece rows | The piece's key: `helmet`, `chestplate`, `leggings` or `boots`. |
+| `%piece_material%` | `targets`, piece rows | The leather material of that slot, to draw the row with. |
+| `%skin_name%` | `targets`, piece rows | The skin worn on that piece, or `wardrobe.empty`. |
+| `%skin_color%` | `targets`, piece rows | That skin's hex colour, or undyed leather when it has none. |
+| `%skin_trim_pattern%` | `targets`, piece rows | That skin's trim pattern, empty when it has no trim. |
+| `%skin_trim_material%` | `targets`, piece rows | That skin's trim metal, empty when it has no trim. |
+| `%skin_id%` | `skins` | The skin's id. |
+| `%skin_name%` | `skins` | Its display name. |
+| `%skin_icon%` | `skins` | Its `icon`, or the default skin item's material. |
+| `%skin_preview%` | `skins` | The armor piece it is previewed in — the one being dressed when the skin fits it. |
+| `%skin_color%` | `skins` | Its hex colour, or undyed leather when it has none. |
+| `%skin_trim_pattern%` | `skins` | Its trim pattern, empty when it has no trim. |
+| `%skin_trim_material%` | `skins` | Its trim metal, empty when it has no trim. |
+| `%skin_pieces%` | `skins` | The pieces it fits. |
+| `%skin_worn%` | `skins` | The pieces the player is wearing it on, empty when none. |
+| `%skin_worn_name%` | `skins` | The same, but `wardrobe.empty` when none. |
 
 ## Actions
 

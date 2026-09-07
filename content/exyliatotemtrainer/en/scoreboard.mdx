@@ -69,20 +69,27 @@ match:
 ## What the lines can say
 
 Nothing is pushed into a board. The library renders it on its own interval and asks the placeholders,
-so a line is any text with `%totem_*%` placeholders in it, and any other placeholder ExyliaLib
-resolves works too. The full list is on [Placeholders](/docs/exyliatotemtrainer/placeholders); the
-ones the defaults use:
+so a line is any text carrying this plugin's own `%totem_<name>%` placeholders, and any other
+placeholder ExyliaLib resolves works too. This file is read by the plugin itself, so the names here go
+without the plugin name in front; the full list, in the form other plugins read them, is on
+[Placeholders](/docs/exyliatotemtrainer/placeholders). The ones the defaults use:
 
 | Placeholder | Board | Value |
 |---|---|---|
 | `%totem_mode%` | training | The mode's display name |
 | `%totem_interval%` | training | The current interval in ticks, which an accelerating mode keeps moving |
 | `%totem_session_time%` | training | Time since the drill began |
-| `%totem_pops%`, `%totem_best%`, `%totem_average%`, `%totem_streak%` | both | The running session's numbers, this round's in a duel |
+| `%totem_pops%` | both | Pops of the running session, this round's in a duel |
+| `%totem_best%` | both | Fastest reaction of the running session, this round's in a duel |
+| `%totem_average%` | both | Average reaction of the running session, this round's in a duel |
+| `%totem_streak%` | both | Pops in a row of the running session, this round's in a duel |
 | `%totem_grade%` | training | The last pop's grade, `—` before the first |
 | `%totem_format%` | match | `BO3` |
-| `%totem_opponent%`, `%totem_opponent_pops%` | match | The other side and their pops this round |
-| `%totem_round%`, `%totem_score%`, `%totem_match_state%` | match | Round number, `2 - 1`, and `starting`, `active`, `round_end`… |
+| `%totem_opponent%` | match | The opponent's name |
+| `%totem_opponent_pops%` | match | The opponent's pops this round |
+| `%totem_round%` | match | The round being played |
+| `%totem_score%` | match | Rounds won, yours first: `2 - 1` |
+| `%totem_match_state%` | match | `waiting`, `starting`, `active`, `round_end`, `ending` or `finished` |
 
 <Callout type="note" title="The grade line never goes blank">
 `%totem_grade%` answers `—` between the start of a session and its first pop, so the line reads

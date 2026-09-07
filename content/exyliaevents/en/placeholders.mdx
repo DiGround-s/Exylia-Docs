@@ -16,8 +16,8 @@ Every placeholder below is written in full, and clicking one copies it.
 | `%exyliaevents_waiting%` | How many are joinable right now — waiting or counting down. |
 | `%exyliaevents_in_progress%` | How many are actually playing. |
 
-`waiting` and `in_progress` do not overlap: an event counting down is joinable, and one that is
-playing is not.
+`%exyliaevents_waiting%` and `%exyliaevents_in_progress%` do not overlap: an event counting down is
+joinable, and one that is playing is not.
 
 ## One event's state
 
@@ -109,6 +109,7 @@ read yet reads `-` the same way.
 
 ## Using them in the plugin's own files
 
-The sidebars in `scoreboards.yml` and the boss bars in `config.yml` are rendered with the values the
-running event provides — `%time%`, `%round%`, `%color%` and the rest — not with these. These are for
-reading the plugin's state from **outside**: a hub scoreboard, a tab list, another plugin's menu.
+The sidebars in `scoreboards.yml` and the boss bars in `config.yml` are rendered with the tokens the
+running event fills in, not with these. Each event type fills the ones its own screens need, so
+`%time%` is on every one of them and `%round%` only where there are rounds. These placeholders are
+for reading the plugin's state from **outside**: a hub scoreboard, a tab list, another plugin's menu.

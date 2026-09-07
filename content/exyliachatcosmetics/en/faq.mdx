@@ -13,8 +13,8 @@ Paper's own chat and for anything rendering through `AsyncChatEvent`; a plugin t
 [Integrations](/docs/exyliachatcosmetics/integrations) matches each case.
 
 The tag and the coloured name are a separate matter: those are never injected for you. If the message
-is coloured but there is no tag in front of the name, you have not put `%ecc_tag%` and `%ecc_nick%`
-into your chat plugin's format yet.
+is coloured but there is no tag in front of the name, you have not put `%exyliachatcosmetics_tag%`
+and `%exyliachatcosmetics_nick%` into your chat plugin's format yet.
 
 ## Tags show up as the word they are written from
 
@@ -119,8 +119,8 @@ clock and the expiry sweep run async, and chat and placeholder rendering read me
 
 Only if a plugin outside the Exylia ecosystem has to read the placeholders. They are registered with
 ExyliaLib's own placeholder module and work in every ExyliaLib text with PAPI absent; when PAPI is
-installed, ExyliaLib bridges the lot into it automatically under both `%exyliachatcosmetics_…%` and
-the short `%ecc_…%`. There is no expansion to download.
+installed, ExyliaLib bridges the lot into it automatically under `%exyliachatcosmetics_<name>%`.
+There is no expansion to download.
 
 ## Where do I get support?
 

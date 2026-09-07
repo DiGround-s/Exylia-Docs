@@ -69,10 +69,34 @@ encajan no llevan acción propia: hacer clic en ellas no hace nada.
 
 ## Placeholders
 
-| Dónde | Disponibles |
-|---|---|
-| `targets` | `%target%` `%target_name%` `%piece%` `%piece_material%` `%skin_name%` `%skin_color%` `%skin_trim_pattern%` `%skin_trim_material%` `%dressed%` `%pieces%` |
-| `skins` | `%skin_id%` `%skin_name%` `%skin_icon%` `%skin_preview%` `%skin_color%` `%skin_trim_pattern%` `%skin_trim_material%` `%skin_pieces%` `%skin_worn%` `%skin_worn_name%` |
+Son los tokens propios del vestidor, que se rellenan mientras se dibuja la pantalla. No son
+placeholders de PlaceholderAPI y solo funcionan dentro de este archivo.
+
+La lista `targets` tiene dos tipos de fila — primero la del set completo y después una por pieza — y
+cada tipo lleva sus propios tokens.
+
+| Placeholder | Dónde | Qué dibuja |
+|---|---|---|
+| `%target%` | `targets` | Qué viste la fila: la clave de una pieza, o `set` en la del set completo. |
+| `%target_name%` | `targets` | Su nombre según `wardrobe`: `full-set`, o el nombre de la pieza. |
+| `%dressed%` | `targets`, fila del set | Cuántas de las cuatro piezas llevan skin. |
+| `%pieces%` | `targets`, fila del set | Cuántas piezas hay en total — cuatro. |
+| `%piece%` | `targets`, filas de pieza | La clave de la pieza: `helmet`, `chestplate`, `leggings` o `boots`. |
+| `%piece_material%` | `targets`, filas de pieza | El material de cuero de esa ranura, para dibujar la fila. |
+| `%skin_name%` | `targets`, filas de pieza | La skin puesta en esa pieza, o `wardrobe.empty`. |
+| `%skin_color%` | `targets`, filas de pieza | El color hex de esa skin, o cuero sin teñir si no tiene. |
+| `%skin_trim_pattern%` | `targets`, filas de pieza | El patrón de trim de esa skin, vacío si no tiene trim. |
+| `%skin_trim_material%` | `targets`, filas de pieza | El metal de trim de esa skin, vacío si no tiene trim. |
+| `%skin_id%` | `skins` | El id de la skin. |
+| `%skin_name%` | `skins` | Su nombre visible. |
+| `%skin_icon%` | `skins` | Su `icon`, o el material del objeto de skin por defecto. |
+| `%skin_preview%` | `skins` | La pieza en la que se previsualiza — la que se está vistiendo cuando la skin encaja en ella. |
+| `%skin_color%` | `skins` | Su color hex, o cuero sin teñir si no tiene. |
+| `%skin_trim_pattern%` | `skins` | Su patrón de trim, vacío si no tiene trim. |
+| `%skin_trim_material%` | `skins` | Su metal de trim, vacío si no tiene trim. |
+| `%skin_pieces%` | `skins` | Las piezas en las que encaja. |
+| `%skin_worn%` | `skins` | Las piezas en las que el jugador la lleva puesta, vacío si ninguna. |
+| `%skin_worn_name%` | `skins` | Lo mismo, pero `wardrobe.empty` si ninguna. |
 
 ## Acciones
 

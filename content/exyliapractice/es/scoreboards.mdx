@@ -60,43 +60,139 @@ plugin se resuelven dentro de una línea de sidebar.
 
 | Token | Responde |
 |---|---|
+| `%server_online%` | Jugadores conectados al servidor |
 | `%queue%` | Jugadores en cola en todo el servidor |
 | `%fighting%` | Jugadores en partida en todo el servidor |
-| `%wins%`, `%kdr%`, `%win_rate%` | Los contadores globales del lector |
-| `%mmr%`, `%rank%`, `%rank_division%`, `%rank_name%`, `%rank_lp%`, `%rank_lp_max%`, `%rank_icon%` | Su rango global |
-| `%members%`, `%max%`, `%leader%` | Solo en party |
+| `%wins%` | Las victorias globales del lector |
+| `%kdr%` | Su ratio global bajas/muertes, un decimal |
+| `%win_rate%` | Su porcentaje global de victorias |
+| `%mmr%` | Su rating global |
+| `%rank%` | El nombre del rango a secas: `Copper` |
+| `%rank_division%` | La división a secas: `II`. Vacío en un rango que no tiene |
+| `%rank_name%` | El rango y su división juntos: `Copper II` |
+| `%rank_lp%` | LP dentro de la división actual |
+| `%rank_lp_max%` | La anchura de la división en LP |
+| `%rank_icon%` | El icono del rango |
+| `%members%` | Cuántos jugadores hay en la party. Solo en `party` |
+| `%max%` | El tamaño máximo de la party. Solo en `party` |
+| `%leader%` | El nombre del líder de la party. Solo en `party` |
 
 ### Cola
-
-Todo lo del lobby, más:
 
 | Token | Responde |
 |---|---|
 | `%kit%` | El primer kit en cola, con `+N` cuando hay más |
 | `%time%` | Cuánto lleva esperando |
+| `%queue%` | Jugadores en cola en todo el servidor |
+| `%fighting%` | Jugadores en partida en todo el servidor |
+| `%wins%` | Las victorias globales del lector |
+| `%kdr%` | Su ratio global bajas/muertes, un decimal |
+| `%win_rate%` | Su porcentaje global de victorias |
+| `%mmr%` | Su rating en el primer kit en cola |
+| `%rank%` | El nombre del rango de ese kit, a secas |
+| `%rank_division%` | La división de ese rango, a secas |
+| `%rank_name%` | Ese rango y su división juntos |
+| `%rank_lp%` | LP dentro de esa división |
+| `%rank_lp_max%` | La anchura de esa división en LP |
+| `%rank_icon%` | El icono de ese rango |
 
-Aquí los tokens de rango son el rating de **ese primer kit**, no el global.
+Aquí los tokens de rango son el rating de **ese primer kit**, no el global. `%server_online%` no se
+rellena en este sidebar: el contexto de la cola se construye sin él.
 
 ### En partida
 
 | Token | Responde |
 |---|---|
-| `%kit%`, `%arena%` | Nombres |
+| `%kit%` | El nombre del kit |
+| `%arena%` | El nombre de la arena |
 | `%time%` | Duración de la partida |
-| `%my_points%`, `%their_points%`, `%points_to_win%` | Puntos |
-| `%hits%`, `%opp_hits%`, `%hits_to_win%` | Golpes **recibidos** por cada lado |
-| `%round%`, `%total_rounds%`, `%my_wins%`, `%their_wins%` | Rondas de duelo |
-| `%my_ping%`, `%opp_ping%` | Latencia |
-| `%alive%`, `%total%` | Supervivientes en FFA |
-| `%team_a_alive%`, `%team_b_alive%` | Supervivientes por equipo |
-| `%opponent%`, `%opp_mmr%`, `%opp_rank%`, `%opp_rank_name%`, `%opp_rank_lp%`, `%opp_rank_lp_max%`, `%opp_rank_icon%` | El rival, solo en 1v1 |
+| `%my_points%` | Los puntos del lector |
+| `%their_points%` | Los puntos del rival |
+| `%points_to_win%` | El `points-to-win` del kit |
+| `%hits%` | Golpes **recibidos** por el lector |
+| `%opp_hits%` | Golpes **recibidos** por el rival |
+| `%hits_to_win%` | El `hits-to-win` del kit |
+| `%round%` | La ronda de duelo actual |
+| `%total_rounds%` | A cuántas rondas se juega el duelo |
+| `%my_wins%` | Rondas ganadas por el lector |
+| `%their_wins%` | Rondas ganadas por el rival |
+| `%my_ping%` | La latencia del lector |
+| `%opp_ping%` | La latencia del rival |
+| `%alive%` | Jugadores que siguen vivos |
+| `%total%` | Jugadores con los que empezó la partida |
+| `%team_a_alive%` | Supervivientes del equipo A |
+| `%team_b_alive%` | Supervivientes del equipo B |
+| `%mmr%` | El rating del lector en el kit que se está jugando |
+| `%rank%` | Su nombre de rango en ese kit, a secas |
+| `%rank_division%` | La división de ese rango, a secas |
+| `%rank_name%` | Ese rango y su división juntos |
+| `%rank_lp%` | LP dentro de esa división |
+| `%rank_lp_max%` | La anchura de esa división en LP |
+| `%rank_icon%` | El icono de ese rango |
+| `%opponent%` | El nombre del rival, solo en 1v1 |
+| `%opp_mmr%` | El rating del rival en el kit, solo en 1v1 |
+| `%opp_rank%` | El nombre de rango del rival, a secas |
+| `%opp_rank_division%` | Su división, a secas |
+| `%opp_rank_name%` | Su rango y su división juntos |
+| `%opp_rank_lp%` | Sus LP dentro de esa división |
+| `%opp_rank_lp_max%` | La anchura de esa división en LP |
+| `%opp_rank_icon%` | El icono de su rango |
 
-Los tokens de rango del propio lector en partida son su rating **del kit que se está jugando**.
+Los tokens de rango del propio lector en partida son su rating **del kit que se está jugando**. Los
+del rival se rellenan en un 1v1 y responden `?` o `0` en cualquier otro modo.
+
+Otros tres se rellenan solo cuando la partida es contra bots:
+
+| Token | Responde |
+|---|---|
+| `%bot_mode%` | El modo de combate en el que pelean los bots |
+| `%bot_difficulty%` | La dificultad con la que se invocaron |
+| `%bots_alive%` | Cuántos bots siguen vivos |
 
 ### Observando
 
-En vez de *my* y *their*, los sidebars de espectador usan `%player1_*%` y `%player2_*%`:
-`name`, `ping`, `points`, `hits`, `wins`, más el juego completo de tokens de rango de cada uno.
+Un sidebar de espectador nombra los dos bandos en vez del lector, así que no tiene ningún token
+`%my_*%` ni `%their_*%`:
+
+| Token | Responde |
+|---|---|
+| `%kit%` | El nombre del kit |
+| `%arena%` | El nombre de la arena |
+| `%time%` | Duración de la partida |
+| `%round%` | La ronda de duelo actual |
+| `%total_rounds%` | A cuántas rondas se juega el duelo |
+| `%points_to_win%` | El `points-to-win` del kit |
+| `%hits_to_win%` | El `hits-to-win` del kit |
+| `%alive%` | Jugadores que siguen vivos |
+| `%total%` | Jugadores con los que empezó la partida |
+| `%team_a_alive%` | Supervivientes del equipo A |
+| `%team_b_alive%` | Supervivientes del equipo B |
+| `%player1_name%` | El nombre del primer jugador |
+| `%player1_ping%` | Su latencia |
+| `%player1_points%` | Sus puntos |
+| `%player1_hits%` | Golpes que ha **recibido** |
+| `%player1_wins%` | Rondas que ha ganado |
+| `%player1_rank%` | Su nombre de rango, a secas |
+| `%player1_rank_division%` | Su división, a secas |
+| `%player1_rank_name%` | Su rango y su división juntos |
+| `%player1_rank_lp%` | Sus LP dentro de esa división |
+| `%player1_rank_lp_max%` | La anchura de esa división en LP |
+| `%player1_rank_icon%` | El icono de su rango |
+| `%player2_name%` | El nombre del segundo jugador |
+| `%player2_ping%` | Su latencia |
+| `%player2_points%` | Sus puntos |
+| `%player2_hits%` | Golpes que ha **recibido** |
+| `%player2_wins%` | Rondas que ha ganado |
+| `%player2_rank%` | Su nombre de rango, a secas |
+| `%player2_rank_division%` | Su división, a secas |
+| `%player2_rank_name%` | Su rango y su división juntos |
+| `%player2_rank_lp%` | Sus LP dentro de esa división |
+| `%player2_rank_lp_max%` | La anchura de esa división en LP |
+| `%player2_rank_icon%` | El icono de ese rango |
+
+Los dos juegos de jugador se rellenan solo en un 1v1 observado. No existen `%player1_mmr%` ni
+`%player2_mmr%`: el rating en bruto no forma parte del contexto de espectador, solo el rango al que
+corresponde.
 
 ## La action bar de partida
 

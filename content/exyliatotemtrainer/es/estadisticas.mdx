@@ -56,7 +56,7 @@ comparar.
 
 | Categoría | Ordena por | Nombre por defecto |
 |---|---|---|
-| `best_score` | `bestScore`, el mayor primero | Best score |
+| `rating` | `bestScore` ponderado por la velocidad a la que se logró, el mayor primero | Rating |
 | `best_pops` | `bestPops`, el mayor primero | Most pops |
 | `fastest_average` | `bestAverageMillis`, el **menor** primero | Fastest average |
 | `best_streak` | `bestStreak`, el mayor primero | Best streak |
@@ -86,12 +86,14 @@ lograr un mejor resultado se ve en la tabla en la que lo logró.
 ### Abrir una tabla
 
 `/totem leaderboard` abre el selector de modo; `/totem leaderboard <modo>` abre la tabla de ese modo
-ordenada por `best_score`; `/totem leaderboard <modo> <categoría>` la ordena por esa categoría. Un
+ordenada por `rating`; `/totem leaderboard <modo> <categoría>` la ordena por esa categoría. Un
 modo desconocido abre el selector en lugar de una tabla vacía. Dentro, la fila de botones de categoría
 reordena la tabla abierta en el sitio, y las tres primeras filas llevan medalla.
 
-La misma tabla se puede leer como placeholders: `%totem_top_<modo>_<categoría>_<n>%` y su gemelo
-`_value`. Ver [Placeholders](/docs/exyliatotemtrainer/placeholders).
+La misma tabla se puede leer a través de PlaceholderAPI:
+`%exyliatotemtrainer_totem_top_<modo>_<categoría>_<n>%` responde el nombre en esa posición, y
+`%exyliatotemtrainer_totem_top_<modo>_<categoría>_<n>_value%` el número que lo puso ahí. Ver
+[Placeholders](/docs/exyliatotemtrainer/placeholders).
 
 ## Historial de duelos
 

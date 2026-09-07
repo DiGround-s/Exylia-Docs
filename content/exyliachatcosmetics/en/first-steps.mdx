@@ -106,32 +106,34 @@ the shortest route from that to a player wearing something and everybody seeing 
     are yours to place, as placeholders, in whatever chat plugin you already run:
 
     ```text
-    %ecc_tag%%ecc_nick%<gray>: <white>%message%
+    %exyliachatcosmetics_tag%%exyliachatcosmetics_nick%<gray>: <white>%message%
     ```
 
-    `%ecc_tag%` is the worn tag with its trailing space already attached, and a custom tag the player
-    made wins over a catalogue one. `%ecc_nick%` is their name in their nick colour. `%ecc_identity%`
-    is the two together. Both answer to the long form `%exyliachatcosmetics_…%` as well.
+    `%exyliachatcosmetics_tag%` is the worn tag with its trailing space already attached, and a
+    custom tag the player made wins over a catalogue one. `%exyliachatcosmetics_nick%` is their name
+    in their nick colour. `%exyliachatcosmetics_identity%` is the two together.
 
     Three notations, because chat plugins do not agree on one — pick the suffix your plugin parses:
 
     | Placeholder | Output |
     |---|---|
-    | `%ecc_tag%` | MiniMessage, `<#ffd700>[MVP]</#ffd700>` — the default |
-    | `%ecc_tag_legacy%` | `&` codes, with `&#rrggbb` for hex |
-    | `%ecc_tag_section%` | `§` codes, with `§x§r§r…` for hex |
+    | `%exyliachatcosmetics_tag%` | MiniMessage, `<#ffd700>[MVP]</#ffd700>` — the default |
+    | `%exyliachatcosmetics_tag_legacy%` | `&` codes, with `&#rrggbb` for hex |
+    | `%exyliachatcosmetics_tag_section%` | `§` codes, with `§x§r§r…` for hex |
 
-    So the same format for a legacy-string chat plugin reads:
+    The name carries the same three: `%exyliachatcosmetics_nick%`,
+    `%exyliachatcosmetics_nick_legacy%` and `%exyliachatcosmetics_nick_section%`. So the same format
+    for a legacy-string chat plugin reads:
 
     ```text
-    %ecc_tag_section%%ecc_nick_section%§7: §f%message%
+    %exyliachatcosmetics_tag_section%%exyliachatcosmetics_nick_section%§7: §f%message%
     ```
 
     Getting the wrong one is the single most common mistake here, and it looks like raw `<#ffd700>`
     text in chat. Outside ExyliaLib's own text these need PlaceholderAPI installed to resolve.
 
-    A player wearing nothing yields an empty string, so a format with `%ecc_tag%` in it is safe for
-    everybody from the first day.
+    A player wearing nothing yields an empty string, so a format with `%exyliachatcosmetics_tag%`
+    in it is safe for everybody from the first day.
   </Step>
 
   <Step title="Pick the right hook for your chat plugin">

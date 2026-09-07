@@ -69,20 +69,28 @@ match:
 ## Qué pueden decir las líneas
 
 No se empuja nada a la tabla. La librería la dibuja en su propio intervalo y pregunta a los
-placeholders, así que una línea es cualquier texto con placeholders `%totem_*%`, y cualquier otro
-placeholder que ExyliaLib resuelva también funciona. La lista completa está en
-[Placeholders](/docs/exyliatotemtrainer/placeholders); los que usan los valores por defecto:
+placeholders, así que una línea es cualquier texto que lleve los placeholders `%totem_<nombre>%` del
+propio plugin, y cualquier otro placeholder que ExyliaLib resuelva también funciona. Este archivo lo lee
+el plugin mismo, así que aquí los nombres van sin el nombre del plugin delante; la lista completa, en la
+forma en que la leen otros plugins, está en [Placeholders](/docs/exyliatotemtrainer/placeholders). Los
+que usan los valores por defecto:
 
 | Placeholder | Tabla | Valor |
 |---|---|---|
 | `%totem_mode%` | training | El nombre visible del modo |
 | `%totem_interval%` | training | El intervalo actual en ticks, que un modo con aceleración va moviendo |
 | `%totem_session_time%` | training | Tiempo desde que empezó el ejercicio |
-| `%totem_pops%`, `%totem_best%`, `%totem_average%`, `%totem_streak%` | ambas | Los números de la sesión en curso, los de esta ronda en un duelo |
+| `%totem_pops%` | ambas | Pops de la sesión en curso, los de esta ronda en un duelo |
+| `%totem_best%` | ambas | Reacción más rápida de la sesión en curso, la de esta ronda en un duelo |
+| `%totem_average%` | ambas | Reacción media de la sesión en curso, la de esta ronda en un duelo |
+| `%totem_streak%` | ambas | Pops seguidos de la sesión en curso, los de esta ronda en un duelo |
 | `%totem_grade%` | training | La calificación del último pop, `—` antes del primero |
 | `%totem_format%` | match | `BO3` |
-| `%totem_opponent%`, `%totem_opponent_pops%` | match | El rival y sus pops en esta ronda |
-| `%totem_round%`, `%totem_score%`, `%totem_match_state%` | match | Número de ronda, `2 - 1`, y `starting`, `active`, `round_end`… |
+| `%totem_opponent%` | match | El nombre del rival |
+| `%totem_opponent_pops%` | match | Los pops del rival en esta ronda |
+| `%totem_round%` | match | La ronda que se juega |
+| `%totem_score%` | match | Rondas ganadas, las tuyas primero: `2 - 1` |
+| `%totem_match_state%` | match | `waiting`, `starting`, `active`, `round_end`, `ending` o `finished` |
 
 <Callout type="note" title="La línea de calificación nunca queda vacía">
 `%totem_grade%` responde `—` entre el inicio de una sesión y su primer pop, así que la línea dice

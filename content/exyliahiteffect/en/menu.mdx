@@ -81,11 +81,37 @@ Each list picks a template per row. `item_template` is the plain state and must 
 
 ## Placeholders
 
-| Where | Available |
-|---|---|
-| `categories` | `%category_id%` `%category_name%` `%category_material%` `%category_total%` `%category_owned%` `%category_status%` |
-| `grid` | `%effect_id%` `%effect_name%` `%effect_material%` `%effect_description%` `%effect_weapons%` `%effect_favourite%` `%effect_tier%` `%effect_tier_id%` `%effect_tier_color%` |
-| Anywhere | `%current_effect%` `%random_status%` `%favourites_count%` `%keys%` `%unlocked_count%` `%catalogue_count%` `%particle_visibility%` `%visibility_all%` `%visibility_none%` `%visibility_self_only%` `%visibility_others_only%` |
+These are the menu's own tokens, filled in while the screen is drawn. They are not PlaceholderAPI
+placeholders and only work inside this file.
+
+| Placeholder | Where | What it draws |
+|---|---|---|
+| `%category_id%` | `categories` | The tab's id — `favourites` on the shortlist tab. |
+| `%category_name%` | `categories` | The tab's display name. |
+| `%category_material%` | `categories` | The material its icon is drawn with. |
+| `%category_total%` | `categories` | How many effects the tab holds. |
+| `%category_owned%` | `categories` | How many of those the player owns. |
+| `%category_status%` | `categories` | `menu.tab-open` or `menu.tab-closed`, depending on whether this is the tab being looked at. |
+| `%effect_id%` | `grid` | The effect's id. |
+| `%effect_name%` | `grid` | Its display name, with its colours. |
+| `%effect_material%` | `grid` | The material it is drawn with. |
+| `%effect_description%` | `grid` | Its description from `effects.yml`. |
+| `%effect_weapons%` | `grid` | What it may be bound to, in words. |
+| `%effect_favourite%` | `grid` | `menu.favourite-on` or `menu.favourite-off`, depending on whether it is starred. |
+| `%effect_tier%` | `grid` | The rarity's name, in the rarity's colour. |
+| `%effect_tier_id%` | `grid` | The rarity's id. |
+| `%effect_tier_color%` | `grid` | That colour on its own. |
+| `%current_effect%` | Anywhere | The effect the player is wearing, `menu.random-name` on random, or `menu.empty`. |
+| `%random_status%` | Anywhere | `menu.random-on` or `menu.random-off`. |
+| `%favourites_count%` | Anywhere | How many effects they have starred. |
+| `%keys%` | Anywhere | Crate keys they hold. |
+| `%unlocked_count%` | Anywhere | How many effects they have won from the crate. |
+| `%catalogue_count%` | Anywhere | How many effects the server declares. |
+| `%particle_visibility%` | Anywhere | The player's current visibility mode, named as `particles.name-*` says. |
+| `%visibility_all%` | Anywhere | The name of the "everyone" mode, for a button that offers it. |
+| `%visibility_none%` | Anywhere | The name of the "nobody" mode. |
+| `%visibility_self_only%` | Anywhere | The name of the "only me" mode. |
+| `%visibility_others_only%` | Anywhere | The name of the "only others" mode. |
 
 ## Actions
 

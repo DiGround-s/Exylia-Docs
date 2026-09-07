@@ -19,7 +19,7 @@ energy:
 |---|---|---|
 | `enabled` | `false` | Missing or `false` means the class has no energy at all. |
 | `name` | `Energy` | Read from the file, but not printed anywhere by the plugin today. |
-| `symbol` | `⚡` | Written into the bar as `%symbol%`, and into `%classes_energy_symbol%`. |
+| `symbol` | `⚡` | Written into the bar below as `%symbol%`, which is a value the bar is given rather than a registered placeholder. Anything outside the plugin reads the same character as `%exyliaclasses_classes_energy_symbol%`. |
 | `color` | `#ffffff` | Written into the bar as `%energy_color%`. Any colour tag the text module accepts. |
 | `max` | `100` | The cap. |
 | `regen-per-tick` | `0.1` | Added every tick, so multiply by 20 for per second. |

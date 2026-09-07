@@ -5,19 +5,14 @@ description: "Every PlaceholderAPI placeholder, and the exact spelling each one 
 
 Every placeholder below is written in full, and clicking one copies it.
 
-<Callout type="warning" title="The global counter carries `capture_` twice">
-It is the one spelling here that is easy to guess wrong, and it is explained right below.
-</Callout>
-
 ## How many events are running
 
 ```text
-%exyliacapture_capture_active_events%
+%exyliacapture_active_events%
 ```
 
-The `capture_` in the middle is not a typo: the family is registered under the prefix `capture`, and
-PlaceholderAPI adds the plugin identifier in front of it. `%exyliacapture_active_events%` does not
-resolve.
+How many events are running across the whole server at that moment. It counts events, not the players
+inside them, and it reads `0` when nothing is running.
 
 ## Per event
 
@@ -46,12 +41,18 @@ Each configured event registers its id as a placeholder family of its own, so an
 | `%exyliacapture_<id>_clan_mode%` | `true` or `false` |
 | `%exyliacapture_<id>_leader%` | The leading player or clan |
 | `%exyliacapture_<id>_leader_pts%` | The leader's points |
-| `%exyliacapture_<id>_top1_name%` | The live podium's first name — `top2_name` and `top3_name` follow it |
-| `%exyliacapture_<id>_top1_pts%` | Its points — `top2_pts` and `top3_pts` follow it |
+| `%exyliacapture_<id>_top1_name%` | The live podium's first name |
+| `%exyliacapture_<id>_top1_pts%` | Its points |
+| `%exyliacapture_<id>_top2_name%` | The second name |
+| `%exyliacapture_<id>_top2_pts%` | Its points |
+| `%exyliacapture_<id>_top3_name%` | The third name |
+| `%exyliacapture_<id>_top3_pts%` | Its points |
 | `%exyliacapture_<id>_capturer%` | Who is capturing right now |
 | `%exyliacapture_<id>_capturer_clan%` | That capturer's clan |
 | `%exyliacapture_<id>_cap_time_remaining%` | Time left to complete the current capture |
-| `%exyliacapture_<id>_zone_x%` | The zone centre's X — `zone_y` and `zone_z` follow it |
+| `%exyliacapture_<id>_zone_x%` | The zone centre's X |
+| `%exyliacapture_<id>_zone_y%` | The zone centre's Y |
+| `%exyliacapture_<id>_zone_z%` | The zone centre's Z |
 
 Anything with no value returns an em dash rather than an empty string.
 

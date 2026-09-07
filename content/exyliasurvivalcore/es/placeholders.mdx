@@ -1,19 +1,15 @@
 ---
 title: "Placeholders"
-description: "Todos los placeholders que registra el plugin, grupo a grupo, en su forma de PlaceholderAPI y en la forma corta que usan los plugins de Exylia."
+description: "Todos los placeholders que registra el plugin, grupo a grupo, escritos en la forma de PlaceholderAPI que toman todos."
 ---
 
 Todos los placeholders de abajo están escritos enteros, y al hacer clic en uno se copia.
 
-Se registran a través de ExyliaLib, lo que significa que cada uno tiene dos escrituras:
-
-| Dónde | Forma |
-|---|---|
-| PlaceholderAPI — scoreboards, tab, hologramas, plugins de chat | `%exyliasurvivalcore_homes_count%` |
-| Dentro del texto de cualquier plugin de Exylia | `%homes_count%` |
-
-La forma larga es el identificador de PlaceholderAPI del plugin seguido del nombre propio del
-placeholder. Úsala en todo lo que no sea un plugin de Exylia.
+Se registran a través de ExyliaLib como un grupo por módulo, así que el nombre registrado de un
+contador de homes es `homes_count`, y PlaceholderAPI llega a un nombre registrado poniéndole el
+plugin delante. Así que un scoreboard, un holograma o un plugin de chat pide
+`%exyliasurvivalcore_homes_count%`, que es la forma que documenta esta página entera; dentro de los
+archivos de un plugin de Exylia el nombre registrado se sostiene solo, sin el plugin delante.
 
 <Callout type="note" title="Un módulo desactivado no registra ningún nombre">
 Cada módulo reclama su grupo al activarse. Un módulo apagado en `config.yml` no registra nada, así
@@ -87,10 +83,11 @@ El `<mundo>` es un id de `modules/rtp/config.yml`, no el nombre de un mundo de B
 | `%exyliasurvivalcore_playtime_next_reward%` | Nombre de la siguiente recompensa, o `—` |
 | `%exyliasurvivalcore_playtime_next_reward_remaining%` | Cuánto queda para desbloquearla, `Now` o `—` |
 
-<Callout type="tip" title="Aquí la forma corta es `%playtime%`, sin nada delante">
-Es la escritura que ya usan todos los scoreboards y menús de un servidor de survival, y este plugin
-es la autoridad del tiempo jugado, así que la palabra le pertenece. Todo lo nuevo va bajo
-`playtime_`.
+<Callout type="tip" title="Tiempo jugado registra el nombre del grupo a secas">
+`%exyliasurvivalcore_playtime%` no lleva nada detrás del grupo porque el módulo registra `playtime`
+en sí, no solo `playtime_seconds` y los demás. El total es la pregunta que hace de verdad un
+scoreboard, y este plugin es la autoridad del tiempo jugado, así que responde bajo la palabra sola.
+Todo lo demás que añade va bajo `playtime_`.
 </Callout>
 
 ## Escalera de rangos
@@ -176,6 +173,20 @@ los `my_` van de quien está leyendo.
 `<jugador>` es un nombre que el servidor ya haya visto, o un UUID. Un nombre que nunca ha estado
 aquí responde `0` en lugar de buscarlo por red desde dentro de un placeholder.
 
+## Cofres
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliasurvivalcore_crate_keys_<id>%` | Llaves que puede gastar en ese cofre: las que lleva en el inventario más el saldo que le guarda el plugin |
+| `%exyliasurvivalcore_crate_keys_total%` | Esa misma cuenta sumada sobre todos los cofres que existen |
+| `%exyliasurvivalcore_crate_pity_<id>%` | Aperturas que le quedan antes de que ese cofre tenga que pagar su tier garantizado |
+
+Las llaves cuentan lo que lleva encima y lo que tiene guardado porque ese es el número que puede
+gastar de verdad, y es el número con el que se escribe el holograma del cofre. Un id de cofre que no
+existe no responde nada, y `crate_pity` tampoco para un cofre sin umbral de pity configurado — el
+placeholder se queda en pantalla en lugar de poner `0`, que significaría que la siguiente apertura
+es la garantizada.
+
 ## Minas
 
 | Placeholder | Descripción |
@@ -226,6 +237,29 @@ bloque, así que su cuenta atrás es `-` y no un número que no llegaría nunca.
 Son los interruptores guardados, no el estado en vivo: lo que eligió el jugador es lo que sobrevive
 a una reconexión, que es lo que debe enseñar un menú de ajustes.
 
+## Ajustes del jugador
+
+Un nombre por preferencia, y cada uno responde `true` o `false`. Todos los ajustes están encendidos
+hasta que el jugador los apaga, así que un jugador del que no hay nada guardado responde `true` en
+todos.
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliasurvivalcore_settings_death_messages%` | Si le llegan los mensajes de muerte de los demás |
+| `%exyliasurvivalcore_settings_join_leave_messages%` | Si le llegan los anuncios de entrada y salida |
+| `%exyliasurvivalcore_settings_rankup_announcements%` | Si se le anuncia que alguien ha subido de rango |
+| `%exyliasurvivalcore_settings_kill_announcements%` | Si le llegan los anuncios de rachas de kills |
+| `%exyliasurvivalcore_settings_bounty_announcements%` | Si se le anuncia una recompensa puesta o cobrada |
+| `%exyliasurvivalcore_settings_crate_announcements%` | Si se le anuncia que alguien ha ganado una recompensa rara de un cofre |
+| `%exyliasurvivalcore_settings_purchase_announcements%` | Si se le anuncia que alguien ha reclamado una compra |
+| `%exyliasurvivalcore_settings_tpa_requests%` | Si le llegan las solicitudes de teletransporte |
+| `%exyliasurvivalcore_settings_tpa_auto_accept%` | Si una solicitud se acepta sin preguntar |
+| `%exyliasurvivalcore_settings_tpa_confirm%` | Si enviar una solicitud pide confirmación |
+
+Los tres últimos son las mismas tres respuestas que da el grupo de TPA. Se leen directamente del
+módulo de tpa en vez de guardarse dos veces, para que un jugador nunca tenga dos respuestas a una
+misma pregunta.
+
 ## Comandos programados
 
 | Placeholder | Descripción |
@@ -238,6 +272,8 @@ el mundo, así que funciona igual en un scoreboard de consola que en el de un ju
 <Callout type="warning" title="Un id con guion bajo no da problemas">
 Todo lo que va detrás del nombre se vuelve a unir antes de leerse, así que
 `%exyliasurvivalcore_farming_count_sugar_cane%`, `%exyliasurvivalcore_kit_cooldown_starter_kit%` y
-`%exyliasurvivalcore_warp_cooldown_pvp_arena%` resuelven sin más. La única excepción es
-`stats_top_*`, donde la posición se lee primero y el id de la estadística es todo lo que va detrás.
+`%exyliasurvivalcore_warp_cooldown_pvp_arena%` resuelven sin más. Las únicas excepciones son
+`%exyliasurvivalcore_stats_top_name_<posición>_<stat>%` y
+`%exyliasurvivalcore_stats_top_value_<posición>_<stat>%`, donde la posición se lee primero y el id de
+la estadística es todo lo que va detrás.
 </Callout>

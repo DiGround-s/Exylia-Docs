@@ -48,14 +48,42 @@ sigue al carro.
 
 ### Tokens de holograma
 
-| Familia | Tokens |
-|---|---|
-| Cualquier evento | `%event_name%`, `%event_time%`, `%event_status%` |
-| KOTH y Capture Points | `%koth_capturer%`, `%koth_player_time%`, `%koth_leader%`, `%koth_top1_name%`, `%koth_top1_pts%` |
-| KOTH Points | `%koth_leader%`, `%koth_top1_name%` … `%koth_top3_pts%` |
-| Conquest | `%conquest_zone_name%`, `%conquest_zone_capturer%`, `%conquest_zone_progress%` |
-| Payload | `%payload_progress%`, `%payload_distance_remaining%`, `%payload_capturing_clan%`, `%payload_state%` |
-| DTC | `%dtc_leader%`, `%dtc_top1_name%` … `%dtc_top3_pts%` |
+Son los tokens propios del holograma, que se rellenan al dibujar las líneas. No son placeholders de
+PlaceholderAPI y solo funcionan dentro de `lines`.
+
+| Token | Familia | Qué dibuja |
+|---|---|---|
+| `%event_name%` | Cualquier evento | El nombre visible del evento. |
+| `%event_time%` | Cualquier evento | Tiempo que le queda al evento en curso, o un guion. |
+| `%event_status%` | Cualquier evento | Inactivo, el tiempo que falta para empezar, o corriendo. |
+| `%koth_capturer%` | KOTH, KOTH Points, Capture Points | Quién tiene la zona ahora mismo — el tag del clan en modo clan. |
+| `%koth_player_time%` | KOTH, KOTH Points, Capture Points | Cuánto le falta a la captura en curso para completarse. |
+| `%koth_leader%` | KOTH, KOTH Points, Capture Points | Quién va delante en puntos. |
+| `%koth_top1_name%` | KOTH, KOTH Points, Capture Points | Primero en puntos. |
+| `%koth_top1_pts%` | KOTH, KOTH Points, Capture Points | Sus puntos. |
+| `%koth_top2_name%` | KOTH, KOTH Points, Capture Points | Segundo en puntos. |
+| `%koth_top2_pts%` | KOTH, KOTH Points, Capture Points | Sus puntos. |
+| `%koth_top3_name%` | KOTH, KOTH Points, Capture Points | Tercero en puntos. |
+| `%koth_top3_pts%` | KOTH, KOTH Points, Capture Points | Sus puntos. |
+| `%conquest_zone_name%` | Conquest | El nombre de la zona a la que pertenece este holograma. |
+| `%conquest_zone_capturer%` | Conquest | El clan que está capturando esa zona. |
+| `%conquest_zone_progress%` | Conquest | El progreso de captura de esa zona. |
+| `%conquest_leader%` | Conquest | El clan que va delante en todo el evento. |
+| `%conquest_top1_clan%` | Conquest | Primer clan en puntos. |
+| `%conquest_top1_pts%` | Conquest | Sus puntos. |
+| `%conquest_top2_clan%` | Conquest | Segundo clan en puntos. |
+| `%conquest_top2_pts%` | Conquest | Sus puntos. |
+| `%payload_progress%` | Payload | Cuánto ha avanzado el carro por la vía. |
+| `%payload_distance_remaining%` | Payload | Cuánto le queda por recorrer. |
+| `%payload_capturing_clan%` | Payload | Quién lo está empujando. |
+| `%payload_state%` | Payload | El estado del carro. |
+| `%dtc_leader%` | DTC | Quién va delante en puntos. |
+| `%dtc_top1_name%` | DTC | Primero en puntos. |
+| `%dtc_top1_pts%` | DTC | Sus puntos. |
+| `%dtc_top2_name%` | DTC | Segundo en puntos. |
+| `%dtc_top2_pts%` | DTC | Sus puntos. |
+| `%dtc_top3_name%` | DTC | Tercero en puntos. |
+| `%dtc_top3_pts%` | DTC | Sus puntos. |
 
 ## Sidebars
 
@@ -86,10 +114,55 @@ multi-event:
 Los sidebars de un solo evento se refrescan cada 2 ticks por defecto, que es lo que pide un
 temporizador de captura en vivo.
 
-Los tokens del sidebar son la familia `%capture_...%`: `%capture_event_name%`, `%capture_event_time%`,
-`%capture_zone_x%`, `%capture_zone_z%`, `%capture_koth_capturer%`, `%capture_koth_capturer_clan%`,
-`%capture_koth_player_time%`, `%capture_koth_top1_name%`, `%capture_dtc_top1_pts%`,
-`%capture_conquest_top1_clan%`, `%capture_payload_progress%` y sus hermanos.
+Cada tipo de evento rellena sus propios tokens de sidebar. Son propios del plugin, no placeholders
+de PlaceholderAPI, y solo se resuelven dentro de `scoreboards.yml`.
+
+| Token | Tipos de evento | Qué dibuja |
+|---|---|---|
+| `%capture_event_name%` | Todos | El nombre visible del evento. |
+| `%capture_event_time%` | Todos | Tiempo que le queda al evento. |
+| `%capture_zone_x%` | KOTH, KOTH Points, Capture Points, DTC | La X del centro de la zona. |
+| `%capture_zone_y%` | KOTH, KOTH Points, Capture Points, DTC | La Y del centro de la zona. |
+| `%capture_zone_z%` | KOTH, KOTH Points, Capture Points, DTC | La Z del centro de la zona. |
+| `%capture_koth_capturer%` | KOTH, Capture Points | Quién tiene la zona ahora mismo. |
+| `%capture_koth_capturer_clan%` | KOTH | El clan de ese capturador. |
+| `%capture_koth_player_time%` | KOTH, Capture Points | Cuánto le falta a la captura en curso. |
+| `%capture_koth_required%` | Capture Points | Cuánto dura una captura completa. |
+| `%capture_koth_leader%` | Capture Points | Quién va delante en puntos. |
+| `%capture_koth_target%` | KOTH Points, Capture Points | Puntos necesarios para ganar. |
+| `%capture_koth_player_points%` | KOTH Points, Capture Points | Los puntos de quien lo lee. |
+| `%capture_koth_top1_name%` | KOTH Points, Capture Points | Primero en puntos. |
+| `%capture_koth_top1_pts%` | KOTH Points, Capture Points | Sus puntos. |
+| `%capture_koth_top2_name%` | KOTH Points, Capture Points | Segundo en puntos. |
+| `%capture_koth_top2_pts%` | KOTH Points, Capture Points | Sus puntos. |
+| `%capture_koth_top3_name%` | KOTH Points, Capture Points | Tercero en puntos. |
+| `%capture_koth_top3_pts%` | KOTH Points, Capture Points | Sus puntos. |
+| `%capture_dtc_target%` | DTC | Puntos necesarios para ganar. |
+| `%capture_dtc_player_points%` | DTC | Los puntos de quien lo lee. |
+| `%capture_dtc_top1_name%` | DTC | Primero en puntos. |
+| `%capture_dtc_top1_pts%` | DTC | Sus puntos. |
+| `%capture_dtc_top2_name%` | DTC | Segundo en puntos. |
+| `%capture_dtc_top2_pts%` | DTC | Sus puntos. |
+| `%capture_dtc_top3_name%` | DTC | Tercero en puntos. |
+| `%capture_dtc_top3_pts%` | DTC | Sus puntos. |
+| `%conquest_target%` | Conquest | Puntos necesarios para ganar. |
+| `%conquest_zone1%` | Conquest | La línea de la primera zona — dos zonas por línea a partir de cuatro. |
+| `%conquest_zone2%` | Conquest | La línea de la segunda zona. |
+| `%conquest_zone3%` | Conquest | La línea de la tercera zona. |
+| `%conquest_zone4%` | Conquest | La línea de la cuarta zona. |
+| `%conquest_top1_clan%` | Conquest | Primer clan en puntos. |
+| `%conquest_top1_pts%` | Conquest | Sus puntos. |
+| `%conquest_top2_clan%` | Conquest | Segundo clan en puntos. |
+| `%conquest_top2_pts%` | Conquest | Sus puntos. |
+| `%conquest_top3_clan%` | Conquest | Tercer clan en puntos. |
+| `%conquest_top3_pts%` | Conquest | Sus puntos. |
+| `%payload_progress%` | Payload | Cuánto ha avanzado el carro por la vía. |
+| `%payload_distance_remaining%` | Payload | Cuánto le queda por recorrer. |
+| `%payload_capturing_clan%` | Payload | Quién lo está empujando. |
+| `%payload_state%` | Payload | El estado del carro. |
+
+Conquest y Payload conservan `capture_` solo en los dos tokens compartidos; sus tokens propios no
+llevan prefijo.
 
 Un evento concreto puede apagar su sidebar con el ajuste `scoreboard-enabled`.
 

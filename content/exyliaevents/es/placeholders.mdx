@@ -16,7 +16,8 @@ Todos los placeholders están escritos enteros, y al hacer clic en uno se copia.
 | `%exyliaevents_waiting%` | Cuántos admiten entrada ahora mismo — esperando o en cuenta atrás. |
 | `%exyliaevents_in_progress%` | Cuántos están jugando de verdad. |
 
-`waiting` e `in_progress` no se solapan: un evento en cuenta atrás admite entrada, y uno jugando no.
+`%exyliaevents_waiting%` e `%exyliaevents_in_progress%` no se solapan: un evento en cuenta atrás
+admite entrada, y uno jugando no.
 
 ## El estado de un evento
 
@@ -108,6 +109,8 @@ placeholder de estadísticas cuya fila aún no se ha leído devuelve `-` igual.
 
 ## Usarlos en los archivos del propio plugin
 
-Los sidebars de `scoreboards.yml` y las boss bars de `config.yml` se dibujan con los valores que
-aporta el evento en curso — `%time%`, `%round%`, `%color%` y demás — no con estos. Estos son para leer
-el estado del plugin desde **fuera**: un scoreboard de hub, una tab list, el menú de otro plugin.
+Los sidebars de `scoreboards.yml` y las boss bars de `config.yml` se dibujan con los tokens que
+rellena el evento en curso, no con estos. Cada tipo de evento rellena los que necesitan sus propias
+pantallas, así que `%time%` está en todas y `%round%` solo donde hay rondas. Estos placeholders son
+para leer el estado del plugin desde **fuera**: un scoreboard de hub, una tab list, el menú de otro
+plugin.

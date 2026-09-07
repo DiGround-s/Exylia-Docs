@@ -5,19 +5,14 @@ description: "Todos los placeholders de PlaceholderAPI y la forma exacta que nec
 
 Todos los placeholders están escritos enteros, y al hacer clic en uno se copia.
 
-<Callout type="warning" title="El contador global lleva `capture_` dos veces">
-Es la única escritura aquí fácil de adivinar mal, y se explica justo debajo.
-</Callout>
-
 ## Cuántos eventos están activos
 
 ```text
-%exyliacapture_capture_active_events%
+%exyliacapture_active_events%
 ```
 
-El `capture_` del medio no es un error: la familia se registra bajo el prefijo `capture`, y
-PlaceholderAPI le añade delante el identificador del plugin. `%exyliacapture_active_events%` no
-resuelve.
+Cuántos eventos están corriendo en todo el servidor en ese momento. Cuenta eventos, no los jugadores
+que hay dentro, y marca `0` cuando no hay ninguno.
 
 ## Por evento
 
@@ -46,12 +41,18 @@ Cada evento configurado registra su id como familia propia de placeholders, así
 | `%exyliacapture_<id>_clan_mode%` | `true` o `false` |
 | `%exyliacapture_<id>_leader%` | El jugador o clan que va líder |
 | `%exyliacapture_<id>_leader_pts%` | Los puntos del líder |
-| `%exyliacapture_<id>_top1_name%` | El primer nombre del podio en vivo — `top2_name` y `top3_name` siguen igual |
-| `%exyliacapture_<id>_top1_pts%` | Sus puntos — `top2_pts` y `top3_pts` siguen igual |
+| `%exyliacapture_<id>_top1_name%` | El primer nombre del podio en vivo |
+| `%exyliacapture_<id>_top1_pts%` | Sus puntos |
+| `%exyliacapture_<id>_top2_name%` | El segundo nombre |
+| `%exyliacapture_<id>_top2_pts%` | Sus puntos |
+| `%exyliacapture_<id>_top3_name%` | El tercer nombre |
+| `%exyliacapture_<id>_top3_pts%` | Sus puntos |
 | `%exyliacapture_<id>_capturer%` | Quién está capturando ahora mismo |
 | `%exyliacapture_<id>_capturer_clan%` | El clan de ese capturador |
 | `%exyliacapture_<id>_cap_time_remaining%` | Tiempo que falta para completar la captura actual |
-| `%exyliacapture_<id>_zone_x%` | La X del centro de la zona — `zone_y` y `zone_z` siguen igual |
+| `%exyliacapture_<id>_zone_x%` | La X del centro de la zona |
+| `%exyliacapture_<id>_zone_y%` | La Y del centro de la zona |
+| `%exyliacapture_<id>_zone_z%` | La Z del centro de la zona |
 
 Lo que no tiene valor devuelve una raya larga, no una cadena vacía.
 

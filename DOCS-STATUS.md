@@ -109,4 +109,12 @@ that moved; a rule a player can feel; a limit an owner can hit.
 - Every English page has a Spanish twin with a translated slug, registered in `src/content/registry.ts`.
 - Nothing goes in the documentation that was not read in the source. Commit messages describe
   intent; the code describes behaviour.
-- Placeholder tables list the whole placeholder, not just its tail.
+- Placeholder tables list the whole placeholder, not just its tail: every name is written complete,
+  with its `%` signs and its full prefix, and each one gets its own row and its own description. Never
+  a bare suffix, never two names sharing a row, never a group standing in for the placeholders under it.
+- One identifier per plugin, and it is the long one. Several plugins publish a second, shorter
+  PlaceholderAPI identifier through `Placeholders.identifier(...)` — `ecc`, `practice`, `exyliatotem`.
+  They keep working; the documentation does not mention them. A plugin whose registered names carry a
+  short group prefix (`staff_`, `totem_`, `classes_`) is a different case: the reference page writes the
+  PlaceholderAPI form, and the pages that document that plugin's own YAML keep the registered name and
+  say once why the two differ.

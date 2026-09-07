@@ -1,19 +1,15 @@
 ---
 title: "Placeholders"
-description: "Every placeholder the plugin registers, group by group, in the PlaceholderAPI form and the short form Exylia plugins use."
+description: "Every placeholder the plugin registers, group by group, written in the PlaceholderAPI form every one of them takes."
 ---
 
 Every placeholder below is written in full, and clicking one copies it.
 
-They are registered through ExyliaLib, which means each one has two spellings:
-
-| Where | Form |
-|---|---|
-| PlaceholderAPI — scoreboards, tab, holograms, chat plugins | `%exyliasurvivalcore_homes_count%` |
-| Inside any Exylia plugin's own text | `%homes_count%` |
-
-The long form is the plugin's PlaceholderAPI identifier followed by the placeholder's own name. Use
-it everywhere outside Exylia plugins.
+They are registered through ExyliaLib as one group per module, so the registered name of a home
+count is `homes_count`, and PlaceholderAPI reaches a registered name by putting the plugin in front
+of it. So a scoreboard, a hologram or a chat plugin asks for `%exyliasurvivalcore_homes_count%`,
+which is the form this page documents throughout; inside an Exylia plugin's own files the registered
+name stands on its own, with no plugin in front of it.
 
 <Callout type="note" title="A disabled module registers no names">
 Each module claims its group as it enables. A module turned off in `config.yml` registers nothing,
@@ -87,9 +83,11 @@ The `<world>` is an id out of `modules/rtp/config.yml`, not a Bukkit world name.
 | `%exyliasurvivalcore_playtime_next_reward%` | The next reward's display name, or `—` |
 | `%exyliasurvivalcore_playtime_next_reward_remaining%` | Time until it unlocks, `Now`, or `—` |
 
-<Callout type="tip" title="The short form here is `%playtime%`, with nothing in front">
-It is the spelling every board and menu on a survival server already writes, and this plugin is the
-playtime authority, so it owns the word. Anything new lives under `playtime_`.
+<Callout type="tip" title="Playtime registers the bare group name">
+`%exyliasurvivalcore_playtime%` has nothing after the group because the module registers `playtime`
+itself, not only `playtime_seconds` and the rest. Total playtime is the question a board actually
+asks, and this plugin is the playtime authority, so it answers under the plain word. Anything else
+it adds lives under `playtime_`.
 </Callout>
 
 ## Rank ladder
@@ -175,6 +173,20 @@ the `my_` ones are about whoever is reading.
 `<player>` is a name the server has seen before, or a UUID. A name nobody here has ever been answers
 `0` rather than looking it up over the network from inside a placeholder.
 
+## Crates
+
+| Placeholder | Description |
+|---|---|
+| `%exyliasurvivalcore_crate_keys_<id>%` | Keys the player can spend on that crate: the ones in their inventory plus the balance the plugin holds for them |
+| `%exyliasurvivalcore_crate_keys_total%` | The same count added up over every crate that exists |
+| `%exyliasurvivalcore_crate_pity_<id>%` | Openings left before that crate has to pay its guaranteed tier |
+
+Keys count what is carried as well as what is banked because that is the number a player can
+actually spend, and it is the number the hologram over the crate is written with. A crate id nothing
+defines answers nothing at all, and so does `crate_pity` for a crate with no pity threshold set —
+the placeholder is left on screen rather than reading `0`, which would mean the next opening is the
+guaranteed one.
+
 ## Mines
 
 | Placeholder | Description |
@@ -225,6 +237,27 @@ its countdown is `-` rather than a number that would never arrive.
 These are the stored toggles, not the live state: what the player chose is what survives a relog,
 which is what a menu showing the toggle should show.
 
+## Player settings
+
+One name per preference, each answering `true` or `false`. Every setting is on until the player
+turns it off, so a player nobody has stored anything for answers `true` throughout.
+
+| Placeholder | Description |
+|---|---|
+| `%exyliasurvivalcore_settings_death_messages%` | Whether other players' death messages reach them |
+| `%exyliasurvivalcore_settings_join_leave_messages%` | Whether join and leave broadcasts reach them |
+| `%exyliasurvivalcore_settings_rankup_announcements%` | Whether somebody reaching a new rank is announced to them |
+| `%exyliasurvivalcore_settings_kill_announcements%` | Whether kill streak broadcasts reach them |
+| `%exyliasurvivalcore_settings_bounty_announcements%` | Whether a bounty placed or claimed is announced to them |
+| `%exyliasurvivalcore_settings_crate_announcements%` | Whether somebody winning a rare crate reward is announced to them |
+| `%exyliasurvivalcore_settings_purchase_announcements%` | Whether somebody claiming a purchase is announced to them |
+| `%exyliasurvivalcore_settings_tpa_requests%` | Whether teleport requests reach them |
+| `%exyliasurvivalcore_settings_tpa_auto_accept%` | Whether a request is accepted without asking |
+| `%exyliasurvivalcore_settings_tpa_confirm%` | Whether sending a request asks for a confirmation |
+
+The last three are the same three answers the TPA group gives. They are read straight through to the
+tpa module rather than stored twice, so a player never has two answers to one question.
+
 ## Scheduled commands
 
 | Placeholder | Description |
@@ -237,6 +270,8 @@ works in a console-rendered board as well as in a player's.
 <Callout type="warning" title="An id with an underscore is fine">
 Everything after the name is put back together before it is read, so
 `%exyliasurvivalcore_farming_count_sugar_cane%`, `%exyliasurvivalcore_kit_cooldown_starter_kit%` and
-`%exyliasurvivalcore_warp_cooldown_pvp_arena%` all resolve. The one exception is `stats_top_*`,
-where the position is read first and the stat id is everything after it.
+`%exyliasurvivalcore_warp_cooldown_pvp_arena%` all resolve. The one exception is
+`%exyliasurvivalcore_stats_top_name_<position>_<stat>%` and
+`%exyliasurvivalcore_stats_top_value_<position>_<stat>%`, where the position is read first and the
+stat id is everything after it.
 </Callout>

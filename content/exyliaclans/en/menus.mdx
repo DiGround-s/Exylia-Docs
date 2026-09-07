@@ -68,20 +68,605 @@ refuses.
 
 ## Per-screen placeholders
 
-Each screen supplies its own values on top of the global ones. A few of the most useful:
+Each screen supplies its own values on top of the global ones. What follows is the whole of it, screen by
+screen — a name that is not listed under a screen is not supplied there, and a name nothing answers stays
+on the item as raw text.
 
-| Screen | Supplies |
+A screen that paginates supplies two kinds of value. The ones the screen holds resolve anywhere in the
+file — the title, the static buttons, their lore. The ones a row holds resolve only inside the paginated
+section, once per entry. Where a screen has both, they are listed separately.
+
+### `main_no_clan`
+
+| Placeholder | Renders |
 |---|---|
-| `main_clan` | `%clan_name%`, `%leader%`, `%members%`, `%max_members%`, `%online_members%`, `%balance%`, `%status%`, `%ff%`, `%allies%`, `%rivals%`, `%home%`, `%dtr%`, `%max_dtr%`, `%dtr_state%`, `%dtr_detail%`, `%clan_level%`, `%max_level%`, `%clan_exp%`, `%level_progress%`, `%clan_kills%`, `%clan_deaths%`, `%clan_kdr%`, `%clan_playtime%`, `%chat_channel%`, `%mail_unread_badge%` |
-| `members` / `members_view` | `%member_name%`, `%member_role%`, `%member_status%`, `%member_kills%`, `%member_deaths%`, `%member_kdr%`, `%member_playtime%`, `%member_action%` |
-| `roles` / `role_manage` | `%role_name%`, `%role_weight%`, `%role_members%`, `%role_default%`, `%role_id%`, and `%perm_<name>_status%` / `%perm_<name>_mat%` per permission |
-| `allies` / `rivals` | `%ally_name%` / `%rival_name%` plus that clan's members, online count, kills, deaths, KDR and playtime |
-| `leaderboard` | `%clan_rank%`, `%stat_name%`, `%stat_value%`, `%stat_material%`, `%stat_type_name%` |
-| `level` | `%current_level%`, `%current_exp%`, `%exp_needed%`, `%progress_bar%`, `%level_members_bonus%`, `%level_alliances_bonus%`, `%level_rivals_bonus%`, `%level_status%` |
-| `logs` | `%log_entry%`, `%log_action%`, `%log_detail%`, `%log_date%`, `%log_date_relative%` |
-| `mail_inbox` / `mail_view` | `%mail_subject%`, `%mail_sender%`, `%mail_body%`, `%mail_sent_relative%`, `%mail_expires%`, `%mail_read_status%`, `%unread_count%`, `%mail_pin_label%` |
-| `lfc_*` / `lfp_*` | `%cat_display_name%`, `%cat_status%`, `%cat_type_hint%`, `%option_name%`, `%tier_name%`, `%tier_color%`, `%profile_summary%` / `%posting_summary%`, `%application_status%` |
-| Any paginated screen | `%current_page%`, `%total_pages%` |
+| `%open_clans%` | How many clans are open to join |
+
+### `main_clan`
+
+| Placeholder | Renders |
+|---|---|
+| `%clan_name%` | The clan's display name |
+| `%leader%` | The leader's name |
+| `%members%` | How many members it has |
+| `%online_members%` | How many of them are online |
+| `%max_members%` | The member cap, level bonus included |
+| `%balance%` | The bank, formatted as money |
+| `%status%` | Open or closed, worded as `messages.yml` words it |
+| `%ff%` | Friendly fire, enabled or disabled |
+| `%allies%` | How many allied clans |
+| `%rivals%` | How many rivals |
+| `%home%` | Whether the home is set |
+| `%role%` | The viewer's own rank in the clan |
+| `%dtr%` | Current DTR, one decimal — `N/A` with the module off |
+| `%max_dtr%` | The DTR maximum, one decimal |
+| `%dtr_state%` | The worded state: normal, frozen, regenerating or raidable |
+| `%dtr_detail%` | The countdown that goes with a frozen, regenerating or raidable state; empty when normal |
+| `%clan_level%` | Current level |
+| `%max_level%` | The highest level configured |
+| `%clan_exp%` | Current EXP |
+| `%level_progress%` | A ten-segment bar towards the next level, with the percentage |
+| `%clan_kills%` | Clan kills |
+| `%clan_deaths%` | Clan deaths |
+| `%clan_kdr%` | Clan KDR, two decimals |
+| `%clan_playtime%` | Total clan playtime, formatted |
+| `%chat_channel%` | The channel the viewer is talking in |
+| `%mail_unread_badge%` | The unread-mail badge, empty when there is nothing unread |
+
+### `clan_info`
+
+| Placeholder | Renders |
+|---|---|
+| `%clan_name%` | The clan's display name |
+| `%leader%` | The leader's name |
+| `%members%` | How many members it has |
+| `%online_members%` | How many of them are online |
+| `%max_members%` | The member cap, level bonus included |
+| `%balance%` | The bank, formatted as money |
+| `%status%` | Open or closed |
+| `%ff%` | Friendly fire, enabled or disabled |
+| `%home%` | The home's world and coordinates, prefixed with the server when it is on another one; otherwise the not-set wording |
+| `%allies%` | How many allied clans |
+| `%dtr%` | Current DTR, one decimal |
+| `%max_dtr%` | The DTR maximum, one decimal |
+| `%dtr_state%` | The worded DTR state |
+| `%dtr_detail%` | The countdown for that state, empty when normal |
+| `%clan_kills%` | Clan kills |
+| `%clan_deaths%` | Clan deaths |
+| `%clan_kdr%` | Clan KDR, two decimals |
+| `%clan_playtime%` | Total clan playtime, formatted |
+| `%members_action%` | The action the members button runs — the manage screen for your own clan, the read-only one for another's |
+| `%members_lore%` | The hint that goes with that button |
+| `%ally_action%` | The action the allies button runs, for this clan |
+| `%ally_lore%` | The hint that goes with that button |
+
+### `settings`
+
+| Placeholder | Renders |
+|---|---|
+| `%status%` | Open or closed |
+| `%status_material%` | `LIME_WOOL` when open, `RED_WOOL` when closed |
+| `%ff%` | Friendly fire, enabled or disabled |
+| `%ff_material%` | `FIRE_CHARGE` when friendly fire is on, `SNOWBALL` when off |
+
+### `confirm`
+
+| Placeholder | Renders |
+|---|---|
+| `%confirm_title%` | The title of what is being confirmed |
+| `%confirm_line1%` | The question |
+| `%confirm_line2%` | The detail under it |
+| `%confirm_action%` | The action the confirm button runs |
+| `%cancel_action%` | The action the cancel button runs, which is the screen to go back to |
+
+### `members`, `members_view` and `mail_member_select`
+
+One class draws all three: `members` for your own clan, `members_view` for another's, and
+`mail_member_select` when picking a recipient. The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%clan_kills%` | Clan kills |
+| `%clan_deaths%` | Clan deaths |
+| `%clan_kdr%` | Clan KDR, two decimals |
+| `%clan_playtime%` | Total clan playtime, formatted |
+| `%clan_online%` | How many members are online |
+| `%clan_id%` | The clan's id — supplied on `members_view` only, where the clan is not the viewer's |
+
+Each row supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%member_name%` | The member's name |
+| `%member_uuid%` | Their UUID |
+| `%member_role%` | Their rank name |
+| `%member_status%` | Online with the session length, or offline with how long ago they were last seen |
+| `%member_kills%` | Their kills in this clan |
+| `%member_deaths%` | Their deaths in this clan |
+| `%member_kdr%` | Their KDR, two decimals |
+| `%member_playtime%` | Their playtime in this clan, formatted |
+| `%member_action%` | The action the row runs — the manage screen, or picking the recipient; empty when the viewer may do neither |
+| `%member_action_lore%` | The hint that goes with it, empty when the row does nothing |
+
+### `member_manage`
+
+| Placeholder | Renders |
+|---|---|
+| `%member_name%` | The member's name |
+| `%member_uuid%` | Their UUID, which the buttons pass to their actions |
+| `%member_role%` | Their rank name |
+| `%member_status%` | Online with the session length, or offline with how long ago they were last seen |
+| `%member_kills%` | Their kills in this clan |
+| `%member_deaths%` | Their deaths in this clan |
+| `%member_kdr%` | Their KDR, two decimals |
+| `%member_playtime%` | Their playtime in this clan, formatted |
+
+### `banned`
+
+Each row supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%banned_name%` | The banned player's name |
+| `%banned_uuid%` | Their full UUID |
+| `%banned_short_uuid%` | The first eight characters of it, followed by an ellipsis |
+
+### `clan_invitations`
+
+Each row is a clan that has invited the viewer:
+
+| Placeholder | Renders |
+|---|---|
+| `%clan_name%` | That clan's display name |
+| `%clan_id%` | Its id, for the accept and decline actions |
+| `%clan_members%` | How many members it has |
+
+### `clan_pending_invites`
+
+Each row is a player this clan has invited:
+
+| Placeholder | Renders |
+|---|---|
+| `%player_name%` | The invited player's name |
+| `%player_uuid%` | Their UUID |
+| `%player_action%` | The action that cancels the invite, empty without the `INVITE` permission |
+| `%player_action_lore%` | The hint that goes with it, empty when the row does nothing |
+
+### `roles`
+
+The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%can_create%` | `true` or `false`, whether the viewer may create a rank |
+
+Each row is a rank, heaviest first:
+
+| Placeholder | Renders |
+|---|---|
+| `%role_name%` | The rank's name |
+| `%role_weight%` | Its weight |
+| `%role_members%` | How many members hold it |
+| `%role_default%` | The default-rank label, or the wording for not being it |
+| `%role_action%` | The action that opens its management screen, empty when the viewer may not edit it |
+| `%role_action_lore%` | The hint that goes with it, or the note that the leader rank is not editable |
+
+### `role_manage`
+
+| Placeholder | Renders |
+|---|---|
+| `%role_id%` | The rank's id, which the permission toggles pass to their action |
+| `%role_name%` | Its name |
+| `%role_weight%` | Its weight |
+| `%role_members%` | How many members hold it |
+| `%role_default%` | Yes or no, whether it is the default rank |
+| `%role_default_mat%` | `LIME_DYE` when it is, `GRAY_DYE` when it is not |
+| `%edit_action_lore%` | The click-to-toggle hint, empty when the viewer may not edit this rank |
+| `%perm_<permission>_status%` | Whether that permission is on, worded |
+| `%perm_<permission>_mat%` | The material configured for on or off |
+
+`<permission>` is any of the twenty-six rank permissions in lower case — `%perm_invite_status%`,
+`%perm_manage_roles_mat%`, `%perm_view_logs_status%` and so on for each name in
+[Ranks](/docs/exyliaclans/roles).
+
+### `assign_role`
+
+The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%member_name%` | The member whose rank is being changed |
+| `%member_uuid%` | Their UUID |
+
+Each row is a rank lighter than the viewer's own:
+
+| Placeholder | Renders |
+|---|---|
+| `%role_name%` | The rank's name, prefixed with the current-rank marker when the member already holds it |
+| `%role_weight%` | Its weight |
+| `%role_members%` | How many members hold it |
+| `%role_default%` | Yes or no, whether it is the default rank |
+| `%role_action%` | The action that assigns it, empty when it cannot be assigned |
+| `%role_action_lore%` | The already-holds-it note, the click-to-assign hint, or empty |
+
+### `bank`
+
+| Placeholder | Renders |
+|---|---|
+| `%clan_name%` | The clan's display name |
+| `%balance%` | The bank, formatted as money |
+
+### `level`
+
+The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%current_level%` | The clan's level |
+| `%max_level%` | The highest level configured |
+| `%current_exp%` | Current EXP |
+| `%next_level_exp%` | The EXP the next level starts at, or the max wording at the top |
+| `%exp_needed%` | How much EXP is still missing, or the max wording at the top |
+| `%progress_bar%` | A ten-segment bar towards the next level, with the percentage |
+
+Each row is one configured level:
+
+| Placeholder | Renders |
+|---|---|
+| `%level_material%` | The material for current, reached or locked |
+| `%level_name%` | The name for current, reached or locked, with the number in it |
+| `%level_required_exp%` | The EXP that level asks for |
+| `%level_members_bonus%` | Extra member slots it grants |
+| `%level_alliances_bonus%` | Extra alliance slots it grants |
+| `%level_rivals_bonus%` | Extra rival slots it grants |
+| `%level_progress_bar%` | The progress bar, on the current level's row only; empty on every other |
+| `%level_status%` | Maxed, current, completed or locked |
+
+### `leaderboard`
+
+The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%stat_type%` | The counter being ranked by, as its enum name — `KILLS`, `BALANCE` and so on |
+
+Each row of the `clans` section is a ranked clan:
+
+| Placeholder | Renders |
+|---|---|
+| `%clan_rank%` | Its position, `1` upwards |
+| `%clan_name%` | Its display name |
+| `%clan_members%` | How many members it has |
+| `%clan_online%` | How many are online |
+| `%clan_kills%` | Its kills |
+| `%clan_deaths%` | Its deaths |
+| `%clan_kdr%` | Its KDR, two decimals |
+| `%clan_playtime%` | Its playtime, formatted |
+| `%clan_balance%` | Its bank, formatted as money |
+| `%stat_type_name%` | The name of the counter the list is sorted by |
+| `%stat_value%` | This clan's value for that counter, formatted for it |
+
+Each row of the `stat_types` section is one of the seven counters:
+
+| Placeholder | Renders |
+|---|---|
+| `%stat_name%` | Its name — Online, Members, Kills, Deaths, KDR, Playtime, Balance |
+| `%stat_material%` | The material it is drawn with |
+| `%stat_type%` | Its enum name, which the click passes to `lb_select_type` |
+
+### `logs`
+
+Each row is one log entry, most recent first, two hundred at most:
+
+| Placeholder | Renders |
+|---|---|
+| `%log_entry%` | The whole worded line, actor and target already in it |
+| `%log_action%` | The label for what happened |
+| `%log_actor%` | Who did it, or the unknown-actor wording |
+| `%log_target%` | Who it was done to, empty when the action had no target |
+| `%log_detail%` | The entry's detail, or the no-detail wording |
+| `%log_date%` | Its full date |
+| `%log_date_relative%` | How long ago it was |
+
+### `allies`
+
+The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%back_action%` | Where the back button goes — the main menu, or the info screen of the clan being viewed |
+
+Each row is an allied clan:
+
+| Placeholder | Renders |
+|---|---|
+| `%ally_name%` | Its display name |
+| `%ally_members%` | How many members it has |
+| `%ally_online%` | How many are online |
+| `%ally_kills%` | Its kills |
+| `%ally_deaths%` | Its deaths |
+| `%ally_kdr%` | Its KDR, two decimals |
+| `%ally_playtime%` | Its playtime, formatted |
+| `%ally_action%` | Removing the alliance with the permission for it, otherwise opening that clan's info |
+| `%ally_lore%` | The hint that goes with whichever of the two it is |
+
+### `rivals`
+
+The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%back_action%` | Where the back button goes |
+
+Each row is a rival clan:
+
+| Placeholder | Renders |
+|---|---|
+| `%rival_name%` | Its display name |
+| `%rival_members%` | How many members it has |
+| `%rival_online%` | How many are online |
+| `%rival_kills%` | Its kills |
+| `%rival_deaths%` | Its deaths |
+| `%rival_kdr%` | Its KDR, two decimals |
+| `%rival_playtime%` | Its playtime, formatted |
+| `%rival_action%` | Removing the rivalry with the permission for it, otherwise opening that clan's info |
+| `%rival_lore%` | The hint that goes with whichever of the two it is |
+
+### `browse_clans`
+
+Each row is an open clan the viewer is not already in:
+
+| Placeholder | Renders |
+|---|---|
+| `%clan_name%` | Its display name |
+| `%clan_id%` | Its id, for the join action |
+| `%clan_members%` | How many members it has |
+| `%clan_online%` | How many are online |
+| `%clan_kills%` | Its kills |
+| `%clan_deaths%` | Its deaths |
+| `%clan_kdr%` | Its KDR, two decimals |
+| `%clan_playtime%` | Its playtime, formatted |
+
+### `mail_inbox`
+
+The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%unread_count%` | How many of the visible mails this viewer has not read |
+| `%compose_clan_title%` | The compose button's name, worded differently without the `SEND_CLAN_MAIL` permission |
+| `%compose_clan_action%` | The action that composes clan mail, empty without that permission |
+| `%compose_clan_action_lore%` | The hint that goes with it, or the note that the permission is missing |
+
+Each row is one mail. A read mail is drawn from the `read` template:
+
+| Placeholder | Renders |
+|---|---|
+| `%mail_id%` | Its id, which the row's actions pass along |
+| `%mail_icon%` | `BOOK` for clan mail, `PAPER` for direct |
+| `%mail_subject%` | Its subject |
+| `%mail_sender%` | Who sent it |
+| `%mail_type_label%` | The clan or direct label |
+| `%mail_sent_relative%` | How long ago it was sent |
+| `%mail_read_status%` | The read or unread wording |
+| `%mail_pinned_line%` | The pinned line, empty when it is not pinned |
+
+### `mail_view`
+
+| Placeholder | Renders |
+|---|---|
+| `%mail_id%` | Its id |
+| `%mail_icon%` | `BOOK` for clan mail, `PAPER` for direct |
+| `%mail_type%` | `clan` or `direct`, for conditions |
+| `%mail_type_label%` | The clan or direct label |
+| `%mail_subject%` | Its subject, colour codes stripped |
+| `%mail_sender%` | Who sent it |
+| `%mail_sent_full%` | Its full date |
+| `%mail_expires%` | When it expires, or `N/A` when it does not |
+| `%mail_body%` | The message, wrapped in the body template |
+| `%mail_pin_display%` | The pin button's label, worded for pinned or unpinned |
+| `%mail_pin_mat%` | `LIME_DYE` when pinned, `GRAY_DYE` when not |
+| `%mail_pin_action%` | The action that pins or unpins, empty unless it is clan mail and the viewer may manage it |
+| `%mail_pin_action_lore%` | The hint that goes with it, or the note that the permission is missing |
+| `%mail_delete_action%` | The action that deletes it, empty unless the viewer took part in it or it is clan mail |
+| `%mail_delete_action_lore%` | The delete hint, or the note that the permission is missing |
+
+### `lfc_browse`
+
+The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%lfc_state%` | `none`, `active` or `expired`, for the viewer's own profile |
+| `%my_profile_status%` | The active or expired wording — supplied only when the viewer has a profile |
+| `%my_profile_posted%` | How long ago they posted it |
+| `%my_profile_expires%` | When it expires |
+
+Each row is somebody else's active profile:
+
+| Placeholder | Renders |
+|---|---|
+| `%profile_name%` | The player's name |
+| `%profile_posted%` | How long ago it was posted |
+| `%profile_expires%` | When it expires |
+| `%profile_summary%` | Their answers, rendered as one summary |
+
+### `lfc_create`
+
+The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%submit_label%` | Publish, or save when an active profile is being edited |
+
+Each row is a category to answer:
+
+| Placeholder | Renders |
+|---|---|
+| `%cat_id%` | Its id, which the row's action passes along |
+| `%cat_display_name%` | Its name |
+| `%cat_icon%` | Its configured material |
+| `%cat_status%` | What the viewer has answered for it so far |
+| `%cat_type_hint%` | How this category is answered — a toggle, one option, or a tier per answer |
+
+### `lfp_browse`
+
+The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%lfp_state%` | `none`, `active` or `expired`, for the viewer's clan's posting |
+| `%lfp_manage_state%` | `none`, `create`, `active` or `expired` — the same thing seen through the viewer's `MANAGE_LFP` permission |
+| `%has_clan%` | `yes` or `no` |
+| `%application_count%` | How many applications the viewer has sent |
+| `%my_posting_status%` | The active or expired wording — supplied only when the clan has a posting |
+| `%my_posting_posted%` | How long ago it was posted |
+| `%my_posting_expires%` | When it expires |
+
+Each row is an active posting:
+
+| Placeholder | Renders |
+|---|---|
+| `%clan_name%` | The posting clan's name |
+| `%clan_leader%` | Who posted it |
+| `%posting_id%` | That clan's id, which the apply action passes along |
+| `%posting_posted%` | How long ago it was posted |
+| `%posting_expires%` | When it expires |
+| `%posting_summary%` | The clan's answers, rendered as one summary |
+| `%application_state%` | The pending wording when the viewer has already applied, otherwise the apply label |
+
+### `lfp_create`
+
+The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%submit_label%` | Publish, or save when an active posting is being edited |
+| `%description%` | The description drafted so far, colour codes stripped |
+
+Each row is a category to answer:
+
+| Placeholder | Renders |
+|---|---|
+| `%cat_id%` | Its id, which the row's action passes along |
+| `%cat_display_name%` | Its name |
+| `%cat_icon%` | Its configured material |
+| `%cat_status%` | What the viewer has answered for it so far |
+| `%cat_type_hint%` | How this category is answered |
+
+### `lfp_applications`
+
+The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%pending_count%` | How many applications are still pending |
+
+Each row is one application to this clan:
+
+| Placeholder | Renders |
+|---|---|
+| `%application_id%` | Its id, which the row's action passes along |
+| `%player_name%` | Who applied |
+| `%application_status%` | Pending, accepted, rejected, or the unknown-status wording |
+| `%application_date%` | How long ago it was sent |
+| `%application_message%` | What they wrote, empty when they wrote nothing |
+
+### `lfp_application_detail`
+
+| Placeholder | Renders |
+|---|---|
+| `%application_id%` | Its id, which the accept, reject and withdraw actions pass along |
+| `%player_name%` | Who applied |
+| `%clan_name%` | The clan applied to, or its id when the clan is gone |
+| `%application_status%` | Pending, accepted, rejected, withdrawn, or the unknown-status wording |
+| `%application_message%` | What they wrote, colour codes stripped |
+| `%application_return%` | `clan` or `player`, whichever list the screen was opened from |
+| `%application_action_state%` | `clan_pending`, `player_pending` or `none` — which buttons the screen should show |
+
+### `lfp_my_applications`
+
+Each row is an application the viewer has sent:
+
+| Placeholder | Renders |
+|---|---|
+| `%application_id%` | Its id, which the row's action passes along |
+| `%clan_name%` | The clan applied to, or its id when the clan is gone |
+| `%clan_id%` | That clan's id |
+| `%application_status%` | Pending, accepted, rejected, withdrawn, or the unknown-status wording |
+| `%application_date%` | How long ago it was sent |
+| `%application_message%` | What they wrote, empty when they wrote nothing |
+
+### `lfc_option_select` and `lfp_option_select`
+
+The screen a single-select category opens. Both supply the same names. The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%cat_display_name%` | The category's name |
+| `%cat_id%` | Its id |
+
+Each row is one of its options:
+
+| Placeholder | Renders |
+|---|---|
+| `%cat_id%` | The category's id, which the row's action passes along |
+| `%option_id%` | The option's id |
+| `%option_name%` | Its name |
+| `%option_icon%` | Its configured material |
+| `%option_selected_lore%` | The selected marker on the chosen option, empty on every other |
+
+### `lfc_tier_select` and `lfp_tier_select`
+
+The screen a multi-answer category opens: one row per answer, each leading to its own tier list. Both
+supply the same names. The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%cat_display_name%` | The category's name |
+| `%cat_id%` | Its id |
+
+Each row is one answer:
+
+| Placeholder | Renders |
+|---|---|
+| `%cat_id%` | The category's id, which the row's action passes along |
+| `%mode_id%` | The answer's id |
+| `%mode_name%` | Its name |
+| `%mode_icon%` | Its configured material |
+| `%mode_current_tier%` | The tier chosen for it so far |
+
+### `lfc_mode_select` and `lfp_mode_select`
+
+The tier list for one answer. Both supply the same names. The screen supplies:
+
+| Placeholder | Renders |
+|---|---|
+| `%cat_id%` | The category's id |
+| `%mode_id%` | The answer's id |
+| `%mode_name%` | The answer's name |
+
+Each row is one tier:
+
+| Placeholder | Renders |
+|---|---|
+| `%cat_id%` | The category's id, which the row's action passes along |
+| `%mode_id%` | The answer's id, passed along with it |
+| `%tier_id%` | The tier's id |
+| `%tier_display%` | Its name in its configured colour |
+| `%tier_icon%` | Its configured material |
+| `%tier_selected_lore%` | The selected marker on the chosen tier, empty on every other |
+
+### Any paginated screen
+
+The menu module fills these in itself, in the title and in the page buttons:
+
+| Placeholder | Renders |
+|---|---|
+| `%current_page%` | The page being shown |
+| `%total_pages%` | How many pages there are |
+| `%page%` | The same as `%current_page%` |
+| `%pages%` | The same as `%total_pages%` |
 
 Every global `%exyliaclans_…%` placeholder works in a menu too, and so does anything PlaceholderAPI
 provides.

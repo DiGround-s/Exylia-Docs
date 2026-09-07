@@ -106,35 +106,36 @@ de ahí a un jugador con algo puesto y todo el mundo viéndolo.
     coloreado los colocas tú, como placeholders, en el plugin de chat que ya lleves:
 
     ```text
-    %ecc_tag%%ecc_nick%<gray>: <white>%message%
+    %exyliachatcosmetics_tag%%exyliachatcosmetics_nick%<gray>: <white>%message%
     ```
 
-    `%ecc_tag%` es la etiqueta puesta, ya con su espacio final incluido, y una etiqueta personalizada
-    del jugador gana a una del catálogo. `%ecc_nick%` es su nombre en su color de nick.
-    `%ecc_identity%` son las dos juntas. Todas responden también a la forma larga
-    `%exyliachatcosmetics_…%`.
+    `%exyliachatcosmetics_tag%` es la etiqueta puesta, ya con su espacio final incluido, y una
+    etiqueta personalizada del jugador gana a una del catálogo. `%exyliachatcosmetics_nick%` es su
+    nombre en su color de nick. `%exyliachatcosmetics_identity%` son las dos juntas.
 
     Tres notaciones, porque los plugins de chat no se ponen de acuerdo en una — elige el sufijo que
     entienda el tuyo:
 
     | Placeholder | Salida |
     |---|---|
-    | `%ecc_tag%` | MiniMessage, `<#ffd700>[MVP]</#ffd700>` — el que va por defecto |
-    | `%ecc_tag_legacy%` | códigos `&`, con `&#rrggbb` para el hex |
-    | `%ecc_tag_section%` | códigos `§`, con `§x§r§r…` para el hex |
+    | `%exyliachatcosmetics_tag%` | MiniMessage, `<#ffd700>[MVP]</#ffd700>` — el que va por defecto |
+    | `%exyliachatcosmetics_tag_legacy%` | códigos `&`, con `&#rrggbb` para el hex |
+    | `%exyliachatcosmetics_tag_section%` | códigos `§`, con `§x§r§r…` para el hex |
 
-    Así que el mismo formato para un plugin de chat de cadenas antiguas queda:
+    El nombre lleva las mismas tres: `%exyliachatcosmetics_nick%`,
+    `%exyliachatcosmetics_nick_legacy%` y `%exyliachatcosmetics_nick_section%`. Así que el mismo
+    formato para un plugin de chat de cadenas antiguas queda:
 
     ```text
-    %ecc_tag_section%%ecc_nick_section%§7: §f%message%
+    %exyliachatcosmetics_tag_section%%exyliachatcosmetics_nick_section%§7: §f%message%
     ```
 
     Equivocarse aquí es el error más común de todos, y se ve como un `<#ffd700>` en crudo dentro del
     chat. Fuera del texto propio de ExyliaLib, estos necesitan PlaceholderAPI instalado para
     resolverse.
 
-    Un jugador que no lleva nada devuelve una cadena vacía, así que un formato con `%ecc_tag%` dentro es
-    seguro para todo el mundo desde el primer día.
+    Un jugador que no lleva nada devuelve una cadena vacía, así que un formato con
+    `%exyliachatcosmetics_tag%` dentro es seguro para todo el mundo desde el primer día.
   </Step>
 
   <Step title="Elige el hook adecuado para tu plugin de chat">

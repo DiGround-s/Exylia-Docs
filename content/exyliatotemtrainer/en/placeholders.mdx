@@ -1,31 +1,31 @@
 ---
 title: "Placeholders"
-description: "Every placeholder the plugin answers, in both spellings, written in full."
+description: "Every placeholder the plugin answers, written in full."
 ---
 
 Every placeholder below is written in full, and clicking one copies it.
 
-## Two spellings
+## How the name is written
 
-Inside this plugin's own files — `scoreboards.yml`, `menus/`, `messages.yml` — a placeholder is written
-with the group `totem` and nothing in front of it:
+Everywhere outside the plugin — PlaceholderAPI, and anything reading through it — a placeholder is the
+plugin name, the group `totem`, and the placeholder's own name:
+
+```text
+%exyliatotemtrainer_totem_wins%
+```
+
+That is the only identifier this plugin answers to. Inside its own files — `scoreboards.yml`, `menus/`,
+`messages.yml` — the same placeholder is written with the group and nothing in front of it, because the
+plugin resolves its own text without going through PlaceholderAPI:
 
 ```text
 %totem_wins%
 ```
 
-Through PlaceholderAPI the plugin name goes in front, or the short alias `exyliatotem`. The group stays
-in the name either way:
-
-```text
-%exyliatotemtrainer_totem_wins%
-%exyliatotem_totem_wins%
-```
-
 <Callout type="danger" title="The word totem is part of the name">
-`%exyliatotem_wins%` does **not** resolve. PlaceholderAPI hands the plugin `wins`, the plugin registered
-`totem_wins`, and nothing matches. Every PlaceholderAPI form of these placeholders reads
-`..._totem_<name>%`.
+`%exyliatotemtrainer_wins%` does **not** resolve. PlaceholderAPI hands the plugin `wins`, the plugin
+registered `totem_wins`, and nothing matches. Every PlaceholderAPI form of these placeholders reads
+`%exyliatotemtrainer_totem_<name>%`.
 </Callout>
 
 Every placeholder resolves for the player looking at it. One that has no value — no viewer, no profile
@@ -80,31 +80,37 @@ Training and duels both count as a session here.
 
 ## Leaderboards
 
-A board is about one mode and sorted by one category. The general form is:
+A board is about one mode and sorted by one category, and both go in the name. Every board placeholder
+comes in two forms: the plain one answers the player standing at position `n`, and the one ending in
+`_value` the number that put them there.
 
-```text
-%exyliatotemtrainer_totem_top_<mode>_<category>_<n>%
-%exyliatotemtrainer_totem_top_<mode>_<category>_<n>_value%
-```
+`<mode>` is a mode id from `config.yml` — `normal`, `infinite`, `random`, `chaos`, `acceleration` and
+`blackout` in the file the plugin ships — and `<n>` is the position, counting from 1.
 
-The first is the player's name at position `n`, the second the number that put them there.
-
-| Category | Sorted by | Value reads as |
+| Placeholder | Sorted by | What it answers |
 |---|---|---|
-| `best_score` | Best session score, highest first | `87` |
-| `best_pops` | Most pops in one session | `112` |
-| `fastest_average` | Best average reaction, lowest first | `0.41s` |
-| `best_streak` | Longest run of pops without a fail | `64` |
-| `longest_run` | Longest session | `95.30s` |
+| `%exyliatotemtrainer_totem_top_<mode>_rating_<n>%` | Best session score weighted by the speed it was set at, highest first | The name of the player at that position. |
+| `%exyliatotemtrainer_totem_top_<mode>_rating_<n>_value%` | The same board | Their rating: `87`. |
+| `%exyliatotemtrainer_totem_top_<mode>_best_pops_<n>%` | Most pops in one session, highest first | The name of the player at that position. |
+| `%exyliatotemtrainer_totem_top_<mode>_best_pops_<n>_value%` | The same board | Their pops: `112`. |
+| `%exyliatotemtrainer_totem_top_<mode>_fastest_average_<n>%` | Best average reaction, lowest first | The name of the player at that position. |
+| `%exyliatotemtrainer_totem_top_<mode>_fastest_average_<n>_value%` | The same board | Their average: `0.41s`. |
+| `%exyliatotemtrainer_totem_top_<mode>_best_streak_<n>%` | Longest run of pops without a fail, highest first | The name of the player at that position. |
+| `%exyliatotemtrainer_totem_top_<mode>_best_streak_<n>_value%` | The same board | Their streak: `64`. |
+| `%exyliatotemtrainer_totem_top_<mode>_longest_run_<n>%` | Longest session, highest first | The name of the player at that position. |
+| `%exyliatotemtrainer_totem_top_<mode>_longest_run_<n>_value%` | The same board | How long it lasted: `95.30s`. |
+
+Written out, with a mode and a position in place:
 
 ```text
-%exyliatotemtrainer_totem_top_chaos_best_score_1%
-%exyliatotemtrainer_totem_top_chaos_best_score_1_value%
+%exyliatotemtrainer_totem_top_chaos_rating_1%
+%exyliatotemtrainer_totem_top_chaos_rating_1_value%
 %exyliatotemtrainer_totem_top_acceleration_fastest_average_3%
+%exyliatotemtrainer_totem_top_acceleration_fastest_average_3_value%
 ```
 
-A mode id or a category with underscores in it is matched whole: `top_my_mode_best_score_1` finds the
-mode `my_mode`. Until the board has been read once, both forms answer the `menu.loading` text,
-`Loading…`, and kick the read off. A position past the end of the board, an unknown mode or an unknown
-category leaves the text unchanged. See [Stats](/docs/exyliatotemtrainer/stats) for how a board is
-built.
+A mode id or a category with underscores in it is matched whole:
+`%exyliatotemtrainer_totem_top_my_mode_best_pops_1%` finds the mode `my_mode`. Until the board has been
+read once, both forms answer the `menu.loading` text, `Loading…`, and kick the read off. A position past
+the end of the board, an unknown mode or an unknown category leaves the text unchanged. See
+[Stats](/docs/exyliatotemtrainer/stats) for how a board is built.

@@ -1,19 +1,15 @@
 ---
 title: "Placeholders"
-description: "The fourteen placeholders the plugin registers, in both the PlaceholderAPI form and the short form Exylia plugins use."
+description: "The fourteen placeholders the plugin registers, written in the PlaceholderAPI form every one of them takes."
 ---
 
 Every placeholder below is written in full, and clicking one copies it.
 
-They are registered through ExyliaLib, which means each one has two spellings:
-
-| Where | Form |
-|---|---|
-| PlaceholderAPI — scoreboards, tab, chat plugins | `%exyliaclasses_classes_class%` |
-| Inside any Exylia plugin's own text | `%classes_class%` |
-
-The long form is the plugin's PlaceholderAPI identifier followed by the placeholder's own name. Use it
-everywhere outside Exylia plugins.
+They are registered through ExyliaLib under names beginning with `classes_`, and PlaceholderAPI
+reaches a registered name by putting the plugin in front of it. So a scoreboard, a tab plugin or a
+chat plugin asks for `%exyliaclasses_classes_class%`, which is the form this page documents
+throughout; inside an Exylia plugin's own files the registered name stands on its own, with no
+plugin in front of it.
 
 ## The player's class
 

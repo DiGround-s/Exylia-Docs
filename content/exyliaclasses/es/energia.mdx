@@ -19,7 +19,7 @@ energy:
 |---|---|---|
 | `enabled` | `false` | Ausente o `false` significa que la clase no tiene energía en absoluto. |
 | `name` | `Energy` | Se lee del archivo, pero hoy el plugin no lo imprime en ninguna parte. |
-| `symbol` | `⚡` | Se escribe en la barra como `%symbol%`, y en `%classes_energy_symbol%`. |
+| `symbol` | `⚡` | Se escribe en la barra de abajo como `%symbol%`, que es un valor que se le pasa a la barra y no un placeholder registrado. Fuera del plugin, el mismo carácter se lee con `%exyliaclasses_classes_energy_symbol%`. |
 | `color` | `#ffffff` | Se escribe en la barra como `%energy_color%`. Cualquier etiqueta de color que acepte el módulo de texto. |
 | `max` | `100` | El tope. |
 | `regen-per-tick` | `0.1` | Se suma cada tick, así que multiplica por 20 para tenerlo por segundo. |

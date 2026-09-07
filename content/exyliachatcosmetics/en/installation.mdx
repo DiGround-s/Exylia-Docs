@@ -11,7 +11,7 @@ two more are optional and each buys something specific.
 | Plugin | Declared as | What for |
 |---|---|---|
 | `ExyliaLib` | `softdepend` | **Required.** Configuration, messages, menus, text, the palette, the database, tasks and placeholders all come from it. The plugin does not run without it. |
-| `PlaceholderAPI` | `softdepend` | Optional. Bridges `%ecc_…%` into every other plugin, which is how a chat plugin draws the tag and the coloured name. |
+| `PlaceholderAPI` | `softdepend` | Optional. Bridges `%exyliachatcosmetics_<name>%` into every other plugin, which is how a chat plugin draws the tag and the coloured name. |
 | `LuckPerms` | `softdepend` | Optional. Rank colours are unusable without it, and permission changes apply within the tick rather than on relog. |
 
 <Callout type="note" title="Why the required one is a softdepend">
@@ -31,8 +31,8 @@ means "load me after it", not "you may leave it out".
 
 ### What each optional plugin buys
 
-**PlaceholderAPI.** ExyliaLib registers every placeholder under both `%exyliachatcosmetics_<name>%`
-and the short `%ecc_<name>%`, and bridges them into PAPI automatically. Inside ExyliaLib's own text
+**PlaceholderAPI.** ExyliaLib registers every placeholder under `%exyliachatcosmetics_<name>%` and
+bridges them into PAPI automatically. Inside ExyliaLib's own text
 they work regardless; PAPI is what makes them resolve in someone else's chat format, scoreboard or
 tab list. If the built-in chat module is doing the delivering, nothing needs the round trip and PAPI
 buys you nothing.

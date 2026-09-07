@@ -16,6 +16,10 @@ Every placeholder below is written in full, and clicking one copies it.
 | `%exyliakilleffect_effect_category%` | The category id. |
 | `%exyliakilleffect_effect_category_name%` | The category's display name. |
 | `%exyliakilleffect_effect_weapons%` | What it may be bound to, in words. |
+| `%exyliakilleffect_effect_tier%` | Its rarity id. |
+| `%exyliakilleffect_effect_tier_name%` | The rarity's display name. |
+| `%exyliakilleffect_effect_tier_color%` | The colour that rarity is written in. |
+| `%exyliakilleffect_effect_tier_colour%` | The same colour, with the `u`. |
 | `%exyliakilleffect_has_effect%` | `true` or `false`. |
 
 ## What the weapon in hand carries
@@ -32,6 +36,10 @@ about their menu choice.
 | `%exyliakilleffect_weapon_effect_category%` | Its category id. |
 | `%exyliakilleffect_weapon_effect_category_name%` | Its category name. |
 | `%exyliakilleffect_weapon_effect_weapons%` | What it fits. |
+| `%exyliakilleffect_weapon_effect_tier%` | Its rarity id. |
+| `%exyliakilleffect_weapon_effect_tier_name%` | The rarity's display name. |
+| `%exyliakilleffect_weapon_effect_tier_color%` | The colour that rarity is written in. |
+| `%exyliakilleffect_weapon_effect_tier_colour%` | The same colour, with the `u`. |
 | `%exyliakilleffect_weapon_has_effect%` | `true` or `false`. |
 
 ## The rest
@@ -40,8 +48,10 @@ about their menu choice.
 |---|---|
 | `%exyliakilleffect_visibility%` | The player's visibility mode, named as `particles.name-*` says. |
 | `%exyliakilleffect_favourites%` | How many effects they have starred. |
+| `%exyliakilleffect_favorites%` | The same count, without the `u`. |
 | `%exyliakilleffect_favourite_<id>%` | `true` or `false` for one effect — `%exyliakilleffect_favourite_blade_storm%`. |
-| `%exyliakilleffect_random%` | `true` while every kill draws a different effect. |
+| `%exyliakilleffect_favorite_<id>%` | The same answer, without the `u` — `%exyliakilleffect_favorite_blade_storm%`. |
+| `%exyliakilleffect_random%` | `random` while every kill is drawing a different effect, `false` otherwise. |
 
 ## The crate
 
@@ -49,11 +59,10 @@ about their menu choice.
 |---|---|
 | `%exyliakilleffect_keys%` | How many crate keys they hold. |
 | `%exyliakilleffect_unlocked%` | How many effects they have won. |
-| `%exyliakilleffect_catalogue%` | How many the server declares. Alias: `_total`. |
+| `%exyliakilleffect_catalogue%` | How many the server declares. |
+| `%exyliakilleffect_total%` | The same count, under the shorter name. |
 | `%exyliakilleffect_unlocked_<id>%` | `true` or `false` for one effect — `%exyliakilleffect_unlocked_blade_storm%`. |
 | `%exyliakilleffect_tier_count_<tier>%` | How many effects a rarity holds — `%exyliakilleffect_tier_count_legendary%`. |
-
-`favorite` is accepted wherever `favourite` is.
 
 ## With nothing chosen
 
@@ -62,6 +71,8 @@ about their menu choice.
 | `%exyliakilleffect_has_effect%` | `false` |
 | `%exyliakilleffect_effect_description%` | Empty |
 | `%exyliakilleffect_effect_material%` | `BARRIER` |
+| `%exyliakilleffect_effect_tier_color%` | Empty |
+| `%exyliakilleffect_effect_tier_colour%` | Empty |
 | Everything else | Whatever `placeholders.none` says — `None` by default |
 
 The same applies to the `weapon_` family when the weapon carries nothing, which is what makes them
@@ -76,8 +87,9 @@ lines:
 ```
 
 <Callout type="note" title="On the random choice">
-`_effect%` answers `random` and `_effect_name%` answers whatever `menu.random-name` says, so a
-scoreboard reads "Random" instead of reading as though they carry nothing.
+`%exyliakilleffect_effect%` answers `random` and `%exyliakilleffect_effect_name%` answers whatever
+`menu.random-name` says, so a scoreboard reads "Random" instead of reading as though they carry
+nothing.
 </Callout>
 
 <Callout type="tip" title="effect_material is for menus">

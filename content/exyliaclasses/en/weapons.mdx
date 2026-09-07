@@ -60,8 +60,8 @@ weapons:
 | Key | Default | What it does |
 |---|---|---|
 | `extra-damage` | `0` | The number written into messages, the boss bar and the placeholders. |
-| `color` | `&f` | The colour of the icon, in `%classes_mark_color%` and `%classes_mark_display%`. |
-| `icon` | `◆` | The icon, in `%classes_mark_icon%`. The shipped classes repeat it once per level. |
+| `color` | `&f` | The colour of the icon. The mark bar is given it as `%mark_color%`; anything outside the plugin reads it as `%exyliaclasses_classes_mark_color%`, or together with the icon as `%exyliaclasses_classes_mark_display%`. |
+| `icon` | `◆` | The icon. The mark bar is given it as `%mark_icon%`; anything outside the plugin reads it as `%exyliaclasses_classes_mark_icon%`. The shipped classes repeat it once per level. |
 | `remove-invisibility` | `false` | Strips Invisibility from the target when the glow is applied. Only does anything with `give-glow: true`. |
 | `attacked-effects` | none | Effect lines applied to the target. |
 | `attacker-effects` | none | Effect lines applied to the shooter. |
@@ -94,8 +94,9 @@ weapons:
 
 <Callout type="danger" title="extra-damage is a number, not damage">
 The mark system does not modify damage. `extra-damage` is what gets written into the mark messages,
-the mark boss bar and `%classes_mark_extra_damage%` — the bonus itself is expected to come from your
-own setup reading those placeholders. Marks also do not change the arrow's own damage.
+into the mark boss bar as `%extra_damage%`, and into `%exyliaclasses_classes_mark_extra_damage%` for
+anything reading the plugin through PlaceholderAPI — the bonus itself is expected to come from your
+own setup reading that number. Marks also do not change the arrow's own damage.
 </Callout>
 
 <Callout type="note" title="Marks belong to the target, not to a pair of players">

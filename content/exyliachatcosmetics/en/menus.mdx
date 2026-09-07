@@ -94,12 +94,16 @@ Values the fixed items may read:
 
 | Value | Is |
 |---|---|
-| `%type%`, `%type_name%` | the kind on screen, and what `menu.types` calls it |
+| `%type%` | the kind on screen |
+| `%type_name%` | what `menu.types` calls it |
 | `%type_custom%` | `true` when MAKE ONE would write something here |
-| `%owned_count%`, `%total_count%` | of this kind, for this player |
-| `%equipped_name%`, `%equipped_any%` | what is worn of this kind, and whether anything is |
+| `%owned_count%` | how many of this kind this player owns |
+| `%total_count%` | how many of this kind there are |
+| `%equipped_name%` | the name of what is worn of this kind |
+| `%equipped_any%` | `true` when anything of this kind is worn |
 | `%custom_type%` | the kind MAKE ONE writes |
-| `%create_tokens%`, `%edit_tokens%` | that kind's two balances — see [Tokens](/docs/exyliachatcosmetics/tokens) |
+| `%create_tokens%` | that kind's creation balance — see [Tokens](/docs/exyliachatcosmetics/tokens) |
+| `%edit_tokens%` | that kind's edit balance |
 | `%preview%` | the player's whole chat line as it is now |
 
 `%preview%` sits on an item with `depends-on: [preview]`, which is what makes it redraw after each
@@ -132,8 +136,13 @@ behind a page of what they cannot.
 
 | Row value | Is |
 |---|---|
-| `%cosmetic_key%`, `%cosmetic_id%`, `%cosmetic_type%`, `%cosmetic_type_name%` | how the row is named |
-| `%cosmetic_name%`, `%cosmetic_description%`, `%cosmetic_icon%` | from the catalogue; `material: "%cosmetic_icon%"` draws the entry's own icon |
+| `%cosmetic_key%` | the row's whole key, `type:id` |
+| `%cosmetic_id%` | the row's id on its own |
+| `%cosmetic_type%` | the row's type id |
+| `%cosmetic_type_name%` | what `menu.types` calls that type |
+| `%cosmetic_name%` | the entry's name, from the catalogue |
+| `%cosmetic_description%` | the entry's description, from the catalogue |
+| `%cosmetic_icon%` | the entry's material; `material: "%cosmetic_icon%"` draws the entry's own icon |
 | `%cosmetic_status%` | one of the four lines under `menu.status` |
 | `%cosmetic_favorite%` | `menu.favorite-on` or `menu.favorite-off` |
 | `%cosmetic_expires%` | what is left of a temporary grant |
@@ -163,7 +172,8 @@ away from the catalogue's, and the button reads the same on every browser. Its v
 | `%custom_state%` | `none` when this kind pairs with nothing or has no catalogue tabs to go back to, otherwise `closed` or `open` |
 | `%custom_glow%` | `true` while the list is open |
 | `%custom_toggle%` | what a click switches to — the custom list, or the first catalogue tab |
-| `%custom_name%`, `%custom_icon%` | how the paired kind is named and drawn |
+| `%custom_name%` | how the paired kind is named |
+| `%custom_icon%` | the material the paired kind is drawn with |
 | `%custom_count%` | how many of them this player has made |
 
 One value rather than two flags, because a `condition` in a menu file is a single comparison: "there

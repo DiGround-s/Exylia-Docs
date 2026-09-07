@@ -1,18 +1,15 @@
 ---
 title: "Placeholders"
-description: "Los dos identificadores, las tres notaciones, todos los nombres a los que responden, y qué le pasa a una cabeza al salir."
+description: "El identificador, las tres notaciones, todos los nombres a los que responde, y qué le pasa a una cabeza al salir."
 ---
 
 Los placeholders se registran a través del módulo de placeholders de ExyliaLib, así que funcionan
 solos en cualquier texto de ExyliaLib, y en cualquier otro plugin en cuanto instalas PlaceholderAPI.
-Dos identificadores responden exactamente a los mismos nombres:
+Hay un solo identificador, y de él cuelgan todos los nombres de abajo:
 
 ```
-%exyliachatcosmetics_<name>%
-%ecc_<name>%
+%exyliachatcosmetics_<nombre>%
 ```
-
-El corto está ahí porque un formato de chat es una línea que alguien tiene que poder leer.
 
 ## Las tres notaciones
 
@@ -46,15 +43,29 @@ de un desconocido al lado del nombre de alguien es peor que ninguna cara.
 
 ## Texto dibujado
 
-Cada uno de estos tiene las tres notaciones: `%ecc_tag%`, `%ecc_tag_legacy%`, `%ecc_tag_section%`.
+Cada uno de estos dibuja un componente, así que existe en las tres notaciones, y cada una de las tres
+es un placeholder por derecho propio:
 
-| Nombre | Valor |
+| Placeholder | Valor |
 |---|---|
-| `tag` | la etiqueta puesta, con el `format` a su alrededor — normalmente un espacio final. Una etiqueta propia gana a una del catálogo. |
-| `customtag` | solo una etiqueta que el jugador se escribió; vacío si lo que lleva viene del catálogo |
-| `nick` | el nombre del jugador en su color de nick |
-| `rank_prefix`, `rank_suffix` | el prefijo y el sufijo del rango, repintados con el color de rango puesto |
-| `identity` | `tag` seguido de `nick` |
+| `%exyliachatcosmetics_tag%` | la etiqueta puesta, con el `format` a su alrededor — normalmente un espacio final. Una etiqueta propia gana a una del catálogo. |
+| `%exyliachatcosmetics_tag_legacy%` | la misma etiqueta, escrita en códigos `&` |
+| `%exyliachatcosmetics_tag_section%` | la misma etiqueta, escrita en códigos `§` |
+| `%exyliachatcosmetics_customtag%` | solo una etiqueta que el jugador se escribió; vacío si lo que lleva viene del catálogo |
+| `%exyliachatcosmetics_customtag_legacy%` | la misma etiqueta, escrita en códigos `&` |
+| `%exyliachatcosmetics_customtag_section%` | la misma etiqueta, escrita en códigos `§` |
+| `%exyliachatcosmetics_nick%` | el nombre del jugador en su color de nick |
+| `%exyliachatcosmetics_nick_legacy%` | el mismo nombre, escrito en códigos `&` |
+| `%exyliachatcosmetics_nick_section%` | el mismo nombre, escrito en códigos `§` |
+| `%exyliachatcosmetics_identity%` | la etiqueta seguida del nombre |
+| `%exyliachatcosmetics_identity_legacy%` | las dos juntas, escritas en códigos `&` |
+| `%exyliachatcosmetics_identity_section%` | las dos juntas, escritas en códigos `§` |
+| `%exyliachatcosmetics_rank_prefix%` | el prefijo del rango, repintado con el color de rango puesto |
+| `%exyliachatcosmetics_rank_prefix_legacy%` | el mismo prefijo, escrito en códigos `&` |
+| `%exyliachatcosmetics_rank_prefix_section%` | el mismo prefijo, escrito en códigos `§` |
+| `%exyliachatcosmetics_rank_suffix%` | el sufijo del rango, repintado con el color de rango puesto |
+| `%exyliachatcosmetics_rank_suffix_legacy%` | el mismo sufijo, escrito en códigos `&` |
+| `%exyliachatcosmetics_rank_suffix_section%` | el mismo sufijo, escrito en códigos `§` |
 
 Cada uno queda vacío cuando no lleva nada puesto, o sea, con el valor de `placeholders.none` — vacío
 por defecto — o con el fallback que escribas.
@@ -63,22 +74,31 @@ por defecto — o con el fallback que escribas.
 
 Estos son palabras y números sin más, sin notaciones.
 
-| Nombre | Valor |
+| Placeholder | Valor |
 |---|---|
-| `tag_id`, `tag_name` | el id y el nombre visible de la etiqueta puesta |
-| `nick_color` | el color efectivo del nombre, como `#rrggbb` o `#a:#b:#c` |
-| `rank_color` | el color con el que se pintan el prefijo y el sufijo |
-| `rank_id` | el id del color de rango del catálogo que lleva puesto |
-| `chat_color` | el color efectivo del mensaje: un color propio, si no un color de chat, si no `chat.default-color` |
-| `chat_color_id` | el id de aquel de los tres del que salió |
-| `font`, `font_name` | el id y el nombre de la fuente puesta |
-| `modifiers` | los ids de los modificadores puestos, separados por comas |
-| `favorites_count` | cuántos cosméticos tiene marcados con estrella |
-| `loadout` | el nombre del último loadout que aplicó |
-| `equipped_<type>` | el id que lleva puesto de ese tipo — `%ecc_equipped_chat_color%` |
-| `tokens_<type>_<kind>` | un saldo de tokens — `%ecc_tokens_customtag_create%`, `%ecc_tokens_customcolor_edit%` |
-| `owns_<type:id>` | `true` o `false` — `%ecc_owns_tag:mvp%` |
-| `expires_<type:id>` | `permanent`, el tiempo que queda en forma compacta (`13d 4h`), o `placeholders.none` si no lo posee |
+| `%exyliachatcosmetics_tag_id%` | el id de la etiqueta puesta |
+| `%exyliachatcosmetics_tag_name%` | el nombre visible de la etiqueta puesta |
+| `%exyliachatcosmetics_nick_color%` | el color efectivo del nombre, como `#rrggbb` o `#a:#b:#c` |
+| `%exyliachatcosmetics_rank_color%` | el color con el que se pintan el prefijo y el sufijo |
+| `%exyliachatcosmetics_rank_id%` | el id del color de rango del catálogo que lleva puesto |
+| `%exyliachatcosmetics_chat_color%` | el color efectivo del mensaje: un color propio, si no un color de chat, si no `chat.default-color` |
+| `%exyliachatcosmetics_chat_color_id%` | el id de aquel de ellos del que salió |
+| `%exyliachatcosmetics_font%` | el id de la fuente puesta |
+| `%exyliachatcosmetics_font_name%` | el nombre visible de la fuente puesta |
+| `%exyliachatcosmetics_modifiers%` | los ids de los modificadores puestos, separados por comas |
+| `%exyliachatcosmetics_favorites_count%` | cuántos cosméticos tiene marcados con estrella |
+| `%exyliachatcosmetics_loadout%` | el nombre del último loadout que aplicó |
+
+## Valores que llevan un argumento
+
+Cuatro de ellos se escriben con algo tuyo en medio — un tipo, o una clave `tipo:id`.
+
+| Placeholder | Valor | Escrito entero |
+|---|---|---|
+| `%exyliachatcosmetics_equipped_<tipo>%` | el id que lleva puesto de ese tipo | `%exyliachatcosmetics_equipped_chat_color%` |
+| `%exyliachatcosmetics_tokens_<tipo>_<kind>%` | un saldo de tokens | `%exyliachatcosmetics_tokens_customtag_create%`, `%exyliachatcosmetics_tokens_customcolor_edit%` |
+| `%exyliachatcosmetics_owns_<tipo:id>%` | `true` o `false` | `%exyliachatcosmetics_owns_tag:mvp%` |
+| `%exyliachatcosmetics_expires_<tipo:id>%` | `permanent`, el tiempo que queda en forma compacta (`13d 4h`), o `placeholders.none` si no lo posee | `%exyliachatcosmetics_expires_tag:mvp%` |
 
 Un nombre al que no responde nada devuelve `placeholders.unknown`, `?` por defecto. Tanto ese como
 `placeholders.none` son tuyos y se cambian en
@@ -87,7 +107,8 @@ Un nombre al que no responde nada devuelve `placeholders.unknown`, `?` por defec
 <Callout type="note" title="Guiones bajos en un argumento">
 Tanto un tipo (`chat_color`) como un id (`my_tag`) pueden llevar un guion bajo, y la librería parte
 los argumentos por los guiones bajos. Se vuelven a juntar antes de leerlos, así que
-`%ecc_equipped_chat_color%` y `%ecc_owns_tag:my_tag%` significan lo que parece.
+`%exyliachatcosmetics_equipped_chat_color%` y `%exyliachatcosmetics_owns_tag:my_tag%` significan lo
+que parece.
 </Callout>
 
 ## Fallbacks
@@ -96,8 +117,8 @@ La sintaxis de fallback de ExyliaLib funciona en todos: lo que va detrás del `|
 placeholder cuando no tiene valor.
 
 ```
-%ecc_tag|%          nada en absoluto cuando no lleva etiqueta
-%ecc_loadout|none%  la palabra "none" cuando no aplicó ningún loadout
+%exyliachatcosmetics_tag|%          nada en absoluto cuando no lleva etiqueta
+%exyliachatcosmetics_loadout|none%  la palabra "none" cuando no aplicó ningún loadout
 ```
 
 Los sufijos de formato de ExyliaLib — `:upper` y los demás — funcionan sobre los placeholders de
@@ -108,13 +129,13 @@ valor.
 Un plugin de chat basado en renderer, que lee MiniMessage:
 
 ```
-%ecc_tag%%ecc_nick%<gray>: <white>%message%
+%exyliachatcosmetics_tag%%exyliachatcosmetics_nick%<gray>: <white>%message%
 ```
 
 Un plugin de chat que todavía compone una cadena legacy:
 
 ```
-%ecc_tag_section%%ecc_nick_section%§7: §f%message%
+%exyliachatcosmetics_tag_section%%exyliachatcosmetics_nick_section%§7: §f%message%
 ```
 
 En los dos, `%message%` sigue siendo lo que ponga ahí tu plugin de chat. El cuerpo del mensaje lo

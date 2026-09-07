@@ -16,6 +16,10 @@ Cada placeholder está escrito completo, y al hacer clic se copia.
 | `%exyliakilleffect_effect_category%` | El id de la categoría. |
 | `%exyliakilleffect_effect_category_name%` | El nombre de la categoría. |
 | `%exyliakilleffect_effect_weapons%` | A qué se puede atar, en palabras. |
+| `%exyliakilleffect_effect_tier%` | El id de su rareza. |
+| `%exyliakilleffect_effect_tier_name%` | El nombre de la rareza. |
+| `%exyliakilleffect_effect_tier_color%` | El color en que se escribe esa rareza. |
+| `%exyliakilleffect_effect_tier_colour%` | El mismo color, con la `u`. |
 | `%exyliakilleffect_has_effect%` | `true` o `false`. |
 
 ## Lo que lleva el arma en mano
@@ -32,6 +36,10 @@ elección del menú.
 | `%exyliakilleffect_weapon_effect_category%` | El id de su categoría. |
 | `%exyliakilleffect_weapon_effect_category_name%` | El nombre de su categoría. |
 | `%exyliakilleffect_weapon_effect_weapons%` | A qué encaja. |
+| `%exyliakilleffect_weapon_effect_tier%` | El id de su rareza. |
+| `%exyliakilleffect_weapon_effect_tier_name%` | El nombre de la rareza. |
+| `%exyliakilleffect_weapon_effect_tier_color%` | El color en que se escribe esa rareza. |
+| `%exyliakilleffect_weapon_effect_tier_colour%` | El mismo color, con la `u`. |
 | `%exyliakilleffect_weapon_has_effect%` | `true` o `false`. |
 
 ## El resto
@@ -40,8 +48,10 @@ elección del menú.
 |---|---|
 | `%exyliakilleffect_visibility%` | Su modo de visibilidad, con el nombre que diga `particles.name-*`. |
 | `%exyliakilleffect_favourites%` | Cuántos efectos tiene marcados. |
+| `%exyliakilleffect_favorites%` | La misma cuenta, sin la `u`. |
 | `%exyliakilleffect_favourite_<id>%` | `true` o `false` para un efecto — `%exyliakilleffect_favourite_blade_storm%`. |
-| `%exyliakilleffect_random%` | `true` mientras cada baja saca un efecto distinto. |
+| `%exyliakilleffect_favorite_<id>%` | La misma respuesta, sin la `u` — `%exyliakilleffect_favorite_blade_storm%`. |
+| `%exyliakilleffect_random%` | `random` mientras cada baja saque un efecto distinto, `false` si no. |
 
 ## La caja
 
@@ -49,11 +59,10 @@ elección del menú.
 |---|---|
 | `%exyliakilleffect_keys%` | Cuántas llaves tiene. |
 | `%exyliakilleffect_unlocked%` | Cuántos efectos ha ganado. |
-| `%exyliakilleffect_catalogue%` | Cuántos declara el servidor. Alias: `_total`. |
+| `%exyliakilleffect_catalogue%` | Cuántos declara el servidor. |
+| `%exyliakilleffect_total%` | La misma cuenta, con el nombre corto. |
 | `%exyliakilleffect_unlocked_<id>%` | `true` o `false` para un efecto — `%exyliakilleffect_unlocked_blade_storm%`. |
 | `%exyliakilleffect_tier_count_<tier>%` | Cuántos efectos tiene una rareza — `%exyliakilleffect_tier_count_legendary%`. |
-
-`favorite` se acepta donde se acepte `favourite`.
 
 ## Sin nada elegido
 
@@ -62,6 +71,8 @@ elección del menú.
 | `%exyliakilleffect_has_effect%` | `false` |
 | `%exyliakilleffect_effect_description%` | Vacío |
 | `%exyliakilleffect_effect_material%` | `BARRIER` |
+| `%exyliakilleffect_effect_tier_color%` | Vacío |
+| `%exyliakilleffect_effect_tier_colour%` | Vacío |
 | Todo lo demás | Lo que diga `placeholders.none` — `None` por defecto |
 
 Lo mismo vale para la familia `weapon_` cuando el arma no lleva nada, que es lo que los hace seguros
@@ -76,8 +87,8 @@ lines:
 ```
 
 <Callout type="note" title="Con la elección aleatoria">
-`_effect%` responde `random` y `_effect_name%` responde lo que diga `menu.random-name`, así que un
-scoreboard lee "Random" en vez de leerse como si no llevara nada.
+`%exyliakilleffect_effect%` responde `random` y `%exyliakilleffect_effect_name%` responde lo que diga
+`menu.random-name`, así que un scoreboard lee "Random" en vez de leerse como si no llevara nada.
 </Callout>
 
 <Callout type="tip" title="effect_material es para menús">

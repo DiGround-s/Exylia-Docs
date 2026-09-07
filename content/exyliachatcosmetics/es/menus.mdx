@@ -97,12 +97,16 @@ Valores que pueden leer los ítems fijos:
 
 | Valor | Es |
 |---|---|
-| `%type%`, `%type_name%` | el tipo en pantalla, y cómo lo llama `menu.types` |
+| `%type%` | el tipo en pantalla |
+| `%type_name%` | cómo lo llama `menu.types` |
 | `%type_custom%` | `true` cuando MAKE ONE escribiría algo aquí |
-| `%owned_count%`, `%total_count%` | de este tipo, para este jugador |
-| `%equipped_name%`, `%equipped_any%` | qué lleva de este tipo, y si lleva algo |
+| `%owned_count%` | cuántos de este tipo posee este jugador |
+| `%total_count%` | cuántos de este tipo hay |
+| `%equipped_name%` | el nombre de lo que lleva de este tipo |
+| `%equipped_any%` | `true` cuando lleva algo de este tipo |
 | `%custom_type%` | el tipo que escribe MAKE ONE |
-| `%create_tokens%`, `%edit_tokens%` | los dos saldos de ese tipo — ver [Tokens](/docs/exyliachatcosmetics/tokens) |
+| `%create_tokens%` | el saldo de creación de ese tipo — ver [Tokens](/docs/exyliachatcosmetics/tokens) |
+| `%edit_tokens%` | el saldo de edición de ese tipo |
 | `%preview%` | la línea de chat completa del jugador tal como está ahora |
 
 `%preview%` va en un ítem con `depends-on: [preview]`, que es lo que hace que se redibuje después de
@@ -135,8 +139,13 @@ mirar y no detrás de una página de lo que no puede.
 
 | Valor de fila | Es |
 |---|---|
-| `%cosmetic_key%`, `%cosmetic_id%`, `%cosmetic_type%`, `%cosmetic_type_name%` | cómo se llama la fila |
-| `%cosmetic_name%`, `%cosmetic_description%`, `%cosmetic_icon%` | del catálogo; `material: "%cosmetic_icon%"` dibuja el ícono de la propia entrada |
+| `%cosmetic_key%` | la clave entera de la fila, `tipo:id` |
+| `%cosmetic_id%` | el id de la fila a secas |
+| `%cosmetic_type%` | el id del tipo de la fila |
+| `%cosmetic_type_name%` | cómo llama `menu.types` a ese tipo |
+| `%cosmetic_name%` | el nombre de la entrada, del catálogo |
+| `%cosmetic_description%` | la descripción de la entrada, del catálogo |
+| `%cosmetic_icon%` | el material de la entrada; `material: "%cosmetic_icon%"` dibuja el ícono de la propia entrada |
 | `%cosmetic_status%` | una de las cuatro líneas de `menu.status` |
 | `%cosmetic_favorite%` | `menu.favorite-on` o `menu.favorite-off` |
 | `%cosmetic_expires%` | lo que queda de una concesión temporal |
@@ -166,7 +175,8 @@ las del catálogo, y así el botón se lee igual en todos los navegadores. Sus v
 | `%custom_state%` | `none` cuando este tipo no se empareja con nada o no tiene pestañas de catálogo a las que volver; si no, `closed` u `open` |
 | `%custom_glow%` | `true` mientras la lista está abierta |
 | `%custom_toggle%` | a qué cambia un clic — la lista propia, o la primera pestaña del catálogo |
-| `%custom_name%`, `%custom_icon%` | cómo se llama y se dibuja el tipo emparejado |
+| `%custom_name%` | cómo se llama el tipo emparejado |
+| `%custom_icon%` | el material con el que se dibuja el tipo emparejado |
 | `%custom_count%` | cuántos ha hecho este jugador |
 
 Un valor en vez de dos banderas, porque un `condition` en un archivo de menú es una sola comparación:

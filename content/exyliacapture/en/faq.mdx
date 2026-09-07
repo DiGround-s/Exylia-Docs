@@ -34,12 +34,12 @@ nothing.
 
 ## A placeholder shows verbatim
 
-Most often the spelling of the counter, which carries `capture` twice:
-`%exyliacapture_capture_active_events%`.
+Most often an event created after the last reload. Per-event families are registered from the
+configurations in memory, so `/captureadmin reload` is what makes a new event's placeholders resolve.
 
-The other common cause is an event created after the last reload. Per-event families are registered
-from the configurations in memory, so `/captureadmin reload` is what makes a new event's placeholders
-resolve. See [Placeholders](/docs/exyliacapture/placeholders).
+The other cause is a spelling the plugin never registered. A name it does not know is left on screen
+as written rather than rendered blank, which is what makes a typo visible. Every placeholder is
+written out in full on [Placeholders](/docs/exyliacapture/placeholders).
 
 ## The payload cart does not move
 
