@@ -1,0 +1,219 @@
+---
+title: "Fonts and modifiers"
+description: "Letters swapped for look-alike glyphs, and the five decorations a player switches on."
+---
+
+A font here is not a Minecraft font. A chat message has no way to ask the client for a different
+typeface, so a font in this plugin is a table of code points: every letter the player typed is
+swapped for a glyph the client already knows how to draw. `Welcome` worn in SMALL CAPS reaches chat
+as `ᴡᴇʟᴄᴏᴍᴇ` — ordinary characters, delivered to everybody, with no resource pack anywhere.
+
+A font touches the message body and nothing else. The tag, the name and the rank keep the letters
+they were written in, because a line where only half of it is in small capitals reads worse than
+either half whole.
+
+## What a font never rewrites
+
+The table runs over the raw line before anything parses it, so everything that is an instruction
+rather than text is copied through exactly as written.
+
+| Left alone | Why |
+|---|---|
+| A MiniMessage tag, `<gradient:#a:#b>` | rewritten letters make a tag nobody can parse |
+| A palette token, `{primary}`, and any other brace a plugin owns | the token is matched by name |
+| A placeholder, `%player_name%` | its name is matched literally when its value is substituted, so a rewritten name silently stops matching and reaches chat as written |
+| A legacy code, `&l` or `&#8a51c4` | `l` is a letter, and `&ʟ` is no longer bold |
+
+An unclosed `<`, an unclosed brace or a lone `%` is text, which is also how MiniMessage reads it.
+
+## The entry
+
+```yaml title="plugins/ExyliaChatCosmetics/cosmetics/fonts.yml"
+fonts:
+  small:
+    category: classic
+    name: '{primary}&lSMALL CAPS'
+    alphabet: 'ᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ'
+    safe: true
+    icon: PAPER
+    description: 'The Exylia look, for your own words.'
+    priority: 1
+  wide:
+    category: classic
+    name: '{primary}&lWIDE'
+    alphabet: 'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ'
+    digits: '０１２３４５６７８９'
+    safe: true
+    icon: BOOKSHELF
+    description: 'Twice the space between every letter.'
+    priority: 5
+```
+
+| Key | What it does |
+|---|---|
+| `alphabet` | the glyphs for `a` to `z` in one string: **26**, or **52** with the capitals after them. 26 gives both cases the same glyph, which is exactly what small capitals are |
+| `digits` | optional, exactly **10** glyphs for `0` to `9`. Without it, numbers are left alone |
+| `map` | optional section of `character: glyph` pairs, one code point on each side, for anything the two strings above do not cover |
+| `safe` | whether every glyph sits in the basic plane. Default `true` |
+
+Everything else an entry may declare — `category`, `name`, `icon`, `description`, `priority`,
+`permission`, `requirement`, `hidden`, `metadata` — is the same as in every other file. See
+[The catalogue](/docs/exyliachatcosmetics/catalogue).
+
+The string form is what a copied alphabet looks like; the map form is for the odd extra character:
+
+```yaml
+    map:
+      '!': '❗'
+```
+
+An `alphabet` of any other length is reported with its path and skipped, and so are `digits` that
+are not ten and a `map` entry that is not one character to one glyph. An entry left with no glyphs
+at all is dropped with *declares no glyphs, so this font changes nothing*. The rest of the file
+still loads.
+
+<Callout type="note" title="Letters with no look-alike stay plain">
+No set is complete, and the gaps are deliberate. GREEK has no look-alike for `j`, `r` or `v`, so
+those three letters are left as they are. The odd plain letter reads as part of the style; a
+missing glyph does not.
+</Callout>
+
+## What `safe` means
+
+`safe: true` says every glyph the font draws with is in the basic plane — the part of Unicode every
+client has a sheet for. `safe: false` says at least one is not: the mathematical alphabets that
+fraktur, script, monospace and the outline letters come from live above `U+FFFF`, and a client
+without them draws a box for each letter instead.
+
+Twelve of the eighteen shipped fonts are `safe: false`. On a current Java client they are drawn from
+the fallback font and look fine. Bedrock clients and old ones are where they break.
+
+<Callout type="warning" title="The flag reports, it does not restrict">
+Nothing is withheld from a player because of `safe`. The value is a statement about the entry, and
+the shipped menus do not draw it. It is there so that a server whose players are largely on Bedrock
+knows which twelve entries to delete before anybody complains.
+</Callout>
+
+## The eighteen that ship
+
+### CLASSIC
+
+Six fonts whose glyphs are all in the basic plane, which means the client draws them with its own
+font sheets, at the size of ordinary chat.
+
+| id | Menu name | Glyphs | Digits |
+|---|---|---|---|
+| `small` | SMALL CAPS | 26, both cases the same | — |
+| `accented` | ACCENTED | 52 | — |
+| `cyrillic` | CYRILLIC | 26, both cases the same | — |
+| `greek` | GREEK | 26, both cases the same | — |
+| `wide` | WIDE | 52 | yes |
+| `bubble` | BUBBLE | 52 | yes |
+
+### TYPESET
+
+| id | Menu name | Glyphs | Digits |
+|---|---|---|---|
+| `bold` | BOLD | 52 | yes |
+| `italic` | ITALIC | 52 | — |
+| `bold_italic` | BOLD ITALIC | 52 | — |
+| `monospace` | MONOSPACE | 52 | yes |
+
+### MODERN
+
+| id | Menu name | Glyphs | Digits |
+|---|---|---|---|
+| `sans` | SANS | 52 | yes |
+| `sans_bold` | SANS BOLD | 52 | yes |
+| `sans_italic` | SANS ITALIC | 52 | — |
+| `outline` | OUTLINE | 52 | yes |
+
+### SCRIPT
+
+| id | Menu name | Glyphs | Digits |
+|---|---|---|---|
+| `script` | SCRIPT | 52 | — |
+| `bold_script` | BOLD SCRIPT | 52 | — |
+| `fraktur` | FRAKTUR | 52 | — |
+| `bold_fraktur` | BOLD FRAKTUR | 52 | — |
+
+Every entry in TYPESET, MODERN and SCRIPT is `safe: false`; every entry in CLASSIC is `safe: true`.
+
+## Why CLASSIC reads differently
+
+Two things decide how a font actually looks in chat, and the tab a font sits in is the honest signal
+of which one it got.
+
+CLASSIC sits in the basic plane, and the client draws it with the same sheets the game uses for
+Greek, Cyrillic and every accented language. Crisp, small, and drawn on every client. Everything else
+lives in the mathematical alphabets, which the client pulls from its fallback font: wider, heavier
+and taller than the line around it. Legible and popular, but never as clean as CLASSIC — the letters
+do not match the chat they sit in, because they are not from the same font.
+
+## The alphabets that were left out
+
+The squared alphabets — 🄰, 🅰 — are not shipped. Each glyph is a frame drawn around a letter, and at
+chat size a sentence of them is a wall of boxes rather than a font. They read as broken text, so they
+are not offered as a cosmetic. BUBBLE, which encloses in circles instead, is shipped and is one of
+the six that sit in the basic plane.
+
+## Modifiers
+
+`modifiers.yml` is the shortest file in the set: five decorations in one tab, and no arithmetic
+anywhere.
+
+```yaml title="plugins/ExyliaChatCosmetics/cosmetics/modifiers.yml"
+modifiers:
+  bold:
+    category: style
+    name: '{primary}&lBOLD'
+    decoration: bold
+    icon: IRON_BLOCK
+    description: 'Say it louder.'
+    priority: 1
+```
+
+| id | `decoration` | What it does |
+|---|---|---|
+| `bold` | `bold` | heavier letters |
+| `italic` | `italic` | leaning letters |
+| `underlined` | `underlined` | a line beneath every word |
+| `strikethrough` | `strikethrough` | a line through it |
+| `obfuscated` | `obfuscated` | characters that never settle |
+
+`decoration` is the only key of its own, and it defaults to the entry's id — an entry named after
+the decoration it applies need not repeat it. Anything the five names above do not cover is
+reported and the entry is skipped.
+
+### Several at once
+
+Modifiers are the one type worn as a set rather than in a single slot. A player may have bold and
+underlined on together, and clicking a modifier that is already worn takes it off rather than
+replacing it. Every other type — a tag, a font, a colour — holds one thing, and picking a second
+one replaces the first.
+
+## Wearing them
+
+`/cc fonts` and `/cc modifiers` open the two browsers directly. Both also sit on the message menu,
+where a left click browses and a right click takes off whatever of that type is worn.
+
+Ownership is the usual four nodes, with `font` or `modifier` as the type:
+
+| Node | Grants |
+|---|---|
+| `exyliachatcosmetics.font.<id>` | one font |
+| `exyliachatcosmetics.font.category.<tab>` | every font in a tab — `classic`, `typeset`, `modern`, `script` |
+| `exyliachatcosmetics.font.*` | every font |
+| `exyliachatcosmetics.*` | everything the plugin has |
+
+Grants work here as anywhere else, expiry included. See
+[Entitlements](/docs/exyliachatcosmetics/entitlements).
+
+<Cards>
+  <Card title="The catalogue" href="/docs/exyliachatcosmetics/catalogue">
+    The fields every entry shares, and how a file is read and reloaded.
+  </Card>
+  <Card title="Animations" href="/docs/exyliachatcosmetics/animations">
+    Fonts and modifiers take no animation. Colours and tags do.
+  </Card>
+</Cards>

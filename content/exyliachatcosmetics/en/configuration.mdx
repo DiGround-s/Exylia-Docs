@@ -1,0 +1,160 @@
+---
+title: "Configuration"
+description: "Every key of config.yml with its default, and what lives in messages.yml instead."
+---
+
+`plugins/ExyliaChatCosmetics/config.yml` is generated from the plugin's own `Settings` record and
+re-read by `/cca reload`. That is worth knowing for two reasons:
+
+- **A key the plugin does not recognise is removed on load**, and every removal is reported once in
+  the console. A typo does not sit there quietly doing nothing.
+- **A value the plugin cannot read is reported and the default used.** The server starts either way;
+  it never refuses to load over a bad line.
+
+The cosmetics themselves are not here. They live in `cosmetics/*.yml` and are described in
+[the catalogue](/docs/exyliachatcosmetics/catalogue).
+
+## chat
+
+| Key | Default | Meaning |
+|---|---|---|
+| `hook` | `decorate` | How the message body is styled. The four modes are below. |
+| `priority` | `NORMAL` | Event priority for `chat_event` and `legacy_event`: `LOWEST`, `LOW`, `NORMAL`, `HIGH`, `HIGHEST`, `MONITOR`. Anything else falls back to `NORMAL` with a warning. |
+| `sanitize` | `true` | Formatting a player types — `&c`, `<red>`, `{primary}` — is shown as the text they typed. `exyliachatcosmetics.chat.format` bypasses it. `§` is always neutralised, permission or not. |
+| `default-color` | `""` | The colour of a message from somebody wearing no chat colour: `#hex`, a colour name, a `{token}` or `#a:#b` for a gradient. Empty leaves the message uncoloured. |
+| `module.enabled` | `false` | Turns on the built-in [chat module](/docs/exyliachatcosmetics/chat). With it on the hook is uninstalled — the module styles the body itself — and the module's own files appear under `chat/`. |
+
+### The four hook modes
+
+| Mode | What happens | Pick it when |
+|---|---|---|
+| `decorate` | `AsyncChatDecorateEvent`: the styled body replaces the decorated message before any chat plugin sees it. Nothing is cancelled. | Paper, with a chat plugin that renders through the event — Paper's own chat, and every renderer-based plugin. Recommended. |
+| `chat_event` | `AsyncChatEvent.message(...)`, at `priority`. | The chat plugin ignores decoration but reads `message()`. |
+| `legacy_event` | `AsyncPlayerChatEvent.setMessage(...)`, written as `§` codes with hex. | The chat plugin still uses the string event. |
+| `off` | Chat is never touched. | You compose the line yourself through the [API](/docs/exyliachatcosmetics/api), or you only want the identity placeholders. |
+
+Whatever the mode, the message is rendered from cached state only. A render that fails leaves the
+message exactly as it was typed and is reported at most once a minute, so a broken cosmetic cannot
+turn into a wall of console.
+
+## tags
+
+| Key | Default | Meaning |
+|---|---|---|
+| `format` | `"%tag% "` | How a tag sits around the name; `%tag%` is the tag itself. The trailing space is why `%ecc_tag%%ecc_nick%` needs nothing between them. A tag entry may override this with its own `format`. |
+
+## rank-colors
+
+| Key | Default | Meaning |
+|---|---|---|
+| `repaint` | `letters` | What a rank colour repaints inside the prefix and the suffix. `letters` paints letters and digits only, so `&8[&eVIP&8]` keeps its grey brackets and any symbol the rank writes keeps its colour; `all` paints everything the rank wrote. A character the rank left colourless is painted either way — there is nothing to keep. |
+
+## custom-tags
+
+The rules a tag a player writes for themselves has to pass. They apply to `/cc customtag create`, to
+the MAKE ONE button, and to `/cca customtag set` — an admin skips the token, not the rules.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `min-length` | `2` | |
+| `max-length` | `16` | |
+| `pattern` | `[A-Za-z0-9_\-]+` | A regular expression the whole text must match. `<>{}&§%\` are rejected whatever the pattern says. |
+| `blacklist` | `[admin, staff, owner]` | Words a tag may not contain, case-insensitively |
+| `unique` | `true` | Two players may not hold the same text |
+
+## custom-colors
+
+| Key | Default | Meaning |
+|---|---|---|
+| `max-stops` | `4` | How many colours a custom gradient may run through |
+
+## loadouts
+
+| Key | Default | Meaning |
+|---|---|---|
+| `limit` | `3` | How many looks one player may keep saved |
+
+<Callout type="note" title="How many customs a player may make is not a key">
+There is no `custom-tags.limit` and there never will be. How many custom tags and colours a player
+may write is a **balance**, held per player and per type and handed out with `/cca tokens give`.
+Making one spends a `create` token, changing one spends an `edit` token, and deleting one gives
+nothing back. A quota in `config.yml` would be the same number for everybody; a balance is something
+you can sell, award or take away one player at a time. See
+[Tokens](/docs/exyliachatcosmetics/tokens).
+</Callout>
+
+## animations
+
+| Key | Default | Meaning |
+|---|---|---|
+| `tick` | `2` | Ticks between animation frames. Lower is smoother and costs more. |
+
+## preview
+
+| Key | Default | Meaning |
+|---|---|---|
+| `format` | `%tag%%prefix% %name%%suffix%{letters_black}: %message%` | The line `/cc preview` and the menu previews draw. `%tag%` already carries its trailing space from `tags.format`; `%prefix%` and `%suffix%` are the rank's, in whichever rank colour is being looked at. |
+
+## menu
+
+| Key | Default | Meaning |
+|---|---|---|
+| `types` | `tag: Tags`, `customtag: Custom tags`, `nick_color: Nick colors`, `customnick: Custom nick colors`, `rank_color: Rank colors`, `customrank: Custom rank colors`, `chat_color: Chat colors`, `customcolor: Custom chat colors`, `shadow_color: Shadow colors`, `font: Fonts`, `modifier: Modifiers` | What each kind of cosmetic is called in menu titles and lore. A type not listed shows its raw id. |
+| `status.selected` | `{success}✔ Worn right now` | The status line a row shows, by state |
+| `status.available` | `{success}✔ Yours` | |
+| `status.locked` | `{error}✖ Not yours yet` | |
+| `status.expiring` | `{warning}⏱ Yours for {highlight}%expires%` | `%expires%` is the time left |
+| `favorite-on` | `{highlight}★ {letters}Starred` | |
+| `favorite-off` | `{muted}☆ Not starred` | |
+| `none` | `{muted}None` | Shown wherever a slot has nothing equipped |
+| `sample-message` | `Hello there!` | The message the previews are drawn with, and what `/cc preview` uses without an argument |
+| `sample-prefix` | `{letters_black}[RANK]` | Stands in for the rank prefix in a preview, for a player whose rank writes none |
+| `custom-hints` | `{warning}➥ Shift right click {letters}to change it`, `{error}➥ Drop key {letters}to delete it` | The prompts only a row the player made shows, inserted into the lore's `%cosmetic_manage%`. An empty list shows none. |
+
+## expiry
+
+| Key | Default | Meaning |
+|---|---|---|
+| `notify-on-join` | `true` | On join: one line per worn temporary grant with the time left, plus a count of worn grants that ran out while they were away |
+| `retention-days` | `30` | How long an expired or revoked grant stays in the table for auditing before the daily sweep deletes it |
+
+## placeholders
+
+| Key | Default | Meaning |
+|---|---|---|
+| `none` | `""` | What a placeholder with no value returns |
+| `unknown` | `?` | What a placeholder naming something that does not exist returns |
+
+## messages.yml
+
+Every player-facing line lives in `plugins/ExyliaChatCosmetics/messages.yml`, generated from the
+plugin's `CosmeticMessages` record and reloaded with the rest. `prefix` — `{primary}&lE-CHAT &8•&r `
+by default — is what `%prefix%` expands to in this file.
+
+Lines are written with ExyliaLib palette tokens (`{primary}`, `{success}`, `{error}`, …) rather than
+hex, so recolouring the whole server from `colors.yml` recolours these too. The placeholders each
+line accepts are named in the comment above it.
+
+| Section | What is in it |
+|---|---|
+| `general` | reloaded, player-only, no-permission, unknown cosmetic / type / player, invalid key, invalid duration |
+| `entitlements` | granted and its two target lines, revoked, the `list` lines, the `check` lines, expired, expired-on-join, expiring-soon |
+| `equip` | equipped, unequipped, unequipped-type, not-owned, nothing-equipped, cleared |
+| `favorites` | added, removed |
+| `loadouts` | saved, applied, deleted, limit, unknown, empty, invalid, the `list` lines |
+| `custom` | created and its target line, edited, deleted, none, not-yours, too-short, too-long, pattern, blacklisted, taken, invalid-color, too-many-stops |
+| `tokens` | no-create, no-edit, spent, given, taken and set with their target lines, the balance lines, unknown-kind, not-custom |
+| `prompts` | the titles and hints of the text inputs: custom tag, colour, editing either, loadout name |
+
+The chat module keeps its own `chat/messages.yml`, with its own prefix. A chat plugin talks as the
+chat, not as the cosmetics plugin, so `%prefix%` there never expands to this one. See
+[the chat module](/docs/exyliachatcosmetics/chat).
+
+<Cards>
+  <Card title="The catalogue" href="/docs/exyliachatcosmetics/catalogue">
+    The cosmetics files, which are not configuration and do not live here.
+  </Card>
+  <Card title="Menus" href="/docs/exyliachatcosmetics/menus">
+    The menu files under `menus/`, which are separate again from `menu` above.
+  </Card>
+</Cards>

@@ -1,0 +1,115 @@
+---
+title: "Tokens"
+description: "Creation and edit tokens: the two balances per kind of custom cosmetic, how a rank or a store hands them out, and when they are checked and spent."
+---
+
+What limits a player is not how many custom cosmetics they hold, but how many they were given the
+right to make. That right is a token, and there are two of them:
+
+| Kind | Buys |
+|---|---|
+| `create` | writing one new custom tag or custom colour |
+| `edit` | changing one they already made |
+
+Balances live in `chatcosmetics_tokens`, one row per player, per cosmetic type, per kind. Nothing
+about them appears in `config.yml`: they are player data, not configuration.
+
+## Deleting refunds nothing
+
+A player who deletes a creation gets nothing back. That is the whole point of counting creations
+rather than possessions: a player handed three creations makes three, and the fourth costs another
+token however many they delete in between. A refund would turn one purchase into an unlimited licence
+to make and unmake for ever.
+
+## Four kinds, each with its own two balances
+
+Every kind a player writes by hand has its own pair:
+
+| Type | Is |
+|---|---|
+| `customtag` | a tag they wrote |
+| `customcolor` | a colour for what they write |
+| `customnick` | a colour for their name |
+| `customrank` | the colour their rank paints their name with |
+
+Creations of custom colours do not pay for custom tags. A server selling both is selling two things.
+
+## Giving them out
+
+```
+/cca tokens give  <player> <type> <create|edit> <amount>
+/cca tokens take  <player> <type> <create|edit> <amount>
+/cca tokens set   <player> <type> <create|edit> <amount>
+/cca tokens check <player>
+```
+
+`<type>` must be one of the four kinds a player makes by hand. A catalogue type such as `tag` or
+`font` is refused with a message saying so — nobody writes one of those, so there is nothing a token
+could buy. Tab completion only offers the four.
+
+`take` never takes a balance below zero, and `set` writes it outright. `check` prints every balance a
+player holds, by type, and works on somebody offline.
+
+<Callout type="note" title="The target may be offline">
+A balance is a row of its own, so it is written and waits for them, exactly the way a grant does. A
+store callback that fires while the buyer is logged out still works.
+</Callout>
+
+Three creations and five edits of a custom colour, for a player who just bought them:
+
+```
+/cca tokens give Notch customcolor create 3
+/cca tokens give Notch customcolor edit 5
+```
+
+A rank hands them out the same way: run the command from whatever grants the rank — a LuckPerms
+group's command list, a crate, the store's callback.
+
+<Callout type="warning" title="There is no permission node that carries a balance">
+Deliberately. A node cannot be spent: a player holding it would be able to make one custom colour or
+a thousand, and taking the node away later would not undo what they already wrote. A balance is a
+number that goes down.
+
+There is a node for whether a player may make one **at all** —
+`exyliachatcosmetics.customtag.create`, and the same shape for the three colour kinds — but it only
+opens the door. Each creation still costs a token.
+</Callout>
+
+## Spending them
+
+A player sees what they have left with `/cc tokens`, which lists both balances of every kind, and on
+the MAKE ONE button of a custom browser, which reads `%create_tokens%` and `%edit_tokens%` for the
+kind on screen.
+
+| Where | Costs |
+|---|---|
+| MAKE ONE in the browser, and `/cc customtag create`, `/cc customcolor create`, `/cc customnick create`, `/cc customrank create` | one `create` of that kind |
+| Shift right click on a row the player made | one `edit` |
+| Drop key on a row the player made | nothing — and refunds nothing |
+
+The balance is **checked before the questions are asked**, so nobody writes out a tag only to be told
+they could never have afforded it. It is **spent after the last answer**, once the text and colour
+have passed their rules and the name is not already taken, so a refused tag costs nothing. The spend
+happens before the row is written, so a second click while the first is still saving finds the
+balance already short rather than reading the same number twice.
+
+A creation that is changed keeps its row number. What changed is what it reads, not which cosmetic it
+is — so a tag that was worn stays worn, and a starred colour stays starred.
+
+`/cca customtag set <player> <text> [color]` writes one for a player without spending anything. The
+text rules still apply, since they are what keeps a slur out of chat.
+
+## Placeholders
+
+| Placeholder | Is |
+|---|---|
+| `%ecc_tokens_customcolor_create%` | what is left to make custom colours |
+| `%ecc_tokens_customtag_edit%` | what is left to change custom tags |
+
+The shape is `%ecc_tokens_<kind>_<create\|edit>%`, so the same two exist for all four kinds. Useful
+on a scoreboard, or in the description of the shop entry that sells them.
+
+In menus, the same two per kind are readable on any screen —
+`%customcolor_create_tokens%`, `%customtag_edit_tokens%` — and inside a browser the bare
+`%create_tokens%` and `%edit_tokens%` mean the kind currently on screen. See
+[Menus](/docs/exyliachatcosmetics/menus).

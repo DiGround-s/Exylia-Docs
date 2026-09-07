@@ -96,9 +96,109 @@ menu:
   favourites-icon: "AMETHYST_SHARD"
   favourite-on: "{highlight}★ In your favourites"
   favourite-off: "{muted}☆ Not in your favourites"
+  random-name: "{highlight}Random"
+  random-on: "{success}✔ Every hit is a surprise"
+  random-off: "{warning}➥ Click to surprise yourself"
 ```
 
+`random-name` es cómo se llama la elección aleatoria donde sea que se dibuje el efecto que lleva un
+jugador, placeholders incluidos. `random-on` y `random-off` son la línea que muestra el botón mientras
+es, y mientras no es, la elección que lleva.
+
 La pantalla en sí es `menus/effects.yml` — ver [El menú](/docs/exyliahiteffect/menu).
+
+## `tiers`
+
+Las rarezas en las que se ordenan los efectos, y con qué frecuencia sale cada una de una caja.
+
+```yaml
+tiers:
+  common:
+    name: "Common"
+    material: GRAY_DYE
+    color: "{muted}"
+    chance: 60.0
+    priority: 1
+  rare: { name: "Rare", material: LIGHT_BLUE_DYE, color: "{info}", chance: 25.0, priority: 2 }
+  epic: { name: "Epic", material: PINK_DYE, color: "{accent}", chance: 12.0, priority: 3 }
+  legendary: { name: "Legendary", material: ORANGE_DYE, color: "{highlight}", chance: 3.0, priority: 4 }
+```
+
+La clave es el id de rareza que `effects.yml` escribe como `tier`. Agregá, renombrá o borrá las que
+quieras — nada está fijo en el código, y `chance` es un peso, no un porcentaje. El detalle completo
+está en [La caja](/docs/exyliahiteffect/caja).
+
+## `crate`
+
+```yaml
+crate:
+  enabled: true
+  start-keys: 0
+  duplicate-refund: 1
+  give-token: false
+  blocks: []
+  max-at-once: 4
+  spin-frames: 34
+  stagger-seconds: 2.0
+  on-spin:
+    sound:
+      name: BLOCK_NOTE_BLOCK_HAT
+      pitch: 1.6
+  on-win:
+    sound:
+      name: ENTITY_PLAYER_LEVELUP
+      pitch: 1.2
+  on-duplicate:
+    sound:
+      name: BLOCK_NOTE_BLOCK_BASS
+      pitch: 0.8
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | Si la caja se abre. Apagada, su botón lo dice. |
+| `start-keys` | `0` | Llaves que recibe un jugador la primera vez que se lo ve. |
+| `duplicate-refund` | `1` | Llaves que se devuelven cuando la caja cae en algo que ya tenía. |
+| `give-token` | `false` | Si ganar un efecto también entrega su ficha. |
+| `blocks` | vacío | Bloques que abren la caja, como `server,world,x,y,z,yaw,pitch`. |
+| `max-at-once` | `4` | Cuántas cajas se pueden abrir de una vez. La pantalla la limita a siete. |
+| `spin-frames` | `34` | Caras por las que pasa el primer carrete. Tope 200, unos once segundos. |
+| `stagger-seconds` | `2.0` | Cuánto después de un carrete se detiene el siguiente. `0` los para juntos. |
+
+<Callout type="tip" title="Atá los bloques en el juego">
+`/hiteffectsadmin crate block add` escribe el bloque que estás mirando. Un bloque atado no se puede
+romper, volar ni empujar mientras esté en la lista — que es lo que editar esta clave a mano no te da.
+</Callout>
+
+## `preview`
+
+Dónde se muestran las previsualizaciones.
+
+```yaml
+preview:
+  location: ""
+  distance: 5.0
+  settle-ticks: 4
+  linger-ticks: 20
+  max-ticks: 600
+```
+
+Una previsualización lleva al jugador al escenario, lanza el efecto delante de él donde solo él lo ve,
+y lo devuelve exactamente a donde estaba. Hasta que `location` esté puesta, no hay previsualización y
+se dice. Ponela en el juego con `/hiteffectsadmin preview location`, no a mano.
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `location` | vacío | Dónde se para el jugador mientras corre la previsualización. |
+| `distance` | `5.0` | A cuántos bloques delante de él se lanza el efecto. |
+| `settle-ticks` | `4` | Cuánto esperar tras el teleport, para que el cliente tenga la posición nueva. |
+| `linger-ticks` | `20` | Cuánto se sostiene el escenario después de que el efecto termina. |
+| `max-ticks` | `600` | Lo máximo que puede durar una previsualización, pase lo que pase. |
+
+<Callout type="note" title="Dos jugadores pueden compartir un escenario">
+Todos los que están en el escenario están ocultos entre sí, y cada efecto se envía a un solo jugador,
+así que una sola ubicación sirve para el servidor entero.
+</Callout>
 
 ## `feedback`
 
@@ -166,5 +266,14 @@ empieza con `%prefix%`.
 | `refreshed` | Terminó `refresh` o `validate`. |
 | `menu-disabled` | Se abrió el menú en un servidor `weapon`. |
 | `favourite-added` / `favourite-removed` / `favourites-cleared` / `favourites-empty` | La lista de favoritos. |
+| `random-chosen` | Se activó la elección aleatoria. |
+| `crate-won` / `crate-duplicate` | La caja cayó en algo nuevo, o en algo que ya tenía. |
+| `crate-no-keys` / `crate-busy` / `crate-empty` / `crate-disabled` | La caja negándose a abrir. |
+| `keys-received` / `keys-taken` / `keys-given` | Cambió el saldo de llaves. |
+| `unlock-granted` / `unlock-already` / `unlock-revoked` / `unlocks-cleared` | Los subcomandos `unlocks`. |
+| `crate-block-*` / `crate-blocks-*` | Los subcomandos `crate block`. |
+| `preview-location-set` | Se movió el escenario de previsualización. |
+| `preview-unavailable` / `preview-unavailable-admin` | Una previsualización en un servidor sin escenario. |
 
-Placeholders en los mensajes: `%effect%`, `%amount%`, `%id%`, `%visibility%` y `%prefix%`.
+Placeholders en los mensajes: `%effect%`, `%amount%`, `%id%`, `%visibility%`, `%keys%`, `%location%` y
+`%prefix%`.

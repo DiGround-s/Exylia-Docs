@@ -1,6 +1,6 @@
 ---
 title: "Comandos"
-description: "Lo que un jugador puede hacer con su efecto, y los trece subcomandos de admin."
+description: "Lo que un jugador puede hacer con su efecto, y los verbos de admin de /hiteffectsadmin."
 ---
 
 ## Comandos de jugador
@@ -11,7 +11,9 @@ description: "Lo que un jugador puede hacer con su efecto, y los trece subcomand
 | Comando | Qué hace |
 |---|---|
 | `/hiteffect` | Abre el menú, en la pestaña donde se dejó. |
-| `/hiteffect preview <efecto>` | Lanza un efecto contra un cielo vacío. No hace falta tenerlo. |
+| `/hiteffect preview <efecto>` | Lanza un efecto en el escenario de previsualización del servidor. No hace falta tenerlo. |
+| `/hiteffect crate` | Abre la caja. Alias: `crates`, `case`. |
+| `/hiteffect random` | Saca un efecto distinto de los que tiene en cada golpe. Alias: `shuffle`. |
 | `/hiteffect visibility [modo]` | Elige quién ve los efectos de golpe para él. Sin modo, avanza al siguiente. |
 | `/hiteffect favourites` | Abre el menú directo en la lista de favoritos. Alias: `favorites`, `favs`. |
 | `/hiteffect favourite <efecto>` | Marca un efecto, o lo desmarca. Alias: `favorite`, `fav`. |
@@ -24,21 +26,37 @@ description: "Lo que un jugador puede hacer con su efecto, y los trece subcomand
 
 | Comando | Qué hace |
 |---|---|
-| `give <jugador> <efecto> [1-64]` | Da fichas de efecto. |
-| `remover <jugador> [1-64]` | Da removedores. |
-| `bind <efecto> [jugador]` | Ata un efecto al arma en mano, reemplazando lo que llevara. |
-| `unbind [jugador]` | Quita el efecto del arma en mano, sin devolver nada. |
-| `set <jugador> <efecto>` | Fija lo que lleva un jugador. |
-| `clear <jugador>` | Le quita el efecto. |
-| `favourites clear <jugador>` | Vacía su lista de favoritos. |
-| `validate [jugador]` | Quita un efecto que el objetivo ya no puede usar. Sin jugador, a todos los conectados. |
-| `open <jugador>` | Le abre el menú a alguien. |
-| `preview <efecto> [jugador]` | Previsualiza un efecto, para ti o para otro. |
+| `item give <jugador> <efecto> [1-64]` | Da fichas de efecto. |
+| `item remover <jugador> [1-64]` | Da removedores. |
+| `weapon bind <efecto> [jugador]` | Ata un efecto al arma en mano, reemplazando lo que llevara. |
+| `weapon unbind [jugador]` | Quita el efecto del arma en mano, sin devolver nada. |
+| `player set <jugador> <efecto>` | Fija lo que lleva un jugador. |
+| `player clear <jugador>` | Le quita el efecto. |
+| `player favourites clear <jugador>` | Vacía su lista de favoritos. |
+| `player validate [jugador]` | Quita un efecto que el objetivo ya no puede usar. Sin jugador, a todos los conectados. |
+| `keys give <jugador> <cantidad>` | Suma llaves de caja. Alias: `keys add`. |
+| `keys take <jugador> <cantidad>` | Resta llaves. Alias: `keys remove`. |
+| `keys set <jugador> <cantidad>` | Fija el saldo directamente. |
+| `keys check <jugador>` | Imprime cuántas tiene. También se escribe `keys <jugador>`. |
+| `unlocks grant <jugador> <efecto>` | Escribe un efecto en su fila, como hace una caja. Alias: `unlocks give`. |
+| `unlocks revoke <jugador> <efecto>` | Se lo quita. Alias: `unlocks take`. |
+| `unlocks clear <jugador>` | Le quita todos los efectos ganados. |
+| `crate block add` | Ata el bloque que estás mirando como abridor de la caja. |
+| `crate block remove` | Desata el bloque que estás mirando. |
+| `crate block list` | Imprime todos los bloques atados. |
+| `crate block clear` | Los desata todos. |
+| `menu open <jugador>` | Le abre el menú de efectos a alguien. |
+| `menu crate <jugador>` | Le abre la caja a alguien. |
+| `preview play <efecto> [jugador]` | Previsualiza un efecto, para ti o para otro. |
+| `preview location` | Fija el escenario de previsualización donde estás parado, mirando a donde miras. |
 | `list [categoría]` | Imprime todos los efectos, o los de una categoría. |
 | `refresh [jugador]` | Redibuja lo que un jugador tiene en la mano. Sin jugador, a todos los conectados. |
 | `reload` | Relee los archivos de este plugin. |
 
-<Callout type="note" title="bind, set y give ignoran los permisos">
+Cada verbo es un grupo: `keys` solo completa a `give`, `take`, `set` y `check`, y `crate` completa a
+`block`. Nada se escribe dos veces.
+
+<Callout type="note" title="bind, set y unlocks ignoran los permisos">
 Son verbos de admin: una caja, una recompensa de rango o un ticket de soporte ya decidieron que el
 jugador puede tener el efecto. `require-permission` gobierna lo que hace un **jugador**, nunca lo que
 hacen un admin o la API.
@@ -46,22 +64,32 @@ hacen un admin o la API.
 
 ## Qué hace cada uno
 
-### `bind`
+### `weapon bind`
 
 Actúa sobre la mano principal del objetivo. Con la mano vacía responde `empty-hand`. Un arma que ya
 lleva efecto lo pierde — el viejo se descarta, no vuelve como ficha. Un arma que no encaja en la lista
 `weapons` del efecto se rechaza.
 
-### `unbind`
+### `weapon unbind`
 
 Quita el valor y no devuelve nada, que es la diferencia con el removedor. Para devolver la ficha, que
 el jugador use un removedor.
 
-### `validate`
+### `player validate`
 
 Revisa la elección del objetivo contra sus permisos y se la quita si ya no se sostiene. La misma
-comprobación corre al entrar, en el siguiente golpe y al abrir el menú — `validate` es cómo hacerlo
-inmediato después de tocar un rango.
+comprobación corre al entrar, en el siguiente golpe y al abrir el menú — `player validate` es cómo
+hacerlo inmediato después de tocar un rango. Un efecto ganado en la caja nunca se lo quita: está en la
+fila del jugador, no en un nodo.
+
+### `preview location`
+
+Las previsualizaciones ocurren en un escenario, no encima del jugador: se lo lleva ahí, el efecto se
+lanza delante de él donde solo él lo ve, y vuelve exactamente a donde estaba. Hasta que haya un
+escenario, `/hiteffect preview` dice que no hay previsualización — y a un admin le dice cómo ponerla.
+
+Párate donde debe ocurrir, mira hacia donde debe verse, y corre el comando. La ubicación se escribe en
+`config.yml` como `preview.location`.
 
 ### `refresh`
 
@@ -70,7 +98,8 @@ ni lanza nada: es la respuesta a un arma cuya línea quedó vieja.
 
 ### `reload`
 
-Corre un único paso, `configs`, que relee `config.yml`, `effects.yml` y `menus/effects.yml`, recompila
+Corre un único paso, `configs`, que relee `config.yml`, `effects.yml` y todos los archivos de
+`menus/`, recompila
 todas las secuencias y vuelve a aplicar el prefijo de los mensajes. Las ediciones hechas al archivo del
 menú se conservan.
 

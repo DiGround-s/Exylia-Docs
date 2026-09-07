@@ -1,0 +1,123 @@
+---
+title: "Channels"
+description: "channels.yml: the three kinds of channel, who may talk and read, prefixes, per-channel formats, and what travels between servers."
+---
+
+A channel is where a message goes. They live in `chat/channels.yml`, read by hand the way the cosmetic
+catalogues are: you add entries and comments, and one bad entry costs that entry only.
+
+```yaml title="plugins/ExyliaChatCosmetics/chat/channels.yml"
+channels:
+  global:
+    type: GLOBAL
+    name: '{letters}Global'
+    prefix: '!'
+    cross-server: true
+  local:
+    enabled: false
+    type: LOCAL
+    name: '{info}Local'
+    prefix: '.'
+    radius: 100
+```
+
+## The keys
+
+| Key | Default | Meaning |
+|---|---|---|
+| `type` | `CUSTOM` | `GLOBAL`, `LOCAL` or `CUSTOM` — see below |
+| `name` | the entry's own id | What messages and menus call it; palette tokens and colours work |
+| `permission` | empty | Needed to talk **and** to read. Empty means everybody |
+| `prefix` | none | One character typed in front of a message to send that one message here |
+| `radius` | `100` | Blocks, `LOCAL` only; every other type ignores it |
+| `format` | empty | A file from `chat/formats/` this channel always uses |
+| `cross-server` | `true`, or `false` for `LOCAL` | Whether messages travel to the other servers |
+| `enabled` | `true` | `false` keeps the channel out entirely |
+
+Ids are normalised to `a-z 0-9 _ -` in lower case, so `Global` and `global` are the same channel.
+
+<Callout type="note" title="There is always a global">
+A message has to go somewhere. If `channels.yml` has no `global` entry, or the section is missing
+altogether, a built-in `GLOBAL` channel is used and the problem is logged. Deleting `global` does not
+turn global chat off; it only takes your settings for it away.
+</Callout>
+
+## The three types
+
+| Type | Who reads it |
+|---|---|
+| `GLOBAL` | Everybody online |
+| `CUSTOM` | Everybody holding the channel's `permission` |
+| `LOCAL` | Everybody in the sender's world within `radius` blocks, plus the sender |
+
+`LOCAL` measures the distance from where the sender stood when the message arrived, which is what
+every proximity chat does. The sender always reads their own message, whatever the type.
+
+`permission` is one permission for two things: a channel behind one is written **and** read by its
+holders only. There is no separate read node, so a player who cannot talk in a channel does not see it
+either.
+
+<Callout type="note" title="`type: STAFF` still loads">
+An earlier version had a fourth type. A file written for it is read as `CUSTOM`, which is what `STAFF`
+always meant: a channel its permission holders read. Nothing to change on upgrade.
+</Callout>
+
+## Which channel a line goes to
+
+A typed line is resolved in this order.
+
+<Steps>
+  <Step title="A prefix character">
+    If the first character is a channel's `prefix`, the player may use that channel, and there is
+    something after it, the message goes there once and the character is stripped. A prefix for a
+    channel they may not use is left in the text — they meant to type it.
+  </Step>
+  <Step title="The channel they switched to">
+    `/channel <id>` (or `/ch`) moves a player's plain messages. If their channel was deleted from the
+    file, or they lost the permission for it, they fall back to global rather than to nothing.
+  </Step>
+  <Step title="Global">
+    Everything else.
+  </Step>
+</Steps>
+
+Switching fires `ChannelSwitchEvent`, and a listener that cancels it leaves the player where they
+were. Only a non-global channel is stored, so a player who never picked one, and a player who picked
+global, are the same row.
+
+A `prefix` longer than one character is trimmed to its first, with a warning: one character is what a
+player types without thinking, and a two-character prefix is a command with extra steps.
+
+## Cross-server
+
+With `cross-server.enabled: true` in `chat/config.yml` and Redis configured in ExyliaLib's
+`database.yml`, the module publishes on the library's `chat` channel. A message from a channel marked
+`cross-server: true` travels; one from a channel marked `false` stays here.
+
+What travels is the **already rendered line**, along with the channel id and the sender's name and
+UUID. The receiving server never re-runs the pipeline: the filter, the cosmetics, the format and every
+transform already happened where the message was typed. All the other side decides is who reads it —
+the channel's permission for a `CUSTOM` channel, everybody for a `GLOBAL` one, and nobody for a
+`LOCAL` one, since a radius means nothing across servers — minus anybody ignoring the sender. The
+console reads it too.
+
+Without Redis nothing is published and nothing arrives; the module runs as a single-server chat and
+`cross-server` on a channel means nothing.
+
+Whispers, the chat mute, `/clearchat` and `/broadcast` travel over the same wire. See
+[Chat features](/docs/exyliachatcosmetics/chat-features).
+
+## Related
+
+<Cards>
+  <Card title="Formats" href="/docs/exyliachatcosmetics/formats">
+    What a channel's `format` points at, and how a format is picked when it points at nothing.
+  </Card>
+  <Card title="The chat module" href="/docs/exyliachatcosmetics/chat">
+    The pipeline a message walks before it reaches the channel's readers.
+  </Card>
+</Cards>
+
+`/channel` and the permission that gates it are listed on
+[Commands](/docs/exyliachatcosmetics/commands) and
+[Permissions](/docs/exyliachatcosmetics/permissions).

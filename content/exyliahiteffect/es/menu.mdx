@@ -18,8 +18,8 @@ Con `behaviour.mode: weapon` nada de esta pantalla se leería nunca, así que el
 | `categories` | `9,18,27,36` | Las pestañas a la izquierda, paginadas con los botones de los huecos `0` y `45`. |
 | `grid` | `11-16,20-25,29-34,38-43` | Los efectos de la categoría abierta, paginados en `47` y `52`. |
 
-Los botones fijos: **YOUR EFFECT** en el hueco `4` (clic para quitarse el efecto), **PARTICLE
-VISIBILITY** en `48` y **CLOSE** en `50`.
+Los botones fijos: **YOUR EFFECT** en el hueco `4` (clic para quitarse el efecto), **EFFECT CRATE** en
+`8`, **PARTICLE VISIBILITY** en `48`, **RANDOM EFFECT** en `49` y **CLOSE** en `50`.
 
 ## La pestaña de favoritos
 
@@ -36,6 +36,19 @@ porque contiene efectos distintos para cada uno. Se nombra y se dibuja con `menu
 
 Una lista vacía dibuja `empty_template`, para que la pestaña se lea como vacía y no como una pantalla
 que falló al cargar.
+
+## La elección aleatoria
+
+El botón del hueco `49` no es un efecto: dice "sorprendeme". Quien lo lleva lanza un efecto distinto en
+cada golpe, sacado en el momento de entre los que tiene — nada se recuerda entre golpes, así que es una
+sorpresa cada vez y no un orden barajado. Su línea es `menu.random-on` mientras es la elección que
+lleva y `menu.random-off` mientras no lo es.
+
+## La caja
+
+El botón del hueco `8` abre `menus/crate.yml`: una llave entra, un efecto sale, con las probabilidades
+que dicta la rareza. Dibuja cuántas llaves tiene el jugador y cuánto del catálogo lleva abierto. Ver
+[La caja](/docs/exyliahiteffect/caja).
 
 ## Qué hace un clic
 
@@ -72,8 +85,8 @@ Cada lista elige una plantilla por fila. `item_template` es el estado normal y d
 | Dónde | Disponibles |
 |---|---|
 | `categories` | `%category_id%` `%category_name%` `%category_material%` `%category_total%` `%category_owned%` `%category_status%` |
-| `grid` | `%effect_id%` `%effect_name%` `%effect_material%` `%effect_description%` `%effect_weapons%` `%effect_favourite%` |
-| En cualquier sitio | `%current_effect%` `%favourites_count%` `%particle_visibility%` `%visibility_all%` `%visibility_none%` `%visibility_self_only%` `%visibility_others_only%` |
+| `grid` | `%effect_id%` `%effect_name%` `%effect_material%` `%effect_description%` `%effect_weapons%` `%effect_favourite%` `%effect_tier%` `%effect_tier_id%` `%effect_tier_color%` |
+| En cualquier sitio | `%current_effect%` `%random_status%` `%favourites_count%` `%keys%` `%unlocked_count%` `%catalogue_count%` `%particle_visibility%` `%visibility_all%` `%visibility_none%` `%visibility_self_only%` `%visibility_others_only%` |
 
 ## Acciones
 
@@ -87,6 +100,9 @@ Cada lista elige una plantilla por fila. `item_template` es el estado normal y d
 | `hiteffect:favourites_clear` | Vacía la lista. |
 | `hiteffect:preview <id>` | Previsualiza un efecto y reabre el menú después. |
 | `hiteffect:visibility` | Avanza un paso en la visibilidad de quien mira. |
+| `hiteffect:random` | Activa la elección aleatoria. |
+| `hiteffect:crate` | Abre la caja. |
+| `hiteffect:crate_open <cantidad>` | Gasta esa cantidad de llaves y abre esa cantidad de carretes. |
 
 ## Textos
 
@@ -103,6 +119,9 @@ menu:
   favourites-icon: "AMETHYST_SHARD"
   favourite-on: "{highlight}★ In your favourites"
   favourite-off: "{muted}☆ Not in your favourites"
+  random-name: "{highlight}Random"
+  random-on: "{success}✔ Every hit is a surprise"
+  random-off: "{warning}➥ Click to surprise yourself"
 ```
 
 <Callout type="tip" title="La ventana sigue a la elección">

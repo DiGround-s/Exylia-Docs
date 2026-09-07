@@ -1,6 +1,6 @@
 ---
 title: "Efectos y categorías"
-description: "Cómo se escribe effects.yml y los 120 efectos que trae."
+description: "Cómo se escribe effects.yml y los 129 efectos que trae."
 ---
 
 ## El archivo
@@ -17,6 +17,7 @@ categories:
 kill_effects:
   BLADE_STORM:
     category: siege
+    tier: common
     name: "<gradient:#DCE6F2:#8FA6C4><bold>BLADE STORM</bold></gradient>"
     material: NETHERITE_SWORD
     description:
@@ -33,6 +34,7 @@ kill_effects:
 | Clave | Qué hace |
 |---|---|
 | `category` | En qué pestaña aparece. Tiene que ser una clave declarada en `categories`. |
+| `tier` | Su rareza: una clave declarada en `tiers`, en `config.yml`. Decide su color y con qué frecuencia cae la caja en él. Una que ya no existe cae en la primera rareza. |
 | `name` | Cómo lo llaman menús y placeholders. Acepta tokens de paleta, MiniMessage y degradados. |
 | `material` | El objeto con el que se dibuja la fila. Por defecto `BARRIER`. |
 | `description` | Una lista es una línea por entrada; un solo texto se parte con `<nl>`. |
@@ -77,7 +79,8 @@ leerlos.
 
 ## El catálogo
 
-Veinte efectos por categoría, 120 en total.
+Veinte efectos por categoría y veintinueve en Bonk, 129 en total. Cada uno lleva un `tier` — ver
+[La caja](/docs/exyliakilleffect/caja).
 
 ### Siege — `NETHERITE_SWORD`
 
@@ -125,11 +128,12 @@ Bromas.
 
 `THE_CLASSIC` `BONK` `ANVIL_CHORUS` `PIANO` `SKILL_ISSUE` `GG_EZ` `YEET` `RUBBER_DUCK` `CAKE`
 `TNT_DELIVERY` `FISH_SLAP` `BIG_BOOT` `FRYING_PAN` `BANANA_PEEL` `CHICKEN_JOCKEY` `SAFE_DELIVERY`
-`TOO_SLOW` `RATIO` `BALLOON_POP` `VENDING_MACHINE`
+`TOO_SLOW` `RATIO` `BALLOON_POP` `VENDING_MACHINE` `EJECTED` `AW_MAN` `PORTAL_LOOP` `STONKS`
+`PRESS_F` `WASTED` `NYAN_CAT` `MOAI` `OLD_PHONE`
 
 ## El cuerpo en el suelo
 
-107 de los 120 efectos usan el paso `[NPC]`: una copia de la víctima, con lo que llevaba puesto,
+Los 129 efectos usan el paso `[NPC]`: una copia de la víctima, con lo que llevaba puesto,
 tirada — o lanzada, o desplomándose — donde cayó durante un par de segundos. Es un display, no una
 entidad: nadie puede golpearla, saquearla ni chocar con ella.
 

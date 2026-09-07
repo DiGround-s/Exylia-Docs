@@ -1,0 +1,230 @@
+---
+title: "Etiquetas"
+description: "La marca delante del nombre: qué puede dibujar un display, las formas de sprite y de cabeza, qué clientes las dibujan, y cómo una cabeza sobrevive a que la escriban."
+---
+
+Una etiqueta es esa cosita que va delante de un nombre. No es un rango: un rango dice lo que alguien
+es, una etiqueta es una marca pequeña que alguien eligió porque le gustó.
+
+Esa es la regla sobre la que está construido el archivo que viene incluido, y merece la pena
+mantenerla cuando escribas las tuyas. Las 180 etiquetas son **un solo glifo** — un símbolo, un sprite,
+una partícula, el ícono de un ítem, una bandera dibujada como cabeza. Sin corchetes, sin palabras, sin
+nada que se lea como un segundo prefijo comprado.
+
+## Las siete pestañas
+
+| Pestaña | Cuántas | Qué trae |
+|---|---|---|
+| SYMBOLS | 24 | caracteres normales — corazones, estrellas, flechas, cruces |
+| ANIMATED | 31 | sprites de texturas que el cliente anima solo |
+| PARTICLES | 24 | texturas de partículas, dibujadas quietas |
+| ICONS | 24 | texturas de ítems y bloques |
+| INTERFACE | 20 | los sprites del propio HUD — corazones, hambre, íconos de efectos |
+| FLAGS | 43 | banderas de países, cada una una skin de cabeza |
+| PREMIUM | 14 | las que merecen quedarse detrás de un permiso, casi todas animadas |
+
+Borra las pestañas que no quieras, quédate con las que sí, y el menú se redibuja alrededor de lo que
+quede. Nada en el plugin sabe cuántas pestañas hay.
+
+## Una entrada
+
+```yaml title="plugins/ExyliaChatCosmetics/cosmetics/tags.yml"
+tags:
+  mvp:
+    category: premium
+    name: '{primary}&lMVP'
+    display: '{highlight}✦'     # lo que se dibuja
+    head: null                  # opcional, una skin dibujada antes del display
+    format: '%tag% '            # opcional, sobrescribe tags.format
+    animation: shine            # opcional, un id de animations.yml
+    icon: GOLD_INGOT
+    description: 'Reservada para los {highlight}mejores.'
+    priority: 1
+```
+
+| Clave | Significa |
+|---|---|
+| `display` | lo que se dibuja; funcionan tokens de paleta, códigos `&` y MiniMessage |
+| `head` | una skin dibujada como cabeza justo antes del display |
+| `format` | cómo se coloca la etiqueta alrededor del nombre, por encima de `tags.format` |
+| `animation` | un id de `animations.yml` |
+
+Todo lo demás — `category`, `name`, `icon`, `description`, `priority`, `permission`, `requirement`,
+`hidden`, `metadata` — es el conjunto compartido que describe
+[el catálogo](/docs/exyliachatcosmetics/catalogo).
+
+Una entrada necesita al menos uno de `display` y `head`. Sin ninguno de los dos no hay nada que
+dibujar, y se reporta y se salta.
+
+El display se dibuja tal cual: una fuente que lleve puesta el jugador nunca lo reescribe. Una línea en
+la que solo una parte de la etiqueta está en versalitas se lee peor que cualquiera de las dos
+completas, así que la línea de chat conserva sus letras y la etiqueta las suyas.
+
+## Qué puede dibujar un display
+
+Los caracteres normales son la mitad segura. Todos los clientes llevan años dibujando `❤`, `★`, `✦` y
+`❀`, y nada de eso depende de una versión.
+
+Todo lo que va debajo es un **componente de objeto**, que llegó en Minecraft 1.21.9.
+
+| Escrito | Dibuja |
+|---|---|
+| `<sprite:'minecraft:block/sea_lantern'>` | la textura de un bloque |
+| `<sprite:'minecraft:items':'minecraft:item/diamond'>` | la textura de un ítem |
+| `<sprite:'minecraft:particles':'minecraft:heart'>` | una partícula |
+| `<sprite:'minecraft:gui':'minecraft:hud/heart/full'>` | un sprite del HUD |
+| `<sprite:'minecraft:gui':'minecraft:mob_effect/speed'>` | el ícono de un efecto |
+| `<head:'entity/player/wide/steve'>` | una skin que viene con el juego |
+| `<head:'Notch'>` | una cuenta real, por nombre |
+| `<head:'069a79f4-44e9-4726-a5be-fca90e38aaf5'>` | esa misma cuenta, por id |
+
+<Callout type="note" title="Los clientes viejos no se rompen">
+Un cliente por debajo de 1.21.9 muestra esa etiqueta como el texto con el que está escrita en vez de
+fallar, y un servidor con un Adventure demasiado viejo para construir el componente dibuja lo demás
+que declare la etiqueta — que no es nada si la etiqueta es solo una cabeza. La pestaña SYMBOLS
+funciona en todos lados, en 1.21 igual que en la última versión.
+</Callout>
+
+## Por qué todos los sprites llevan `<white>`
+
+Un sprite es un glifo. Como una letra, toma el color que tiene alrededor: bajo una línea de lore gris,
+o dentro de un formato de chat que lo está pintando todo de dorado, sale apagado y teñido, y un
+diamante que no es de color diamante no es el ícono que eligió nadie.
+
+Un `<white>` delante es lo que lo deja exactamente como lo dibujó el juego, y todos los sprites del
+archivo incluido lo llevan. Por eso cualquier otro color es un tinte a propósito:
+`<red><sprite:'minecraft:items':'minecraft:item/diamond'>` es una versión roja del mismo ícono, y eso
+es una decisión, no un accidente.
+
+Con una cabeza pasa lo mismo, y por eso el plugin te la pinta de blanco al construirla.
+
+## Cómo se escribe el id de un sprite
+
+El id de un sprite es la ruta de la textura sin `textures/` y sin `.png`. El atlas al que pertenece
+decide el resto, y equivocarse de atlas es el motivo habitual de que un sprite no dibuje nada.
+
+| Atlas | Se escribe | Carpeta |
+|---|---|---|
+| blocks | `<sprite:'minecraft:block/…'>` | el atlas al que cae un sprite por defecto; conserva su carpeta `block/` |
+| items | `<sprite:'minecraft:items':'minecraft:item/…'>` | atlas propio, y conserva `item/` |
+| particles | `<sprite:'minecraft:particles':'minecraft:…'>` | se deja la carpeta fuera del todo |
+| gui | `<sprite:'minecraft:gui':'minecraft:…'>` | se deja la carpeta fuera del todo |
+
+Así que una partícula es `'minecraft:heart'` y no `'minecraft:particle/heart'`, y un sprite del HUD es
+`'minecraft:hud/heart/full'` y no `'minecraft:gui/hud/heart/full'`. Todos los ids del archivo incluido
+se sacaron del cliente, así que lo que hay escrito es lo que el cliente tiene de verdad.
+
+## Etiquetas que se mueven
+
+Hay dos tipos de movimiento distintos, y no se solapan.
+
+El cliente anima una textura que trae su animación al lado — el fuego, la lava, un portal del Nether,
+el sculk, el ícono de música — y un sprite de una de esas se mueve solo en el chat, sin configurar
+nada. **La pestaña ANIMATED es exactamente esos sprites**, y ninguna de sus entradas nombra un
+`animation:`.
+
+```yaml
+  anim_fire:
+    category: animated
+    name: '{primary}&lFIRE'
+    display: "<white><sprite:'minecraft:block/fire_0'>"
+    icon: FLINT_AND_STEEL
+    description: "It burns in front of your name."
+    priority: 1
+```
+
+`animation:` es el otro tipo, y solo llega a las letras. Repinta caracteres fotograma a fotograma, así
+que un símbolo se anima y un sprite no — un sprite es una imagen, y una imagen se queda como está. La
+pestaña PREMIUM es donde se ve la diferencia: sus símbolos llevan `animation: flow`, `shine`, `ember`,
+y sus sprites no llevan ninguno.
+
+## Cabezas
+
+`<head:>` dentro de un display llega a una cuenta o a una skin que viene con el juego. Una bandera no
+es ninguna de las dos: es una skin que no lleva nadie, hecha una vez y repartida como un valor. Una
+skin así es una propiedad de perfil, que solo puede llevar un componente, así que va en la clave
+`head:` de la entrada y no en su texto.
+
+Acepta la skin en cualquiera de las tres formas en las que se reparte una:
+
+| `head:` | Qué es |
+|---|---|
+| `'ewogICJ0aW1lc3RhbXAiIDog…'` | el valor base64 que te da cualquier página de cabezas |
+| `'9c8d2b3f…'` | el hash de la textura, de 32 a 64 caracteres hex |
+| `'http://textures.minecraft.net/texture/9c8d2b3f…'` | la URL completa |
+
+Las tres terminan siendo la misma propiedad, y el valor se lee al cargar el archivo, así que un valor
+que no es ninguna de las tres se reporta junto a la entrada de la que vino en vez de fallar en
+silencio al dibujar.
+
+La cabeza se dibuja **antes** del display. Por eso una etiqueta puede ser una cabeza sola, o una
+cabeza con algo al lado.
+
+El ícono del menú toma ese mismo valor escrito como `basehead-<valor>`, que es como la pestaña FLAGS
+muestra cada bandera como sí misma en vez de como una cabeza genérica:
+
+```yaml
+  flag_argentina:
+    category: flags
+    name: '{primary}&lARGENTINA'
+    head: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6…In19fQ=='
+    icon: basehead-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6…In19fQ==
+    description: "Argentina, drawn as a head."
+    priority: 1
+```
+
+## `format`
+
+`tags.format` en `config.yml` decide cómo se coloca cada etiqueta alrededor del nombre, y por defecto
+es `%tag% ` — la etiqueta, y después el espacio que la separa de lo que venga. Una entrada puede poner
+su propio `format:` y sobrescribirlo, que es lo que necesita una etiqueta que no quiere espacio
+detrás, o quiere un corchete, o dos.
+
+El espacio lo lleva el formato, no el display. Un display que termina en espacio es un display con un
+espacio dentro, y ese espacio se va con la etiqueta al lore y a los placeholders, donde nadie lo
+quería.
+
+## `ecc_head`, y por qué existe
+
+El lore de un menú y un placeholder son cadenas de texto. Se escriben, se le entregan a otra cosa y se
+vuelven a parsear — y ninguna etiqueta estándar de MiniMessage sabe escribir una skin. Una cabeza
+construida desde una propiedad de perfil se serializa como un `<head>` pelado, y quien lea esa cadena
+dibuja la cara de un desconocido al lado del nombre de alguien.
+
+Por eso el plugin añade una etiqueta propia, `ecc_head`:
+
+```text
+<ecc_head:'ewogICJ0aW1lc3RhbXAiIDog…'>
+```
+
+A la salida, cada cabeza de la línea se saca y se sustituye por una marca — un carácter del área de
+uso privado, que ninguna fuente dibuja y nadie puede escribir —, la línea se serializa, y cada marca
+se cambia de vuelta por la etiqueta con su skin dentro. A la entrada, la etiqueta vuelve a construir
+la cabeza. La skin llega.
+
+Una cabeza escrita como una cuenta o como una textura que trae el juego no necesita nada de esto: se
+escribe sola y se conserva tal cual.
+
+<Callout type="warning" title="Una cabeza que no se puede escribir se descarta">
+Si una cabeza llega a la cadena como un `<head>` pelado — porque perdió su skin por el camino — se
+quita en vez de dejarla. La cara de un desconocido al lado del nombre de alguien es peor que ninguna
+cara, así que lo que devuelve el placeholder es el resto de la línea con la cabeza simplemente
+ausente.
+</Callout>
+
+## Relacionado
+
+<Cards>
+  <Card title="El catálogo" href="/docs/exyliachatcosmetics/catalogo">
+    Los campos que comparten todas las entradas y la gramática de colores detrás de `display`.
+  </Card>
+  <Card title="Animaciones" href="/docs/exyliachatcosmetics/animaciones">
+    Qué nombra `animation:`, y los seis tipos de movimiento.
+  </Card>
+  <Card title="Cosméticos personalizados" href="/docs/exyliachatcosmetics/personalizados">
+    Las etiquetas que se escriben los jugadores, y por qué son solo texto.
+  </Card>
+  <Card title="Placeholders" href="/docs/exyliachatcosmetics/placeholders">
+    Dónde se le entrega una etiqueta a otro plugin como cadena, en las tres formas de salida.
+  </Card>
+</Cards>

@@ -1,0 +1,394 @@
+---
+title: "API"
+description: "Two services: reading and driving the cosmetics, and the chat this plugin runs when you let it."
+badge: "dev"
+---
+
+ExyliaChatCosmetics publishes two services. `CosmeticsService` is the catalogue, who owns what, what
+they are wearing and what the plugin would have drawn. `ChatService` is the chat module — channels,
+sending, moderation, and the settings players keep for themselves — and it is there whether or not
+the module is switched on.
+
+```java
+ExyliaAPI.get(CosmeticsService.class).ifPresent(cosmetics ->
+    CosmeticKey.parse("tag:mvp").ifPresent(key ->
+        cosmetics.grantFor(player.getUniqueId(), key, EntitlementSource.PURCHASE,
+                Duration.ofDays(30), "order-1234", "store")));
+```
+
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
+</Callout>
+
+Everything below lives in `net.exylia.lib.api.chatcosmetics`, in ExyliaLib's `exylia-api` artifact —
+not in this plugin's own jar. That is what makes each contract one class rather than two: see the
+[public API page](/docs/exylialib/api) for the whole of that reasoning.
+
+## Checking they are there
+
+Both services register with Bukkit's `ServicesManager` when ExyliaChatCosmetics enables, and both are
+reached through `net.exylia.lib.api.ExyliaAPI`:
+
+```java
+Optional<CosmeticsService> cosmetics = ExyliaAPI.get(CosmeticsService.class);
+```
+
+The `Optional` can genuinely be empty — the plugin is not installed, it is disabled, or it is still
+enabling and has not registered yet. Handle it rather than logging it: that is what a soft dependency
+is. `ExyliaAPI.isAvailable(CosmeticsService.class)` is the same question as a yes or no, and
+`ExyliaAPI.require(…)` throws instead, for a plugin that hard-`depend`s on this one and genuinely
+cannot work without it.
+
+Resolve a service where you use it rather than caching one in your own `onEnable`, where you may be
+asking before the plugin providing it has started.
+
+## Threads
+
+Three rules cover the whole surface.
+
+| Shape | Rule |
+|---|---|
+| Anything about an **online** player that returns a value | Reads memory. Safe from a chat thread, a placeholder or a menu redraw. |
+| Anything returning a `CompletableFuture` | Touches the database: granting, revoking, and asking about somebody offline. |
+| Anything taking a `Player` | Changes what that player is wearing, and wants that player's own thread. The methods taking a `UUID` only read. |
+
+A grant for an offline player is simply written and waits for their next join.
+
+## `CosmeticsService`
+
+### The catalogue
+
+Only what the files declare. A colour or a tag a player wrote for themselves belongs to that player
+and is not found here.
+
+| Method | What it does |
+|---|---|
+| `Optional<Cosmetic> cosmetic(CosmeticKey key)` | One entry, or empty when nothing goes by that key. |
+| `List<Cosmetic> cosmetics(String type)` | Every entry of one type, in the order a menu lists them. Empty for an unregistered type. |
+| `List<String> types()` | Every cosmetic type this server has. Registered at startup and fixed afterwards, so it is the right thing to validate a config value against. |
+
+A `Cosmetic` is a snapshot of what the files said when you asked. Catalogues are reloaded whole, so
+hold the `key()` rather than the record if you will look the same cosmetic up later.
+
+### Ownership
+
+| Method | What it does |
+|---|---|
+| `Ownership ownership(Player player, CosmeticKey key)` | The verdict for an online player. The permission is asked live and the grants come from memory, so this is both the accurate answer and the cheap one. `Ownership.NONE` when nothing goes by that key. |
+| `CompletableFuture<Ownership> ownership(UUID player, CosmeticKey key)` | The same for anybody, online or not. |
+| `boolean owns(Player player, CosmeticKey key)` | The short form. |
+| `CompletableFuture<List<Entitlement>> entitlements(UUID player)` | Every grant they hold, active or not — from memory when they are online, from the table otherwise. |
+
+<Callout type="warning" title="An offline verdict covers stored grants only">
+Permissions are not consulted for somebody offline, because no permission plugin can answer for an
+absent player without loading them. A cosmetic a player holds by permission node reads as unowned
+while they are away.
+</Callout>
+
+`entitlements` deliberately includes expired and revoked rows; ask `Entitlement.active(now)` for the
+ones that still count.
+
+### Granting and revoking
+
+| Method | What it does |
+|---|---|
+| `CompletableFuture<Entitlement> grant(UUID player, CosmeticKey key, EntitlementSource source, String sourceRef, String grantedBy)` | Gives a cosmetic for good. |
+| `CompletableFuture<Entitlement> grantFor(UUID player, CosmeticKey key, EntitlementSource source, Duration duration, String sourceRef, String grantedBy)` | Gives it for a while. The clock starts now and runs whether the player is online or not, which is what a subscription or a rental wants. |
+| `CompletableFuture<Optional<Entitlement>> revoke(long entitlementId)` | Takes one grant away by its id. Empty when there was no such active grant. |
+| `CompletableFuture<List<Entitlement>> revokeAll(UUID player, CosmeticKey key)` | Takes every active grant of one cosmetic away. |
+| `CompletableFuture<List<Entitlement>> revokeAll(UUID player, CosmeticKey key, EntitlementSource source)` | The same, from one source only. |
+
+Granting the same cosmetic twice leaves two grants rather than extending one. That is the point:
+revoking a purchase cannot take away the reward the player also earned. It is also why the
+source-scoped `revokeAll` exists, and why a store plugin should always reach for that one.
+
+Revoking leaves a permission node alone. This plugin did not give that and cannot take it back.
+
+### Wearing
+
+| Method | What it does |
+|---|---|
+| `EquipResult equip(Player player, CosmeticKey key)` | Puts one on. For a type worn one at a time it replaces what was on; for a type worn as a set it toggles, which is why `UNEQUIPPED` is a normal answer to an equip. |
+| `boolean unequip(Player player, String type)` | Takes off everything of one type. `true` when they were wearing something. |
+| `List<CosmeticKey> equipped(UUID player, String type)` | What they wear of one type. Empty when they wear none or are not loaded. |
+| `boolean isEquipped(UUID player, CosmeticKey key)` | Whether one particular cosmetic is on. |
+| `List<Cosmetic> favorites(UUID player)` | The catalogue entries they starred. |
+
+### Loadouts
+
+| Method | What it does |
+|---|---|
+| `List<Loadout> loadouts(UUID player)` | The looks they saved. |
+| `Optional<Loadout> applyLoadout(Player player, long id)` | Puts one on. Empty when they hold no loadout of that id. |
+
+Applying takes everything off first, then puts back each cosmetic the player still owns; anything
+they have since lost is skipped rather than failing the whole thing. `LoadoutAppliedEvent` says how
+many were skipped.
+
+### Rendering
+
+What the plugin would have drawn — for a scoreboard, a hologram, a tab list, or a chat plugin laying
+out its own line. Memory only, and safe from a chat thread.
+
+| Method | What it does |
+|---|---|
+| `Component tag(Player player)` | Their equipped tag inside its format. Empty when they wear none. |
+| `Component nick(Player player)` | Their name in their nick or rank colour. |
+| `Component styleMessage(Player player, String message)` | Text in their font, decorations and colour. |
+
+`styleMessage` takes text rather than a component because the cosmetics *are* the styling: whatever
+you pass is restyled whole. It is what `chat.hook: off` expects you to call — see
+[Integrations](/docs/exyliachatcosmetics/integrations).
+
+## `ChatService`
+
+The cosmetics work whether or not this server handles its own chat, so the chat is a module that a
+config key switches on and a reload can switch off again under you.
+
+`isEnabled()` says whether it is running right now. The service stays registered either way, and
+**every method answers as if there were no chat when the module is off** — empty collections,
+`false`, zero. That is deliberate: a caller that forgot to check still gets a sane, harmless answer
+rather than a null or an exception. It also means those answers are not facts about the server. Ask
+`isEnabled()` once, at the top:
+
+```java
+ExyliaAPI.get(ChatService.class)
+         .filter(ChatService::isEnabled)
+         .ifPresent(chat -> chat.send("global", Component.text("Restarting in 5 minutes.")));
+```
+
+### Channels
+
+| Method | What it does |
+|---|---|
+| `Collection<ChatChannel> channels()` | Every channel the config declares. |
+| `Optional<ChatChannel> channel(String id)` | One by id. |
+| `Optional<ChatChannel> channelOf(UUID player)` | Where a player's plain messages go. Empty when the module is off or they are not loaded. |
+| `boolean switchChannel(Player player, String channelId)` | Moves them. Fires `ChannelSwitchEvent` first, so another plugin can refuse it. `false` when the channel does not exist, a listener objected, or they are not loaded. Call on the player's thread. |
+
+### Sending
+
+| Method | What it does |
+|---|---|
+| `boolean speak(Player sender, String channelId, String text)` | Says something on a player's behalf. The whole pipeline runs — the gate, the filter, their cosmetics, the format — on a thread of its own, and the call returns immediately. `false` only when the channel does not exist. |
+| `boolean send(String channelId, Component line)` | A line from the server to everybody reading a channel. Sent as it is: no format, no filter, no cosmetics. |
+
+The difference matters. `speak` is for a message a player is responsible for, and a message the filter
+blocks is not delivered — which is the whole reason to send it this way rather than by hand. `send` is
+for announcements, where the server wrote the line and there is nothing to filter.
+
+### Moderation
+
+| Method | What it does |
+|---|---|
+| `boolean muted()` | Whether the chat is muted for everybody without the bypass permission. |
+| `void mute(boolean muted, Plugin by)` | Mutes or unmutes it, announced the way the plugin's own command announces it and naming your plugin as who did it. Setting it to what it already is does nothing. Main thread. |
+| `int infractionPoints(UUID player)` | What a player has earned by breaking the chat rules. They decay, so somebody quiet long enough reads zero again. |
+
+### What players set
+
+| Method | What it does |
+|---|---|
+| `boolean isIgnoring(UUID who, UUID other)` | Whether one player has another on their ignore list. |
+| `boolean acceptsPrivateMessages(UUID player)` | `true` unless they closed their messages. |
+| `boolean isSocialSpying(UUID player)` | Whether social spy is on for them. |
+
+These are the three settings another plugin has a legitimate reason to read — a party invite, a
+trade request or a duel challenge should honour an ignore the same way a whisper does.
+
+## Types
+
+### `CosmeticKey`
+
+`type` and `id`: `tag:mvp`, `chat_color:aurora`, `customtag:42`.
+
+Both halves are normalised on construction — lower case, spaces to underscores, and anything that is
+not a letter, a digit, an underscore or a dash dropped. That happens in the record rather than only
+inside the plugin, so a key you build and a key the service hands back compare equal whatever case
+you wrote.
+
+| Member | What it does |
+|---|---|
+| `CosmeticKey.parse(String raw)` | Reads a `type:id` string. Empty when either half is missing. |
+| `CosmeticKey.normalise(String raw)` | The same cleanup on one half, for validating a config value. |
+| `toString()` | The `type:id` form — what the plugin stores and what commands and placeholders accept. |
+
+### `Cosmetic`
+
+`key`, `name` (with the plugin's colour placeholders still in it), `category`, `icon`, `description`,
+`priority` (lower sorts first), `hidden`, `permissionNode`. `type()` and `id()` are the two halves of
+the key. Whether a given player owns or wears it is not here — that depends on the player, and is
+asked of the service, so reading the catalogue stays a plain lookup.
+
+### `Ownership`
+
+The resolved verdict, not a list to work through: a permission node and any number of grants can each
+say yes on their own.
+
+| Component | What it means |
+|---|---|
+| `owned` | Whether they have it right now. |
+| `permanent` | Theirs for good — a node, or a grant with no expiry. |
+| `expiresAt` | When the last active grant runs out, in epoch millis. `0` when permanent or not owned. |
+| `byPermission` | Whether the node alone would have answered yes. |
+| `grants` | The stored grants active right now; empty when only a node grants it. |
+
+`Ownership.NONE` is what a lookup for an unknown cosmetic answers.
+
+### `Entitlement`
+
+One grant of one cosmetic to one player: `id`, `player`, `cosmetic`, `source`, `sourceRef`,
+`grantedBy`, `grantedAt`, `expiresAt`, `revokedAt`, `note`. Revocation is a timestamp rather than a
+deletion, so a revoked grant is still there to be audited.
+
+| Method | What it means |
+|---|---|
+| `permanent()` | No expiry. |
+| `revoked()` | It was taken away. |
+| `active(long now)` | Neither revoked nor expired. |
+
+`active` takes the time rather than reading the clock, so a listing rendered from one sweep does not
+disagree with itself halfway down.
+
+### `EntitlementSource`
+
+`PERMISSION` (not a stored grant at all — the node is checked live), `ADMIN`, `PURCHASE`, `REWARD`,
+`EVENT`, `ACHIEVEMENT`, `EXTERNAL`. Stored by name, and a name your version does not know reads back
+as `EXTERNAL` rather than failing, so a server running a newer plugin than your integration still
+answers every question you ask it. `EXTERNAL` is for another plugin; its `sourceRef` says which.
+
+### `EquipResult`
+
+Returned rather than thrown, because none of these is a programming error — they are the ordinary
+answers a menu turns into a message.
+
+| Value | Meaning |
+|---|---|
+| `EQUIPPED` | It is on. |
+| `UNEQUIPPED` | A set member that was worn is worn no longer, because equipping toggles. |
+| `NOT_OWNED` | The player does not own it. |
+| `UNKNOWN` | No cosmetic goes by that key. |
+| `CANCELLED` | A listener refused it. |
+| `NOT_LOADED` | Their row is not in memory yet; try again in a moment. |
+
+`changed()` is `true` for `EQUIPPED` and `UNEQUIPPED` — the two answers that mean you should redraw
+something.
+
+### `Loadout`
+
+`id`, `player`, `name`, `createdAt`. What is *in* it is deliberately not published: it is stored as
+the plugin's own packed text, and a cosmetic the player has since lost is skipped on the way in.
+Apply it and read what they ended up wearing afterwards.
+
+### `ChatChannel` and `ChannelType`
+
+`id`, `type`, `name`, `permission` (needed to talk and to read; empty means everybody), `prefix` (a
+character typed in front of a message to send it here from any other channel), `radius` (blocks, for
+`LOCAL`), `crossServer`. `open()` is whether it needs no permission.
+
+A channel is read from the chat's config and replaced whole on a reload, so keep the `id()` rather
+than the record.
+
+| `ChannelType` | Who reads it |
+|---|---|
+| `GLOBAL` | Everybody online. |
+| `LOCAL` | Everybody in the sender's world within the channel's radius. |
+| `CUSTOM` | Everybody holding the channel's permission. |
+
+## Events
+
+Ten, all in `net.exylia.lib.api.chatcosmetics.event`.
+
+| Event | Cancellable | Thread | When |
+|---|---|---|---|
+| `CosmeticEquipEvent` | yes | the player's | A cosmetic is about to be worn, after ownership was checked and before anything is written. |
+| `CosmeticUnequipEvent` | no | the player's | One came off — by the player, by an admin, by a loadout going on over it, or because it stopped existing. |
+| `LoadoutAppliedEvent` | no | the player's | A saved loadout went on, after every cosmetic in it fired its own equip. |
+| `EntitlementGrantedEvent` | no | the player's, or global when offline | A grant was written and read back. |
+| `EntitlementRevokedEvent` | no | the player's, or global when offline | A grant was taken away. |
+| `EntitlementExpiredEvent` | no | the player's, or global when offline | A grant ran out. |
+| `ChannelSwitchEvent` | yes | the player's | Somebody is choosing the channel their plain messages go to. |
+| `ChatMessageEvent` | yes | the chat thread | A message passed every filter and is about to be delivered. |
+| `ChatInfractionEvent` | yes | the chat thread | A message broke the chat rules and is about to cost its sender points. |
+| `PrivateMessageEvent` | yes | whichever the whisper arrived on | A whisper is about to reach somebody on this server. |
+
+A few of them repay reading twice.
+
+`CosmeticEquipEvent` — cancelling refuses the equip, and the plugin tells the player nothing when you
+do. The equip simply reports `CANCELLED`. Say something yourself if they need to know why.
+
+`CosmeticUnequipEvent` carries the key rather than the cosmetic, because one reason it fires is that
+the catalogue no longer has an entry to hand you.
+
+`EntitlementRevokedEvent` fires once per grant, so revoking every grant of one cosmetic fires it
+several times — and the player may still own the cosmetic afterwards through a node or another grant.
+Ask rather than assume.
+
+`EntitlementExpiredEvent` is fired by the sweep that notices it, which runs every thirty seconds, so
+it arrives shortly after the expiry rather than exactly on it.
+
+`ChatMessageEvent` is the last look before the viewers get it, which makes it the place to log chat,
+mirror it, or take a reader out. `viewers()` is the live set: remove a player and they do not see the
+message. Nobody may be added, because a viewer that was never in the set was excluded for a reason —
+a channel permission, an ignore, a world. `line(Component)` replaces the whole rendered line for
+everybody; `line()` is empty when the chosen format depends on the reader and so is built once per
+viewer, and setting one then collapses it to your single line, which is the point.
+
+`ChatInfractionEvent` is the hook for an external punishment system: the rules that tripped and what
+each was worth are on it. Cancelling books nothing and nothing else — the message is still filtered or
+blocked exactly as the rules said, only the tally is spared. Points are booked for a blocked message
+too, so this can arrive for a line nobody ever read.
+
+`PrivateMessageEvent` fires after the receiver's own settings were honoured, so closed messages and
+ignores have already turned the whisper away by the time you see it. This is about your rules, not
+theirs. The text is read-only: a whisper is between two people, and rewriting it under them would be
+worse than refusing it.
+
+<Callout type="warning" title="The chat events are not on the main thread">
+`ChatMessageEvent`, `ChatInfractionEvent` and a chat-driven `PrivateMessageEvent` all run on the chat
+thread. Read what you are handed and schedule anything that touches the world.
+</Callout>
+
+## A worked example
+
+A store plugin selling a tag for thirty days, and handing it back on a chargeback.
+
+```java
+public void onPurchase(UUID buyer, String orderId) {
+    ExyliaAPI.get(CosmeticsService.class).ifPresentOrElse(cosmetics ->
+            CosmeticKey.parse("tag:mvp").ifPresent(key ->
+                    cosmetics.grantFor(buyer, key, EntitlementSource.PURCHASE,
+                                    Duration.ofDays(30), orderId, "MyStore")
+                             .thenAccept(grant -> log(orderId, grant.id()))
+                             .exceptionally(failure -> {
+                                 retryLater(buyer, orderId);
+                                 return null;
+                             })),
+            () -> retryLater(buyer, orderId));
+}
+
+public void onChargeback(UUID buyer) {
+    ExyliaAPI.get(CosmeticsService.class).ifPresent(cosmetics ->
+            CosmeticKey.parse("tag:mvp").ifPresent(key ->
+                    cosmetics.revokeAll(buyer, key, EntitlementSource.PURCHASE)));
+}
+```
+
+Three things are doing work there.
+
+The grant is `PURCHASE` with the order id as its `sourceRef`, so the row says where it came from long
+after your own logs have rotated. The chargeback uses the **source-scoped** `revokeAll`: if the same
+player also won that tag at an event or was given it by an admin, those grants survive, and they keep
+wearing it. The plain `revokeAll(player, key)` would have taken all three.
+
+And the buyer never has to be online. The row is written, the clock starts, and the cosmetic is
+theirs the next time they join — which is what you want from a web store that fires whenever the
+payment clears.
+
+Nothing here removes the tag from what the player is *wearing*. It does not have to: equipped and
+owned are separate questions, ownership is asked again wherever a line is drawn, and a cosmetic
+somebody no longer owns simply stops being drawn — and comes back the day it is theirs again. See
+[Entitlements](/docs/exyliachatcosmetics/entitlements).
+
+If something you genuinely need is still missing, ask on [Discord](https://discord.exylia.net).

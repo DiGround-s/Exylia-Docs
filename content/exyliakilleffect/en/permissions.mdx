@@ -1,6 +1,6 @@
 ---
 title: "Permissions"
-description: "The four kinds of node, and how a category is sold as one line."
+description: "The five kinds of node, and how a category or a rarity is sold as one line."
 ---
 
 ## The nodes
@@ -12,9 +12,11 @@ description: "The four kinds of node, and how a category is sold as one line."
 | `exyliakilleffect.effect.<id>` | One effect, by its id in lowercase. |
 | `exyliakilleffect.effect.*` | Every effect. |
 | `exyliakilleffect.category.<id>` | Every effect in that category. |
+| `exyliakilleffect.tier.<id>` | Every effect of that rarity. |
 
-An effect is owned if **any** of the three effect nodes applies: its own, the wildcard, or its
-category's.
+An effect is granted if **any** of the four effect nodes applies: its own, the wildcard, its
+category's or its rarity's. A permission is only half of owning one — the other half is winning it
+out of [the crate](/docs/exyliakilleffect/crate), which is written to the player's row instead.
 
 ## The id is the node
 
@@ -23,6 +25,7 @@ There is no `permission` key in `effects.yml`. The node is derived from the key,
 ```text
 BLADE_STORM  →  exyliakilleffect.effect.blade_storm
 siege        →  exyliakilleffect.category.siege
+legendary    →  exyliakilleffect.tier.legendary
 ```
 
 Case is not part of it, so recapitalising a key changes nothing. Renaming one changes everything: it
@@ -34,11 +37,12 @@ is a different node, and everybody who had the old one loses the effect.
 /lp group default permission set exyliakilleffect.command.killeffect true
 /lp group vip     permission set exyliakilleffect.category.siege true
 /lp group mvp     permission set exyliakilleffect.effect.blade_storm true
+/lp group elite   permission set exyliakilleffect.tier.legendary true
 /lp group legend  permission set exyliakilleffect.effect.* true
 ```
 
-Six categories of twenty is what makes a category node worth selling: "every Siege effect" is one
-line instead of twenty.
+Six categories and four rarities are what make those nodes worth selling: "every Siege effect" or
+"every legendary" is one line instead of twenty.
 
 <Callout type="tip" title="Give the menu away">
 Without `exyliakilleffect.command.killeffect` the catalogue cannot be opened at all. A player who

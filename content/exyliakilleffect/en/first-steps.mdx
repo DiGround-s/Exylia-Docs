@@ -34,12 +34,34 @@ description: "From a clean server to a player with an effect on their kills."
 A test kill on a cow plays nothing, and that is the setting, not a bug.
 </Callout>
 
+## The crate path
+
+<Steps>
+  <Step title="Put the crate somewhere">
+    ```text
+    /killeffectsadmin crate block add
+    ```
+    Binds the block you are looking at, so clicking it opens the crate. The button in the corner of
+    the menu and `/killeffect crate` open the same screen.
+  </Step>
+  <Step title="Hand over a key">
+    ```text
+    /killeffectsadmin keys give <player> 1
+    ```
+    Keys live on the player's row, so this is what a shop, a vote listener or a reward plugin runs as
+    console.
+  </Step>
+  <Step title="Open it">
+    One key, one reel. What comes out is theirs for good — see [The crate](/docs/exyliakilleffect/crate).
+  </Step>
+</Steps>
+
 ## The weapon path
 
 <Steps>
   <Step title="Give a token">
     ```text
-    /killeffectsadmin give <player> blade_storm 1
+    /killeffectsadmin item give <player> blade_storm 1
     ```
   </Step>
   <Step title="Drop it onto a weapon">
@@ -48,7 +70,7 @@ A test kill on a cow plays nothing, and that is the setting, not a bug.
   </Step>
   <Step title="Take it off again">
     ```text
-    /killeffectsadmin remover <player>
+    /killeffectsadmin item remover <player>
     ```
     The remover unbinds the effect and hands the token back, so nothing is destroyed.
   </Step>
@@ -58,7 +80,7 @@ A test kill on a cow plays nothing, and that is the setting, not a bug.
 
 | Question | How to answer it |
 |---|---|
-| Is the effect there? | `/killeffect preview <id>` — it plays against an empty sky. |
+| Is the effect there? | `/killeffect preview <id>` — it plays on the preview stage. Set one first with `/killeffectsadmin preview location`. |
 | Does the weapon carry one? | Its line is drawn under the weapon's own lore. |
-| Did a permission take? | `/killeffectsadmin validate <player>` takes off what they may no longer use, now. |
+| Did a permission take? | `/killeffectsadmin player validate <player>` takes off what they may no longer use, now. |
 | Did the file load? | `/killeffectsadmin list` prints every effect the catalogue declares. |

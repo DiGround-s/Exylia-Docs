@@ -18,8 +18,8 @@ With `behaviour.mode: weapon` nothing on this screen would ever be read, so the 
 | `categories` | `9,18,27,36` | The tabs down the left, paged with the buttons at slots `0` and `45`. |
 | `grid` | `11-16,20-25,29-34,38-43` | The open category's effects, paged at slots `47` and `52`. |
 
-The fixed buttons: **YOUR EFFECT** at slot `4` (click to take the effect off), **PARTICLE
-VISIBILITY** at `48`, **CLOSE** at `50`.
+The fixed buttons: **YOUR EFFECT** at slot `4` (click to take the effect off), **EFFECT CRATE** at
+`8`, **PARTICLE VISIBILITY** at `48`, **RANDOM EFFECT** at `49`, **CLOSE** at `50`.
 
 ## The favourites tab
 
@@ -36,6 +36,19 @@ holds different effects for every player. It is named and drawn by `menu.favouri
 
 An empty shortlist draws `empty_template` so the tab reads as empty rather than as a screen that
 failed to load.
+
+## The random choice
+
+The button at slot `49` is not an effect: it says "surprise me". A player carrying it plays a
+different effect on every hit, drawn afresh out of the ones they own — nothing is remembered between
+hits, so it is a surprise every time rather than a shuffled order. Its line is `menu.random-on` while
+it is the choice being carried and `menu.random-off` while it is not.
+
+## The crate
+
+The button at slot `8` opens `menus/crate.yml`: one key in, one effect out, weighted by rarity. It
+draws how many keys the player holds and how much of the catalogue they have unboxed. See
+[The crate](/docs/exyliahiteffect/crate).
 
 ## What a click does
 
@@ -71,8 +84,8 @@ Each list picks a template per row. `item_template` is the plain state and must 
 | Where | Available |
 |---|---|
 | `categories` | `%category_id%` `%category_name%` `%category_material%` `%category_total%` `%category_owned%` `%category_status%` |
-| `grid` | `%effect_id%` `%effect_name%` `%effect_material%` `%effect_description%` `%effect_weapons%` `%effect_favourite%` |
-| Anywhere | `%current_effect%` `%favourites_count%` `%particle_visibility%` `%visibility_all%` `%visibility_none%` `%visibility_self_only%` `%visibility_others_only%` |
+| `grid` | `%effect_id%` `%effect_name%` `%effect_material%` `%effect_description%` `%effect_weapons%` `%effect_favourite%` `%effect_tier%` `%effect_tier_id%` `%effect_tier_color%` |
+| Anywhere | `%current_effect%` `%random_status%` `%favourites_count%` `%keys%` `%unlocked_count%` `%catalogue_count%` `%particle_visibility%` `%visibility_all%` `%visibility_none%` `%visibility_self_only%` `%visibility_others_only%` |
 
 ## Actions
 
@@ -86,6 +99,9 @@ Each list picks a template per row. `item_template` is the plain state and must 
 | `hiteffect:favourites_clear` | Empties the shortlist. |
 | `hiteffect:preview <id>` | Previews an effect and reopens the menu afterwards. |
 | `hiteffect:visibility` | Steps the viewer's visibility on by one. |
+| `hiteffect:random` | Turns the random choice on. |
+| `hiteffect:crate` | Opens the crate. |
+| `hiteffect:crate_open <amount>` | Spends that many keys and opens that many reels. |
 
 ## Wording
 
@@ -102,6 +118,9 @@ menu:
   favourites-icon: "AMETHYST_SHARD"
   favourite-on: "{highlight}★ In your favourites"
   favourite-off: "{muted}☆ Not in your favourites"
+  random-name: "{highlight}Random"
+  random-on: "{success}✔ Every hit is a surprise"
+  random-off: "{warning}➥ Click to surprise yourself"
 ```
 
 <Callout type="tip" title="The window follows the choice">

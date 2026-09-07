@@ -1,0 +1,161 @@
+---
+title: "Configuración"
+description: "Todas las claves de config.yml con su valor por defecto, y qué vive en messages.yml en vez de aquí."
+---
+
+`plugins/ExyliaChatCosmetics/config.yml` se genera a partir del record `Settings` del propio plugin y
+lo vuelve a leer `/cca reload`. Eso conviene saberlo por dos motivos:
+
+- **Una clave que el plugin no reconoce se elimina al cargar**, y cada eliminación se reporta una vez
+  en la consola. Una errata no se queda ahí calladita sin hacer nada.
+- **Un valor que el plugin no puede leer se reporta y se usa el de por defecto.** El servidor arranca
+  igual; nunca se niega a cargar por una línea mala.
+
+Los cosméticos en sí no están aquí. Viven en `cosmetics/*.yml` y se describen en
+[el catálogo](/docs/exyliachatcosmetics/catalogo).
+
+## chat
+
+| Clave | Por defecto | Significado |
+|---|---|---|
+| `hook` | `decorate` | Cómo se estiliza el cuerpo del mensaje. Los cuatro modos están abajo. |
+| `priority` | `NORMAL` | Prioridad del evento para `chat_event` y `legacy_event`: `LOWEST`, `LOW`, `NORMAL`, `HIGH`, `HIGHEST`, `MONITOR`. Cualquier otra cosa cae a `NORMAL` con un aviso. |
+| `sanitize` | `true` | El formato que escribe un jugador — `&c`, `<red>`, `{primary}` — se muestra como el texto que escribió. `exyliachatcosmetics.chat.format` se lo salta. El `§` se neutraliza siempre, con permiso o sin él. |
+| `default-color` | `""` | El color de un mensaje de alguien que no lleva color de chat: `#hex`, el nombre de un color, un `{token}` o `#a:#b` para un degradado. Vacío deja el mensaje sin colorear. |
+| `module.enabled` | `false` | Enciende el [módulo de chat](/docs/exyliachatcosmetics/chat) integrado. Con él encendido el hook se desinstala — el módulo estiliza el cuerpo por su cuenta — y aparecen los archivos propios del módulo en `chat/`. |
+
+### Los cuatro modos de hook
+
+| Modo | Qué pasa | Elígelo cuando |
+|---|---|---|
+| `decorate` | `AsyncChatDecorateEvent`: el cuerpo estilizado reemplaza al mensaje decorado antes de que lo vea ningún plugin de chat. No se cancela nada. | Paper, con un plugin de chat que dibuja a través del evento — el chat propio de Paper y cualquier plugin basado en renderer. Recomendado. |
+| `chat_event` | `AsyncChatEvent.message(...)`, en la `priority` de arriba. | El plugin de chat ignora la decoración pero lee `message()`. |
+| `legacy_event` | `AsyncPlayerChatEvent.setMessage(...)`, escrito con códigos `§` y hex. | El plugin de chat todavía usa el evento de cadena. |
+| `off` | El chat no se toca nunca. | Compones la línea tú mismo con la [API](/docs/exyliachatcosmetics/api), o solo quieres los placeholders de identidad. |
+
+Sea cual sea el modo, el mensaje se dibuja únicamente desde estado cacheado. Un dibujo que falla deja
+el mensaje exactamente como se escribió y se reporta como mucho una vez por minuto, así que un
+cosmético roto no puede convertirse en un muro de consola.
+
+## tags
+
+| Clave | Por defecto | Significado |
+|---|---|---|
+| `format` | `"%tag% "` | Cómo se sitúa la etiqueta alrededor del nombre; `%tag%` es la etiqueta. El espacio final es la razón por la que `%ecc_tag%%ecc_nick%` no necesita nada en medio. Una entrada de etiqueta puede sustituirlo con su propio `format`. |
+
+## rank-colors
+
+| Clave | Por defecto | Significado |
+|---|---|---|
+| `repaint` | `letters` | Qué repinta un color de rango dentro del prefijo y del sufijo. `letters` pinta solo letras y dígitos, así que `&8[&eVIP&8]` conserva sus corchetes grises y cualquier símbolo que escriba el rango conserva su color; `all` pinta todo lo que escribió el rango. Un carácter que el rango dejó sin color se pinta de las dos formas — no hay nada que conservar. |
+
+## custom-tags
+
+Las reglas que tiene que pasar una etiqueta que un jugador se escribe. Valen para
+`/cc customtag create`, para el botón MAKE ONE y para `/cca customtag set` — un administrador se
+salta el token, no las reglas.
+
+| Clave | Por defecto | Significado |
+|---|---|---|
+| `min-length` | `2` | |
+| `max-length` | `16` | |
+| `pattern` | `[A-Za-z0-9_\-]+` | Una expresión regular que tiene que cumplir el texto entero. `<>{}&§%\` se rechazan diga lo que diga el patrón. |
+| `blacklist` | `[admin, staff, owner]` | Palabras que una etiqueta no puede contener, sin distinguir mayúsculas |
+| `unique` | `true` | Dos jugadores no pueden tener el mismo texto |
+
+## custom-colors
+
+| Clave | Por defecto | Significado |
+|---|---|---|
+| `max-stops` | `4` | Por cuántos colores puede pasar un degradado propio |
+
+## loadouts
+
+| Clave | Por defecto | Significado |
+|---|---|---|
+| `limit` | `3` | Cuántos looks puede tener guardados un jugador |
+
+<Callout type="note" title="Cuántos personalizados puede crear un jugador no es una clave">
+No hay ningún `custom-tags.limit` y no lo va a haber. Cuántas etiquetas y colores propios puede
+escribir un jugador es un **saldo**, guardado por jugador y por tipo y repartido con
+`/cca tokens give`. Crear uno gasta un token `create`, cambiarlo gasta uno `edit`, y borrarlo no
+devuelve nada. Una cuota en `config.yml` sería el mismo número para todo el mundo; un saldo es algo
+que puedes vender, premiar o retirar jugador a jugador. Ver
+[Tokens](/docs/exyliachatcosmetics/tokens).
+</Callout>
+
+## animations
+
+| Clave | Por defecto | Significado |
+|---|---|---|
+| `tick` | `2` | Ticks entre fotogramas de animación. Más bajo va más suave y cuesta más. |
+
+## preview
+
+| Clave | Por defecto | Significado |
+|---|---|---|
+| `format` | `%tag%%prefix% %name%%suffix%{letters_black}: %message%` | La línea que dibujan `/cc preview` y las vistas previas del menú. `%tag%` ya trae su espacio final de `tags.format`; `%prefix%` y `%suffix%` son los del rango, en el color de rango que se esté mirando. |
+
+## menu
+
+| Clave | Por defecto | Significado |
+|---|---|---|
+| `types` | `tag: Tags`, `customtag: Custom tags`, `nick_color: Nick colors`, `customnick: Custom nick colors`, `rank_color: Rank colors`, `customrank: Custom rank colors`, `chat_color: Chat colors`, `customcolor: Custom chat colors`, `shadow_color: Shadow colors`, `font: Fonts`, `modifier: Modifiers` | Cómo se llama cada clase de cosmético en los títulos y en el lore. Un tipo que no esté en la lista muestra su id en bruto. |
+| `status.selected` | `{success}✔ Worn right now` | La línea de estado que muestra una fila, según su estado |
+| `status.available` | `{success}✔ Yours` | |
+| `status.locked` | `{error}✖ Not yours yet` | |
+| `status.expiring` | `{warning}⏱ Yours for {highlight}%expires%` | `%expires%` es el tiempo que queda |
+| `favorite-on` | `{highlight}★ {letters}Starred` | |
+| `favorite-off` | `{muted}☆ Not starred` | |
+| `none` | `{muted}None` | Se muestra allí donde un hueco no tiene nada equipado |
+| `sample-message` | `Hello there!` | El mensaje con el que se dibujan las vistas previas, y lo que usa `/cc preview` sin argumento |
+| `sample-prefix` | `{letters_black}[RANK]` | Hace de prefijo del rango en una vista previa, para un jugador cuyo rango no escribe ninguno |
+| `custom-hints` | `{warning}➥ Shift right click {letters}to change it`, `{error}➥ Drop key {letters}to delete it` | Las indicaciones que solo muestra una fila que hizo el propio jugador, insertadas en el `%cosmetic_manage%` del lore. Una lista vacía no muestra ninguna. |
+
+## expiry
+
+| Clave | Por defecto | Significado |
+|---|---|---|
+| `notify-on-join` | `true` | Al entrar: una línea por cada concesión temporal que lleva puesta con el tiempo que le queda, más un recuento de las que se le acabaron mientras no estaba |
+| `retention-days` | `30` | Cuánto se queda en la tabla una concesión caducada o revocada, para auditoría, antes de que la barrida diaria la borre |
+
+## placeholders
+
+| Clave | Por defecto | Significado |
+|---|---|---|
+| `none` | `""` | Lo que devuelve un placeholder que no tiene valor |
+| `unknown` | `?` | Lo que devuelve un placeholder que nombra algo que no existe |
+
+## messages.yml
+
+Todas las líneas que ve un jugador viven en `plugins/ExyliaChatCosmetics/messages.yml`, generado a
+partir del record `CosmeticMessages` del plugin y recargado con lo demás. `prefix` — por defecto
+`{primary}&lE-CHAT &8•&r ` — es a lo que se expande `%prefix%` en este archivo.
+
+Las líneas se escriben con tokens de paleta de ExyliaLib (`{primary}`, `{success}`, `{error}`, …) en
+vez de con hex, así que repintar el servidor entero desde `colors.yml` las repinta también. Los
+placeholders que acepta cada línea están nombrados en el comentario que tiene encima.
+
+| Sección | Qué hay dentro |
+|---|---|
+| `general` | recargado, solo-jugador, sin-permiso, cosmético / tipo / jugador desconocido, clave inválida, duración inválida |
+| `entitlements` | concedido y sus dos líneas para el destinatario, revocado, las líneas de `list`, las de `check`, caducado, caducado-al-entrar, a-punto-de-caducar |
+| `equip` | equipado, desequipado, desequipado-por-tipo, no-poseído, nada-equipado, todo-quitado |
+| `favorites` | añadido, quitado |
+| `loadouts` | guardado, aplicado, borrado, límite, desconocido, vacío, inválido, las líneas de `list` |
+| `custom` | creado y su línea para el destinatario, editado, borrado, ninguno, no-es-tuyo, muy-corto, muy-largo, patrón, en-lista-negra, ocupado, color-inválido, demasiadas-paradas |
+| `tokens` | sin-create, sin-edit, gastado, dado, quitado y fijado con sus líneas para el destinatario, las líneas de saldo, clase-desconocida, no-es-personalizado |
+| `prompts` | los títulos y las pistas de las entradas de texto: etiqueta propia, color, editar cualquiera de las dos, nombre de loadout |
+
+El módulo de chat se queda con su propio `chat/messages.yml`, con su propio prefijo. Un plugin de
+chat habla como el chat, no como el plugin de cosméticos, así que el `%prefix%` de allí nunca se
+expande a este. Ver [el módulo de chat](/docs/exyliachatcosmetics/chat).
+
+<Cards>
+  <Card title="El catálogo" href="/docs/exyliachatcosmetics/catalogo">
+    Los archivos de cosméticos, que no son configuración y no viven aquí.
+  </Card>
+  <Card title="Menús" href="/docs/exyliachatcosmetics/menus">
+    Los archivos de `menus/`, que son otra cosa distinta de la sección `menu` de arriba.
+  </Card>
+</Cards>

@@ -185,6 +185,7 @@ Read everything below, then write the effect the user asks for at the end.
     kill_effects:
       BLADE_STORM:
         category: siege
+        tier: common
         name: "<gradient:#DCE6F2:#8FA6C4><bold>BLADE STORM</bold></gradient>"
         material: NETHERITE_SWORD
         description:
@@ -196,6 +197,9 @@ Read everything below, then write the effect the user asks for at the end.
 
     category      which tab it appears under; must be a key declared under categories:
                   the shipped ones are siege, cataclysm, abyss, aurora, verdant, bonk
+    tier          how rare it is; must be a key declared under tiers: in config.yml
+                  the shipped ones are common, rare, epic, legendary. Omit it and it falls back
+                  to the first rarity
     name          what menus and placeholders call it. MiniMessage and gradients work
     material      the item the menu row is drawn with. Defaults to BARRIER
     description   one line, or a list of lines. <nl> also breaks a single line
@@ -273,6 +277,7 @@ Read everything below, then write the effect the user asks for at the end.
     hit_effects:
       CRIT_SPARK:
         category: impact
+        tier: common
         name: "<gradient:#FFE9A8:#D1A53F><bold>CRIT SPARK</bold></gradient>"
         material: GOLDEN_SWORD
         description: "Eight splinters of gold, {highlight}gone in a third<nl>of a second{neutral}."
@@ -282,6 +287,8 @@ Read everything below, then write the effect the user asks for at the end.
 
     category      which tab it appears under; must be a key declared under categories:
                   the shipped ones are impact, crimson, ember, sculk, prism, goofy
+    tier          how rare it is; must be a key declared under tiers: in config.yml
+                  the shipped ones are common, rare, epic, legendary. Omit it and it is common
     name          what menus and placeholders call it. MiniMessage and gradients work
     material      the item the menu row is drawn with. Defaults to BARRIER
     description   one line, or a list of lines. <nl> also breaks a single line

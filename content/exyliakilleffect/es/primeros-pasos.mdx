@@ -32,12 +32,34 @@ description: "De un servidor limpio a un jugador con efecto en sus bajas."
 Una prueba matando una vaca no lanza nada, y eso es la configuración, no un fallo.
 </Callout>
 
+## Por la caja
+
+<Steps>
+  <Step title="Pon la caja en algún sitio">
+    ```text
+    /killeffectsadmin crate block add
+    ```
+    Ata el bloque que estás mirando, para que al hacerle clic abra la caja. El botón de la esquina del
+    menú y `/killeffect crate` abren la misma pantalla.
+  </Step>
+  <Step title="Entrega una llave">
+    ```text
+    /killeffectsadmin keys give <jugador> 1
+    ```
+    Las llaves viven en la fila del jugador, así que esto es lo que corre desde consola una tienda, un
+    listener de votos o un plugin de recompensas.
+  </Step>
+  <Step title="Ábrela">
+    Una llave, un rodillo. Lo que salga es suyo para siempre — ver [La caja](/docs/exyliakilleffect/caja).
+  </Step>
+</Steps>
+
 ## Por el arma
 
 <Steps>
   <Step title="Da una ficha">
     ```text
-    /killeffectsadmin give <jugador> blade_storm 1
+    /killeffectsadmin item give <jugador> blade_storm 1
     ```
   </Step>
   <Step title="Arrástrala sobre un arma">
@@ -46,7 +68,7 @@ Una prueba matando una vaca no lanza nada, y eso es la configuración, no un fal
   </Step>
   <Step title="Quítalo">
     ```text
-    /killeffectsadmin remover <jugador>
+    /killeffectsadmin item remover <jugador>
     ```
     El removedor desata el efecto y devuelve la ficha, así que no se destruye nada.
   </Step>
@@ -56,7 +78,7 @@ Una prueba matando una vaca no lanza nada, y eso es la configuración, no un fal
 
 | Pregunta | Cómo responderla |
 |---|---|
-| ¿Existe el efecto? | `/killeffect preview <id>` — se lanza contra un cielo vacío. |
+| ¿Existe el efecto? | `/killeffect preview <id>` — se lanza en el escenario de previsualización. Fíjalo antes con `/killeffectsadmin preview location`. |
 | ¿El arma lleva uno? | Su línea se dibuja bajo el lore propio del arma. |
-| ¿El permiso hizo efecto? | `/killeffectsadmin validate <jugador>` quita ya lo que no pueda usar. |
+| ¿El permiso hizo efecto? | `/killeffectsadmin player validate <jugador>` quita ya lo que no pueda usar. |
 | ¿Cargó el archivo? | `/killeffectsadmin list` imprime todos los efectos declarados. |

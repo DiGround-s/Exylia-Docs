@@ -1,0 +1,166 @@
+---
+title: "La caja"
+description: "Rarezas, llaves virtuales, los rodillos que caen y los bloques que los abren."
+---
+
+La caja es cómo se ganan los efectos en vez de regalarlos. Se gasta una llave, cae un rodillo, y lo
+que sale se escribe en la fila del propio jugador — suyo para siempre, pase lo que pase con su rango.
+
+## Rarezas
+
+Cada efecto declara un `tier` en `effects.yml`, y `config.yml` declara cuáles son:
+
+```yaml
+tiers:
+  common:
+    name: "Common"
+    material: GRAY_DYE
+    color: "{muted}"
+    chance: 60.0
+    priority: 1
+  rare:
+    name: "Rare"
+    material: LIGHT_BLUE_DYE
+    color: "{info}"
+    chance: 25.0
+    priority: 2
+  epic:
+    name: "Epic"
+    material: PINK_DYE
+    color: "{accent}"
+    chance: 12.0
+    priority: 3
+  legendary:
+    name: "Legendary"
+    material: ORANGE_DYE
+    color: "{highlight}"
+    chance: 3.0
+    priority: 4
+```
+
+| Clave | Qué hace |
+|---|---|
+| `name` | Cómo la llaman los menús y los placeholders. |
+| `material` | El objeto con el que se dibuja la rareza. |
+| `color` | El color en el que se escriben su nombre y sus efectos. |
+| `chance` | Con qué frecuencia cae la caja en ella, **en relación a las demás**. |
+| `priority` | Dónde se sitúa en los menús; el más bajo va primero. |
+
+Nada de esto está fijado en el código. Borra `legendary`, inventa `mythic`, renombra las cuatro: la
+clave es el id que `effects.yml` escribe como `tier`, y un efecto que nombra una rareza que ya no
+existe cae en la primera — pierde su color, nunca su existencia.
+
+<Callout type="note" title="chance es un peso, no un porcentaje">
+Las probabilidades que muestra el menú se calculan a partir de los pesos, así que cuatro rarezas con
+`60/25/12/3` y cuatro con `6/2.5/1.2/0.3` se comportan igual. Borrar una rareza reparte sus
+probabilidades entre las demás en vez de dejar un hueco del tres por ciento.
+</Callout>
+
+## Llaves
+
+Las llaves no son un objeto. Viven en la fila del jugador, así que no se pueden tirar, duplicar ni
+perder por tener el inventario lleno:
+
+```text
+/killeffectsadmin keys give <jugador> <cantidad>
+/killeffectsadmin keys take <jugador> <cantidad>
+/killeffectsadmin keys set <jugador> <cantidad>
+/killeffectsadmin keys check <jugador>
+```
+
+Es la única puerta de entrada, que es lo que hace seguro correrlo desde consola — una tienda, un
+listener de votos, un plugin de recompensas o una caja de otro plugin entregan llaves igual.
+
+```text
+[console] killeffectsadmin keys give %player% 1
+```
+
+## Abrirla
+
+`/killeffect crate`, el botón de la esquina del menú de efectos, o un bloque atado. La primera
+pantalla pregunta una sola cosa: cuántas a la vez. Elegir cuatro gasta cuatro llaves y suelta cuatro
+rodillos en paralelo en la pantalla siguiente.
+
+<Steps>
+  <Step title="Cuántas">
+    `menus/crate.yml`. Las opciones se dibujan hasta `crate.max-at-once`, con un tope de siete por el
+    ancho de la pantalla, y se reparten como se repartirán los rodillos — donde haces clic es donde
+    caerá ese rodillo.
+  </Step>
+  <Step title="Los rodillos caen">
+    `menus/crate_open.yml`. Un rodillo por caja, cada uno ocupando todo el alto del cofre, cada uno
+    con sus caras y con su meta `crate.stagger-seconds` después del anterior. Cada cara mantiene su
+    nombre y su lore durante toda la caída, así que un rodillo se puede leer mientras cae.
+  </Step>
+  <Step title="Lo que pasó de largo se queda">
+    No se limpia nada cuando un rodillo para. Lo que se quedó a una casilla sigue en pantalla, porque
+    la mitad de lo que vale una caja es el legendario que pasó de largo.
+  </Step>
+  <Step title="Ya es tuyo">
+    Las llaves se gastan y los premios se deciden antes de dibujar el primer fotograma. Cerrar la
+    ventana a media caída no cuesta nada: lo ganado ya está escrito y se dice por chat.
+  </Step>
+</Steps>
+
+## Duplicados
+
+Caer en algo que ya se tiene devuelve llaves — tantas como diga `crate.duplicate-refund`. Con el `1`
+por defecto un duplicado es una tirada gratis en vez de una pérdida, que es lo que mantiene una
+colección casi completa digna de seguir abriendo.
+
+## Ajustes
+
+```yaml
+crate:
+  enabled: true
+  start-keys: 0
+  duplicate-refund: 1
+  give-token: false
+  blocks: []
+  max-at-once: 4
+  spin-frames: 34
+  stagger-seconds: 2.0
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | Apagada, el botón lo dice en vez de abrir. |
+| `start-keys` | `0` | Llaves que recibe un jugador la primera vez que se le ve. |
+| `duplicate-refund` | `1` | Llaves devueltas por algo que ya se tenía. |
+| `give-token` | `false` | Si ganar entrega también la ficha del efecto, para poder atarlo a un arma. Vale la pena con `behaviour.mode` en `weapon` o `both`. |
+| `blocks` | `[]` | Los bloques que abren la caja. Átalos en el juego, no a mano. |
+| `max-at-once` | `4` | Cuántas cajas puede abrir un jugador de una vez. La pantalla admite siete. |
+| `spin-frames` | `34` | Cuántas caras recorre el primer rodillo antes de parar. Tope de 200, unos once segundos. |
+| `stagger-seconds` | `2.0` | Cuánto después de parar uno para el siguiente. `0` los para a la vez. |
+
+`on-spin`, `on-win` y `on-duplicate` son bloques de efecto completos de ExyliaLib — título, action
+bar, boss bar, sonido, partícula y firework — lanzados en cada tick de caída, una vez al ganar, y en
+lugar de la victoria cuando no salió nada nuevo.
+
+## Bloques de caja
+
+Un bloque físico, en cualquier parte del mundo, que abre la caja al hacerle clic:
+
+```text
+/killeffectsadmin crate block add      # el bloque que estás mirando
+/killeffectsadmin crate block remove
+/killeffectsadmin crate block list
+/killeffectsadmin crate block clear
+```
+
+Se escriben en `config.yml`, no en el mundo, así que un bloque atado sobrevive a un pegado de esquema,
+a un world edit y a un rollback. Mientras está atado no se puede romper, ni volar, ni empujar, y
+hacerle clic ya no hace lo que haría su material — una caja dibujada sobre un barril no debe abrir un
+barril.
+
+## Qué entrega una caja
+
+Lo que sale se escribe en la fila del jugador en vez de darse como permiso, así que sobrevive a un
+rango que caduca. `/killeffectsadmin unlocks grant|revoke|clear` es la misma puerta para un plugin de
+recompensas que quiera entregar un efecto sin caja de por medio.
+
+<Callout type="tip" title="Permisos y desbloqueos son dos vías distintas">
+Un jugador puede usar un efecto que ganó en una caja **o** uno que le da su rango. Vender una rareza
+como rango es una línea — `exyliakilleffect.tier.legendary` — y es independiente de lo que haya
+sacado de la caja.
+</Callout>

@@ -1,0 +1,224 @@
+---
+title: "Tags"
+description: "The mark in front of a name: what a display may draw, the sprite and head forms, which clients draw them, and how a head survives being written down."
+---
+
+A tag is the little thing that sits in front of a name. It is not a rank: a rank says what somebody
+is, a tag is one small mark somebody picked because they liked it.
+
+That is the rule the shipped file is built on, and it is worth keeping when you write your own.
+Every one of the 180 tags is a **single glyph** — a symbol, a sprite, a particle, an item icon, a flag
+drawn as a head. No brackets, no words, nothing that reads as a second prefix somebody bought.
+
+## The seven tabs
+
+| Tab | Count | What it holds |
+|---|---|---|
+| SYMBOLS | 24 | ordinary characters — hearts, stars, arrows, crosses |
+| ANIMATED | 31 | sprites of textures the client animates by itself |
+| PARTICLES | 24 | particle textures, drawn still |
+| ICONS | 24 | item and block textures |
+| INTERFACE | 20 | the HUD's own sprites — hearts, hunger, effect icons |
+| FLAGS | 43 | country flags, each one a head skin |
+| PREMIUM | 14 | the ones worth keeping behind a permission, most of them animated |
+
+Delete the tabs you do not want, keep the ones you do, and the menu redraws itself around what is
+left. Nothing in the plugin knows how many tabs there are.
+
+## An entry
+
+```yaml title="plugins/ExyliaChatCosmetics/cosmetics/tags.yml"
+tags:
+  mvp:
+    category: premium
+    name: '{primary}&lMVP'
+    display: '{highlight}✦'     # what is drawn
+    head: null                  # optional, a skin drawn before the display
+    format: '%tag% '            # optional, overrides tags.format
+    animation: shine            # optional, an id from animations.yml
+    icon: GOLD_INGOT
+    description: 'Reserved for the {highlight}top players.'
+    priority: 1
+```
+
+| Key | Means |
+|---|---|
+| `display` | what is drawn; palette tokens, `&` codes and MiniMessage all work |
+| `head` | a skin drawn as a head immediately before the display |
+| `format` | how the tag sits around the name, overriding `tags.format` |
+| `animation` | an id from `animations.yml` |
+
+Everything else — `category`, `name`, `icon`, `description`, `priority`, `permission`, `requirement`,
+`hidden`, `metadata` — is the shared set described in
+[the catalogue](/docs/exyliachatcosmetics/catalogue).
+
+An entry needs at least one of `display` and `head`. With neither, there is nothing to draw, and it is
+reported and skipped.
+
+The display is drawn verbatim: a font the player is wearing never rewrites it. A line where only part
+of the tag is in small capitals reads worse than either whole, so the chat line keeps its own letters
+throughout and the tag keeps its.
+
+## What a display may draw
+
+Plain characters are the safe half. Every client has drawn `❤`, `★`, `✦` and `❀` for years, and
+nothing about them depends on a version.
+
+Everything below them is an **object component**, which arrived in Minecraft 1.21.9.
+
+| Written | Draws |
+|---|---|
+| `<sprite:'minecraft:block/sea_lantern'>` | a block texture |
+| `<sprite:'minecraft:items':'minecraft:item/diamond'>` | an item texture |
+| `<sprite:'minecraft:particles':'minecraft:heart'>` | a particle |
+| `<sprite:'minecraft:gui':'minecraft:hud/heart/full'>` | a HUD sprite |
+| `<sprite:'minecraft:gui':'minecraft:mob_effect/speed'>` | an effect icon |
+| `<head:'entity/player/wide/steve'>` | a skin the game ships with |
+| `<head:'Notch'>` | a real account, by name |
+| `<head:'069a79f4-44e9-4726-a5be-fca90e38aaf5'>` | the same account, by id |
+
+<Callout type="note" title="Older clients are not broken by them">
+A client below 1.21.9 shows such a tag as the text it is written in rather than failing, and a server
+whose Adventure is too old to build the component draws whatever else the tag declares — which is
+nothing at all for a tag that is only a head. The SYMBOLS tab works everywhere, on 1.21 the same as on
+the newest release.
+</Callout>
+
+## Why every sprite carries `<white>`
+
+A sprite is a glyph. Like a letter, it takes the colour around it — under a grey lore line, or inside
+a chat format that is painting everything gold, it comes out dimmed and tinted, and a diamond that is
+not diamond-coloured is not the icon anybody picked.
+
+`<white>` in front of one is what keeps it exactly as the game drew it, and every sprite in the shipped
+file carries it. Any other colour is therefore a tint on purpose: `<red><sprite:'minecraft:items':'minecraft:item/diamond'>`
+is a red version of the same icon, and that is a decision, not an accident.
+
+The same is true of a head, which is why the plugin colours one white for you when it builds it.
+
+## Writing a sprite id
+
+A sprite id is the texture's path with `textures/` and `.png` taken off. Which atlas it belongs to
+decides the rest, and getting the atlas wrong is the usual reason a sprite draws nothing.
+
+| Atlas | Written as | Folder |
+|---|---|---|
+| blocks | `<sprite:'minecraft:block/…'>` | the one a sprite falls back to; keeps its `block/` folder |
+| items | `<sprite:'minecraft:items':'minecraft:item/…'>` | its own atlas, and keeps `item/` |
+| particles | `<sprite:'minecraft:particles':'minecraft:…'>` | drops the folder entirely |
+| GUI | `<sprite:'minecraft:gui':'minecraft:…'>` | drops the folder entirely |
+
+So a particle is `'minecraft:heart'` and not `'minecraft:particle/heart'`, and a HUD sprite is
+`'minecraft:hud/heart/full'` and not `'minecraft:gui/hud/heart/full'`. Every id in the shipped file
+was read out of the client, so what is written there is what the client actually has.
+
+## Tags that move
+
+There are two different kinds of movement, and they do not overlap.
+
+The client animates a texture that ships with an animation beside it — fire, lava, a nether portal,
+sculk, the music icon — and a sprite of one of those moves in chat by itself, with nothing configured
+at all. **The ANIMATED tab is exactly those sprites**, and no entry in it names an `animation:`.
+
+```yaml
+  anim_fire:
+    category: animated
+    name: '{primary}&lFIRE'
+    display: "<white><sprite:'minecraft:block/fire_0'>"
+    icon: FLINT_AND_STEEL
+    description: "It burns in front of your name."
+    priority: 1
+```
+
+`animation:` is the other kind, and it only reaches letters. It repaints characters frame by frame, so
+a symbol animates and a sprite does not — a sprite is a picture, and a picture stays as it is. The
+PREMIUM tab is where the two are told apart: its symbols carry `animation: flow`, `shine`, `ember`,
+and its sprites carry none.
+
+## Heads
+
+`<head:>` inside a display reaches an account or a skin the game ships with. A flag is neither: it is
+a skin nobody wears, made once and handed out as a value. A skin like that is a profile property,
+which only a component can carry, so it goes in the entry's own `head:` key rather than in its text.
+
+It takes the skin in any of the three shapes one is handed out in:
+
+| `head:` | What it is |
+|---|---|
+| `'ewogICJ0aW1lc3RhbXAiIDog…'` | the base64 value a head site gives you |
+| `'9c8d2b3f…'` | the texture's hash, 32 to 64 hex characters |
+| `'http://textures.minecraft.net/texture/9c8d2b3f…'` | the full URL |
+
+All three end up as the same property, and the value is read when the file loads, so a value that is
+not one of the three is reported with the entry it came from rather than failing silently at draw.
+
+The head draws **before** the display. A tag can therefore be a head on its own, or a head with
+something beside it.
+
+The menu icon takes the same value written as `basehead-<value>`, which is how the FLAGS tab shows
+each flag as itself rather than as a generic head:
+
+```yaml
+  flag_argentina:
+    category: flags
+    name: '{primary}&lARGENTINA'
+    head: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6…In19fQ=='
+    icon: basehead-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6…In19fQ==
+    description: "Argentina, drawn as a head."
+    priority: 1
+```
+
+## `format`
+
+`tags.format` in `config.yml` decides how every tag sits around the name, and it is `%tag% ` by
+default — the tag, then the space that separates it from what follows. An entry may set its own
+`format:` and override it, which is what a tag needs when it wants no trailing space, or a bracket, or
+two of them.
+
+The format is what carries the spacing, not the display. A display that ends in a space is a display
+with a space in it, and the space moves with the tag into lore and placeholders where nobody wanted
+it.
+
+## `ecc_head`, and why it exists
+
+A menu's lore and a placeholder are strings. They are written down, handed to something else, and
+parsed again — and no standard MiniMessage tag can write down a skin. A head built from a profile
+property serialises to a bare `<head>`, and whoever reads that string draws a stranger's face beside
+somebody's name.
+
+So the plugin adds one tag of its own, `ecc_head`:
+
+```text
+<ecc_head:'ewogICJ0aW1lc3RhbXAiIDog…'>
+```
+
+On the way out, every head in a line is taken out and replaced by a marker — a character from the
+private use area, which no font draws and nobody can type — the line is serialised, and each marker is
+swapped back for the tag carrying its skin. On the way in, the tag builds the head again. The skin
+arrives.
+
+A head written as an account or as a texture the game ships needs none of this: it writes itself and
+is kept as it was.
+
+<Callout type="warning" title="A head that cannot be written down is dropped">
+If a head reaches the string as a bare `<head>` — its skin lost on the way out — it is removed rather
+than left in. A stranger's face beside somebody's name is worse than no face at all, so what a
+placeholder hands back is the rest of the line with the head simply missing.
+</Callout>
+
+## Related
+
+<Cards>
+  <Card title="The catalogue" href="/docs/exyliachatcosmetics/catalogue">
+    The fields every entry shares and the colour grammar behind `display`.
+  </Card>
+  <Card title="Animations" href="/docs/exyliachatcosmetics/animations">
+    What `animation:` names, and the six kinds of movement.
+  </Card>
+  <Card title="Custom cosmetics" href="/docs/exyliachatcosmetics/custom">
+    The tags players write for themselves, and why they are text only.
+  </Card>
+  <Card title="Placeholders" href="/docs/exyliachatcosmetics/placeholders">
+    Where a tag is handed to another plugin as a string, in all three output shapes.
+  </Card>
+</Cards>

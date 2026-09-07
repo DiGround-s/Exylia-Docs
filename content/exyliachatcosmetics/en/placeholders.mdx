@@ -1,0 +1,125 @@
+---
+title: "Placeholders"
+description: "Both identifiers, the three notations, every name they answer to, and what happens to a head on the way out."
+---
+
+Placeholders are registered through ExyliaLib's placeholder module, so they work in every ExyliaLib
+text on their own, and in every other plugin as soon as PlaceholderAPI is installed. Two identifiers
+answer exactly the same names:
+
+```
+%exyliachatcosmetics_<name>%
+%ecc_<name>%
+```
+
+The short one is there because a chat format is a line somebody has to read.
+
+## The three notations
+
+Some placeholders return a drawn thing rather than a word, and a drawn thing has to become text
+before a chat format can carry it. Which text depends on who is asking, so each of them comes in
+three spellings from the same component — a colour is never rendered twice.
+
+| Suffix | Output | Use it when |
+|---|---|---|
+| *(none)* | MiniMessage — `<#ffd700>[MVP]</#ffd700>` | your chat plugin parses MiniMessage. The default. |
+| `_legacy` | `&` codes, with `&#rrggbb` for hex | your chat plugin still reads `&` codes |
+| `_section` | `§` codes, with the `§x§r§r…` hex form | your chat plugin sends the string straight to the client |
+
+The legacy serialisers here are built with hex support on purpose. The stock ones downsample a hex
+colour to the nearest of the sixteen named colours, which turns a gradient into a flat `&6`.
+
+<Callout type="warning" title="A head only survives the MiniMessage notation">
+A tag drawn from a head skin — a flag, a face somebody made — is an object component carrying a
+profile property, and neither legacy notation has anywhere to put one. In `_legacy` and `_section`
+the head is simply not there; whatever else the tag draws still is.
+
+In the MiniMessage notation it survives, written as `<ecc_head:'…'>` — a tag this plugin adds to
+MiniMessage for exactly this reason and reads back on the way in. The one case it cannot survive is a
+head that reaches the serialiser with its skin already lost: MiniMessage would write it as a bare
+`<head>`, which draws a default face for whoever reads it, so it is stripped out instead. A stranger's
+face beside somebody's name is worse than no face at all.
+</Callout>
+
+## Rendered text
+
+Each of these has all three notations: `%ecc_tag%`, `%ecc_tag_legacy%`, `%ecc_tag_section%`.
+
+| Name | Value |
+|---|---|
+| `tag` | the worn tag, with the `format` around it — usually a trailing space. A custom tag wins over a catalogue one. |
+| `customtag` | only a tag the player wrote for themselves; empty if what they wear came from the catalogue |
+| `nick` | the player's name in its nick colour |
+| `rank_prefix`, `rank_suffix` | the rank's prefix and suffix, repainted in the worn rank colour |
+| `identity` | `tag` followed by `nick` |
+
+Each is empty when nothing is worn, which means the value of `placeholders.none` — empty by default —
+or whatever fallback you write.
+
+## Values
+
+These are plain words and numbers, with no notations.
+
+| Name | Value |
+|---|---|
+| `tag_id`, `tag_name` | the id and the display name of the worn tag |
+| `nick_color` | the effective name colour, as `#rrggbb` or `#a:#b:#c` |
+| `rank_color` | the colour the prefix and suffix are painted in |
+| `rank_id` | the id of the worn catalogue rank colour |
+| `chat_color` | the effective message colour: a custom colour, else a chat colour, else `chat.default-color` |
+| `chat_color_id` | the id of whichever of those it came from |
+| `font`, `font_name` | the worn font's id and name |
+| `modifiers` | the worn modifier ids, comma-separated |
+| `favorites_count` | how many cosmetics they have starred |
+| `loadout` | the name of the last loadout they applied |
+| `equipped_<type>` | the id worn of that type — `%ecc_equipped_chat_color%` |
+| `tokens_<type>_<kind>` | a token balance — `%ecc_tokens_customtag_create%`, `%ecc_tokens_customcolor_edit%` |
+| `owns_<type:id>` | `true` or `false` — `%ecc_owns_tag:mvp%` |
+| `expires_<type:id>` | `permanent`, the time left in compact form (`13d 4h`), or `placeholders.none` if they do not own it |
+
+A name that nothing answers to yields `placeholders.unknown`, `?` by default. Both that and
+`placeholders.none` are yours to change in [`config.yml`](/docs/exyliachatcosmetics/configuration).
+
+<Callout type="note" title="Underscores in an argument">
+Both a type (`chat_color`) and an id (`my_tag`) may contain an underscore, and the library splits
+arguments on underscores. They are joined back together before they are read, so
+`%ecc_equipped_chat_color%` and `%ecc_owns_tag:my_tag%` mean what they look like.
+</Callout>
+
+## Fallbacks
+
+ExyliaLib's fallback syntax works throughout: everything after the `|` is what the placeholder
+renders when it has no value.
+
+```
+%ecc_tag|%          nothing at all when no tag is worn
+%ecc_loadout|none%  the word "none" when no loadout was applied
+```
+
+ExyliaLib's format suffixes — `:upper` and the rest — work on the value placeholders.
+
+## In a chat format
+
+A renderer-based chat plugin, reading MiniMessage:
+
+```
+%ecc_tag%%ecc_nick%<gray>: <white>%message%
+```
+
+A chat plugin that still composes a legacy string:
+
+```
+%ecc_tag_section%%ecc_nick_section%§7: §f%message%
+```
+
+In both, `%message%` stays whatever your chat plugin puts there. The message body is coloured by the
+[chat hook](/docs/exyliachatcosmetics/configuration), not by a placeholder — a placeholder cannot
+reach inside a string somebody else already built. If you would rather the plugin composed the whole
+line itself, that is what the [chat module](/docs/exyliachatcosmetics/chat) is.
+
+## Threads
+
+Every resolver is registered async-safe and reads only cached state: nothing here touches the Bukkit
+API beyond the player handed in, so they can be asked from the chat thread without a hop to the main
+one. A player whose profile has not finished loading answers as if wearing nothing, rather than
+blocking to wait for it.

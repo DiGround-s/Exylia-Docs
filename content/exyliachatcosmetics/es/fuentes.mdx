@@ -1,0 +1,224 @@
+---
+title: "Fuentes y decoraciones"
+description: "Letras cambiadas por glifos parecidos, y las cinco decoraciones que un jugador puede encender."
+---
+
+Una fuente aquí no es una fuente de Minecraft. Un mensaje de chat no tiene forma de pedirle al
+cliente otra tipografía, así que una fuente en este plugin es una tabla de puntos de código: cada
+letra que escribió el jugador se cambia por un glifo que el cliente ya sabe dibujar. `Welcome` con
+SMALL CAPS puesto llega al chat como `ᴡᴇʟᴄᴏᴍᴇ` — caracteres normales, entregados a todo el mundo, sin
+ningún resource pack de por medio.
+
+Una fuente toca el cuerpo del mensaje y nada más. La etiqueta, el nombre y el rango conservan las
+letras con las que fueron escritos, porque una línea en la que solo la mitad está en versalitas se
+lee peor que cualquiera de las dos mitades entera.
+
+## Lo que una fuente nunca reescribe
+
+La tabla recorre la línea en crudo antes de que nada la parsee, así que todo lo que es una
+instrucción y no texto se copia tal cual está escrito.
+
+| Se deja intacto | Por qué |
+|---|---|
+| Una etiqueta de MiniMessage, `<gradient:#a:#b>` | con las letras reescritas queda una etiqueta que nadie puede parsear |
+| Un token de paleta, `{primary}`, y cualquier otra llave de otro plugin | el token se busca por su nombre |
+| Un placeholder, `%player_name%` | su nombre se compara literalmente al sustituir su valor, así que un nombre reescrito deja de coincidir en silencio y llega al chat tal como se escribió |
+| Un código legacy, `&l` o `&#8a51c4` | `l` es una letra, y `&ʟ` ya no pone nada en negrita |
+
+Un `<` sin cerrar, una llave sin cerrar o un `%` suelto son texto, que es también como los lee
+MiniMessage.
+
+## La entrada
+
+```yaml title="plugins/ExyliaChatCosmetics/cosmetics/fonts.yml"
+fonts:
+  small:
+    category: classic
+    name: '{primary}&lSMALL CAPS'
+    alphabet: 'ᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ'
+    safe: true
+    icon: PAPER
+    description: 'The Exylia look, for your own words.'
+    priority: 1
+  wide:
+    category: classic
+    name: '{primary}&lWIDE'
+    alphabet: 'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ'
+    digits: '０１２３４５６７８９'
+    safe: true
+    icon: BOOKSHELF
+    description: 'Twice the space between every letter.'
+    priority: 5
+```
+
+| Clave | Qué hace |
+|---|---|
+| `alphabet` | los glifos de la `a` a la `z` en una sola cadena: **26**, o **52** con las mayúsculas detrás. Con 26 ambas cajas usan el mismo glifo, que es justo lo que son las versalitas |
+| `digits` | opcional, exactamente **10** glifos para `0` a `9`. Sin esta clave, los números se dejan como están |
+| `map` | sección opcional de pares `carácter: glifo`, un punto de código a cada lado, para lo que las dos cadenas anteriores no cubren |
+| `safe` | si todos los glifos están en el plano básico. Por defecto `true` |
+
+Todo lo demás que puede declarar una entrada — `category`, `name`, `icon`, `description`,
+`priority`, `permission`, `requirement`, `hidden`, `metadata` — es igual que en cualquier otro
+archivo. Ver [El catálogo](/docs/exyliachatcosmetics/catalogo).
+
+La forma de cadena es como se ve un alfabeto copiado; la forma de mapa es para el carácter suelto:
+
+```yaml
+    map:
+      '!': '❗'
+```
+
+Un `alphabet` de cualquier otra longitud se reporta con su ruta y se salta, y lo mismo pasa con unos
+`digits` que no son diez y con una entrada de `map` que no es un carácter por un glifo. Una entrada
+que se queda sin ningún glifo se descarta con *declares no glyphs, so this font changes nothing*. El
+resto del archivo se carga igual.
+
+<Callout type="note" title="Las letras sin equivalente se quedan como están">
+Ningún conjunto está completo, y los huecos son a propósito. GREEK no tiene un glifo parecido para
+la `j`, la `r` ni la `v`, así que esas tres letras se dejan tal cual. Una letra suelta sin cambiar
+se lee como parte del estilo; un glifo que falta, no.
+</Callout>
+
+## Qué significa `safe`
+
+`safe: true` dice que todos los glifos con los que dibuja la fuente están en el plano básico — la
+parte de Unicode para la que todos los clientes tienen hoja de caracteres. `safe: false` dice que al
+menos uno no lo está: los alfabetos matemáticos de los que salen fraktur, script, monospace y las
+letras de contorno viven por encima de `U+FFFF`, y un cliente que no los tiene dibuja un cuadro por
+cada letra.
+
+Doce de las dieciocho fuentes incluidas son `safe: false`. En un cliente de Java actual se dibujan
+desde la fuente de respaldo y se ven bien. Donde se rompen es en Bedrock y en los clientes viejos.
+
+<Callout type="warning" title="La marca informa, no restringe">
+A ningún jugador se le niega nada por culpa de `safe`. El valor es una afirmación sobre la entrada, y
+los menús incluidos no lo dibujan. Está ahí para que un servidor con la mayoría de sus jugadores en
+Bedrock sepa qué doce entradas borrar antes de que alguien se queje.
+</Callout>
+
+## Las dieciocho incluidas
+
+### CLASSIC
+
+Seis fuentes cuyos glifos están todos en el plano básico, lo que significa que el cliente las dibuja
+con sus propias hojas de caracteres, al tamaño del chat normal.
+
+| id | Nombre en el menú | Glifos | Dígitos |
+|---|---|---|---|
+| `small` | SMALL CAPS | 26, misma caja para ambas | — |
+| `accented` | ACCENTED | 52 | — |
+| `cyrillic` | CYRILLIC | 26, misma caja para ambas | — |
+| `greek` | GREEK | 26, misma caja para ambas | — |
+| `wide` | WIDE | 52 | sí |
+| `bubble` | BUBBLE | 52 | sí |
+
+### TYPESET
+
+| id | Nombre en el menú | Glifos | Dígitos |
+|---|---|---|---|
+| `bold` | BOLD | 52 | sí |
+| `italic` | ITALIC | 52 | — |
+| `bold_italic` | BOLD ITALIC | 52 | — |
+| `monospace` | MONOSPACE | 52 | sí |
+
+### MODERN
+
+| id | Nombre en el menú | Glifos | Dígitos |
+|---|---|---|---|
+| `sans` | SANS | 52 | sí |
+| `sans_bold` | SANS BOLD | 52 | sí |
+| `sans_italic` | SANS ITALIC | 52 | — |
+| `outline` | OUTLINE | 52 | sí |
+
+### SCRIPT
+
+| id | Nombre en el menú | Glifos | Dígitos |
+|---|---|---|---|
+| `script` | SCRIPT | 52 | — |
+| `bold_script` | BOLD SCRIPT | 52 | — |
+| `fraktur` | FRAKTUR | 52 | — |
+| `bold_fraktur` | BOLD FRAKTUR | 52 | — |
+
+Todas las entradas de TYPESET, MODERN y SCRIPT son `safe: false`; todas las de CLASSIC son
+`safe: true`.
+
+## Por qué CLASSIC se lee distinto
+
+Dos cosas deciden cómo se ve de verdad una fuente en el chat, y la pestaña en la que está es la señal
+honesta de cuál le tocó.
+
+CLASSIC está en el plano básico, y el cliente la dibuja con las mismas hojas que usa el juego para el
+griego, el cirílico y todos los idiomas con acentos. Nítida, pequeña y dibujada en todos los
+clientes. Todo lo demás vive en los alfabetos matemáticos, que el cliente saca de su fuente de
+respaldo: más anchos, más pesados y más altos que la línea que los rodea. Legibles y populares, pero
+nunca tan limpios como CLASSIC — las letras no encajan con el chat en el que están, porque no son de
+la misma fuente.
+
+## Los alfabetos que se quedaron fuera
+
+Los alfabetos encuadrados — 🄰, 🅰 — no se incluyen. Cada glifo es un marco dibujado alrededor de una
+letra, y al tamaño del chat una frase entera de esos es un muro de cuadros más que una fuente. Se
+leen como texto roto, así que no se ofrecen como cosmético. BUBBLE, que encierra en círculos en vez
+de cuadros, sí se incluye y es una de las seis que están en el plano básico.
+
+## Decoraciones
+
+`modifiers.yml` es el archivo más corto del conjunto: cinco decoraciones en una pestaña, y ninguna
+cuenta que hacer.
+
+```yaml title="plugins/ExyliaChatCosmetics/cosmetics/modifiers.yml"
+modifiers:
+  bold:
+    category: style
+    name: '{primary}&lBOLD'
+    decoration: bold
+    icon: IRON_BLOCK
+    description: 'Say it louder.'
+    priority: 1
+```
+
+| id | `decoration` | Qué hace |
+|---|---|---|
+| `bold` | `bold` | letras más pesadas |
+| `italic` | `italic` | letras inclinadas |
+| `underlined` | `underlined` | una línea debajo de cada palabra |
+| `strikethrough` | `strikethrough` | una línea que lo atraviesa |
+| `obfuscated` | `obfuscated` | caracteres que nunca se quedan quietos |
+
+`decoration` es la única clave propia, y por defecto vale el id de la entrada — una entrada que se
+llama igual que la decoración que aplica no necesita repetirla. Cualquier cosa que no sea uno de esos
+cinco nombres se reporta y la entrada se salta.
+
+### Varias a la vez
+
+Las decoraciones son el único tipo que se lleva como conjunto en vez de en una ranura única. Un
+jugador puede tener negrita y subrayado puestos a la vez, y hacer clic en una decoración que ya
+lleva puesta se la quita en vez de reemplazarla. Cualquier otro tipo — una etiqueta, una fuente, un
+color — guarda una sola cosa, y elegir la segunda reemplaza a la primera.
+
+## Cómo se llevan
+
+`/cc fonts` y `/cc modifiers` abren los dos navegadores directamente. Los dos están también en el
+menú de mensaje, donde el clic izquierdo navega y el derecho quita lo que haya puesto de ese tipo.
+
+La propiedad son los cuatro nodos de siempre, con `font` o `modifier` como tipo:
+
+| Nodo | Concede |
+|---|---|
+| `exyliachatcosmetics.font.<id>` | una fuente |
+| `exyliachatcosmetics.font.category.<pestaña>` | todas las fuentes de una pestaña — `classic`, `typeset`, `modern`, `script` |
+| `exyliachatcosmetics.font.*` | todas las fuentes |
+| `exyliachatcosmetics.*` | todo lo que tiene el plugin |
+
+Las concesiones funcionan aquí igual que en el resto, caducidad incluida. Ver
+[Concesiones](/docs/exyliachatcosmetics/concesiones).
+
+<Cards>
+  <Card title="El catálogo" href="/docs/exyliachatcosmetics/catalogo">
+    Los campos que comparten todas las entradas, y cómo se lee y se recarga un archivo.
+  </Card>
+  <Card title="Animaciones" href="/docs/exyliachatcosmetics/animaciones">
+    Las fuentes y las decoraciones no llevan animación. Los colores y las etiquetas sí.
+  </Card>
+</Cards>

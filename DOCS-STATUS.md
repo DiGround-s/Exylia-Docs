@@ -19,6 +19,7 @@ scripts/doc-drift.sh exyliaevents # just one
 | `exyliaarmortrims` | `ExyliaArmorTrims` | 1.1.0 | `1d83e8f` 2026-09-03 | Current — the cosmetic gate is a library contract, documented in the library’s Cosmetic rules page rather than per plugin. |
 | `exyliaarrows` | `ExyliaArrows` | 1.0.5 | `2a7335b` 2026-09-03 | Current — rewritten for the 120 display-driven effects, the three triggers, tokens, the menu and the `arrows-effects` flag. |
 | `exyliacapture` | `ExyliaCapture` | 1.1.0 | `c8c2ec7` 2026-09-02 | Current — typed durations noted. The database indexes and the admin menu layout were not worth a page. |
+| `exyliachatcosmetics` | `ExyliaChatCosmetics` | 1.0.0 | `e1bf009` 2026-09-07 | Current — first full documentation: the shipped catalogue (180 tags in seven tabs, 90 nick, 96 chat, 90 shadow and 77 rank colours, 18 fonts, 5 modifiers, 18 animations), tag marks as sprites, particles and head skins with the 1.21.9 ceiling, the four custom kinds and the create/edit token economy, entitlements and expiry, the menus, and the whole built-in chat module across five pages, mentions included: a name is a mention with or without the `@`, and the nudge ships as a sound alone. Written against the source: the repository's own `docs/` predates the current catalogue by twelve commits. |
 | `exyliaclans` | `ExyliaClans` | 1.0.1 | `94c78fe` 2026-08-31 | Current. |
 | `exyliaclasses` | `ExyliaClasses` | 1.0.0 | `d48bfe0` 2026-08-31 | Current — the only change since was a database index. |
 | `exyliaevents` | `ExyliaEvents` | 1.2.0 | `3c6b6aa` 2026-09-02 | 49 types, gauntlets, the 33 Mace Roulette modifiers, PvP during the hunt, the shrinking floor and event chat isolation. The 1.3.0 statistics and leaderboard placeholders are documented ahead of the rest (`fb7782d`). **Gap:** everything else in 1.3.0 — the team King of the Hill event, one dodgeball ball per player, hidden names in Hide & Seek, the TNT Run block break, 15 more trivia questions and the move of player-facing text into `messages.yml`. |
@@ -49,7 +50,8 @@ ExyliaLib `befa514` — release tag `v1.113.0`, the tag JitPack builds and the o
 | Hub page | `exylialib` — integration for Gradle, Gradle Kotlin DSL and Maven, the lookup, timing, events, and the classloader reason the artifact must be `compileOnly`. New page. |
 | Rewritten | The 14 plugins that already had an API page. |
 | New | `exyliasurvivalcore`, which had none and now publishes 31 methods and 6 cancellable events. Registered in `SURVIVALCORE_NAV`. |
-| Not documented | ExyliaBetCore, ExyliaChatCosmetics, ExyliaSandBox, ExyliaSpecialsV3, ExyliaPearls, ExyliaTotems and ExyliaPracticeBotV3 all publish a service, but have no documentation set on this site at all. They are absent from the hub's service table for that reason. |
+| Added later | `exyliachatcosmetics` (`CosmeticsService` and `ChatService`) and `PracticeBotService`, which the artifact already published but the hub table had not listed. |
+| Not documented | ExyliaBetCore, ExyliaSandBox, ExyliaSpecialsV3, ExyliaPearls and ExyliaTotems all publish a service, but have no documentation set on this site at all. They are absent from the hub's service table for that reason. |
 
 The source of truth for these pages is
 `~/Java/Exylia/ExyliaLib/exylia-api/src/main/java/net/exylia/lib/api/`, not the plugin repositories:
@@ -68,6 +70,23 @@ stays as the player left it.
 - `BotDefaults`' `@Comment` on `bot.mode`: *"Picking a mode applies that mode's kit AND its combat model."*
 
 The pages describe what the code does. If the strings are corrected, nothing here needs rewriting.
+
+### Fields ExyliaChatCosmetics declares and does not use
+
+Found while writing that set. Each is read from the file without complaint and reaches the definition;
+nothing then consumes it. The pages say so rather than describing an effect that does not happen.
+
+- `requirement` on any cosmetic entry: parsed by `CosmeticInfo.read` and copied through
+  `RankColorType.withoutPermission`, never evaluated. `BrowserRows` filters on `hidden()` alone.
+- `safe` on a font: reports whether the glyphs live in the basic plane. No menu value exposes it and
+  nothing restricts a font by it.
+- `animation` on a custom cosmetic: the column exists and both renderers honour it, but every caller
+  of `create` and `edit` passes `null`, so nothing writes one.
+
+Its own `docs/` folder is a version behind the plugin — it was last touched at `e6d264b`, twelve
+commits before `4e4428b`, and its tags, fonts, menu-default and command sections all predate what
+ships. The site's pages were written from the source; the repository's notes were used only where the
+source confirmed them.
 
 ## How a review goes
 

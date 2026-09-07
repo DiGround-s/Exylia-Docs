@@ -1,0 +1,145 @@
+---
+title: "Concesiones"
+description: "Disponible, poseído y puesto como tres preguntas distintas, concesiones que caducan, y por qué nunca se quita nada porque un permiso dijera que no."
+---
+
+Sobre cada cosmético se hacen tres preguntas distintas, y conviene no mezclarlas:
+
+| | Significa | Lo decide |
+|---|---|---|
+| **Disponible** | el cosmético existe, no es `hidden`, y quien lo mira cumple su `requirement` | el catálogo |
+| **Poseído** | el jugador tiene al menos una concesión válida | `OwnershipService` |
+| **Puesto** | el jugador lo lleva encima | la fila del perfil |
+
+Poseído y puesto están separados a propósito, y esa separación es la razón de que el plugin se
+comporte como se comporta cuando se acaba un rango o el plugin de permisos va lento.
+
+## Nunca se quita nada porque un permiso dijera que no
+
+Lo que un jugador se puso se queda en su fila. La propiedad se vuelve a preguntar allí donde se
+dibuja una línea, así que un cosmético que ya no posee simplemente deja de dibujarse — y vuelve el
+día que vuelva a ser suyo, todavía en la fila, todavía donde lo dejó.
+
+<Callout type="warning" title="Por qué funciona así">
+Un diseño anterior quitaba lo que el jugador llevaba y ya no poseía, y lo escribía en su fila. Una
+sola respuesta equivocada — un plugin de permisos todavía enganchando sus datos en el join, una
+sincronización de grupos en curso, LuckPerms a medio recalcular — borraba un cosmético para siempre.
+Eso era el "a veces se me quitan las cosas que llevo puestas". Una pregunta hecha al dibujar puede
+estar mal durante un segundo; una escritura no se deshace.
+</Callout>
+
+Hay exactamente una eliminación que sí se escribe: la de un cosmético que dejó de existir. Cuando un
+jugador borra una etiqueta o un color propios, o se los borra un admin, se le quitan de la fila al
+irse. Ya nada podrá responder "sí" por ellos, así que dejarlos ahí solo produciría una línea que no
+dibuja nada.
+
+## De dónde viene la propiedad
+
+| Origen | ¿Se guarda? | Viene de |
+|---|---|---|
+| `PERMISSION` | no — se pregunta en vivo, memorizado durante la sesión | `exyliachatcosmetics.<type>.<id>` y los comodines de abajo. Se ignora en entradas con `permission: false` |
+| `ADMIN` | sí | `/cca give` sin `--source` |
+| `PURCHASE`, `REWARD`, `EVENT`, `ACHIEVEMENT`, `EXTERNAL` | sí | `/cca give --source <name>`, o `ChatCosmeticsAPI.grant` |
+| quien hizo un cosmético personalizado | implícito | la fila de `chatcosmetics_custom` — suyo igual que lo haría suyo un permiso: para siempre y sin fila que caduque |
+| un grupo nombrado por un color de rango | implícito | la lista `groups` de una entrada de `rank-colors.yml` |
+
+El permiso se pregunta en vivo y no se guarda nunca, porque cambia mientras el jugador está
+desconectado. Las concesiones se leen de donde las tenga quien pregunta — el perfil en memoria si
+está conectado, la tabla si no — y se filtran en el momento de preguntar, así que una fila caducada
+sencillamente no es una concesión.
+
+Un `--source` que no se reconozca se lee como `EXTERNAL` en vez de rechazarse, y `--ref` deja
+anotado qué plugin o qué transacción fue.
+
+## Nodos de permiso
+
+| Nodo | Concede |
+|---|---|
+| `exyliachatcosmetics.<type>.<id>` | un cosmético — `exyliachatcosmetics.tag.mvp` |
+| `exyliachatcosmetics.<type>.category.<category>` | todos los cosméticos de una categoría de un tipo |
+| `exyliachatcosmetics.<type>.*` | todos los cosméticos de un tipo |
+| `exyliachatcosmetics.*` | todo |
+
+Una entrada escrita con `permission: false` no se posee nunca por un nodo, tenga el jugador el que
+tenga de los cuatro. La lista completa está en [Permisos](/docs/exyliachatcosmetics/permisos).
+
+## La caducidad es de la concesión
+
+No del cosmético. Una concesión es una fila, y la fila lleva su propio reloj:
+
+| Columna | Significa |
+|---|---|
+| `expires_at = 0` | permanente |
+| `revoked_at != 0` | revocada, con el momento exacto guardado para la auditoría |
+| ni caducada ni revocada | activa |
+
+Una fila inactiva sencillamente no es una concesión. No hace falta que corra nada para que la
+concesión de un jugador desconectado deje de contar — la siguiente lectura la descarta. Lo que hacen
+los temporizadores es avisar y ordenar:
+
+- **Barrido en línea, cada 30 segundos.** Un solo temporizador recorre los perfiles de quienes están
+  aquí, porque una concesión que se acabó solo merece anunciarse a alguien presente. Cada concesión
+  recién caducada dispara `EntitlementExpiredEvent`, envía el mensaje `expired`, y el cosmético deja
+  de dibujarse.
+- **Al entrar.** Con `expiry.notify-on-join` encendido, el jugador recibe una línea `expiring-soon`
+  por cada concesión temporal que lleve puesta, con el tiempo que le queda, y una línea
+  `expired-on-join` con la cuenta de las que llevaba puestas y se acabaron mientras no estaba.
+- **Retención, una vez al día.** Las filas caducadas o revocadas hace más de `expiry.retention-days`
+  se borran. Hasta entonces se quedan, para que `/cca list` y una auditoría todavía vean qué se dio.
+
+Las duraciones son las de ExyliaLib: `30m`, `2h`, `14d`, `1w`, con decimales.
+
+## Varias concesiones del mismo cosmético
+
+Un jugador puede tener más de una concesión del mismo cosmético a la vez — una permanente de un
+rango, una de admin de 14 días, una compra de 30. Que haya una fila por concesión, y no una fecha de
+caducidad por cosmético, es lo que hace que eso funcione: quitar una nunca toca las otras.
+
+`/cca remove <player> <type:id> [source]` revoca todas las concesiones activas de ese cosmético, o
+solo las de un origen. `/cca revoke <id>` revoca exactamente una, por el número que imprime
+`/cca list`.
+
+Lo que todo el mundo lee es la única respuesta que da `Ownership`:
+
+| Campo | Es |
+|---|---|
+| `owned` | si el jugador lo tiene ahora mismo |
+| `permanent` | si alguna de las concesiones, o el permiso, no se acaba nunca |
+| `expiresAt` | cuándo se acaba la última de las temporales, o `0` cuando algo es permanente |
+| `byPermission` | si el nodo por sí solo habría respondido que sí |
+| `grants` | las concesiones guardadas que están activas en este momento |
+
+Eso es también lo que decide cómo se dibuja una fila en un menú: no poseído es bloqueado, poseído y
+puesto es seleccionado, poseído y permanente es la plantilla normal, y poseído con reloj es
+caducando. Ver [Menús](/docs/exyliachatcosmetics/menus).
+
+## La base de datos
+
+El módulo de base de datos de ExyliaLib, configurado en `plugins/ExyliaChatCosmetics/database.yml` —
+H2 por defecto, con MySQL, MariaDB, PostgreSQL y MongoDB soportados. Las tablas se crean y se
+amplían solas; no hay que importar nada a mano. La referencia completa está en [Base de
+datos](/docs/exylialib/base-de-datos).
+
+| Tabla | Clave | Columnas |
+|---|---|---|
+| `chatcosmetics_profiles` | `uuid` | `name`, `equipped` (`type=id,id;type=id`), `favorites` (`type:id,type:id`), `active_loadout`, `created_at`, `updated_at` |
+| `chatcosmetics_entitlements` | `id`, generada | `player_uuid`\*, `cosmetic_key`\*, `source`, `source_ref`, `granted_by`, `granted_at`, `expires_at`, `revoked_at`, `note` |
+| `chatcosmetics_custom` | `id`, generada | `player_uuid`\*, `type` (`customtag`, `customcolor`, `customnick`, `customrank`), `text`, `color`, `animation`, `created_at` |
+| `chatcosmetics_loadouts` | `id`, generada | `player_uuid`\*, `name`, `slots`, `created_at` |
+| `chatcosmetics_tokens` | `id`, generada | `player_uuid`\*, `type`, `kind` (`create` o `edit`), `amount`, `updated_at` |
+
+\* indexada.
+
+El perfil se lee una sola vez al entrar — la fila, las concesiones, las filas propias, los loadouts y
+los saldos de tokens, todo de una — y se guarda en memoria mientras el jugador esté conectado. Dos
+entradas simultáneas comparten una sola lectura, así que una reconexión rápida no puede hacer que
+una segunda lectura termine antes y escriba datos más viejos.
+
+Las escrituras se agrupan. Un clic en un menú marca la fila como sucia y un temporizador la vuelca
+cada **5 segundos**, al salir y al apagar. Un jugador rebuscando en un navegador produce una
+escritura, no treinta.
+
+<Callout type="note" title="El chat nunca toca la base de datos">
+Cada línea que se dibuja en el chat lee el perfil que ya está en memoria. Por muy movido que esté el
+chat, no añade ni una consulta.
+</Callout>

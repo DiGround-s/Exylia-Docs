@@ -1,6 +1,6 @@
 ---
 title: "Commands"
-description: "What a player can do to their own effect, and the thirteen admin subcommands."
+description: "What a player can do to their own effect, and the admin verbs behind /hiteffectsadmin."
 ---
 
 ## Player commands
@@ -11,7 +11,9 @@ needs `exyliahiteffect.command.hiteffect`.
 | Command | What it does |
 |---|---|
 | `/hiteffect` | Opens the menu, on the tab it was last left on. |
-| `/hiteffect preview <effect>` | Plays an effect against an empty sky. Owning it is not required. |
+| `/hiteffect preview <effect>` | Plays an effect on the server's preview stage. Owning it is not required. |
+| `/hiteffect crate` | Opens the crate. Aliases: `crates`, `case`. |
+| `/hiteffect random` | Draws a different effect out of what they own on every hit. Alias: `shuffle`. |
 | `/hiteffect visibility [mode]` | Sets who sees hit effects for them. With no mode it steps to the next one. |
 | `/hiteffect favourites` | Opens the menu straight onto the shortlist. Aliases: `favorites`, `favs`. |
 | `/hiteffect favourite <effect>` | Stars an effect, or unstars it. Aliases: `favorite`, `fav`. |
@@ -24,21 +26,37 @@ needs `exyliahiteffect.command.hiteffect`.
 
 | Command | What it does |
 |---|---|
-| `give <player> <effect> [1-64]` | Gives effect tokens. |
-| `remover <player> [1-64]` | Gives effect removers. |
-| `bind <effect> [player]` | Binds an effect to the weapon in hand, replacing whatever it carried. |
-| `unbind [player]` | Strips the effect from the weapon in hand, giving nothing back. |
-| `set <player> <effect>` | Sets what a player wears. |
-| `clear <player>` | Takes a player's effect off. |
-| `favourites clear <player>` | Empties a player's shortlist. |
-| `validate [player]` | Takes off an effect the target may no longer use. With no player, everyone online. |
-| `open <player>` | Opens the menu for someone. |
-| `preview <effect> [player]` | Previews an effect, for yourself or for someone else. |
+| `item give <player> <effect> [1-64]` | Gives effect tokens. |
+| `item remover <player> [1-64]` | Gives effect removers. |
+| `weapon bind <effect> [player]` | Binds an effect to the weapon in hand, replacing whatever it carried. |
+| `weapon unbind [player]` | Strips the effect from the weapon in hand, giving nothing back. |
+| `player set <player> <effect>` | Sets what a player wears. |
+| `player clear <player>` | Takes a player's effect off. |
+| `player favourites clear <player>` | Empties a player's shortlist. |
+| `player validate [player]` | Takes off an effect the target may no longer use. With no player, everyone online. |
+| `keys give <player> <amount>` | Adds crate keys. Alias: `keys add`. |
+| `keys take <player> <amount>` | Removes crate keys. Alias: `keys remove`. |
+| `keys set <player> <amount>` | Sets the balance outright. |
+| `keys check <player>` | Prints what they hold. Written as `keys <player>` too. |
+| `unlocks grant <player> <effect>` | Writes an effect onto their row, as a crate win does. Alias: `unlocks give`. |
+| `unlocks revoke <player> <effect>` | Takes one back off. Alias: `unlocks take`. |
+| `unlocks clear <player>` | Takes every won effect off their row. |
+| `crate block add` | Binds the block you are looking at as a crate opener. |
+| `crate block remove` | Unbinds the block you are looking at. |
+| `crate block list` | Prints every bound block. |
+| `crate block clear` | Unbinds all of them. |
+| `menu open <player>` | Opens the effect menu for someone. |
+| `menu crate <player>` | Opens the crate for someone. |
+| `preview play <effect> [player]` | Previews an effect, for yourself or for someone else. |
+| `preview location` | Sets the preview stage to where you stand, facing what you face. |
 | `list [category]` | Prints every effect, or just one category's. |
 | `refresh [player]` | Redraws what a player is holding. With no player, everyone online. |
 | `reload` | Re-reads this plugin's files. |
 
-<Callout type="note" title="bind, set and give ignore permissions">
+Every verb is a group: `keys` on its own completes to `give`, `take`, `set` and `check`, and `crate`
+completes to `block`. Nothing is spelled out twice.
+
+<Callout type="note" title="bind, set and unlocks ignore permissions">
 They are admin verbs: a crate, a rank reward or a support ticket has already decided the player may
 have the effect. `require-permission` governs what a **player** can do, never what an admin or the
 API does.
@@ -46,22 +64,32 @@ API does.
 
 ## What each one actually does
 
-### `bind`
+### `weapon bind`
 
 Acts on the target's main hand. An empty hand answers `empty-hand`. A weapon that already carries an
 effect has it replaced — the old one is dropped, not returned as a token. The weapon that does not fit
 the effect's `weapons` list is refused.
 
-### `unbind`
+### `weapon unbind`
 
 Strips the value and hands nothing back, which is the difference from a remover item. For giving the
 token back, have the player use a remover.
 
-### `validate`
+### `player validate`
 
 Re-checks the target's choice against their permissions and takes it off if it no longer holds. The
-same check runs on join, on the next hit and on every menu open — `validate` is how you make it
-immediate after changing a rank.
+same check runs on join, on the next hit and on every menu open — `player validate` is how you make it
+immediate after changing a rank. An effect won out of the crate is never taken off by it: it is on the
+player's row rather than on a node.
+
+### `preview location`
+
+Previews play on a stage rather than on top of the player: they are moved there, the effect plays in
+front of them where only they can see it, and they are put back exactly where they were. Until a stage
+is set, `/hiteffect preview` says previews are unavailable — and tells an admin how to set one.
+
+Stand where the preview should happen, face the way it should be watched, and run it. The location is
+written to `config.yml` as `preview.location`.
 
 ### `refresh`
 
@@ -70,7 +98,7 @@ plays no effect: it is the answer to a weapon whose line went stale.
 
 ### `reload`
 
-Runs one step, `configs`, which re-reads `config.yml`, `effects.yml` and `menus/effects.yml`,
+Runs one step, `configs`, which re-reads `config.yml`, `effects.yml` and every file under `menus/`,
 recompiles every sequence and reapplies the message prefix. Edits made to the menu file survive.
 
 It deliberately does **not** reload ExyliaLib — recolouring every plugin on the server is what

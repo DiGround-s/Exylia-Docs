@@ -1,0 +1,236 @@
+---
+title: "Installation"
+description: "Dependencies, the first boot, every file it writes, the database, Folia and the reload."
+---
+
+## Before you start
+
+The server needs Paper 1.21 or newer and Java 21. One plugin has to be in `plugins/` beside the jar;
+two more are optional and each buys something specific.
+
+| Plugin | Declared as | What for |
+|---|---|---|
+| `ExyliaLib` | `softdepend` | **Required.** Configuration, messages, menus, text, the palette, the database, tasks and placeholders all come from it. The plugin does not run without it. |
+| `PlaceholderAPI` | `softdepend` | Optional. Bridges `%ecc_…%` into every other plugin, which is how a chat plugin draws the tag and the coloured name. |
+| `LuckPerms` | `softdepend` | Optional. Rank colours are unusable without it, and permission changes apply within the tick rather than on relog. |
+
+<Callout type="note" title="Why the required one is a softdepend">
+`softdepend` is a load-order rule, not a statement about how optional something is. The comment in
+`plugin.yml` says it plainly:
+
+```yaml title="plugin.yml"
+# Soft on purpose: a hard depend stops this plugin from loading when
+# ExyliaLib is absent, and the loader that would install ExyliaLib is
+# exactly what has to load for the install to happen.
+softdepend: [ExyliaLib, PlaceholderAPI, LuckPerms]
+```
+
+A hard `depend` would refuse to load the plugin before the library could ever arrive, so soft here
+means "load me after it", not "you may leave it out".
+</Callout>
+
+### What each optional plugin buys
+
+**PlaceholderAPI.** ExyliaLib registers every placeholder under both `%exyliachatcosmetics_<name>%`
+and the short `%ecc_<name>%`, and bridges them into PAPI automatically. Inside ExyliaLib's own text
+they work regardless; PAPI is what makes them resolve in someone else's chat format, scoreboard or
+tab list. If the built-in chat module is doing the delivering, nothing needs the round trip and PAPI
+buys you nothing.
+
+**LuckPerms.** A rank colour repaints the prefix and suffix your permission plugin already writes, and
+it reads them from LuckPerms' cached data. Without LuckPerms `{prefix}` and `{suffix}` draw nothing
+and the whole rank-colour screen is empty. LuckPerms also carries the groups an entry's `groups` list
+names, and its `UserDataRecalculateEvent` drops the memoised permissions and the render cache, so a
+rank that ran out takes its cosmetics off without a relog. Ownership by permission still works through
+Bukkit without it — the memo simply refreshes on join, on reload and on the 30-second sweep instead.
+
+## Installing
+
+<Steps>
+  <Step title="Drop in the jar">
+    Copy `ExyliaChatCosmetics.jar` into `plugins/`, next to `ExyliaLib`.
+  </Step>
+  <Step title="Start the server">
+    The first boot writes the configuration, the eight catalogue files, the six menus and the database
+    tables. It may take longer than usual: `plugin.yml` declares the same driver list ExyliaLib does,
+    and the server's own library loader fetches each one once and shares it, so the very first start
+    needs an internet connection.
+  </Step>
+  <Step title="Check the console">
+    You are looking for the ASCII banner with the plugin name, followed by `Version: v1.0.0`. If it
+    never appears, `ExyliaLib` is missing.
+  </Step>
+  <Step title="Open the menu">
+    `/cc` in game. `exyliachatcosmetics.command.cosmetics` is declared `default: true`, so every player
+    already has it. See [First steps](/docs/exyliachatcosmetics/first-steps).
+  </Step>
+</Steps>
+
+<Callout type="note" title="Nothing about your chat changes yet">
+`chat.module.enabled` is `false` out of the box, so the plugin delivers no messages, owns no format
+and registers no chat commands. Whatever runs your chat today keeps running it. All the plugin does
+until you decide otherwise is style the message body through the hook and answer placeholders — and
+even that is only what the hook mode you pick allows. Turning the module on is a deliberate step, and
+it lives on the [chat page](/docs/exyliachatcosmetics/chat).
+</Callout>
+
+## What the first boot writes
+
+Everything lives under `plugins/ExyliaChatCosmetics/`. Each file is copied out once and never
+overwritten, so your edits survive an update.
+
+| File | Contents |
+|---|---|
+| `config.yml` | Generated from the `Settings` record: the chat hook, the tag format, rank-colour repainting, the custom-tag and custom-colour rules, the loadout limit, the animation tick, the preview line, the menu strings, expiry and the placeholder fallbacks. |
+| `messages.yml` | Every player-facing line, generated from the `CosmeticMessages` record, plus the `prefix` that `%prefix%` expands to. |
+| `database.yml` | ExyliaLib's. Engine, credentials and pool size. H2 by default. |
+
+### `cosmetics/`
+
+The catalogue. These are not schema-managed on purpose — a catalogue is curated by hand and a schema
+writer keeps none of its comments — so what ships is a commented file you can read top to bottom.
+
+| File | Holds |
+|---|---|
+| `cosmetics/tags.yml` | 180 tags in seven tabs: `symbols`, `animated`, `particles`, `icons`, `interface`, `flags`, `premium` |
+| `cosmetics/nick-colors.yml` | 90 nick colours in `red`, `blue`, `yellow`, `green`, `advanced`, `premium` |
+| `cosmetics/chat-colors.yml` | 96 chat colours in the same six tabs |
+| `cosmetics/shadow-colors.yml` | 90 shadow colours in `natural`, `red`, `blue`, `yellow`, `green`, `premium` |
+| `cosmetics/rank-colors.yml` | 77 rank colours in `solid`, `metal`, `gems`, `gradient`, `animated`, `staff` |
+| `cosmetics/fonts.yml` | 18 fonts in `classic`, `typeset`, `modern`, `script` |
+| `cosmetics/modifiers.yml` | bold, italic, underlined, strikethrough and obfuscated, in one `style` tab |
+| `cosmetics/animations.yml` | 18 animations, referenced by id from any of the files above |
+
+### `menus/`
+
+Six ExyliaLib menu files, compiled on load and recompiled by `/cca reload`.
+
+| File | Opens from |
+|---|---|
+| `menus/main.yml` | `/cc` |
+| `menus/identity.yml` | the IDENTITY button — tags, nick colours, rank colours |
+| `menus/message.yml` | the MESSAGE button — chat colours, shadow colours, fonts, modifiers |
+| `menus/browser.yml` | every grid of cosmetics, one screen reused for every type |
+| `menus/favorites.yml` | the FAVORITES button |
+| `menus/loadouts.yml` | the LOADOUTS button |
+
+## The `chat/` tree
+
+None of it is written on the first boot. The chat module builds its files the first time it starts,
+which is the first load or reload after `chat.module.enabled: true`.
+
+| File | Holds |
+|---|---|
+| `chat/config.yml` | The module's own settings, generated from a record like `config.yml` is. |
+| `chat/messages.yml` | The module's player-facing lines. |
+| `chat/channels.yml` | The channels and their ranges, permissions and formats. |
+| `chat/formats/default.yml` | The line a message is drawn as. |
+| `chat/formats/msg.yml` | The same for private messages. Any other `.yml` you add to this folder is read too. |
+| `chat/filter/config.yml` | Cooldowns, similarity, flood, caps and the point budget. |
+| `chat/filter/rules.yml` | What is blocked, and what each rule costs. |
+| `chat/filter/whitelist.yml` | Words a rule must not match. |
+| `chat/filter/leet.yml` | The letter substitutions folded away before a rule looks at a message. |
+| `chat/filter/punishments.yml` | What happens at each point total. |
+| `chat/text/emojis.yml` | `:name:` to the glyph it draws. |
+| `chat/text/grammar.yml` | The capitalisation and punctuation tidy-ups. |
+| `chat/announcements.yml` | The announcer's rotation. |
+
+<Callout type="note" title="A server upgrading from the loose layout">
+The filter used to be five loose files directly in `chat/`, beside `emojis.yml` and `grammar.yml`.
+They live in `chat/filter/` and `chat/text/` now, and the module moves each one into place on the
+first start after the change — an edited file keeps its edits, and anything already in the new place
+is left alone.
+</Callout>
+
+## Database
+
+By default the plugin uses **H2**: a file inside the plugin folder, with no server, no installation
+and no maintenance. Tables are created on first use and widened automatically when a column needs
+more room.
+
+| Table | Key | Holds |
+|---|---|---|
+| `chatcosmetics_profiles` | `uuid` | `name`, `equipped`, `favorites`, `active_loadout`, `created_at`, `updated_at` |
+| `chatcosmetics_entitlements` | generated `id` | `player_uuid`, `cosmetic_key`, `source`, `source_ref`, `granted_by`, `granted_at`, `expires_at`, `revoked_at`, `note` |
+| `chatcosmetics_custom` | generated `id` | `player_uuid`, `type`, `text`, `color`, `animation`, `created_at` |
+| `chatcosmetics_loadouts` | generated `id` | `player_uuid`, `name`, `slots`, `created_at` |
+| `chatcosmetics_tokens` | generated `id` | `player_uuid`, `type`, `kind`, `amount`, `updated_at` — one row per player, per kind of custom cosmetic, per `create`/`edit` balance |
+
+A sixth table, `chatcosmetics_chat_players`, belongs to the chat module and is created only once that
+module runs. It carries a player's channel, their ignore list and their moderation state.
+
+To share cosmetics across several servers, point them at the same engine:
+
+```yaml title="plugins/ExyliaChatCosmetics/database.yml"
+database:
+  type: mysql
+  settings:
+    max-pool-size: 0
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Supported engines: `h2`, `mysql`, `mariadb`, `postgresql` and `mongodb`. Only the block matching
+`type` is read, and an unrecognised value falls back to `h2` and says so. The file is ExyliaLib's; its
+full reference is in the [library's database page](/docs/exylialib/database).
+
+A profile is read once on join — the row, the grants, what the player made and their loadouts — and
+held in memory while they are online. Menu clicks mark the row dirty and a flush runs every five
+seconds, on quit and on shutdown. Drawing a chat line never touches the database.
+
+## Folia
+
+`plugin.yml` declares `folia-supported: true`, and everything thread-bound goes through ExyliaLib's
+`Tasks`: profile writes and event firing land on the player's own region, the animation clock and the
+expiry sweep are asynchronous, and rendering a line or answering a placeholder reads memory only.
+Nothing extra to configure.
+
+## Updating
+
+Replace the jar and restart. Your catalogue files, menus and chat files are kept untouched, and
+everything a player owns lives in the database.
+
+`config.yml` and `messages.yml` are generated from records, so they are handled differently from the
+files that are merely copied: a key a new release adds appears with its default and its comment, and
+a key no record declares any more is **removed on load** and reported once as `UNKNOWN_KEY`. That is
+one-way — a typo in a key name is deleted rather than warned about for ever, so read the console after
+an update if you have been editing by hand.
+
+## Reloading
+
+```text
+/cca reload
+```
+
+Permission `exyliachatcosmetics.admin`. It runs five steps in order, and a step that fails is reported
+while the rest still run:
+
+| Step | Re-reads |
+|---|---|
+| `configs` | `config.yml` and `messages.yml`, and the message prefix with them |
+| `catalogs` | `cosmetics/animations.yml` and every catalogue file |
+| `menus` | all six `menus/*.yml` |
+| `chat` | turns the built-in module on or off to match `chat.module.enabled`, and reinstalls the chat hook |
+| `hooks` | tries LuckPerms again, in case it registered its service after this plugin started |
+
+`/exylialib reload` is separate: it reloads the palette, and this plugin drops its render cache in
+response, so recolouring the server recolours tags and names without touching anything here.
+
+## Where to go next
+
+<Cards>
+  <Card title="First steps" href="/docs/exyliachatcosmetics/first-steps">
+    The first ten minutes: the menu, what a player already owns, granting a tag, and getting the
+    identity into your chat format.
+  </Card>
+  <Card title="The catalogue" href="/docs/exyliachatcosmetics/catalogue">
+    What each file under `cosmetics/` can say, and how to write your own entries.
+  </Card>
+  <Card title="The chat module" href="/docs/exyliachatcosmetics/chat">
+    What turning `chat.module.enabled` on actually changes.
+  </Card>
+</Cards>

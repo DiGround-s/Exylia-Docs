@@ -1,6 +1,6 @@
 ---
 title: "Permisos"
-description: "Los cuatro tipos de nodo, y cómo se vende una categoría en una línea."
+description: "Los cinco tipos de nodo, y cómo se vende una categoría o una rareza en una línea."
 ---
 
 ## Los nodos
@@ -12,9 +12,11 @@ description: "Los cuatro tipos de nodo, y cómo se vende una categoría en una l
 | `exyliakilleffect.effect.<id>` | Un efecto, por su id en minúscula. |
 | `exyliakilleffect.effect.*` | Todos los efectos. |
 | `exyliakilleffect.category.<id>` | Todos los efectos de esa categoría. |
+| `exyliakilleffect.tier.<id>` | Todos los efectos de esa rareza. |
 
-Un efecto se tiene si aplica **cualquiera** de los tres nodos de efecto: el suyo, el comodín o el de su
-categoría.
+Un efecto se concede si aplica **cualquiera** de los cuatro nodos de efecto: el suyo, el comodín, el
+de su categoría o el de su rareza. Un permiso es solo la mitad de tenerlo — la otra mitad es ganarlo
+en [la caja](/docs/exyliakilleffect/caja), que se escribe en la fila del jugador.
 
 ## El id es el nodo
 
@@ -23,6 +25,7 @@ No hay clave `permission` en `effects.yml`. El nodo sale de la clave, en minúsc
 ```text
 BLADE_STORM  →  exyliakilleffect.effect.blade_storm
 siege        →  exyliakilleffect.category.siege
+legendary    →  exyliakilleffect.tier.legendary
 ```
 
 Las mayúsculas no cuentan, así que recapitalizar una clave no cambia nada. Renombrarla lo cambia todo:
@@ -34,11 +37,12 @@ es otro nodo, y quien tuviera el viejo pierde el efecto.
 /lp group default permission set exyliakilleffect.command.killeffect true
 /lp group vip     permission set exyliakilleffect.category.siege true
 /lp group mvp     permission set exyliakilleffect.effect.blade_storm true
+/lp group elite   permission set exyliakilleffect.tier.legendary true
 /lp group legend  permission set exyliakilleffect.effect.* true
 ```
 
-Seis categorías de veinte es lo que hace que valga la pena vender el nodo de categoría: "todos los
-efectos de Siege" es una línea en vez de veinte.
+Seis categorías y cuatro rarezas son lo que hace que valga la pena vender esos nodos: "todos los
+efectos de Siege" o "todos los legendarios" es una línea en vez de veinte.
 
 <Callout type="tip" title="Regala el menú">
 Sin `exyliakilleffect.command.killeffect` no se puede abrir el catálogo. Quien no ve lo que hay a la

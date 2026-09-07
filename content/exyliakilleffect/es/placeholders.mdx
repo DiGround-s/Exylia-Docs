@@ -41,6 +41,17 @@ elección del menú.
 | `%exyliakilleffect_visibility%` | Su modo de visibilidad, con el nombre que diga `particles.name-*`. |
 | `%exyliakilleffect_favourites%` | Cuántos efectos tiene marcados. |
 | `%exyliakilleffect_favourite_<id>%` | `true` o `false` para un efecto — `%exyliakilleffect_favourite_blade_storm%`. |
+| `%exyliakilleffect_random%` | `true` mientras cada baja saca un efecto distinto. |
+
+## La caja
+
+| Placeholder | Descripción |
+|---|---|
+| `%exyliakilleffect_keys%` | Cuántas llaves tiene. |
+| `%exyliakilleffect_unlocked%` | Cuántos efectos ha ganado. |
+| `%exyliakilleffect_catalogue%` | Cuántos declara el servidor. Alias: `_total`. |
+| `%exyliakilleffect_unlocked_<id>%` | `true` o `false` para un efecto — `%exyliakilleffect_unlocked_blade_storm%`. |
+| `%exyliakilleffect_tier_count_<tier>%` | Cuántos efectos tiene una rareza — `%exyliakilleffect_tier_count_legendary%`. |
 
 `favorite` se acepta donde se acepte `favourite`.
 
@@ -60,7 +71,14 @@ para un scoreboard sin fallback propio:
 lines:
   - " {muted}❙ {letters}Efecto: {highlight}%exyliakilleffect_effect_name%"
   - " {muted}❙ {letters}Arma: {highlight}%exyliakilleffect_weapon_effect_name%"
+  - " {muted}❙ {letters}Llaves: {highlight}%exyliakilleffect_keys%"
+  - " {muted}❙ {letters}Conseguidos: {highlight}%exyliakilleffect_unlocked%{muted}/%exyliakilleffect_catalogue%"
 ```
+
+<Callout type="note" title="Con la elección aleatoria">
+`_effect%` responde `random` y `_effect_name%` responde lo que diga `menu.random-name`, así que un
+scoreboard lee "Random" en vez de leerse como si no llevara nada.
+</Callout>
 
 <Callout type="tip" title="effect_material es para menús">
 Es el icono de lo que eligió, que es lo que permite que el menú de otro plugin dibuje su efecto actual

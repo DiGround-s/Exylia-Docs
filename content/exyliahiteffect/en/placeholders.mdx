@@ -16,6 +16,9 @@ Every placeholder below is written in full, and clicking one copies it.
 | `%exyliahiteffect_effect_category%` | The category id. |
 | `%exyliahiteffect_effect_category_name%` | The category's display name. |
 | `%exyliahiteffect_effect_weapons%` | What it may be bound to, in words. |
+| `%exyliahiteffect_effect_tier%` | Its rarity id. |
+| `%exyliahiteffect_effect_tier_name%` | The rarity's display name. |
+| `%exyliahiteffect_effect_tier_color%` | The colour that rarity is written in. `colour` reads the same. |
 | `%exyliahiteffect_has_effect%` | `true` or `false`. |
 
 ## What the weapon in hand carries
@@ -41,8 +44,21 @@ about their menu choice.
 | `%exyliahiteffect_visibility%` | The player's visibility mode, named as `particles.name-*` says. |
 | `%exyliahiteffect_favourites%` | How many effects they have starred. |
 | `%exyliahiteffect_favourite_<id>%` | `true` or `false` for one effect — `%exyliahiteffect_favourite_crit_spark%`. |
+| `%exyliahiteffect_keys%` | How many crate keys they hold. |
+| `%exyliahiteffect_unlocked%` | How many effects they have won. |
+| `%exyliahiteffect_unlocked_<id>%` | `true` or `false` for one effect — `%exyliahiteffect_unlocked_crit_spark%`. |
+| `%exyliahiteffect_catalogue%` | How many effects the server declares. `total` reads the same. |
+| `%exyliahiteffect_tier_count_<id>%` | How many effects a rarity holds — `%exyliahiteffect_tier_count_legendary%`. |
+| `%exyliahiteffect_random%` | `true` while the player is on the random choice. |
 
 `favorite` is accepted wherever `favourite` is.
+
+## On the random choice
+
+A player who asked for a different effect on every hit is not carrying one, and a scoreboard asking
+what they carry would otherwise read as carrying nothing. So `%exyliahiteffect_effect%` answers
+`random`, `%exyliahiteffect_effect_name%` answers whatever `menu.random-name` says, and
+`%exyliahiteffect_has_effect%` stays `true`.
 
 ## With nothing chosen
 

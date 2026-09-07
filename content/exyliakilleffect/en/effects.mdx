@@ -1,6 +1,6 @@
 ---
 title: "Effects and categories"
-description: "How effects.yml is written, and the 120 effects that ship in it."
+description: "How effects.yml is written, and the 129 effects that ship in it."
 ---
 
 ## The file
@@ -17,6 +17,7 @@ categories:
 kill_effects:
   BLADE_STORM:
     category: siege
+    tier: common
     name: "<gradient:#DCE6F2:#8FA6C4><bold>BLADE STORM</bold></gradient>"
     material: NETHERITE_SWORD
     description:
@@ -33,6 +34,7 @@ kill_effects:
 | Key | What it does |
 |---|---|
 | `category` | Which tab it appears under. Must be a key declared under `categories`. |
+| `tier` | Its rarity: a key declared under `tiers` in `config.yml`. Decides its colour and how often a crate lands on it. One that no longer exists falls back to the first rarity. |
 | `name` | What menus and placeholders call it. Palette tokens, MiniMessage and gradients all work. |
 | `material` | The item the row is drawn with. Defaults to `BARRIER`. |
 | `description` | A list is one line per entry; a single string breaks on `<nl>`. |
@@ -77,7 +79,8 @@ in.
 
 ## The catalogue
 
-Twenty effects per category, 120 in total.
+Twenty effects per category and twenty-nine in Bonk, 129 in total. Each carries a `tier` — see
+[The crate](/docs/exyliakilleffect/crate).
 
 ### Siege — `NETHERITE_SWORD`
 
@@ -125,11 +128,12 @@ Jokes.
 
 `THE_CLASSIC` `BONK` `ANVIL_CHORUS` `PIANO` `SKILL_ISSUE` `GG_EZ` `YEET` `RUBBER_DUCK` `CAKE`
 `TNT_DELIVERY` `FISH_SLAP` `BIG_BOOT` `FRYING_PAN` `BANANA_PEEL` `CHICKEN_JOCKEY` `SAFE_DELIVERY`
-`TOO_SLOW` `RATIO` `BALLOON_POP` `VENDING_MACHINE`
+`TOO_SLOW` `RATIO` `BALLOON_POP` `VENDING_MACHINE` `EJECTED` `AW_MAN` `PORTAL_LOOP` `STONKS`
+`PRESS_F` `WASTED` `NYAN_CAT` `MOAI` `OLD_PHONE`
 
 ## The body on the ground
 
-107 of the 120 effects use the `[NPC]` step: a copy of the victim, wearing what they wore, left
+Every one of the 129 effects uses the `[NPC]` step: a copy of the victim, wearing what they wore, left
 lying — or thrown, or slumping — where they fell for a couple of seconds. It is a display, not an entity anyone can hit — nothing can
 be looted from it and nothing collides with it.
 

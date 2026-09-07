@@ -1,6 +1,6 @@
 ---
 title: "Permisos"
-description: "Los cuatro tipos de nodo, y cómo se vende una categoría en una línea."
+description: "Los tipos de nodo, cómo se vende una categoría en una línea, y la mitad de la propiedad que no es un nodo."
 ---
 
 ## Los nodos
@@ -12,9 +12,16 @@ description: "Los cuatro tipos de nodo, y cómo se vende una categoría en una l
 | `exyliahiteffect.effect.<id>` | Un efecto, por su id en minúscula. |
 | `exyliahiteffect.effect.*` | Todos los efectos. |
 | `exyliahiteffect.category.<id>` | Todos los efectos de esa categoría. |
+| `exyliahiteffect.tier.<id>` | Todos los efectos de esa rareza. |
 
-Un efecto se tiene si aplica **cualquiera** de los tres nodos de efecto: el suyo, el comodín o el de su
-categoría.
+Un efecto se tiene si aplica **cualquiera** de los cuatro nodos de efecto: el suyo, el comodín, el de
+su categoría o el de su rareza.
+
+<Callout type="note" title="O si se ganó">
+Un efecto que sale de la caja se escribe en la fila del jugador, no se concede como nodo. La propiedad
+se lee como "un permiso lo concede **o** su fila dice que lo desbloqueó", que es lo que hace que una
+ganancia sobreviva al rango que pagó la llave. Ver [La caja](/docs/exyliahiteffect/caja).
+</Callout>
 
 ## El id es el nodo
 
@@ -23,6 +30,7 @@ No hay clave `permission` en `effects.yml`. El nodo sale de la clave, en minúsc
 ```text
 CRIT_SPARK  →  exyliahiteffect.effect.crit_spark
 impact      →  exyliahiteffect.category.impact
+legendary   →  exyliahiteffect.tier.legendary
 ```
 
 Las mayúsculas no cuentan, así que recapitalizar una clave no cambia nada. Renombrarla lo cambia todo:
@@ -34,11 +42,13 @@ es otro nodo, y quien tuviera el viejo pierde el efecto.
 /lp group default permission set exyliahiteffect.command.hiteffect true
 /lp group vip     permission set exyliahiteffect.category.impact true
 /lp group mvp     permission set exyliahiteffect.effect.crit_spark true
+/lp group elite   permission set exyliahiteffect.tier.legendary true
 /lp group legend  permission set exyliahiteffect.effect.* true
 ```
 
 Seis categorías de quince es lo que hace que valga la pena vender el nodo de categoría: "todos los
-efectos de Impact" es una línea en vez de quince.
+efectos de Impact" es una línea en vez de quince. El nodo de rareza corta al revés — "todos los
+Legendary" es un rango que se vende por lo raro que es lo que contiene, no por cómo se ve.
 
 <Callout type="tip" title="Regala el menú">
 Sin `exyliahiteffect.command.hiteffect` no se puede abrir el catálogo. Quien no ve lo que hay a la

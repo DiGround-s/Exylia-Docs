@@ -17,6 +17,7 @@ categories:
 hit_effects:
   CRIT_SPARK:
     category: impact
+    tier: common
     name: "<gradient:#FFE9A8:#D1A53F><bold>CRIT SPARK</bold></gradient>"
     material: GOLDEN_SWORD
     description: "Eight splinters of gold, {highlight}gone in a third<nl>of a second{neutral}."
@@ -30,6 +31,7 @@ hit_effects:
 | Clave | Qué hace |
 |---|---|
 | `category` | En qué pestaña aparece. Tiene que ser una clave declarada en `categories`. |
+| `tier` | Qué tan raro es. Tiene que ser una clave declarada en `tiers`, en `config.yml`. Sin él, el efecto es común. |
 | `name` | Cómo lo llaman menús y placeholders. Acepta tokens de paleta, MiniMessage y degradados. |
 | `material` | El objeto con el que se dibuja la fila. Por defecto `BARRIER`. |
 | `description` | Una lista es una línea por entrada; un solo texto se parte con `<nl>`. |
@@ -37,7 +39,8 @@ hit_effects:
 | `effects` | Los pasos que se dibujan sobre quien recibió el golpe. |
 | `weapons` | Opcional. A qué se puede atar. Sin él, encaja en todo. |
 
-Una categoría acepta `material`, `name` y `priority`.
+Una categoría acepta `material`, `name` y `priority`. Las rarezas se declaran en `config.yml`, no
+aquí — ver [La caja](/docs/exyliahiteffect/caja).
 
 <Callout type="note" title="Lo roto se avisa, no se adivina">
 Falta la sección `categories`, un efecto que nombra una categoría no declarada, una entrada sin

@@ -95,9 +95,74 @@ menu:
   favourites-icon: "AMETHYST_SHARD"
   favourite-on: "{highlight}★ In your favourites"
   favourite-off: "{muted}☆ Not in your favourites"
+  random-name: "{highlight}Random"
+  random-on: "{success}✔ Every kill is a surprise"
+  random-off: "{warning}➥ Click to surprise yourself"
 ```
 
-The screen itself is `menus/effects.yml` — see [The menu](/docs/exyliakilleffect/menu).
+The three `random-*` keys are what the random choice is called and what its button says. The
+screen itself is `menus/effects.yml` — see [The menu](/docs/exyliakilleffect/menu).
+
+## `tiers`
+
+The rarities effects are sorted into, and how often each one comes out of a crate. Add, rename or
+delete any of them — the key is the id `effects.yml` writes as `tier`. Full reference on
+[The crate](/docs/exyliakilleffect/crate).
+
+```yaml
+tiers:
+  common:
+    name: "Common"
+    material: GRAY_DYE
+    color: "{muted}"
+    chance: 60.0
+    priority: 1
+  rare: { name: "Rare", material: LIGHT_BLUE_DYE, color: "{info}", chance: 25.0, priority: 2 }
+  epic: { name: "Epic", material: PINK_DYE, color: "{accent}", chance: 12.0, priority: 3 }
+  legendary: { name: "Legendary", material: ORANGE_DYE, color: "{highlight}", chance: 3.0, priority: 4 }
+```
+
+`chance` is a weight, not a percentage: the shares shown in the menu are worked out from it.
+
+## `crate`
+
+```yaml
+crate:
+  enabled: true
+  start-keys: 0
+  duplicate-refund: 1
+  give-token: false
+  blocks: []
+  max-at-once: 4
+  spin-frames: 34
+  stagger-seconds: 2.0
+  on-spin:
+    sound:
+      name: BLOCK_NOTE_BLOCK_HAT
+      pitch: 1.6
+  on-win:
+    sound:
+      name: ENTITY_PLAYER_LEVELUP
+      pitch: 1.2
+  on-duplicate:
+    sound:
+      name: BLOCK_NOTE_BLOCK_BASS
+      pitch: 0.8
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `enabled` | `true` | Off, the crate button says so instead of opening. |
+| `start-keys` | `0` | Keys a player is given the first time they are seen. |
+| `duplicate-refund` | `1` | Keys handed back for an effect already owned. |
+| `give-token` | `false` | Whether winning also hands over the effect's token. |
+| `blocks` | `[]` | The blocks that open the crate. Bind them with `/killeffectsadmin crate block add`. |
+| `max-at-once` | `4` | How many crates one player may open in one go, up to seven. |
+| `spin-frames` | `34` | How many faces the first reel runs through. Capped at 200. |
+| `stagger-seconds` | `2.0` | How long after one reel stops the next one does. |
+
+The three effect blocks are played on every falling tick, once on a win, and instead of the win when
+nothing new came out.
 
 ## `feedback`
 
@@ -164,5 +229,14 @@ with `%prefix%`.
 | `refreshed` | `refresh` or `validate` finished. |
 | `menu-disabled` | The menu was opened on a `weapon` server. |
 | `favourite-added` / `favourite-removed` / `favourites-cleared` / `favourites-empty` | The shortlist. |
+| `random-chosen` | The random choice was turned on. |
+| `crate-won` / `crate-duplicate` | A crate landed on something new, or on something already owned. |
+| `crate-no-keys` / `crate-busy` / `crate-empty` / `crate-disabled` | The crate refused to open. |
+| `keys-received` / `keys-taken` / `keys-given` | Keys changed hands. |
+| `unlock-granted` / `unlock-already` / `unlock-revoked` / `unlocks-cleared` | `unlocks` subcommands. |
+| `crate-block-*` / `crate-blocks-*` | `crate block` subcommands. |
+| `preview-location-set` | The preview stage was moved. |
+| `preview-unavailable` / `preview-unavailable-admin` | A preview was asked for before a stage was set. |
 
-Placeholders in messages: `%effect%`, `%amount%`, `%id%`, `%visibility%`, plus `%prefix%`.
+Placeholders in messages: `%effect%`, `%amount%`, `%id%`, `%visibility%`, `%player%`, `%location%`,
+plus `%prefix%`.

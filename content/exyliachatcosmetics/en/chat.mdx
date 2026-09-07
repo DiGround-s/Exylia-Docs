@@ -1,0 +1,201 @@
+---
+title: "The chat module"
+description: "What turning the built-in chat on means, the files it owns, the pipeline a message walks, and how the line is delivered."
+---
+
+The chat module is off by default. With it on, ExyliaChatCosmetics *is* the server's chat: channels,
+formats, private messages, the filter, mentions, emojis, item renders and the announcer. The cosmetics
+land inside the line directly, with no placeholder round-trip, because the module builds the line
+itself rather than handing a string to somebody else's format.
+
+## Turning it on
+
+```yaml title="plugins/ExyliaChatCosmetics/config.yml"
+chat:
+  module:
+    enabled: true
+```
+
+While the module runs, the cosmetic `chat.hook` is uninstalled. The two must never both be on: the
+hook exists to style a message another chat plugin will deliver, and the module styles the body itself
+(`CosmeticsProcessor`) and draws the tag and the name into the format as `{tag}` and `{nick}`. Turn the
+module off and the hook is reinstalled, with the cosmetics working exactly as before.
+
+If a file under `chat/` cannot be read, the module refuses to start, says so in the console, and the
+hook goes back on — a broken word list costs you the module, never the cosmetics.
+
+<Callout type="note" title="Two reloads, two scopes">
+`/cca reload` re-reads everything and switches the module on or off to match `config.yml`.
+`/cca chat reload` re-reads only the module's own files — channels, formats, the filter set,
+the emoji and grammar tables, the announcements — and never touches the cosmetics. It also rebuilds
+the command set, so a command switched off in `chat/config.yml` stops answering without a restart.
+</Callout>
+
+## The files
+
+Everything the module owns lives under `plugins/ExyliaChatCosmetics/chat/`, written on the first
+start with the module on.
+
+```
+chat/
+  config.yml         the switches: commands, mentions, emojis, renders, links, cross-server
+  messages.yml       every line the module sends, with its own prefix
+  channels.yml       where a message goes
+  announcements.yml  the rotation
+  formats/           one file per format — default.yml and msg.yml ship
+  filter/            config.yml, rules.yml, whitelist.yml, leet.yml, punishments.yml
+  text/              emojis.yml, grammar.yml — the tables that rewrite what was typed
+```
+
+An older version kept seven of those files loose in `chat/`. A server upgrading keeps its edits: each
+one is moved into its folder on the first start, once, and a file already in the new place is left
+alone.
+
+| Was | Is now |
+|---|---|
+| `chat/filter.yml` | `chat/filter/config.yml` |
+| `chat/rules.yml` | `chat/filter/rules.yml` |
+| `chat/whitelist.yml` | `chat/filter/whitelist.yml` |
+| `chat/leet.yml` | `chat/filter/leet.yml` |
+| `chat/punishments.yml` | `chat/filter/punishments.yml` |
+| `chat/emojis.yml` | `chat/text/emojis.yml` |
+| `chat/grammar.yml` | `chat/text/grammar.yml` |
+
+## What it needs
+
+The module rides Paper's `AsyncChatEvent` and its `ChatRenderer`, so it needs Paper. The cosmetics
+half runs on Spigot through the legacy hook; the module does not.
+
+Folia is supported. Every message is decided on the chat thread from in-memory snapshots — the rules,
+the formats and the channels are swapped whole on a reload, never edited in place — and anything that
+touches a player, a sound or a window, hops to that player's thread first.
+
+## Small capitals do not apply to a chat line
+
+ExyliaLib's `small-text` draws every line the server writes in small capitals: menus, messages,
+scoreboards. The chat line is exempt, and there is nothing to configure.
+
+The message, the tag, the name, the format around them, whispers, the console copy, social spy and the
+mention, emoji, command and `[item]` chips all reach the screen in the letters they were written in. A
+player who types WELCOME reads WELCOME. The menus follow: the sample line under LOOKS LIKE, the
+YOUR CHAT preview and what a screen says a player is wearing all read the way chat will read them, and
+a tag somebody wrote for themselves keeps their letters. The lore around them — which the server wrote
+— stays in small capitals, and so does everything in `chat/messages.yml` and the announcer.
+
+The reason is a rule rather than a preference: a chat line is not the server speaking. Rendering half a
+line in small capitals and half in ordinary letters reads as two voices, so the whole line is parsed
+verbatim.
+
+## The pipeline
+
+A message is a `ChatMessage` walked by `ChatProcessor`s, ordered by stage and then by priority, lower
+first. A processor that cancels stops the walk: nothing after a gate should spend time on a line
+nobody will read.
+
+| Stage | Processor | Priority | Does |
+|---|---|---|---|
+| GATE | `GateProcessor` | −100 | chat muted (`bypass.mute`), channel permission, blank message |
+| GATE | `CooldownProcessor` | −50 | `chat/filter/config.yml → cooldown` (`bypass.cooldown`) |
+| FILTER | `SimilarityProcessor` | −30 | too alike the last message (`bypass.similarity`) |
+| FILTER | `FloodProcessor` | −20 | too long, too many repeated characters (`bypass.flood`) |
+| FILTER | `CapsProcessor` | −10 | too many capitals: lowercased or blocked (`bypass.caps`) |
+| FILTER | `PatternProcessor` | 0 | ip, url, domain, phone, unicode: masked or blocked, points |
+| FILTER | `RulesProcessor` | 10 | `rules.yml`: masked or blocked, points (`bypass.filter`) |
+| TRANSFORM | `GrammarProcessor` | −50 | `grammar.yml` word fixes |
+| TRANSFORM | `EmojiProcessor` | −40 | `emojis.yml` triggers become symbols |
+| TRANSFORM | `RenderProcessor` | −35 | `[item]`, `[inv]`, `[ec]` become what they name |
+| TRANSFORM | `CommandReplacer` | −30 | a `/command` becomes a clickable suggestion |
+| TRANSFORM | `LinkProcessor` | −20 | a URL becomes clickable, for `chat.links` holders |
+| TRANSFORM | `MentionProcessor` | −10 | a name, with or without the `@`, is highlighted — only readers of the message can be mentioned |
+| COSMETICS | `CosmeticsProcessor` | 0 | font, modifiers and colour on the text runs |
+| FORMAT | `InfractionProcessor` | −100 | books points, applies punishments |
+| FORMAT | `FormatProcessor` | 0 | picks the format, builds the line |
+| DELIVERY | `ChatApi.events` | −1000 | fires `ChatMessageEvent` |
+| DELIVERY | mention feedback | 0 | the feedback effect for the mentioned — a sound by default |
+| DELIVERY | `CooldownProcessor.Start` | 100 | starts the wait, so only a message that goes through is charged |
+
+A processor that throws is reported at most once a minute and then skipped — except at GATE and
+FILTER, where it fails closed and the message is cancelled. A broken emoji list is not a reason to
+lose a line; a broken word filter is.
+
+Plugins add their own processors through the API. See [API](/docs/exyliachatcosmetics/api).
+
+## How the line is delivered
+
+Delivery is not a processor. `ChatDelivery` takes the chat event at `listener-priority` (`HIGHEST` by
+default, so every other plugin has had its say), runs the pipeline, and then does two small things:
+
+1. It trims the event's viewers to the channel's readers, minus everybody `Chats.canHear` refuses and
+   everybody who ignores the sender.
+2. It sets a renderer.
+
+It never cancels a message the pipeline let through and never sends the line itself, so the server
+delivers exactly as it would have — signed, with the same hover and click every other plugin sees. If
+another plugin handed the viewer set over read-only, the trimming is lost and reported; the line is
+still styled for everybody.
+
+A format that reads the same for everybody is rendered **once**, at the FORMAT stage, and handed to
+every viewer. A format that is `per-viewer`, or that names a `%rel_…%` placeholder, is rendered per
+reader inside the renderer. The console gets its own line from `console-format`.
+
+A message the pipeline cancelled has its event cancelled instead, and if it was cancelled by the word
+filter it is still shown to staff holding `exyliachatcosmetics.chat.staff.filtered`, marked with
+`filtered-marker`. A message that throws somewhere unrecoverable is cancelled too and the sender is
+told, because delivering a line the filter may never have read is worse than losing it.
+
+## Segments
+
+After the walk the text is not a string but a list of *segments*: runs of typed text, which the
+cosmetics style, and components a feature already built — an emoji, a mention, a link, a rendered item
+— which reach the reader exactly as made. Nothing restyles somebody else's component, and the colour
+of the surrounding text runs over the text between them.
+
+A message nothing transformed never builds the list at all; it stays one string until the cosmetics
+stage.
+
+## Performance
+
+- The chat event is asynchronous and the whole pipeline runs on it, reading immutable snapshots.
+- Regexes are compiled at load: one alternation for all emoji triggers, one per rule word, one for
+  every render trigger of every kind.
+- Format texts are compiled placeholder templates, and a viewer-unaware format is rendered once per
+  message rather than once per reader.
+- Item snapshots live in a bounded, expiring cache. There is one announcer timer and no task per
+  message. Sounds, titles and windows hop to the player's thread.
+
+## Seeing where a hover stops
+
+`/cca chat line [message]` renders your own chat line with the format that applies to you, sends it to
+you, and writes to the console the same line broken into the stretches that share a hover and a click.
+
+That is the tool for the one question a screenshot cannot answer: where a piece's hover ends. A hover
+that runs into the piece next to it shows up here as one stretch where you expected two.
+
+```
+Format 'default' for Notch:
+  [Notch] hover INFORMATION, click /msg Notch
+  [ ➠ ] no hover
+  [hello] hover WARNING, click /report Notch offensive_language
+```
+
+## Where to go next
+
+<Cards>
+  <Card title="Channels" href="/docs/exyliachatcosmetics/channels">
+    `channels.yml`, the three types, permissions, prefixes, and what travels between servers.
+  </Card>
+  <Card title="Formats" href="/docs/exyliachatcosmetics/formats">
+    One file per format, the component list, the tokens, and the padding rule.
+  </Card>
+  <Card title="The filter" href="/docs/exyliachatcosmetics/filter">
+    Word rules, leet spelling, the whitelist, and how points become punishments.
+  </Card>
+  <Card title="Chat features" href="/docs/exyliachatcosmetics/chat-features">
+    Mentions, emojis, renders, whispers, moderation, the announcer and `chat/messages.yml`.
+  </Card>
+</Cards>
+
+The module's commands and permissions are listed in full on
+[Commands](/docs/exyliachatcosmetics/commands) and
+[Permissions](/docs/exyliachatcosmetics/permissions); the processors, events and services it exposes
+are on [API](/docs/exyliachatcosmetics/api).

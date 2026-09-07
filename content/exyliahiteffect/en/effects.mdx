@@ -17,6 +17,7 @@ categories:
 hit_effects:
   CRIT_SPARK:
     category: impact
+    tier: common
     name: "<gradient:#FFE9A8:#D1A53F><bold>CRIT SPARK</bold></gradient>"
     material: GOLDEN_SWORD
     description: "Eight splinters of gold, {highlight}gone in a third<nl>of a second{neutral}."
@@ -30,6 +31,7 @@ hit_effects:
 | Key | What it does |
 |---|---|
 | `category` | Which tab it appears under. Must be a key declared under `categories`. |
+| `tier` | How rare it is. Must be a key declared under `tiers` in `config.yml`. Omit it and the effect is common. |
 | `name` | What menus and placeholders call it. Palette tokens, MiniMessage and gradients all work. |
 | `material` | The item the row is drawn with. Defaults to `BARRIER`. |
 | `description` | A list is one line per entry; a single string breaks on `<nl>`. |
@@ -37,7 +39,8 @@ hit_effects:
 | `effects` | The steps drawn on whoever was hit. |
 | `weapons` | Optional. What the effect may be bound to. Omit it and it fits anything. |
 
-A category takes `material`, `name` and `priority`.
+A category takes `material`, `name` and `priority`. A rarity is declared in `config.yml` rather than
+here — see [The crate](/docs/exyliahiteffect/crate).
 
 <Callout type="note" title="Broken entries are reported, not guessed">
 A missing `categories` section, an effect naming a category that is not declared, an entry with no

@@ -1,0 +1,185 @@
+---
+title: "Animaciones"
+description: "Las seis formas en que un color puede moverse sobre el texto, las dieciocho incluidas y el único reloj que hay detrás."
+---
+
+Una animación no es algo que un jugador se ponga. Es un movimiento declarado una vez en
+`animations.yml` y luego prestado: una etiqueta, un color de nick, un color de chat o un color de
+rango dice `animation: <id>`, y a partir de ahí se dibuja en movimiento. Nada de este archivo se
+navega, nada se posee y ningún jugador elige una directamente.
+
+## La entrada
+
+```yaml title="plugins/ExyliaChatCosmetics/cosmetics/animations.yml"
+animations:
+  shine:
+    type: gradient_shift
+    period: 60                                 # ticks de un ciclo completo; 20 = un segundo
+    colors: ['#ffd700', '#ffffff', '#ffd700']  # opcional; sin esto, los del cosmético
+    intensity: 1.0                             # de 0 a 1
+```
+
+No hay sección `categories` ni campos de menú. Una entrada son cuatro claves y nada más.
+
+| Clave | Qué hace |
+|---|---|
+| `type` | uno de los seis de abajo. Una entrada que nombre otra cosa se reporta con su ruta y se salta |
+| `period` | ticks de un ciclo completo. Cualquier valor por debajo de `1` se lee como `1`. Por defecto `40` |
+| `colors` | las paradas por las que moverse, escritas en la [gramática de colores](/docs/exyliachatcosmetics/catalogo) de siempre. Si se omite, se mueve por el color del cosmético que la lleve |
+| `intensity` | de `0` a `1`, acotado. Lo que significa depende del tipo. Por defecto `1.0` |
+
+Una parada puede ser un color hex, un color con nombre o un token de paleta, y un degradado escrito
+como una sola parada se lee como sus paradas en orden — `colors: ['#a:#b']` y `colors: ['#a', '#b']`
+son lo mismo.
+
+## Los seis tipos
+
+| `type` | Cómo se ve | Lee `colors` | Lee `intensity` |
+|---|---|---|---|
+| `gradient_shift` | las paradas se deslizan por el texto y dan la vuelta | sí | no |
+| `rainbow` | todos los tonos por turno, deslizándose por el texto | no | sí, como saturación |
+| `cycle` | todo el texto es un solo color que camina por las paradas | sí | no |
+| `wave` | una onda de brillo recorre el texto | no | sí, como profundidad |
+| `pulse` | todo el texto respira, más claro y más oscuro a la vez | no | sí, como profundidad |
+| `flicker` | los caracteres se apagan al azar, como una bombilla mala | no | sí, como cuántos |
+
+Lo que hay que saber está en esas dos últimas columnas. `gradient_shift` y `cycle` deciden el color
+por completo, y por eso son los dos que leen `colors`. `wave`, `pulse` y `flicker` no deciden ningún
+color — oscurecen el que ya está ahí — así que un `colors` puesto en uno de ellos se lee y luego no
+se usa nunca. Y `rainbow` calcula un tono desde cero, así que ignora tanto `colors` como el color del
+cosmético; lo único que le llega es `intensity`, como lo saturados que salen los tonos.
+
+`flicker` elige a sus víctimas con un hash barato de la posición del carácter y del momento, así que
+el mismo fotograma apaga siempre los mismos caracteres y un fotograma cacheado sigue siendo honesto.
+Con `intensity: 1.0` se apaga alrededor de un carácter de cada seis a poco más de un tercio de su
+brillo en cualquier fotograma dado; con `0.7`, uno de cada nueve; con `0.35`, uno de cada dieciocho.
+
+## Por qué colores se mueve una animación
+
+Una entrada que omite `colors` toma prestado el color del cosmético que la nombró, y eso es lo que
+hace que la misma animación se lea distinta en cada degradado que la lleve.
+
+| El color propio del cosmético | La animación se mueve por |
+|---|---|
+| un degradado | sus propias paradas, sin tocar |
+| un solo color | ese color y el blanco |
+| ninguno | el blanco y `{primary}` |
+
+De las dieciocho incluidas, trece toman prestado así, tres llevan paradas propias — `shine`, `cycle`
+y `house` — y dos, `rainbow` y `spectrum`, ignoran el color por completo.
+
+## Las dieciocho incluidas
+
+| id | `type` | `period` | `intensity` | Colores |
+|---|---|---|---|---|
+| `rush` | `gradient_shift` | 30 | — | los del cosmético |
+| `shine` | `gradient_shift` | 60 | — | `#ffd700`, `#ffffff`, `#ffd700` |
+| `flow` | `gradient_shift` | 70 | — | los del cosmético |
+| `house` | `gradient_shift` | 100 | — | `{primary}`, `{secondary_light}`, `{letters}`, `{secondary}` |
+| `drift` | `gradient_shift` | 160 | — | los del cosmético |
+| `spectrum` | `rainbow` | 40 | 1.0 | sus propios tonos |
+| `rainbow` | `rainbow` | 80 | 0.9 | sus propios tonos |
+| `cycle_own` | `cycle` | 90 | — | los del cosmético |
+| `cycle` | `cycle` | 120 | — | `{primary}`, `{secondary}`, `{accent}` |
+| `ember` | `wave` | 28 | 0.8 | los del cosmético |
+| `wave` | `wave` | 40 | 0.6 | los del cosmético |
+| `sweep` | `wave` | 60 | 0.35 | los del cosmético |
+| `glow` | `pulse` | 26 | 0.7 | los del cosmético |
+| `pulse` | `pulse` | 40 | 0.5 | los del cosmético |
+| `breathe` | `pulse` | 90 | 0.3 | los del cosmético |
+| `static` | `flicker` | 10 | 1.0 | los del cosmético |
+| `sparkle` | `flicker` | 16 | 0.35 | los del cosmético |
+| `flicker` | `flicker` | 20 | 0.7 | los del cosmético |
+
+Las dos entradas de paleta son las primeras que hay que mirar. `house` y `cycle` están escritas con
+tokens de paleta en vez de hex, así que siguen el `colors.yml` de tu servidor: un servidor que
+repinta su paleta repinta con ella esas dos animaciones, y todos los cosméticos que las lleven.
+
+## Cómo se nombra una
+
+`animation:` va en la entrada que la quiere, en cuatro de los archivos del catálogo.
+
+| Archivo | En |
+|---|---|
+| `tags.yml` | una etiqueta |
+| `nick-colors.yml` | un color de nick |
+| `chat-colors.yml` | un color de chat |
+| `rank-colors.yml` | un color de rango |
+
+```yaml title="plugins/ExyliaChatCosmetics/cosmetics/chat-colors.yml"
+chat_colors:
+  aurora:
+    category: premium
+    name: '{primary}&lAURORA'
+    gradient: ['#00f260', '#0575e6', '#8a51c4']
+    animation: flow
+    icon: END_ROD
+    description: 'Northern lights, in a sentence.'
+    priority: 2
+```
+
+Los colores de sombra, las fuentes y las decoraciones no nombran ninguna — ahí la clave no se lee. Un
+cosmético hecho por un jugador lleva ese mismo campo en su fila y se dibuja con él cuando la fila
+nombra uno, aunque todavía no hay nada en los comandos ni en los menús que lo escriba.
+
+Un id que no existe no es un error y no rompe nada: el cosmético simplemente se dibuja con su propio
+color, quieto. Lo mismo pasa después de una recarga que quitó una animación que alguna entrada sigue
+nombrando.
+
+## En el chat, una línea es un fotograma
+
+Un mensaje de chat ya entregado no cambia nunca. El cliente se queda con lo que le mandaron, y
+ningún plugin puede volver atrás a repintarlo. Así que un mensaje lleva el fotograma del momento en
+que se envió, y "animado" en el chat significa que cada línea es un fotograma distinto del mismo
+movimiento — no que una línea concreta se mueva.
+
+Los menús son la otra mitad de eso. Los navegadores se redibujan con el reloj, así que una fila que
+lleva una animación se mueve mientras el jugador la mira, y lo que ve en el menú es lo que la
+animación hace de verdad. Todo lo que se imprime en el chat, `/cc preview` incluido, es un fotograma
+suyo.
+
+<Callout type="note" title="Una etiqueta se cachea antes de animarse">
+Las etiquetas, prefijos y sufijos ya dibujados se guardan por jugador para que una línea de chat no
+tenga que rehacerlos. Lo que se guarda es la etiqueta *antes* de aplicarle la animación — guardada
+después, el fotograma en el que se dibujó la primera vez sería el fotograma que mostrarían todas las
+líneas siguientes, y el jugador pensaría que la animación se paró.
+</Callout>
+
+## El reloj
+
+Un solo temporizador para todo el servidor, y su único trabajo es contar.
+
+```yaml title="plugins/ExyliaChatCosmetics/config.yml"
+animations:
+  # Ticks between animation frames. Lower is smoother and costs more
+  tick: 2
+```
+
+Un ciclo tiene `period / tick` fotogramas: `flow`, con un periodo de 70 y un tick de 2, dura 35
+fotogramas.
+
+Nada de una animación es por jugador. Un fotograma es una función de la animación, el color que hay
+debajo, cuántos caracteres hay y qué fotograma es — así que dos jugadores con la misma etiqueta
+animada son los mismos colores calculados, y una línea de chat solo lee un array que ya calculó otro.
+La caché guarda hasta 4096 de esos arrays y se olvida de uno cinco minutos después de la última vez
+que se leyó. `/cca reload` la vacía, porque la animación con la que se calculó puede haber cambiado.
+
+Ahí es donde `animations.tick` se gana su sitio. Subirlo a `4` reduce a la mitad los fotogramas de
+cada ciclo, lo que reduce a la mitad los arrays a calcular y a la mitad los redibujados de cada menú
+abierto. Bajarlo a `1` es más suave y cuesta lo contrario.
+
+<Callout type="note" title="Los colores de rango animan solo las letras">
+Cuando `rank-colors.repaint` vale `letters` — el valor por defecto — un color de rango animado pasa
+su fotograma solo por las letras y los dígitos, los mismos caracteres que pinta el color de debajo.
+Una animación que llegara a los corchetes de `&8[&eVIP&8]` desharía justo aquello para lo que existe
+el modo de solo letras.
+</Callout>
+
+<Cards>
+  <Card title="Colores" href="/docs/exyliachatcosmetics/colores">
+    Las cuatro cosas que un color puede pintar, y cuáles de ellas pueden llevar animación.
+  </Card>
+  <Card title="Etiquetas" href="/docs/exyliachatcosmetics/etiquetas">
+    La pestaña de animadas, y qué puede dibujar una etiqueta.
+  </Card>
+</Cards>

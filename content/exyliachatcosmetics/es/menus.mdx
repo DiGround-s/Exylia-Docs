@@ -1,0 +1,249 @@
+---
+title: "Menús"
+description: "Los seis archivos de menú, desde dónde se abre cada uno, las acciones que ejecutan sus botones y los valores que pueden leer sus plantillas."
+---
+
+Todas las pantallas que ve un jugador son menús de ExyliaLib, un archivo cada una bajo
+`plugins/ExyliaChatCosmetics/menus/`. Se escriben en el primer arranque y después se respetan: una
+actualización del plugin nunca pisa un archivo que tú editaste, y `/cca reload` levanta lo que
+cambiaste.
+
+<Callout type="note" title="La gramática vive en ExyliaLib">
+Plantillas, secciones, rellenos, `condition`, `depends-on`, `refresh`, sonidos, navegación y los
+tokens de paleta son todos de ExyliaLib, y aquí se comportan exactamente igual que en cualquier otro
+sitio. Ver [ExyliaLib — Menús](/docs/exylialib/menus). Esta página solo lista lo que estos seis
+archivos pueden decir y ningún otro menú puede.
+</Callout>
+
+## Los seis archivos
+
+| Archivo | Tamaño | Se abre desde | Contiene |
+|---|---|---|---|
+| `main.yml` | 27 | `/cc`, `chatcosmetics:open main` | `preview`, `identity`, `message`, `favorites`, `loadouts`, `collection`, `unequip` |
+| `identity.yml` | 27 | `chatcosmetics:open identity` | `preview`, `tags`, `nick`, `rank`, `back` |
+| `message.yml` | 27 | `chatcosmetics:open message` | `preview`, `colors`, `shadows`, `fonts`, `modifiers`, `back` |
+| `browser.yml` | 54 | `chatcosmetics:browse <type>`, `/cc tags`, `/tags`, `/nickcolors` … | las secciones `categories` y `cosmetics`, más `create`, `custom`, `preview`, `unequip`, `back` |
+| `favorites.yml` | 54 | `chatcosmetics:open favorites`, `/cc favorites` | la sección `cosmetics`, más `preview`, `unequip`, `back` |
+| `loadouts.yml` | 45 | `chatcosmetics:open loadouts`, `/cc loadouts` | la sección `loadouts`, más `preview`, `save`, `unequip`, `back` |
+
+No hay un séptimo archivo para lo que hacen los jugadores. Los colores de nick que un jugador mezcló
+viven en un botón del navegador de colores de nick, y no en una pantalla propia — ver [Lo que hizo el
+jugador](#lo-que-hizo-el-jugador).
+
+## Las acciones
+
+Todos los botones de estos archivos ejecutan `chatcosmetics:<name> [argumento]`. Las propias de
+ExyliaLib — `back`, `close`, `next_page` y `previous_page` — funcionan aquí como en todas partes.
+
+| Acción | Hace |
+|---|---|
+| `open <main\|identity\|message\|favorites\|loadouts>` | abre una pantalla fija; cualquier otra cosa abre `main` |
+| `browse <type>` | abre `browser.yml` en ese tipo |
+| `category <id>` | cambia la pestaña del navegador desde el que se hizo clic |
+| `equip <type:id>` | se lo pone — o se lo quita, si es un tipo de uno solo y ya lo lleva |
+| `favorite <type:id>` | marca o desmarca con estrella |
+| `preview <type:id>` | envía en el chat la línea que produciría ese cosmético |
+| `edit <type:id>` | vuelve a hacer las preguntas de una fila que hizo el jugador; se ignora en una fila del catálogo |
+| `delete <type:id>` | borra una fila que hizo el jugador; se ignora en una del catálogo |
+| `create <type>` | hace las preguntas que escriben uno nuevo |
+| `unequip <type>` | quita todo lo de un tipo |
+| `clear` | quita todos los tipos de una vez |
+| `loadout_apply <id>`, `loadout_overwrite <id>`, `loadout_delete <id>` | un look guardado |
+| `loadout_save` | pide un nombre y guarda lo que lleva puesto |
+
+Un verbo que cambia el perfil actúa sobre el jugador, no sobre la ventana: todas las pantallas
+abiertas que muestran ese perfil las redibuja el store. Solo `category` actúa sobre la ventana desde
+la que se hizo clic.
+
+## Sin botón de cerrar, y dónde va back
+
+Ninguna de las seis pantallas lleva botón de cerrar. Un jugador cierra esta ventana igual que cierra
+todas las demás, y un hueco gastado en decirlo es un hueco que podría haber tenido un cosmético.
+
+`back` va en el centro de la fila de abajo en todas las pantallas que lo tienen — el hueco
+`size - 5`, o sea 22 en las de 27, 40 en `loadouts.yml` y 49 en las dos de 54. `main.yml` no tiene
+`back`, porque no hay nada por encima.
+
+Los dos navegadores paginados llevan `parent: "main"`, que es adónde va su `back` cuando al jugador
+lo mandó ahí directamente `/tags` o `/nickcolors` en vez de la puerta principal.
+
+## Quitarse cosas
+
+Un menú que solo sabe poner no tiene forma de decir "nada de esto". Dos acciones sí:
+
+| Acción | Hace | Dónde viene |
+|---|---|---|
+| `chatcosmetics:unequip <type>` | quita todo lo de un tipo | TAKE IT OFF en el navegador (hueco 53), y clic derecho sobre un tipo en `identity.yml` / `message.yml` |
+| `chatcosmetics:clear` | quita todos los tipos de una vez | TAKE IT ALL OFF en `main.yml` (26), `favorites.yml` (53) y `loadouts.yml` (43) |
+
+Los dos botones llevan `condition: "%equipped_any% == true"`, así que solo se dibujan cuando hay algo
+que quitar; si no, el hueco cae en el relleno.
+
+`%equipped_any%` es el jugador entero en todas las pantallas — y solo ese tipo dentro de un
+navegador, donde un botón de quitar habla del tipo que está en pantalla. Para preguntar por un tipo
+en cualquier sitio, `%<type>_worn%` dice lo mismo.
+
+Hacer clic en un cosmético que ya se lleva también lo quita, pero solo en los tipos que se llevan de
+uno en uno. Los modificadores se llevan en conjunto, así que el botón es la única forma de no llevar
+ninguno.
+
+## browser.yml
+
+Un solo archivo dibuja el navegador de todos los tipos; el título toma `%type_name%`, que sale de
+`menu.types` en `config.yml`. El título no lleva contador de páginas a propósito: una pantalla con
+dos listas no tiene una sola página que la librería pueda contar.
+
+Valores que pueden leer los ítems fijos:
+
+| Valor | Es |
+|---|---|
+| `%type%`, `%type_name%` | el tipo en pantalla, y cómo lo llama `menu.types` |
+| `%type_custom%` | `true` cuando MAKE ONE escribiría algo aquí |
+| `%owned_count%`, `%total_count%` | de este tipo, para este jugador |
+| `%equipped_name%`, `%equipped_any%` | qué lleva de este tipo, y si lleva algo |
+| `%custom_type%` | el tipo que escribe MAKE ONE |
+| `%create_tokens%`, `%edit_tokens%` | los dos saldos de ese tipo — ver [Tokens](/docs/exyliachatcosmetics/tokens) |
+| `%preview%` | la línea de chat completa del jugador tal como está ahora |
+
+`%preview%` va en un ítem con `depends-on: [preview]`, que es lo que hace que se redibuje después de
+cada clic y no solo con el temporizador.
+
+### Las pestañas
+
+La sección `categories` ocupa los huecos 2–6, con flechas propias en el 1 y el 7 cuando un tipo tiene
+más pestañas de las que caben. Toma dos plantillas — `item_template` para una pestaña y
+`open_template` para aquella en la que está el jugador — y lee `%category_id%`, `%category_name%`,
+`%category_icon%`, `%category_total%` y `%category_owned%`. Su clic es
+`chatcosmetics:category %category_id%`. Un tipo sin categorías se salta la fila entera.
+
+La pestaña en la que el jugador dejó un tipo se recuerda, así que el navegador se reabre donde estaba.
+
+### La rejilla
+
+La sección `cosmetics` es una rejilla de 4×7 en los huecos `10-16,19-25,28-34,37-43`, con flechas de
+página en el 48 y el 50. Toma una plantilla por estado, y la que falte cae en `item_template`:
+
+| Plantilla | Se dibuja para |
+|---|---|
+| `item_template` | poseído, sin llevar puesto, sin reloj encima |
+| `selected_template` | puesto ahora mismo |
+| `expiring_template` | poseído, pero solo hasta que caduque una concesión |
+| `locked_template` | no poseído |
+
+Las filas bloqueadas se ordenan al final, para que lo que un jugador puede ponerse esté donde va a
+mirar y no detrás de una página de lo que no puede.
+
+| Valor de fila | Es |
+|---|---|
+| `%cosmetic_key%`, `%cosmetic_id%`, `%cosmetic_type%`, `%cosmetic_type_name%` | cómo se llama la fila |
+| `%cosmetic_name%`, `%cosmetic_description%`, `%cosmetic_icon%` | del catálogo; `material: "%cosmetic_icon%"` dibuja el ícono de la propia entrada |
+| `%cosmetic_status%` | una de las cuatro líneas de `menu.status` |
+| `%cosmetic_favorite%` | `menu.favorite-on` o `menu.favorite-off` |
+| `%cosmetic_expires%` | lo que queda de una concesión temporal |
+| `%cosmetic_sample%` | la línea de chat entera dibujada como si llevara este puesto |
+| `%cosmetic_manage%` | los avisos de cambiar y borrar (`menu.custom-hints`) en una fila que hizo el jugador, y una línea en blanco en todas las demás |
+
+`%cosmetic_sample%` es una línea entera y no una muestra suelta a propósito: un color se juzga mejor
+al lado de la etiqueta y del nombre con los que va a convivir, y un solo renderizador que responde
+por todos los tipos no puede desviarse de lo que dibuja el chat de verdad.
+
+`%cosmetic_manage%` es un valor de fila y no líneas de lore porque un solo archivo dibuja todos los
+tipos. Una fila del catálogo lo expande a la línea en blanco que la maquetación quería ahí de todas
+formas, en vez de prometer dos clics que no harían nada.
+
+### Lo que hizo el jugador
+
+Un tipo que un jugador puede escribirse lo nombra el tipo con el que se empareja — `tag` responde
+`customtag`, `nick_color` responde `customnick`, `chat_color` responde `customcolor`, `rank_color`
+responde `customrank`. La pareja recibe un botón, `custom` en el hueco 46, que cambia la rejilla a lo
+que hizo ese jugador, y vuelve a la primera pestaña del catálogo con un segundo clic.
+
+Un hueco propio en vez de una pestaña: un tipo del que nadie ha hecho nada le quitaría una pestaña a
+las del catálogo, y así el botón se lee igual en todos los navegadores. Sus valores son
+
+| Valor | Es |
+|---|---|
+| `%custom_state%` | `none` cuando este tipo no se empareja con nada o no tiene pestañas de catálogo a las que volver; si no, `closed` u `open` |
+| `%custom_glow%` | `true` mientras la lista está abierta |
+| `%custom_toggle%` | a qué cambia un clic — la lista propia, o la primera pestaña del catálogo |
+| `%custom_name%`, `%custom_icon%` | cómo se llama y se dibuja el tipo emparejado |
+| `%custom_count%` | cuántos ha hecho este jugador |
+
+Un valor en vez de dos banderas, porque un `condition` en un archivo de menú es una sola comparación:
+"hay uno, y está abierto" tiene que poder decirse en una palabra. El archivo que viene incluido
+esconde el botón con `condition: "%custom_state% != none"`.
+
+MAKE ONE, el ítem `create` del hueco 45, lleva `condition: "%type_custom% == true"` y ejecuta
+`chatcosmetics:create %custom_type%`. Se dibuja en el navegador de un tipo que hace el jugador, y en
+uno del catálogo solo mientras la lista propia está abierta — o sea, aparece exactamente donde
+escribir uno tendría sentido.
+
+Un jugador que busca un color para su nombre busca un color para su nombre; si lo escribió el
+servidor o lo escribió él es un clic, no una pantalla.
+
+## favorites.yml
+
+Todos los cosméticos marcados de todos los tipos, en el orden en el que el jugador los marcó, en una
+rejilla de 5×7 en los huecos `1-7,10-16,19-25,28-34,37-43`. Las mismas cuatro plantillas de estado y
+los mismos valores de fila que el navegador, y `%cosmetic_type_name%` se gana su sitio aquí porque
+las filas son de tipos mezclados.
+
+Marcar con estrella no exige poseerlo — un favorito es tanto una lista de deseos como una lista
+corta — así que aquí puede haber una fila bloqueada, y su plantilla lo dice. No se ordena nada: el
+orden de las estrellas es el orden.
+
+## loadouts.yml
+
+La sección `loadouts` ocupa los huecos `10-16,19-25` y toma dos plantillas, `item_template` y
+`active_template` para el que se lleva puesto. Lee `%loadout_id%`, `%loadout_name%` y
+`%loadout_slots%` — lo que contiene el loadout, por nombre, un tipo por línea — y sus clics son
+`chatcosmetics:loadout_apply`, `loadout_overwrite` y `loadout_delete` con `%loadout_id%`.
+
+SAVE THIS LOOK, en el hueco 37, ejecuta `chatcosmetics:loadout_save`, que pide un nombre. El relleno
+de paginación es donde a un jugador sin loadouts se le explica cómo hacer el primero.
+
+`%loadout_count%`, `%loadout_limit%` y `%active_loadout%` se pueden leer en cualquier parte de la
+pantalla.
+
+## Valores que tienen todas las pantallas
+
+Además de `%preview%`, los seis archivos pueden leer `%equipped_summary%` (cada tipo y qué lleva de
+él), `%equipped_any%`, `%owned_count%`, `%favorites_count%`, `%loadout_count%`, `%loadout_limit%` y
+`%active_loadout%`.
+
+Por tipo, en cualquier sitio: `%<type>_owned%`, `%<type>_total%`, `%<type>_equipped%` y
+`%<type>_worn%` — para que un botón que lleva a algún lado pueda decir qué hay detrás. Una pantalla
+de casillas que dicen todas la misma frase es una pantalla que nadie lee de un vistazo. Los tipos que
+hace el jugador llevan además `%<type>_create_tokens%` y `%<type>_edit_tokens%`.
+
+Cuando un tipo no tiene nada puesto, `%<type>_equipped%` y `%equipped_summary%` caen en `menu.none`.
+
+## Cambiar el estilo
+
+- Los colores son tokens de paleta (`{primary}`, `{letters}`, `{letters_black}`, `{muted}`,
+  `{success}`, `{warning}`, `{error}`). Recolorea el servidor entero desde el `colors.yml` de
+  ExyliaLib, no desde aquí.
+- Renombra una plantilla solo junto con la lista de estados de arriba; una plantilla de estado que
+  falta cae en `item_template` en vez de fallar.
+- Los valores de fila que traen formato — `%cosmetic_name%`, `%cosmetic_sample%`,
+  `%cosmetic_status%`, `%preview%`, `%equipped_summary%` — se insertan ya con su estilo; los ids y
+  las claves son literales. Un color suelto no puede ser un valor, así que dale estilo a la frase
+  entera en la plantilla.
+- Las palabras de la línea de estado de una fila, de su línea de estrella y de los avisos de cambiar
+  y borrar son `menu.status`, `menu.favorite-on` / `menu.favorite-off` y `menu.custom-hints` en
+  `config.yml`, no texto del archivo de menú. `menu.sample-message` es la frase con la que se dibujan
+  todas las vistas previas.
+- `refresh: { mode: SMART }` redibuja solo lo que puede cambiar. Un menú abierto también se redibuja
+  cuando cambia el perfil — llega una concesión, se acaba un rango — y una vez por fotograma de
+  animación, para que un color animado se mueva en pantalla. Cada cuánto es eso lo decide
+  `animations.tick` en `config.yml`: la misma perilla que decide cuán suave es una animación en el
+  chat decide lo que cuesta mantener un menú abierto en movimiento.
+
+<Cards>
+  <Card title="Concesiones" href="/docs/exyliachatcosmetics/concesiones">
+    Qué decide que una fila se dibuje bloqueada, poseída o caducando.
+  </Card>
+  <Card title="Tokens" href="/docs/exyliachatcosmetics/tokens">
+    Qué gasta MAKE ONE, y cómo lo reparte un rango o una tienda.
+  </Card>
+</Cards>

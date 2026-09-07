@@ -1,0 +1,116 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaChatCosmetics, las dos mitades con las que viene, y cómo está organizada esta documentación."
+---
+
+ExyliaChatCosmetics son dos cosas en un mismo jar, y cualquiera de las dos mitades funciona sola.
+
+Los **cosméticos** son lo que un jugador se pone en el chat: una etiqueta delante de su nombre, un
+color en el nombre, un color en el prefijo de su rango, un color en lo que escribe, una sombra debajo,
+una fuente, una decoración o dos. Los elige desde un menú, los posee por un permiso o por una concesión
+que puede caducar, y guarda como loadouts las combinaciones que le gustaron.
+
+El **módulo de chat** viene apagado, y encenderlo convierte a este plugin en el chat del servidor:
+canales, formatos, mensajes privados, un filtro que entiende inglés y español, menciones, emojis,
+ítems mostrados con `[item]` y un anunciador. Con él encendido los cosméticos entran en la línea
+directamente, sin pasar por un placeholder.
+
+## El catálogo que viene incluido
+
+Nada de esto es un hueco que tengas que llenar tú. Los archivos que se generan son el contenido.
+
+| Archivo | Trae |
+|---|---|
+| `tags.yml` | **180 etiquetas** en siete pestañas — símbolos, sprites animados, partículas, íconos de ítems y bloques, íconos de interfaz, banderas dibujadas como skins y premium |
+| `nick-colors.yml` | **90 colores de nick** en seis pestañas |
+| `chat-colors.yml` | **96 colores de chat** en seis pestañas |
+| `shadow-colors.yml` | **90 colores de sombra** en seis pestañas, que responden a las del color de chat |
+| `rank-colors.yml` | **77 colores de rango** en seis pestañas, con animados y una pestaña de staff |
+| `fonts.yml` | **18 fuentes** en cuatro pestañas |
+| `modifiers.yml` | negrita, cursiva, subrayado, tachado y ofuscado |
+| `animations.yml` | **18 animaciones** repartidas en seis tipos de movimiento |
+
+Son YAML común. Borra lo que no quieras, escribe lo tuyo, y `/cca reload` lo levanta.
+
+## Una etiqueta no es un segundo rango
+
+Todas las etiquetas que trae el plugin son **un solo glifo** — un símbolo, un sprite, una partícula,
+el ícono de un ítem, una bandera dibujada como cabeza. Sin corchetes, sin palabras, sin nada que se
+lea como un rango comprado.
+
+<Callout type="note" title="Los rangos se quedan donde están">
+Los colores de rango repintan el prefijo y el sufijo que ya escribe tu plugin de permisos; nunca
+inventan uno y nunca tocan el nombre. Un jugador con un color de rango puesto sigue siendo el mismo
+rango, en un color que eligió. Ver [Colores](/docs/exyliachatcosmetics/colores).
+</Callout>
+
+## Qué incluye
+
+<Cards>
+  <Card title="El catálogo" href="/docs/exyliachatcosmetics/catalogo">
+    Los archivos de `cosmetics/`, los campos que comparten todas las entradas y la gramática de colores
+    que los atraviesa a todos.
+  </Card>
+  <Card title="Etiquetas" href="/docs/exyliachatcosmetics/etiquetas">
+    Símbolos, sprites, partículas y cabezas — qué puede dibujar una etiqueta y qué cliente la dibuja.
+  </Card>
+  <Card title="Colores" href="/docs/exyliachatcosmetics/colores">
+    Colores de nick, de rango, de chat y de sombra: cuatro cosas que un color puede pintar, y cuál gana.
+  </Card>
+  <Card title="Cosméticos personalizados" href="/docs/exyliachatcosmetics/personalizados">
+    Las etiquetas y los colores que los jugadores se escriben, y las reglas que los mantienen legibles.
+  </Card>
+  <Card title="Concesiones" href="/docs/exyliachatcosmetics/concesiones">
+    Disponible, poseído, puesto — tres preguntas distintas, concesiones que caducan, y por qué nunca se
+    borra nada por un "no".
+  </Card>
+  <Card title="El módulo de chat" href="/docs/exyliachatcosmetics/chat">
+    Canales, formatos, filtro, menciones, susurros, ítems mostrados y anunciador.
+  </Card>
+</Cards>
+
+## Requisitos
+
+| Requisito | Detalle |
+|---|---|
+| Servidor | Paper 1.21 o superior. En Spigot los cosméticos van por el hook legacy; el módulo de chat necesita Paper. Folia soportado. |
+| Java | 21 |
+| Obligatorio | `ExyliaLib` |
+| Opcional | `PlaceholderAPI`, `LuckPerms` (los colores de rango lo necesitan), Redis para varios servidores |
+
+<Callout type="note" title="1.21.9 para sprites y cabezas">
+Las etiquetas hechas de sprites, partículas y skins de cabeza son componentes de objeto, que llegaron
+en Minecraft 1.21.9. Un cliente más viejo muestra esas etiquetas como el texto con el que están
+escritas en vez de fallar — pero la pestaña SYMBOLS, y todo lo de colores, fuentes y chat, funciona en
+1.21 igual que en la última versión.
+</Callout>
+
+## Cómo leer esta documentación
+
+<Steps>
+  <Step title="Empezar">
+    Instalación, y un jugador con algo puesto en un par de minutos.
+  </Step>
+  <Step title="El catálogo">
+    Qué viene incluido, qué puede decir cada archivo y cómo escribir tus propias entradas.
+  </Step>
+  <Step title="Llevarlos">
+    Los menús, cómo se decide la propiedad y los tokens que pagan lo que hacen los jugadores.
+  </Step>
+  <Step title="Módulo de chat">
+    Solo si quieres que este plugin lleve tu chat. Si no, sáltatelo entero.
+  </Step>
+  <Step title="Referencia">
+    Comandos, permisos, placeholders, todas las claves de configuración, las integraciones y la API.
+  </Step>
+</Steps>
+
+## Convenciones
+
+- Un cosmético se nombra `type:id` en todos lados — `tag:mvp`, `chat_color:aurora`, `customtag:42`.
+- Las claves se normalizan a `a-z 0-9 _ -` en minúsculas, así que `MVP` y `mvp` son el mismo id.
+- Los colores usan tokens de paleta de ExyliaLib (`{primary}`, `{highlight}`, `{muted}`), que siguen el
+  `colors.yml` de tu servidor en vez de un hex fijo.
+- Las duraciones son las de ExyliaLib: `30m`, `2h`, `14d`, `1w`, con decimales.
+- Los valores marcados como **por defecto** son los que escribe el plugin en el primer arranque. Si el
+  archivo ya existe, se respeta lo tuyo.

@@ -1,0 +1,139 @@
+---
+title: "Integraciones"
+description: "Plugins de chat, LuckPerms, PlaceholderAPI, Redis, la compuerta de cosméticos, Folia y qué relee cada recarga."
+---
+
+El plugin está escrito para convivir con lo que ya tienes, no para sustituirlo. Nunca cancela un
+evento de chat, nunca se adueña de un formato de chat, y le hace al ecosistema las mismas preguntas
+que le hace cualquier otro plugin de cosméticos de Exylia.
+
+## Plugins de chat
+
+Una línea de chat tiene dos mitades, y este plugin te las entrega por separado.
+
+**La identidad** — la etiqueta y el nombre coloreado — la colocas tú. Pon `%ecc_tag%` y `%ecc_nick%`
+(o sus formas `_legacy` / `_section`) donde tu plugin de chat los quiera dentro de su formato. No se
+inyecta nada por ti, porque solo tu formato sabe dónde va el nombre.
+
+**El cuerpo del mensaje** — el color, la sombra, la fuente, las decoraciones con las que escribe un
+jugador — lo estiliza el hook configurado en `config.yml`, en `chat.hook`. Esa es la mitad que ningún
+formato puede expresar, así que el plugin reescribe el mensaje él mismo y deja la entrega en paz.
+
+Elige el hook que corresponda al plugin que realmente dibuja tu chat:
+
+| Tu plugin de chat | Hook | Por qué |
+|---|---|---|
+| El chat propio de Paper, o cualquier plugin que use `AsyncChatEvent` / un `ChatRenderer` | `decorate` | el mensaje decorado es lo que esos dibujan, y no se dispara nada más |
+| Spigot, sin los eventos de Paper | cualquiera | `decorate` y `chat_event` caen a `legacy_event` con un aviso al arrancar |
+| Un plugin que lee `AsyncChatEvent.message()` pero ignora la decoración | `chat_event`, a una prioridad **por debajo** de él (`LOW`) | la reescritura llega antes de que ese plugin lea |
+| Un plugin que sigue en `AsyncPlayerChatEvent` | `legacy_event`, a una prioridad por debajo de él | la cadena que lee ya lleva colores `§` |
+| Tú compones la línea entera | `off`, más `CosmeticsService.styleMessage` | nada se estiliza dos veces |
+
+Los dos hooks de evento se saltan un evento cancelado, así que un plugin que ya rechazó un mensaje
+nunca ve cómo se lo reestilizan a sus espaldas. Las claves en sí están en
+[Configuración](/docs/exyliachatcosmetics/configuracion), y las notaciones de los placeholders en
+[Placeholders](/docs/exyliachatcosmetics/placeholders).
+
+<Callout type="note" title="Chat seguro">
+Cualquier cambio en el cuerpo de un mensaje — un color incluido — lo marca como modificado para un
+cliente vanilla. Se sigue viendo, pero un cliente con *Only Show Secure Chat* activado lo oculta.
+Todos los plugins de color de chat del mercado tienen esta propiedad; no es algo de este en concreto.
+Los servidores a los que les importa ponen `enforce-secure-profile=false` en `server.properties`.
+</Callout>
+
+### El formato que escribe un jugador
+
+Con `chat.sanitize` activo — lo que viene por defecto — el `&c`, el `<red>` o el `{primary}` que
+escribe un jugador se muestra como el texto que tecleó en lugar de obedecerse, para que nadie pinte
+su línea de un color que nunca compró. El permiso `exyliachatcosmetics.chat.format` lo deja pasar
+para la gente en quien confías. El `§` se neutraliza siempre, esté la opción como esté y tenga el
+jugador el permiso que tenga.
+
+## LuckPerms
+
+Dependencia blanda, y solo dos clases del plugin lo nombran, así que un servidor sin LuckPerms no
+carga ninguna de las dos.
+
+**Los colores de rango lo necesitan.** El prefijo y el sufijo que repinta un color de rango son meta
+de LuckPerms, leídos de los datos en caché del jugador, y la lista `groups` de una entrada es lo que
+decide quién puede llevarlo. Sin LuckPerms `{prefix}` y `{suffix}` no dibujan nada y la pantalla de
+colores de rango queda vacía — los otros cinco tipos de cosmético no se ven afectados.
+
+**Cambios de permisos en vivo.** Las respuestas de permisos se memorizan por perfil, que es lo que
+mantiene el dibujado del chat fuera del camino caliente del plugin de permisos.
+`UserDataRecalculateEvent` es la corrección: cuando se dispara, se tiran los permisos memorizados del
+jugador junto con su caché de dibujado, en el hilo propio de ese jugador, así que la siguiente línea
+que envíe se dibuja con lo que posee ahora. Un rango que se acabó se lleva sus cosméticos dentro del
+mismo tick, sin necesidad de reconectar.
+
+Sin LuckPerms, la posesión por permiso sigue funcionando a través de Bukkit; el memo simplemente se
+refresca al entrar, al recargar y en el barrido de caducidad de treinta segundos, en vez de en el
+momento en que cambia un rango.
+
+## PlaceholderAPI
+
+Dependencia blanda. Todos los placeholders se registran en el módulo de placeholders de ExyliaLib, y
+ExyliaLib los puentea a PlaceholderAPI automáticamente bajo los dos identificadores:
+`%exyliachatcosmetics_…%` y el corto `%ecc_…%`. No hay nada que instalar más allá de PAPI, ni ninguna
+expansión que descargar. Dentro de cualquier texto de ExyliaLib los mismos nombres funcionan aunque
+PAPI no esté.
+
+## Redis y varios servidores
+
+El almacenamiento es la base de datos; en Redis no se guarda nada. Con el Redis de ExyliaLib activado
+en `database.yml`, un canal `profiles` avisa a los demás servidores de que se escribió un perfil o
+una concesión, y el servidor que tenga a ese jugador conectado vuelve a leer su perfil. Lo que viaja
+es un UUID y nada más — la base de datos es la verdad, y el canal solo dice *vuelve a mirar*. Un
+servidor que recarga no publica nada, así que dos servidores no pueden rebotarse el mismo jugador.
+
+Sin Redis el canal es local y sus propios mensajes se ignoran, así que no cambia nada. Un jugador que
+cambia de servidor se lee de nuevo al entrar en cualquiera de los dos casos, de modo que el canal
+solo importa para un cambio hecho mientras está sentado en otro sitio: una concesión de un admin, una
+compra que llega a mitad de sesión. Los loadouts y las filas de cosméticos personalizados viajan
+igual. Ver [Base de datos](/docs/exylialib/base-de-datos).
+
+## La compuerta de cosméticos
+
+ExyliaLib lleva una compuerta que todos los plugins de cosméticos del ecosistema consultan antes de
+dibujar nada: `net.exylia.lib.cosmetic.Cosmetics`. Mientras la regla de cualquier plugin diga que los
+cosméticos de un jugador no deben mostrarse — modo staff, un vanish que le presta otra identidad —,
+la etiqueta va vacía, el nombre va liso y el mensaje se queda intacto. Llamar a
+`Cosmetics.refresh(player)` desde ese plugin tira aquí la caché de dibujado.
+
+No registras nada. Un plugin de modo staff que responde a la compuerta está respondiendo por todos
+los plugins de cosméticos a la vez, y de eso se trata al poner la pregunta en la librería.
+
+## Folia
+
+`folia-supported: true`, y está escrito para ello, no simplemente tolerado. Todo lo que depende de un
+hilo pasa por los `Tasks` de ExyliaLib: las escrituras de perfil y el disparo de eventos caen en la
+región propia del jugador, el reloj de las animaciones y el barrido de caducidad corren en asíncrono,
+y el dibujado del chat y de los placeholders solo lee memoria y no toca nada que pertenezca a una
+región.
+
+<Callout type="warning" title="Equipar es cosa del hilo del jugador">
+Los métodos de la API que reciben un `Player` cambian lo que alguien lleva puesto y hay que llamarlos
+en el hilo que lo posee. Los que reciben un `UUID` solo leen. Ver la
+[API](/docs/exyliachatcosmetics/api).
+</Callout>
+
+## Qué relee cada recarga
+
+`/cca reload` ejecuta cinco pasos en orden, y un paso que falla se reporta mientras el resto siguen
+corriendo: un archivo de menú roto te cuesta ese menú, no tu chat.
+
+| Paso | Qué relee |
+|---|---|
+| configs | `config.yml` y `messages.yml` |
+| catalogs | todos los archivos de cosméticos y `animations.yml` |
+| menus | los archivos de menú |
+| chat | se arranca, se recarga o se para el módulo de chat, y se reinstala el hook de chat en consecuencia |
+| hooks | la suscripción a LuckPerms |
+
+`/exylialib reload` es la recarga de la paleta, y este plugin la escucha: se tira la caché de
+dibujado y se vuelven a leer los menús, de modo que recolorear `colors.yml` recolorea etiquetas,
+nombres y filas de menú sin tocar este plugin para nada. Los menús están en esa lista porque un menú
+guarda la paleta con la que se compiló.
+
+`/cca chat reload` es todavía más estrecho: los archivos propios del módulo de chat, dejando los
+cosméticos en paz.

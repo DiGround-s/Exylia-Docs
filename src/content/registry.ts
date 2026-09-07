@@ -336,6 +336,58 @@ const PRACTICEBOT_NAV: NavGroup[] = [
   },
 ];
 
+const CHATCOSMETICS_NAV: NavGroup[] = [
+  {
+    label: { en: "Getting started", es: "Empezar" },
+    pages: [
+      page("introduction", "introduction", "introduccion"),
+      page("installation", "installation", "instalacion"),
+      page("first-steps", "first-steps", "primeros-pasos"),
+    ],
+  },
+  {
+    label: { en: "The catalogue", es: "El catálogo" },
+    pages: [
+      page("catalogue", "catalogue", "catalogo"),
+      page("tags", "tags", "etiquetas"),
+      page("colors", "colors", "colores"),
+      page("fonts", "fonts", "fuentes"),
+      page("animations", "animations", "animaciones"),
+      page("custom", "custom", "personalizados"),
+    ],
+  },
+  {
+    label: { en: "Wearing them", es: "Llevarlos" },
+    pages: [
+      page("menus", "menus", "menus"),
+      page("entitlements", "entitlements", "concesiones"),
+      page("tokens", "tokens", "tokens"),
+    ],
+  },
+  {
+    label: { en: "Chat module", es: "Módulo de chat" },
+    pages: [
+      page("chat", "chat", "chat"),
+      page("channels", "channels", "canales"),
+      page("formats", "formats", "formatos"),
+      page("filter", "filter", "filtro"),
+      page("chat-features", "chat-features", "funciones-de-chat"),
+    ],
+  },
+  {
+    label: { en: "Reference", es: "Referencia" },
+    pages: [
+      page("commands", "commands", "comandos"),
+      page("permissions", "permissions", "permisos"),
+      page("placeholders", "placeholders", "placeholders"),
+      page("configuration", "configuration", "configuracion"),
+      page("integrations", "integrations", "integraciones"),
+      page("api", "api", "api"),
+      page("faq", "faq", "faq"),
+    ],
+  },
+];
+
 const TOTEMTRAINER_NAV: NavGroup[] = [
   {
     label: { en: "Getting started", es: "Empezar" },
@@ -739,10 +791,10 @@ export const plugins: Plugin[] = [
     name: "ExyliaKillEffect",
     tagline: { en: "Kill effects drawn with display entities", es: "Efectos de muerte hechos con display entities" },
     summary: {
-      en: "120 kill effects across six categories, drawn with real items and blocks that fall, turn and slam: chosen from a menu or bound to a weapon with a token, and written as sequences a server owner can edit.",
-      es: "120 efectos de muerte en seis categorías, dibujados con objetos y bloques reales que caen, giran y se clavan: elegidos desde un menú o atados a un arma con una ficha, y escritos como secuencias que el dueño puede editar.",
+      en: "129 kill effects across six categories, drawn with real items and blocks that fall, turn and slam: chosen from a menu, won out of a crate or bound to a weapon with a token, and written as sequences a server owner can edit.",
+      es: "129 efectos de muerte en seis categorías, dibujados con objetos y bloques reales que caen, giran y se clavan: elegidos desde un menú, ganados en una caja o atados a un arma con una ficha, y escritos como secuencias que el dueño puede editar.",
     },
-    version: "1.0.10",
+    version: "1.1.0",
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
@@ -753,7 +805,7 @@ export const plugins: Plugin[] = [
       { en: "Cosmetic", es: "Cosmético" },
       { en: "Folia", es: "Folia" },
     ],
-    nav: effectsNav(),
+    nav: effectsNav([page("crate", "crate", "caja")]),
   },
   {
     id: "exyliahiteffect",
@@ -763,7 +815,7 @@ export const plugins: Plugin[] = [
       en: "90 hit effects across six categories, played on the body of whoever was struck and written to a budget of six tenths of a second: chosen from a menu or bound to a weapon with a token.",
       es: "90 efectos de golpe en seis categorías, lanzados sobre el cuerpo de quien recibe el impacto y escritos con un presupuesto de seis décimas de segundo: elegidos desde un menú o atados a un arma con una ficha.",
     },
-    version: "1.0.10",
+    version: "1.1.0",
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
@@ -774,7 +826,7 @@ export const plugins: Plugin[] = [
       { en: "Combat", es: "Combate" },
       { en: "Folia", es: "Folia" },
     ],
-    nav: effectsNav(),
+    nav: effectsNav([page("crate", "crate", "caja")]),
   },
   {
     id: "exyliaarmortrims",
@@ -860,6 +912,28 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: SHIELDS_NAV,
+  },
+  {
+    id: "exyliachatcosmetics",
+    name: "ExyliaChatCosmetics",
+    tagline: { en: "Chat cosmetics, and the chat itself", es: "Cosméticos de chat, y el chat mismo" },
+    summary: {
+      en: "Tags, nick, rank, chat and shadow colours, fonts and modifiers a player wears from a menu, custom tags and colours they mix themselves, grants that expire, loadouts — and a full chat module underneath: channels, formats, a bilingual filter, mentions, emojis, item renders, whispers and an announcer.",
+      es: "Etiquetas, colores de nick, de rango, de chat y de sombra, fuentes y modificadores que el jugador se pone desde un menú, etiquetas y colores que se mezcla él mismo, concesiones que caducan, loadouts — y debajo un módulo de chat completo: canales, formatos, un filtro bilingüe, menciones, emojis, ítems mostrados, susurros y un anunciador.",
+    },
+    version: "1.0.0",
+    status: "stable",
+    category: { en: "Social", es: "Social" },
+    minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/chat/ExyliaChatCosmeticsBanner.webp",
+    tags: [
+      { en: "Chat", es: "Chat" },
+      { en: "Cosmetics", es: "Cosméticos" },
+      { en: "Filter", es: "Filtro" },
+      { en: "Channels", es: "Canales" },
+      { en: "Folia", es: "Folia" },
+    ],
+    nav: CHATCOSMETICS_NAV,
   },
   {
     id: "exyliaclans",

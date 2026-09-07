@@ -1,0 +1,242 @@
+---
+title: "Instalación"
+description: "Dependencias, el primer arranque, todos los archivos que escribe, la base de datos, Folia y la recarga."
+---
+
+## Antes de empezar
+
+El servidor necesita Paper 1.21 o superior y Java 21. Un plugin tiene que estar en `plugins/` junto al
+jar; otros dos son opcionales y cada uno aporta algo concreto.
+
+| Plugin | Declarado como | Para qué |
+|---|---|---|
+| `ExyliaLib` | `softdepend` | **Obligatorio.** La configuración, los mensajes, los menús, el texto, la paleta, la base de datos, las tareas y los placeholders salen de ahí. El plugin no funciona sin él. |
+| `PlaceholderAPI` | `softdepend` | Opcional. Lleva los `%ecc_…%` al resto de plugins, que es como un plugin de chat dibuja la etiqueta y el nombre coloreado. |
+| `LuckPerms` | `softdepend` | Opcional. Los colores de rango son inservibles sin él, y los cambios de permisos se aplican en el mismo tick en vez de al reconectar. |
+
+<Callout type="note" title="Por qué el obligatorio es un softdepend">
+`softdepend` es una regla de orden de carga, no una declaración de lo opcional que es algo. El
+comentario del `plugin.yml` lo dice sin rodeos:
+
+```yaml title="plugin.yml"
+# Soft on purpose: a hard depend stops this plugin from loading when
+# ExyliaLib is absent, and the loader that would install ExyliaLib is
+# exactly what has to load for the install to happen.
+softdepend: [ExyliaLib, PlaceholderAPI, LuckPerms]
+```
+
+Un `depend` duro se negaría a cargar el plugin antes de que la librería pudiera llegar siquiera, así
+que aquí "soft" significa "cárgame después de él", no "puedes prescindir de él".
+</Callout>
+
+### Qué aporta cada plugin opcional
+
+**PlaceholderAPI.** ExyliaLib registra cada placeholder bajo `%exyliachatcosmetics_<nombre>%` y bajo
+el corto `%ecc_<nombre>%`, y los lleva a PAPI automáticamente. Dentro del texto propio de ExyliaLib
+funcionan igual; PAPI es lo que hace que se resuelvan en el formato de chat, el scoreboard o el tab de
+otro plugin. Si el módulo de chat integrado es el que entrega los mensajes, nada necesita ese rodeo y
+PAPI no aporta nada.
+
+**LuckPerms.** Un color de rango repinta el prefijo y el sufijo que ya escribe tu plugin de permisos, y
+los lee de los datos en caché de LuckPerms. Sin LuckPerms, `{prefix}` y `{suffix}` no dibujan nada y
+toda la pantalla de colores de rango queda vacía. LuckPerms también aporta los grupos que nombra la
+lista `groups` de cada entrada, y su `UserDataRecalculateEvent` limpia los permisos memorizados y la
+caché de render, así que un rango que caducó se lleva sus cosméticos sin reconectar. La propiedad por
+permiso sigue funcionando por Bukkit sin él — la memoria simplemente se refresca al entrar, al
+recargar y en el barrido de 30 segundos.
+
+## Instalación
+
+<Steps>
+  <Step title="Deja el jar">
+    Copia `ExyliaChatCosmetics.jar` en `plugins/`, junto a `ExyliaLib`.
+  </Step>
+  <Step title="Arranca el servidor">
+    El primer arranque escribe la configuración, los ocho archivos del catálogo, los seis menús y las
+    tablas de la base de datos. Puede tardar más de lo normal: el `plugin.yml` declara la misma lista
+    de drivers que ExyliaLib, y el cargador de librerías del propio servidor descarga cada uno una vez
+    y lo comparte, así que el primer arranque necesita conexión a internet.
+  </Step>
+  <Step title="Mira la consola">
+    Busca el banner ASCII con el nombre del plugin, seguido de `Version: v1.0.0`. Si nunca aparece,
+    falta `ExyliaLib`.
+  </Step>
+  <Step title="Abre el menú">
+    `/cc` en el juego. `exyliachatcosmetics.command.cosmetics` está declarado como `default: true`,
+    así que todos los jugadores ya lo tienen. Ver
+    [Primeros pasos](/docs/exyliachatcosmetics/primeros-pasos).
+  </Step>
+</Steps>
+
+<Callout type="note" title="Tu chat no cambia todavía">
+`chat.module.enabled` viene en `false`, así que el plugin no entrega mensajes, no es dueño de ningún
+formato y no registra comandos de chat. Lo que lleve tu chat hoy lo sigue llevando. Hasta que decidas
+otra cosa, lo único que hace el plugin es dar estilo al cuerpo del mensaje a través del hook y
+responder placeholders — y ni eso más allá de lo que permita el modo de hook que elijas. Encender el
+módulo es un paso deliberado, y vive en la [página de chat](/docs/exyliachatcosmetics/chat).
+</Callout>
+
+## Qué escribe el primer arranque
+
+Todo vive bajo `plugins/ExyliaChatCosmetics/`. Cada archivo se copia una vez y nunca se sobrescribe,
+así que tus ediciones sobreviven a una actualización.
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | Generado desde el record `Settings`: el hook de chat, el formato de la etiqueta, el repintado de los colores de rango, las reglas de etiquetas y colores personalizados, el límite de loadouts, el tick de las animaciones, la línea de previsualización, los textos del menú, la caducidad y los valores de reserva de los placeholders. |
+| `messages.yml` | Todas las líneas que ve un jugador, generadas desde el record `CosmeticMessages`, más el `prefix` al que se expande `%prefix%`. |
+| `database.yml` | El de ExyliaLib. Motor, credenciales y tamaño del pool. H2 por defecto. |
+
+### `cosmetics/`
+
+El catálogo. Estos no son archivos con esquema, y es a propósito: un catálogo se cura a mano y un
+escritor de esquemas no conserva ninguno de sus comentarios, así que lo que viene es un archivo
+comentado que puedes leer de arriba abajo.
+
+| Archivo | Trae |
+|---|---|
+| `cosmetics/tags.yml` | 180 etiquetas en siete pestañas: `symbols`, `animated`, `particles`, `icons`, `interface`, `flags`, `premium` |
+| `cosmetics/nick-colors.yml` | 90 colores de nick en `red`, `blue`, `yellow`, `green`, `advanced`, `premium` |
+| `cosmetics/chat-colors.yml` | 96 colores de chat en las mismas seis pestañas |
+| `cosmetics/shadow-colors.yml` | 90 colores de sombra en `natural`, `red`, `blue`, `yellow`, `green`, `premium` |
+| `cosmetics/rank-colors.yml` | 77 colores de rango en `solid`, `metal`, `gems`, `gradient`, `animated`, `staff` |
+| `cosmetics/fonts.yml` | 18 fuentes en `classic`, `typeset`, `modern`, `script` |
+| `cosmetics/modifiers.yml` | negrita, cursiva, subrayado, tachado y ofuscado, en una sola pestaña `style` |
+| `cosmetics/animations.yml` | 18 animaciones, referenciadas por id desde cualquiera de los archivos anteriores |
+
+### `menus/`
+
+Seis archivos de menú de ExyliaLib, compilados al cargar y recompilados por `/cca reload`.
+
+| Archivo | Se abre desde |
+|---|---|
+| `menus/main.yml` | `/cc` |
+| `menus/identity.yml` | el botón IDENTITY — etiquetas, colores de nick, colores de rango |
+| `menus/message.yml` | el botón MESSAGE — colores de chat, colores de sombra, fuentes, modificadores |
+| `menus/browser.yml` | cada rejilla de cosméticos, una sola pantalla reutilizada para todos los tipos |
+| `menus/favorites.yml` | el botón FAVORITES |
+| `menus/loadouts.yml` | el botón LOADOUTS |
+
+## El árbol `chat/`
+
+Nada de esto se escribe en el primer arranque. El módulo de chat construye sus archivos la primera vez
+que arranca, que es la primera carga o recarga después de poner `chat.module.enabled: true`.
+
+| Archivo | Trae |
+|---|---|
+| `chat/config.yml` | Los ajustes del módulo, generados desde un record igual que `config.yml`. |
+| `chat/messages.yml` | Las líneas del módulo que ve un jugador. |
+| `chat/channels.yml` | Los canales con sus alcances, permisos y formatos. |
+| `chat/formats/default.yml` | La línea con la que se dibuja un mensaje. |
+| `chat/formats/msg.yml` | Lo mismo para los mensajes privados. Cualquier otro `.yml` que añadas a esta carpeta también se lee. |
+| `chat/filter/config.yml` | Cooldowns, similitud, flood, mayúsculas y el presupuesto de puntos. |
+| `chat/filter/rules.yml` | Qué se bloquea, y cuánto cuesta cada regla. |
+| `chat/filter/whitelist.yml` | Palabras que ninguna regla debe capturar. |
+| `chat/filter/leet.yml` | Las sustituciones de letras que se deshacen antes de que una regla mire el mensaje. |
+| `chat/filter/punishments.yml` | Qué pasa en cada total de puntos. |
+| `chat/text/emojis.yml` | De `:nombre:` al glifo que dibuja. |
+| `chat/text/grammar.yml` | Los arreglos de mayúsculas y puntuación. |
+| `chat/announcements.yml` | La rotación del anunciador. |
+
+<Callout type="note" title="Un servidor que viene del reparto antiguo">
+El filtro eran cinco archivos sueltos directamente en `chat/`, junto a `emojis.yml` y `grammar.yml`.
+Ahora viven en `chat/filter/` y `chat/text/`, y el módulo mueve cada uno a su sitio en el primer
+arranque después del cambio — un archivo editado conserva sus ediciones, y lo que ya esté en el sitio
+nuevo se deja en paz.
+</Callout>
+
+## Base de datos
+
+Por defecto el plugin usa **H2**: un archivo dentro de la carpeta del plugin, sin servidor, sin
+instalación y sin mantenimiento. Las tablas se crean al primer uso y se ensanchan solas cuando una
+columna necesita más sitio.
+
+| Tabla | Clave | Guarda |
+|---|---|---|
+| `chatcosmetics_profiles` | `uuid` | `name`, `equipped`, `favorites`, `active_loadout`, `created_at`, `updated_at` |
+| `chatcosmetics_entitlements` | `id` generado | `player_uuid`, `cosmetic_key`, `source`, `source_ref`, `granted_by`, `granted_at`, `expires_at`, `revoked_at`, `note` |
+| `chatcosmetics_custom` | `id` generado | `player_uuid`, `type`, `text`, `color`, `animation`, `created_at` |
+| `chatcosmetics_loadouts` | `id` generado | `player_uuid`, `name`, `slots`, `created_at` |
+| `chatcosmetics_tokens` | `id` generado | `player_uuid`, `type`, `kind`, `amount`, `updated_at` — una fila por jugador, por tipo de cosmético personalizado y por saldo `create`/`edit` |
+
+Hay una sexta tabla, `chatcosmetics_chat_players`, que pertenece al módulo de chat y solo se crea
+cuando ese módulo funciona. Lleva el canal del jugador, su lista de ignorados y su estado de
+moderación.
+
+Para compartir los cosméticos entre varios servidores, apúntalos al mismo motor:
+
+```yaml title="plugins/ExyliaChatCosmetics/database.yml"
+database:
+  type: mysql
+  settings:
+    max-pool-size: 0
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Motores soportados: `h2`, `mysql`, `mariadb`, `postgresql` y `mongodb`. Solo se lee el bloque que
+coincide con `type`, y un valor que no se reconoce cae a `h2` y lo dice. El archivo es de ExyliaLib; su
+referencia completa está en la [página de base de datos de la librería](/docs/exylialib/base-de-datos).
+
+Un perfil se lee una sola vez al entrar — la fila, las concesiones, lo que el jugador ha creado y sus
+loadouts — y se mantiene en memoria mientras está conectado. Los clics en el menú marcan la fila como
+sucia y un volcado corre cada cinco segundos, al salir y al apagar. Dibujar una línea de chat nunca
+toca la base de datos.
+
+## Folia
+
+El `plugin.yml` declara `folia-supported: true`, y todo lo que depende de un hilo pasa por los `Tasks`
+de ExyliaLib: las escrituras de perfil y el disparo de eventos caen en la región del propio jugador, el
+reloj de las animaciones y el barrido de caducidades son asíncronos, y dibujar una línea o responder un
+placeholder solo lee memoria. No hay nada más que configurar.
+
+## Actualizar
+
+Reemplaza el jar y reinicia. Tus archivos de catálogo, tus menús y tus archivos de chat se quedan
+intactos, y todo lo que posee un jugador vive en la base de datos.
+
+`config.yml` y `messages.yml` se generan desde records, así que se tratan distinto de los archivos que
+solo se copian: una clave que añada una versión nueva aparece con su valor por defecto y su comentario,
+y una clave que ya no declara ningún record **se elimina al cargar** y se reporta una vez como
+`UNKNOWN_KEY`. Eso es de ida y no de vuelta — un error tipográfico en el nombre de una clave se borra
+en vez de avisarte para siempre, así que lee la consola después de una actualización si has estado
+editando a mano.
+
+## Recargar
+
+```text
+/cca reload
+```
+
+Permiso `exyliachatcosmetics.admin`. Corre cinco pasos en orden, y un paso que falla se reporta
+mientras el resto siguen corriendo:
+
+| Paso | Vuelve a leer |
+|---|---|
+| `configs` | `config.yml` y `messages.yml`, y el prefijo de los mensajes con ellos |
+| `catalogs` | `cosmetics/animations.yml` y todos los archivos del catálogo |
+| `menus` | los seis `menus/*.yml` |
+| `chat` | enciende o apaga el módulo integrado según `chat.module.enabled`, y reinstala el hook de chat |
+| `hooks` | reintenta LuckPerms, por si registró su servicio después de que arrancara este plugin |
+
+`/exylialib reload` es otra cosa: recarga la paleta, y este plugin tira su caché de render como
+respuesta, así que recolorear el servidor recolorea etiquetas y nombres sin tocar nada de aquí.
+
+## A dónde ir después
+
+<Cards>
+  <Card title="Primeros pasos" href="/docs/exyliachatcosmetics/primeros-pasos">
+    Los primeros diez minutos: el menú, qué posee ya un jugador, conceder una etiqueta y meter la
+    identidad en tu formato de chat.
+  </Card>
+  <Card title="El catálogo" href="/docs/exyliachatcosmetics/catalogo">
+    Qué puede decir cada archivo de `cosmetics/`, y cómo escribir tus propias entradas.
+  </Card>
+  <Card title="El módulo de chat" href="/docs/exyliachatcosmetics/chat">
+    Qué cambia de verdad al encender `chat.module.enabled`.
+  </Card>
+</Cards>

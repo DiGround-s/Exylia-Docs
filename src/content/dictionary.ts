@@ -164,8 +164,8 @@ export const dict = {
       es: "Lo que ven los jugadores: efectos, skins, trims y escudos.",
     },
     Social: {
-      en: "Groups, territory and everything played between players.",
-      es: "Grupos, territorio y todo lo que se juega entre jugadores.",
+      en: "Chat, groups, territory and everything played between players.",
+      es: "Chat, grupos, territorio y todo lo que se juega entre jugadores.",
     },
     Survival: {
       en: "The survival toolkit, module by module.",

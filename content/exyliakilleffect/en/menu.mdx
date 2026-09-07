@@ -18,8 +18,8 @@ With `behaviour.mode: weapon` nothing on this screen would ever be read, so the 
 | `categories` | `9,18,27,36` | The tabs down the left, paged with the buttons at slots `0` and `45`. |
 | `grid` | `11-16,20-25,29-34,38-43` | The open category's effects, paged at slots `47` and `52`. |
 
-The fixed buttons: **YOUR EFFECT** at slot `4` (click to take the effect off), **PARTICLE
-VISIBILITY** at `48`, **CLOSE** at `50`.
+The fixed buttons: **YOUR EFFECT** at slot `4` (click to take the effect off), **EFFECT CRATE** at
+`8`, **PARTICLE VISIBILITY** at `48`, **RANDOM EFFECT** at `49`, **CLOSE** at `50`.
 
 ## The favourites tab
 
@@ -42,7 +42,7 @@ failed to load.
 | Click | On a grid row |
 |---|---|
 | Left | Wears the effect — or takes it off, when it is already the one worn. |
-| Right | Previews it: the player is lifted to an empty patch of sky, the effect plays for them alone, and they are put back where they were. Locked rows can be previewed too. |
+| Right | Previews it on the server's preview stage, set with `/killeffectsadmin preview location`. Locked rows can be previewed too. |
 | Shift | Stars it, or unstars it. |
 
 ## Ordering and locked rows
@@ -50,6 +50,17 @@ failed to load.
 Effects the player may use are drawn first, then the locked ones — so what they can use is never
 behind a page of rows they cannot. With `behaviour.hide-without-permission: true` the locked ones are
 dropped from the grid entirely, except on the favourites tab.
+
+## The random choice
+
+**RANDOM EFFECT** at slot `49` is a choice rather than an effect: every kill draws a different one of
+the effects the player owns. It is turned on and off by clicking it, by `/killeffect random`, or by
+the `killeffect:random` action, and what it is called is `menu.random-name`.
+
+## The crate
+
+**EFFECT CRATE** at slot `8` opens `menus/crate.yml`, which asks how many to open and hands over to
+`menus/crate_open.yml` for the reels. Both are documented on [The crate](/docs/exyliakilleffect/crate).
 
 ## Templates
 
@@ -71,8 +82,8 @@ Each list picks a template per row. `item_template` is the plain state and must 
 | Where | Available |
 |---|---|
 | `categories` | `%category_id%` `%category_name%` `%category_material%` `%category_total%` `%category_owned%` `%category_status%` |
-| `grid` | `%effect_id%` `%effect_name%` `%effect_material%` `%effect_description%` `%effect_weapons%` `%effect_favourite%` |
-| Anywhere | `%current_effect%` `%favourites_count%` `%particle_visibility%` `%visibility_all%` `%visibility_none%` `%visibility_self_only%` `%visibility_others_only%` |
+| `grid` | `%effect_id%` `%effect_name%` `%effect_material%` `%effect_description%` `%effect_weapons%` `%effect_favourite%` `%effect_tier%` `%effect_tier_id%` `%effect_tier_color%` |
+| Anywhere | `%current_effect%` `%random_status%` `%favourites_count%` `%keys%` `%unlocked_count%` `%catalogue_count%` `%particle_visibility%` `%visibility_all%` `%visibility_none%` `%visibility_self_only%` `%visibility_others_only%` |
 
 ## Actions
 
@@ -86,6 +97,9 @@ Each list picks a template per row. `item_template` is the plain state and must 
 | `killeffect:favourites_clear` | Empties the shortlist. |
 | `killeffect:preview <id>` | Previews an effect and reopens the menu afterwards. |
 | `killeffect:visibility` | Steps the viewer's visibility on by one. |
+| `killeffect:random` | Turns the random choice on, or off when it is already on. |
+| `killeffect:crate` | Opens the crate. |
+| `killeffect:crate_open <amount>` | Spends that many keys and drops that many reels. Used by `menus/crate.yml`. |
 
 ## Wording
 
@@ -102,6 +116,9 @@ menu:
   favourites-icon: "AMETHYST_SHARD"
   favourite-on: "{highlight}★ In your favourites"
   favourite-off: "{muted}☆ Not in your favourites"
+  random-name: "{highlight}Random"
+  random-on: "{success}✔ Every kill is a surprise"
+  random-off: "{warning}➥ Click to surprise yourself"
 ```
 
 <Callout type="tip" title="The window follows the choice">

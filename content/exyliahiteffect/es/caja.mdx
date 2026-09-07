@@ -1,0 +1,140 @@
+---
+title: "La caja"
+description: "Llaves, rarezas y carretes: cómo se gana un efecto en vez de concederlo."
+---
+
+Un efecto se puede dar con un nodo de permiso, o se puede ganar. La caja es la segunda vía: el jugador
+gasta llaves, mira caer los carretes, y se queda con lo que salga — escrito en su propia fila y no en
+un rango, así que sobrevive al rango que lo pagó.
+
+```yaml title="config.yml"
+crate:
+  enabled: true
+  start-keys: 0
+  duplicate-refund: 1
+  give-token: false
+  blocks: []
+  max-at-once: 4
+  spin-frames: 34
+  stagger-seconds: 2.0
+```
+
+## Las llaves no son un objeto
+
+Una llave vive en la fila del jugador, al lado de su efecto elegido y su lista de favoritos. Nada la
+puede tirar, duplicar ni perder en un inventario lleno, y nadie la levanta del suelo.
+
+La única entrada es el comando de admin, que una tienda, un listener de votos o un plugin de
+recompensas corre por consola:
+
+```text
+/hiteffectsadmin keys give <jugador> <cantidad>
+/hiteffectsadmin keys take <jugador> <cantidad>
+/hiteffectsadmin keys set <jugador> <cantidad>
+/hiteffectsadmin keys check <jugador>
+```
+
+`start-keys` es lo que recibe un jugador la primera vez que el plugin lo ve — una forma de dejar que
+todos abran una antes de pedirles que compren la siguiente.
+
+## Rarezas
+
+Cada efecto pertenece a una rareza, escrita como `tier:` en `effects.yml`. La rareza decide tres cosas:
+el color con el que se escribe el efecto, con qué frecuencia un carrete se detiene en él, y qué concede
+`exyliahiteffect.tier.<id>`.
+
+```yaml title="config.yml"
+tiers:
+  common:
+    name: "Common"
+    material: GRAY_DYE
+    color: "{muted}"
+    chance: 60.0
+    priority: 1
+  legendary:
+    name: "Legendary"
+    material: ORANGE_DYE
+    color: "{highlight}"
+    chance: 3.0
+    priority: 4
+```
+
+| Clave | Qué hace |
+|---|---|
+| `name` | Cómo la llaman menús y placeholders. |
+| `material` | El objeto con el que se dibuja la rareza. |
+| `color` | El color con el que se escriben sus efectos. |
+| `chance` | Con qué frecuencia cae un carrete en ella, relativo a las demás. |
+| `priority` | Dónde se sitúa en los menús; menor va primero. |
+
+<Callout type="note" title="chance es un peso, no un porcentaje">
+Que los cuatro pesos que vienen sumen 100 es solo una comodidad. Si borrás `epic`, sus doce se
+reparten entre las tres que quedan, en vez de dejar un hueco de doce sobre cien donde no sale nada.
+</Callout>
+
+Nada está fijo en el código. Renombrá `rare`, inventá `mythic`, borrá `legendary` — un efecto que
+nombra una rareza que ya no existe cae en la primera, así que una rareza borrada les cuesta a sus
+efectos el color y nunca la existencia. Un efecto sin `tier:` es común.
+
+## Abrirla
+
+`/hiteffect crate` — o el botón de la esquina superior derecha del menú de efectos, o un bloque atado —
+abre `menus/crate.yml`, que hace una sola pregunta: cuántas de una vez. Una llave abre una caja, y
+`max-at-once` limita la respuesta a siete, que es lo que entra en la pantalla.
+
+Elegir cuatro gasta cuatro llaves y abre cuatro carretes uno al lado del otro en
+`menus/crate_open.yml`. Cada carrete cae por su propia columna, y cada uno se detiene
+`stagger-seconds` después del anterior, así que aterrizan de a uno con una pausa para mirar cada uno.
+`spin-frames` es por cuántas caras pasa el primer carrete antes de parar — más alto es una caída más
+larga, con tope en 200, unos once segundos.
+
+<Callout type="note" title="Cerrar a mitad de caída no cuesta nada">
+Las llaves se gastan y los premios se deciden antes de dibujar el primer cuadro. Lo que ganó el
+jugador ya es suyo y se dice en el chat, así que una desconexión a mitad de camino no le quita nada.
+</Callout>
+
+Lo que un carrete pasó por un solo hueco se queda en pantalla cuando para. La mitad de lo que vale una
+caja es el legendario que se pasó de la línea, y una columna que se limpia sola no deja que nadie lo
+vea.
+
+## Duplicados
+
+Un carrete que cae en algo que el jugador ya tiene devuelve `duplicate-refund` llaves. En `0` un
+duplicado no vale nada; en `1` un duplicado es un reintento gratis.
+
+Con `give-token: true` una ganancia también entrega la ficha del efecto, para poder atarlo a un arma.
+Vale la pena encenderlo donde `behaviour.mode` sea `weapon` o `both`.
+
+## Bloques de caja
+
+Un bloque del mundo puede abrir la caja. Miralo y corré:
+
+```text
+/hiteffectsadmin crate block add
+/hiteffectsadmin crate block remove
+/hiteffectsadmin crate block list
+/hiteffectsadmin crate block clear
+```
+
+El comando escribe el bloque que estás mirando en `crate.blocks`, como
+`server,world,x,y,z,yaw,pitch`. Atalos en el juego y no a mano: un bloque atado no se puede romper,
+volar ni empujar mientras esté en la lista.
+
+## Cuánto vale una ganancia
+
+Un efecto desbloqueado se escribe en la fila del jugador, no se concede como permiso. Ese es el sentido
+de la caja: un rango que se vence se lleva su nodo de categoría, y no se lleva nada de lo ganado.
+
+Las dos mitades se leen juntas — un jugador tiene un efecto si un permiso se lo concede **o** su fila
+dice que lo desbloqueó. Los admins pueden escribir esa mitad a mano:
+
+```text
+/hiteffectsadmin unlocks grant <jugador> <efecto>
+/hiteffectsadmin unlocks revoke <jugador> <efecto>
+/hiteffectsadmin unlocks clear <jugador>
+```
+
+<Callout type="tip" title="Apagar la caja">
+`enabled: false` deja el botón donde está y hace que diga que la caja está cerrada, en vez de sacar
+algo que los jugadores ya aprendieron a buscar.
+</Callout>

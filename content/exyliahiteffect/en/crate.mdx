@@ -1,0 +1,140 @@
+---
+title: "The crate"
+description: "Keys, rarities and the reels: how an effect is won instead of granted."
+---
+
+An effect can be given by a permission node, or it can be won. The crate is the second way: a player
+spends keys, watches reels fall, and keeps whatever they land on — written to their own row rather
+than to a rank, so it outlives the rank that paid for it.
+
+```yaml title="config.yml"
+crate:
+  enabled: true
+  start-keys: 0
+  duplicate-refund: 1
+  give-token: false
+  blocks: []
+  max-at-once: 4
+  spin-frames: 34
+  stagger-seconds: 2.0
+```
+
+## Keys are not an item
+
+A key lives on the player's row, next to their chosen effect and their shortlist. Nothing can drop
+one, dupe one, or lose one to a full inventory, and nothing picks one up off the floor.
+
+The only way in is the admin command, which a shop, a vote listener or a reward plugin runs as
+console:
+
+```text
+/hiteffectsadmin keys give <player> <amount>
+/hiteffectsadmin keys take <player> <amount>
+/hiteffectsadmin keys set <player> <amount>
+/hiteffectsadmin keys check <player>
+```
+
+`start-keys` is what a player is handed the first time the plugin sees them — a way to let everybody
+open one before they are asked to buy the next.
+
+## Rarities
+
+Every effect belongs to a rarity, written as `tier:` in `effects.yml`. The rarity decides three
+things: the colour the effect is named in, how often a reel stops on it, and what
+`exyliahiteffect.tier.<id>` grants.
+
+```yaml title="config.yml"
+tiers:
+  common:
+    name: "Common"
+    material: GRAY_DYE
+    color: "{muted}"
+    chance: 60.0
+    priority: 1
+  legendary:
+    name: "Legendary"
+    material: ORANGE_DYE
+    color: "{highlight}"
+    chance: 3.0
+    priority: 4
+```
+
+| Key | What it does |
+|---|---|
+| `name` | What menus and placeholders call the rarity. |
+| `material` | The item the rarity is drawn with. |
+| `color` | The colour its effects are written in. |
+| `chance` | How often a reel stops on it, relative to the others. |
+| `priority` | Where it sits in menus; lower comes first. |
+
+<Callout type="note" title="chance is a weight, not a percentage">
+The four shipped weights happen to add up to 100, which is only a convenience. Delete `epic` and its
+twelve are re-spread across the three that are left, rather than becoming a twelve-in-a-hundred hole
+where nothing comes out.
+</Callout>
+
+Nothing here is hard-coded. Rename `rare`, invent `mythic`, delete `legendary` — an effect naming a
+rarity that no longer exists falls back to the first one, so a deleted rarity costs its effects their
+colour and never their existence. An effect with no `tier:` at all is common.
+
+## Opening
+
+`/hiteffect crate` — or the button in the top-right corner of the effect menu, or a bound block —
+opens `menus/crate.yml`, which asks one question: how many at once. One key opens one crate, and
+`max-at-once` caps the answer at seven, which is what the opening screen fits.
+
+Picking four spends four keys and opens four reels side by side on `menus/crate_open.yml`. Each reel
+falls down its own column, and each stops `stagger-seconds` after the one before it, so they land one
+at a time with a pause to look at each. `spin-frames` is how many faces the first reel runs through
+before it stops — higher is a longer fall, capped at 200, which is about eleven seconds.
+
+<Callout type="note" title="Closing mid-fall costs nothing">
+The keys are spent and the prizes decided before the first frame is drawn. What a player won is
+already theirs and is said in chat, so a disconnect halfway down loses them nothing.
+</Callout>
+
+What a reel came within one slot of stays on screen when it stops. Half of what a crate is worth is
+the legendary that went past the line, and a column that wipes itself never lets anybody see it.
+
+## Duplicates
+
+A reel that stops on something the player already owns hands back `duplicate-refund` keys instead.
+Set it to `0` and a duplicate is worth nothing; set it to `1` and a duplicate is a free retry.
+
+With `give-token: true` a win also hands over the effect's token, so it can be bound to a weapon.
+Worth turning on where `behaviour.mode` is `weapon` or `both`.
+
+## Crate blocks
+
+A block in the world can open the crate. Look at it and run:
+
+```text
+/hiteffectsadmin crate block add
+/hiteffectsadmin crate block remove
+/hiteffectsadmin crate block list
+/hiteffectsadmin crate block clear
+```
+
+The command writes the block you are looking at into `crate.blocks`, as
+`server,world,x,y,z,yaw,pitch`. Bind them in game rather than by hand: a bound block cannot be broken,
+blown up or pushed away while it is on the list.
+
+## What a win is worth
+
+An unlocked effect is written to the player's row, not granted as a permission. That is the whole
+point of the crate: a rank running out takes its category node with it, and takes nothing that was
+won.
+
+Both halves are read together — a player owns an effect if a permission grants it **or** their row
+says they unlocked it. Admins can write that half by hand:
+
+```text
+/hiteffectsadmin unlocks grant <player> <effect>
+/hiteffectsadmin unlocks revoke <player> <effect>
+/hiteffectsadmin unlocks clear <player>
+```
+
+<Callout type="tip" title="Turning the crate off">
+`enabled: false` leaves the button in place and has it say the crate is closed, rather than removing a
+thing players had learned to look for.
+</Callout>

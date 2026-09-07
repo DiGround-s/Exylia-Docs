@@ -1,0 +1,127 @@
+---
+title: "Frequently asked questions"
+description: "The questions that come up most."
+---
+
+## Nothing shows in chat at all
+
+Almost always the hook does not match the chat plugin you actually run. `chat.hook` decides how the
+message body is styled, and the wrong mode is a mode nothing ever fires. `decorate` is right for
+Paper's own chat and for anything rendering through `AsyncChatEvent`; a plugin that reads
+`message()` but ignores decoration wants `chat_event` at a priority below its own; a plugin still on
+`AsyncPlayerChatEvent` wants `legacy_event`. The table on
+[Integrations](/docs/exyliachatcosmetics/integrations) matches each case.
+
+The tag and the coloured name are a separate matter: those are never injected for you. If the message
+is coloured but there is no tag in front of the name, you have not put `%ecc_tag%` and `%ecc_nick%`
+into your chat plugin's format yet.
+
+## Tags show up as the word they are written from
+
+Sprites, particles and head skins in tags are object components, which arrived in Minecraft 1.21.9.
+A client older than that has nothing to draw, so it shows the tag as the text it is written in rather
+than failing — which is why the ANIMATED, PARTICLES, ICONS, INTERFACE and FLAGS tabs read as words on
+an old client and the SYMBOLS tab does not. Colours, fonts, shadows and the whole chat module work on
+1.21 exactly as they do on the newest release.
+
+## Some players never see certain messages
+
+That is secure chat. Any change to a message body — a colour is a change — marks the message as
+modified for a vanilla client, and a client with *Only Show Secure Chat* turned on hides a modified
+message. It still arrives; the client refuses to draw it. Every chat-colour plugin on the market has
+this property. Setting `enforce-secure-profile=false` in `server.properties` is the usual answer.
+
+## Rank colours do nothing
+
+Two causes. Rank colours repaint the prefix and suffix your permission plugin writes, and that meta
+comes from LuckPerms — without it there is nothing to repaint, `{prefix}` and `{suffix}` draw nothing
+and the rank-colour screen is empty. The other five cosmetic types are unaffected.
+
+If LuckPerms is there and the colour still looks wrong, it is `rank-colors.repaint`. The default,
+`letters`, paints only letters and digits, so `&8[&eVIP&8]` keeps its grey brackets and whatever
+symbol the rank wrote keeps its own colour. `all` paints everything the rank wrote, brackets
+included.
+
+## A player kept a cosmetic after losing the rank that gave it
+
+For at most a moment, and only without LuckPerms. Permission answers are memoised per profile so that
+drawing a chat line never goes near the permission plugin. With LuckPerms installed,
+`UserDataRecalculateEvent` drops that memo and the render cache the instant a rank changes, and the
+next line they send is drawn with what they own now — no relog. Without LuckPerms the memo refreshes
+on join, on `/cca reload`, and on the thirty-second sweep instead.
+
+What never happens is the cosmetic being deleted from their row. Equipped and owned are separate
+questions; a cosmetic somebody no longer owns simply stops being drawn, and comes back the day it is
+theirs again. That is deliberate — a permission plugin still loading on join would otherwise delete
+what somebody paid for.
+
+## I revoked a grant and it did not disappear at once
+
+Ownership is asked wherever a line is drawn, so a revoked grant stops counting immediately for chat.
+What waits is the *announcement* and the automatic unequip: one sweep walks the online profiles every
+thirty seconds, because a grant that ran out is only worth telling somebody who is actually here.
+`EntitlementExpiredEvent`, the `expired` message and taking the cosmetic off all ride on that sweep,
+so they arrive shortly after the moment rather than exactly on it. An offline player's grant needs no
+sweep at all: it is simply inactive the next time it is read.
+
+## The chat module will not start
+
+The chat module needs Paper. The cosmetics do not — on Spigot they run through `legacy_event`, and
+`decorate` or `chat_event` fall back to it with a warning at startup — but the module itself is built
+on Paper's chat events and has no Spigot path. Leave `chat.module.enabled` off there and use the hook
+with whatever chat plugin you already run.
+
+If the module fails for any other reason, the console says
+`The built-in chat could not start; cosmetics keep working through the chat hook.` and the hook is
+reinstalled. A chat file that cannot be read must not cost a server its cosmetics.
+
+## How do I give somebody a whole tab?
+
+`exyliachatcosmetics.<type>.category.<category>` — so
+`exyliachatcosmetics.chat_color.category.premium` is the whole premium chat-colour tab, and
+`exyliachatcosmetics.tag.category.flags` is every flag. `exyliachatcosmetics.<type>.*` is every entry
+of a type, and `exyliachatcosmetics.*` is everything. That is the difference between selling a rank
+and selling a cosmetic: one node against a hundred grants.
+
+Rank colours are the exception. They ship with `permission: false` and are owned by being in one of
+the groups the entry names, so a player in `vip` wears the VIP colour with no node at all.
+
+## Deleting a custom tag gave no token back
+
+By design. A player is not limited by how many custom cosmetics they hold but by how many they were
+given the right to make: a `create` token pays for each new one and an `edit` token for each change,
+and deleting returns nothing. Somebody handed three creations makes three, and the fourth costs
+another token however many they delete in between. See [Tokens](/docs/exyliachatcosmetics/tokens).
+
+## A tag's hover runs into the rest of the line
+
+Run `/cca chat line [message]`. It renders your own chat line and breaks it into the stretches that
+share a hover and a click, the way a client actually reads it — every character carries the style of
+its ancestors, so a hover set on a parent reaches every child under it. Each stretch is printed as
+`[text] hover …, click …`, to the console and to you, and a piece whose hover swallows the next one
+is visible there rather than guessed at from a screenshot. The module has to be on for it.
+
+## Players type `&c` and it shows as text
+
+That is `chat.sanitize`, on by default: a player's own `&c`, `<red>` or `{primary}` is shown as what
+they typed rather than obeyed, so nobody paints their line a colour they never bought. Give
+`exyliachatcosmetics.chat.format` to the people you trust with it. `§` is neutralised regardless of
+the setting and of the permission.
+
+## Does it run on Spigot? On Folia?
+
+Spigot runs the cosmetics through the legacy hook — everything about tags, colours, fonts and
+animations works — but not the chat module. Folia is fully supported and written for rather than
+merely tolerated: profile writes and event firing land on the player's own region, the animation
+clock and the expiry sweep run async, and chat and placeholder rendering read memory only.
+
+## Do I need PlaceholderAPI?
+
+Only if a plugin outside the Exylia ecosystem has to read the placeholders. They are registered with
+ExyliaLib's own placeholder module and work in every ExyliaLib text with PAPI absent; when PAPI is
+installed, ExyliaLib bridges the lot into it automatically under both `%exyliachatcosmetics_…%` and
+the short `%ecc_…%`. There is no expansion to download.
+
+## Where do I get support?
+
+On the [Exylia Discord](https://discord.exylia.net).

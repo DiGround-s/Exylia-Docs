@@ -1,0 +1,239 @@
+---
+title: "Menus"
+description: "The six menu files, what each one opens from, the actions their buttons run, and the values their templates can read."
+---
+
+Every screen a player sees is an ExyliaLib menu, one file each under
+`plugins/ExyliaChatCosmetics/menus/`. They are written on the first start and kept afterwards: a
+plugin update never overwrites a file you edited, and `/cca reload` picks up what you changed.
+
+<Callout type="note" title="The grammar lives in ExyliaLib">
+Templates, sections, fillers, `condition`, `depends-on`, `refresh`, sounds, navigation and the
+palette tokens are all ExyliaLib's, and they behave here exactly as they do anywhere else. See
+[ExyliaLib — Menus](/docs/exylialib/menus). This page only lists what these six files may say that no
+other menu can.
+</Callout>
+
+## The six files
+
+| File | Size | Opens from | Holds |
+|---|---|---|---|
+| `main.yml` | 27 | `/cc`, `chatcosmetics:open main` | `preview`, `identity`, `message`, `favorites`, `loadouts`, `collection`, `unequip` |
+| `identity.yml` | 27 | `chatcosmetics:open identity` | `preview`, `tags`, `nick`, `rank`, `back` |
+| `message.yml` | 27 | `chatcosmetics:open message` | `preview`, `colors`, `shadows`, `fonts`, `modifiers`, `back` |
+| `browser.yml` | 54 | `chatcosmetics:browse <type>`, `/cc tags`, `/tags`, `/nickcolors` … | sections `categories` and `cosmetics`, plus `create`, `custom`, `preview`, `unequip`, `back` |
+| `favorites.yml` | 54 | `chatcosmetics:open favorites`, `/cc favorites` | section `cosmetics`, plus `preview`, `unequip`, `back` |
+| `loadouts.yml` | 45 | `chatcosmetics:open loadouts`, `/cc loadouts` | section `loadouts`, plus `preview`, `save`, `unequip`, `back` |
+
+There is no seventh file for what players make. The nick colours a player mixed live on one button of
+the nick colour browser rather than on a screen of their own — see [What the player
+made](#what-the-player-made).
+
+## The actions
+
+Every button in these files runs `chatcosmetics:<name> [argument]`. ExyliaLib's own `back`, `close`,
+`next_page` and `previous_page` work here as everywhere.
+
+| Action | Does |
+|---|---|
+| `open <main\|identity\|message\|favorites\|loadouts>` | opens a fixed screen; anything else opens `main` |
+| `browse <type>` | opens `browser.yml` on that type |
+| `category <id>` | switches the tab of the browser the click came from |
+| `equip <type:id>` | wears it — or takes it off, when it is a single-slot kind already on |
+| `favorite <type:id>` | stars or unstars |
+| `preview <type:id>` | sends the line that cosmetic would produce, in chat |
+| `edit <type:id>` | opens the questions again for a row the player made; ignored on a catalogue row |
+| `delete <type:id>` | deletes a row the player made; ignored on a catalogue row |
+| `create <type>` | asks the questions that write a new one |
+| `unequip <type>` | takes off everything of one kind |
+| `clear` | takes off every kind at once |
+| `loadout_apply <id>`, `loadout_overwrite <id>`, `loadout_delete <id>` | one saved look |
+| `loadout_save` | asks for a name and saves what is worn now |
+
+A verb that changes the profile acts on the player, not on the window: every open screen showing that
+profile is redrawn by the store. Only `category` acts on the window the click came from.
+
+## No close button, and where back sits
+
+None of the six screens carries a close button. A player closes this window the way they close every
+other one, and a slot spent saying so is a slot that could have held a cosmetic.
+
+`back` sits in the middle of the bottom row on every screen that has one — slot `size - 5`, so 22 on
+the 27-slot screens, 40 on `loadouts.yml` and 49 on the two 54-slot ones. `main.yml` has no `back`,
+because there is nowhere above it.
+
+The two paginated browsers carry `parent: "main"`, which is where their `back` goes when a player was
+sent straight there by `/tags` or `/nickcolors` rather than through the front door.
+
+## Taking things off
+
+A menu that can only put things on has no way to say "none of this". Two actions do:
+
+| Action | Does | Where it ships |
+|---|---|---|
+| `chatcosmetics:unequip <type>` | takes off everything of one kind | TAKE IT OFF in the browser (slot 53), and a right click on a kind in `identity.yml` / `message.yml` |
+| `chatcosmetics:clear` | takes off every kind at once | TAKE IT ALL OFF on `main.yml` (26), `favorites.yml` (53) and `loadouts.yml` (43) |
+
+Both buttons carry `condition: "%equipped_any% == true"`, so they are drawn only when there is
+something to take off; the slot falls back to the filler otherwise.
+
+`%equipped_any%` means the whole player on every screen — and that one kind inside a browser, where a
+TAKE IT OFF button is about the kind on screen. To ask about one kind anywhere, `%<type>_worn%` says
+the same thing.
+
+Clicking a cosmetic that is already worn also takes it off, but only for a kind worn one at a time.
+Modifiers are worn as a set, so the button is the only way to wear none of them.
+
+## browser.yml
+
+One file draws the browser for every type; the title takes `%type_name%`, which comes from
+`menu.types` in `config.yml`. The title deliberately carries no page counter: a screen with two lists
+has no single page for the library to count.
+
+Values the fixed items may read:
+
+| Value | Is |
+|---|---|
+| `%type%`, `%type_name%` | the kind on screen, and what `menu.types` calls it |
+| `%type_custom%` | `true` when MAKE ONE would write something here |
+| `%owned_count%`, `%total_count%` | of this kind, for this player |
+| `%equipped_name%`, `%equipped_any%` | what is worn of this kind, and whether anything is |
+| `%custom_type%` | the kind MAKE ONE writes |
+| `%create_tokens%`, `%edit_tokens%` | that kind's two balances — see [Tokens](/docs/exyliachatcosmetics/tokens) |
+| `%preview%` | the player's whole chat line as it is now |
+
+`%preview%` sits on an item with `depends-on: [preview]`, which is what makes it redraw after each
+click rather than only on the timer.
+
+### The tabs
+
+Section `categories` fills slots 2–6, with arrows of its own at 1 and 7 when a type has more tabs than
+fit. It takes two templates — `item_template` for a tab, `open_template` for the one the player is on
+— and reads `%category_id%`, `%category_name%`, `%category_icon%`, `%category_total%` and
+`%category_owned%`. Its click is `chatcosmetics:category %category_id%`. A type with no categories
+skips the row entirely.
+
+The tab a player last left a type on is remembered, so a browser reopens where they were.
+
+### The grid
+
+Section `cosmetics` is a 4×7 grid on slots `10-16,19-25,28-34,37-43`, with page arrows at 48 and 50.
+It takes one template per state, and a missing one falls back to `item_template`:
+
+| Template | Drawn for |
+|---|---|
+| `item_template` | owned, not worn, no clock on it |
+| `selected_template` | worn right now |
+| `expiring_template` | owned, but only until a grant runs out |
+| `locked_template` | not owned |
+
+Locked rows are sorted to the end, so what a player can wear is where they will look rather than
+behind a page of what they cannot.
+
+| Row value | Is |
+|---|---|
+| `%cosmetic_key%`, `%cosmetic_id%`, `%cosmetic_type%`, `%cosmetic_type_name%` | how the row is named |
+| `%cosmetic_name%`, `%cosmetic_description%`, `%cosmetic_icon%` | from the catalogue; `material: "%cosmetic_icon%"` draws the entry's own icon |
+| `%cosmetic_status%` | one of the four lines under `menu.status` |
+| `%cosmetic_favorite%` | `menu.favorite-on` or `menu.favorite-off` |
+| `%cosmetic_expires%` | what is left of a temporary grant |
+| `%cosmetic_sample%` | the whole chat line drawn as if this one were worn |
+| `%cosmetic_manage%` | the change and delete prompts (`menu.custom-hints`) on a row the player made, and a blank line on every other |
+
+`%cosmetic_sample%` is a whole line rather than a swatch on purpose: a colour is best judged next to
+the tag and the name it will sit with, and one renderer answering every kind cannot drift from what
+chat actually draws.
+
+`%cosmetic_manage%` is a row value rather than lore lines because one file draws every kind. A
+catalogue row expands it to the blank line the layout wants there anyway, instead of promising two
+clicks that would do nothing.
+
+### What the player made
+
+A kind a player can write for themselves is named by the kind it pairs with — `tag` answers
+`customtag`, `nick_color` answers `customnick`, `chat_color` answers `customcolor`, `rank_color`
+answers `customrank`. The pair gets one button, `custom` at slot 46, that switches the grid to what
+that player made, and switches back to the first catalogue tab on a second click.
+
+A slot of its own rather than a tab: a kind nobody has made anything of would otherwise take a tab
+away from the catalogue's, and the button reads the same on every browser. Its values are
+
+| Value | Is |
+|---|---|
+| `%custom_state%` | `none` when this kind pairs with nothing or has no catalogue tabs to go back to, otherwise `closed` or `open` |
+| `%custom_glow%` | `true` while the list is open |
+| `%custom_toggle%` | what a click switches to — the custom list, or the first catalogue tab |
+| `%custom_name%`, `%custom_icon%` | how the paired kind is named and drawn |
+| `%custom_count%` | how many of them this player has made |
+
+One value rather than two flags, because a `condition` in a menu file is a single comparison: "there
+is one, and it is open" has to be sayable in one word. The shipped file hides the button with
+`condition: "%custom_state% != none"`.
+
+MAKE ONE, the `create` item at slot 45, carries `condition: "%type_custom% == true"` and runs
+`chatcosmetics:create %custom_type%`. It is drawn on a browser of a kind the player makes, and on a
+catalogue browser only while the custom list is open — so it appears exactly where writing one would
+make sense.
+
+A player looking for a colour for their name is looking for a colour for their name; whether the
+server wrote it or they did is one click, not a screen.
+
+## favorites.yml
+
+Every starred cosmetic of every kind, in the order the player starred them, across a 5×7 grid on
+slots `1-7,10-16,19-25,28-34,37-43`. Same four state templates and the same row values as the
+browser, and `%cosmetic_type_name%` earns its place here because the rows are of mixed kinds.
+
+Starring does not need ownership — a favourite is a wish list as much as a shortlist — so a locked
+row can sit here, and its template says so. Nothing is sorted: the star order is the order.
+
+## loadouts.yml
+
+Section `loadouts` fills slots `10-16,19-25` and takes two templates, `item_template` and
+`active_template` for the one being worn. It reads `%loadout_id%`, `%loadout_name%` and
+`%loadout_slots%` — what the loadout holds, by name, one kind per line — and its clicks are
+`chatcosmetics:loadout_apply`, `loadout_overwrite` and `loadout_delete` with `%loadout_id%`.
+
+SAVE THIS LOOK at slot 37 runs `chatcosmetics:loadout_save`, which asks for a name. The pagination
+filler is where a player with no loadouts is told how to make the first one.
+
+`%loadout_count%`, `%loadout_limit%` and `%active_loadout%` are readable anywhere on the screen.
+
+## Values every screen has
+
+Besides `%preview%`, all six files may read `%equipped_summary%` (every kind and what is worn of it),
+`%equipped_any%`, `%owned_count%`, `%favorites_count%`, `%loadout_count%`, `%loadout_limit%` and
+`%active_loadout%`.
+
+Per kind, anywhere: `%<type>_owned%`, `%<type>_total%`, `%<type>_equipped%` and `%<type>_worn%` — so
+a button that leads somewhere can say what is behind it. A screen of tiles that all read the same
+sentence is a screen nobody can read at a glance. The kinds a player makes carry
+`%<type>_create_tokens%` and `%<type>_edit_tokens%` on top of those.
+
+Where a kind has nothing on, `%<type>_equipped%` and `%equipped_summary%` fall back to `menu.none`.
+
+## Restyling
+
+- Colours are palette tokens (`{primary}`, `{letters}`, `{letters_black}`, `{muted}`, `{success}`,
+  `{warning}`, `{error}`). Recolour the whole server from ExyliaLib's `colors.yml`, not from here.
+- Rename a template only together with the state list above; a missing state template falls back to
+  `item_template` rather than failing.
+- Row values that carry formatting — `%cosmetic_name%`, `%cosmetic_sample%`, `%cosmetic_status%`,
+  `%preview%`, `%equipped_summary%` — are inserted already styled; ids and keys are literal. A bare
+  colour cannot be a value, so style the whole phrase in the template.
+- The words in a row's status line, its star line and the change and delete prompts are
+  `menu.status`, `menu.favorite-on` / `menu.favorite-off` and `menu.custom-hints` in `config.yml`,
+  not text in the menu file. `menu.sample-message` is the sentence every preview is drawn with.
+- `refresh: { mode: SMART }` redraws only what can change. An open menu also redraws when the profile
+  changes — a grant lands, a rank runs out — and once per animation frame, so an animated colour
+  moves on screen. How often that is, is `animations.tick` in `config.yml`: the knob that decides how
+  smooth a chat animation is decides what an open menu costs to keep moving.
+
+<Cards>
+  <Card title="Entitlements" href="/docs/exyliachatcosmetics/entitlements">
+    What decides whether a row is drawn locked, owned or expiring.
+  </Card>
+  <Card title="Tokens" href="/docs/exyliachatcosmetics/tokens">
+    What MAKE ONE spends, and how a rank or a store hands it out.
+  </Card>
+</Cards>

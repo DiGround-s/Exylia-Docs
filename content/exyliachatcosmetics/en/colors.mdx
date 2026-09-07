@@ -1,0 +1,224 @@
+---
+title: "Colours"
+description: "Nick, chat, shadow and rank colours: four files, four things a colour can paint, and the rules that decide which one wins."
+---
+
+Four of the types in the catalogue are colours, and the only thing separating them is what they paint.
+
+| Type | File | Paints |
+|---|---|---|
+| `nick_color` | `nick-colors.yml` | the player's name |
+| `chat_color` | `chat-colors.yml` | the message they typed |
+| `shadow_color` | `shadow-colors.yml` | what is drawn under that message |
+| `rank_color` | `rank-colors.yml` | the prefix and suffix their rank already writes |
+
+All four read the same [colour grammar](/docs/exyliachatcosmetics/catalogue) — shadows with one
+addition of their own — and all four share the fields every catalogue entry has.
+
+## The shape of an entry
+
+Nick, chat and rank colours read exactly two keys of their own: the colour, and an animation.
+
+```yaml
+nick_colors:
+  nebula:
+    category: premium
+    name: '{primary}&lNEBULA'
+    gradient: ['#8a51c4', '#ff6b9d', '#59a4ff']   # or color: '#8a51c4'
+    animation: shine
+    icon: ENDER_EYE
+    description: 'Three colours, and none of them sit still.'
+    priority: 1
+```
+
+`color:` takes one colour as a string; `gradient:` takes a list of them instead. Write one or the
+other — an entry with neither has nothing to paint with, and is reported and skipped. `animation:`
+names an entry from [`animations.yml`](/docs/exyliachatcosmetics/animations) and is optional; with one,
+the colour becomes the palette the animation moves through.
+
+A palette token works as a stop like any other colour, so `gradient: ['{primary}', '{secondary_light}',
+'{letters}']` is a gradient that follows your server rather than a fixed one. That is exactly what the
+shipped EXYLIA entries do.
+
+## Nick colours
+
+`cosmetics/nick-colors.yml`, section `nick_colors`. **90 colours in six tabs.**
+
+| Tab | Count |
+|---|---|
+| RED, BLUE, YELLOW, GREEN | 15 each, one flat shade per row |
+| ADVANCED | 15 gradients |
+| PREMIUM | 15 gradients that move |
+
+The tabs are the chat colour tabs, and an id here is the id there: wearing CRIMSON on both paints the
+name and the message in the same red, and the line reads as one decision rather than two.
+
+A name is four to sixteen letters, which is why nothing here is darker than a name can afford to be —
+the deepest shades live in the chat colours, where there is room for them. For the same reason a
+gradient across a name wants two stops, three at the most: two read as a gradient, three read as a
+flourish, and more than that reads as noise on eight characters.
+
+## Chat colours
+
+`cosmetics/chat-colors.yml`, section `chat_colors`. **96 colours in six tabs.**
+
+| Tab | Count |
+|---|---|
+| RED, BLUE, YELLOW, GREEN | 16 each, solid and readable on the vanilla chat background |
+| ADVANCED | 16 gradients |
+| PREMIUM | 16 gradients that move |
+
+A message from somebody wearing no chat colour falls back to `chat.default-color` in `config.yml`,
+which reads the same grammar — a hex, a name, a `{token}` or a gradient. Left empty, the message is
+not touched at all and arrives in whatever colour the format gave it.
+
+## Shadow colours
+
+`cosmetics/shadow-colors.yml`, section `shadow_colors`. **90 colours in six tabs.**
+
+The shadow is the darker copy of the text the client draws under every line. A shadow colour replaces
+it for that player's messages, and only for those.
+
+| `color` | Means |
+|---|---|
+| `#rrggbb` | one colour under the whole line |
+| `#rrggbbaa` | the same, the last two digits saying how strong |
+| `{primary}` and any palette token | that colour, opaque |
+| `auto` | the message's own colour, darkened to a quarter |
+| `auto:0.5` | the same, saying by how much — `0` to `1` |
+| `none` | no shadow at all, not even the client's own |
+
+There is no `gradient:` here. A shadow is one colour under a whole line, or the line's own colour
+darkened; a shadow that changed colour halfway would be a second message rather than a shadow.
+
+| Tab | Count | Built for |
+|---|---|---|
+| NATURAL | 15 | `auto` at every strength — the shadow follows whatever the message is |
+| RED, BLUE, YELLOW, GREEN | 15 each | sitting under the chat colour tab of the same name |
+| PREMIUM | 15 | named after the PREMIUM chat colours, to be worn as a pair |
+
+Alpha is how strong the shadow is: `aa` reads as depth, `55` as a glow, and no alpha at all as a hard
+block of colour. NATURAL is what the ADVANCED and PREMIUM gradients want, because a gradient should
+cast a gradient.
+
+<Callout type="note" title="Nothing ships as `none`">
+Taking the shadow off is what the browser's own "take it off" click already does, and a cosmetic that
+does nothing is a row a player has to read to learn that it does nothing. The value still works if you
+want it as a row of your own.
+</Callout>
+
+<Callout type="note" title="1.21.4 and newer">
+Shadow colours are drawn by clients on 1.21.4 and newer. An older one sees the message exactly as it
+always did — nothing fails, and nothing else about the line changes.
+</Callout>
+
+## Rank colours
+
+`cosmetics/rank-colors.yml`, section `rank_colors`. **77 colours in six tabs.** Needs LuckPerms.
+
+A rank colour repaints the prefix the permission plugin gives the player, and the suffix with it. It
+never touches the name — that is what nick colours are for. What the rank wrote keeps its shape, its
+bold and its spacing; only its colour is replaced. Wearing none leaves the prefix and suffix exactly
+as the rank wrote them.
+
+### `repaint`
+
+By default only letters and digits are repainted, so a rank's own frame survives:
+
+| `rank-colors.repaint` in `config.yml` | `&8[&eVIP&8]` painted `#55ffff` |
+|---|---|
+| `letters` (default) | `&8[&bVIP&8]` — the grey brackets stay grey |
+| `all` | `&b[VIP]` — everything the rank wrote, brackets included |
+
+A gradient runs over the characters it may paint and not over the brackets it never reaches, and an
+animation moves over exactly the same characters — an animation that reached the brackets would undo
+the one thing `letters` is for. A prefix written with no colours of its own is painted whole either
+way.
+
+### Who may wear one
+
+`permission` defaults to **`false`** for this type, the other way round from every other one, because
+a rank colour is more often something a rank owns than something a player buys. That is only the
+default an entry falls back to when it writes no `permission` of its own.
+
+| Entry | Who may wear it |
+|---|---|
+| no `groups`, no `permission` | everybody |
+| `groups: [owner, admin]` | whoever is in one of those LuckPerms groups, case-insensitively |
+| `permission: true` | whoever has `exyliachatcosmetics.rank_color.<id>`, plus grants |
+
+The shipped file uses all three. Its 15 SOLID entries write neither key and are free to every rank;
+the 54 entries of METAL, GEMS, GRADIENT and ANIMATED each write `permission: true` and are bought with
+a node or a grant; the 8 STAFF entries write `groups:` and are owned by being in one of them.
+
+```yaml
+rank_colors:
+  azure:
+    category: solid
+    name: '{primary}&lAZURE'
+    color: '{info}'
+    priority: 2
+  owner:
+    category: staff
+    name: '{primary}&lOWNER'
+    gradient: ['#ffd700', '#ff8c00']
+    animation: shine
+    groups: [owner]
+    icon: NETHER_STAR
+    priority: 1
+```
+
+### The tabs
+
+| Tab | Count | Meant for |
+|---|---|---|
+| SOLID | 15 | free to every rank — one flat colour, always legible |
+| METAL | 12 | bronze through obsidian, by permission |
+| GEMS | 15 | the cut stones, by permission |
+| GRADIENT | 15 | two or three stops across the prefix, by permission |
+| ANIMATED | 12 | the same, moving, by permission |
+| STAFF | 8 | named by `groups:` rather than by a node |
+
+<Callout type="warning" title="The STAFF tab names guesses at your groups">
+`owner`, `admin`, `dev`, `mod`, `helper`, `builder`, `media`, `veteran` — change them to whatever
+LuckPerms actually calls the groups on this server, or the tab is empty for everybody.
+</Callout>
+
+A prefix is short: two stops read as a gradient across it, three read as a flourish, and a prefix of
+four letters cannot show more than that.
+
+## Which colour wins
+
+Players can also mix colours of their own, and those are separate types
+([custom cosmetics](/docs/exyliachatcosmetics/custom)). Where two could apply, the more deliberate
+choice wins — the one somebody mixed themselves.
+
+| What is painted | First one wins |
+|---|---|
+| the name | `customnick`, then `nick_color`, then nothing |
+| the prefix and suffix | `customrank`, then `rank_color`, then the rank as it wrote itself |
+| the message | `customcolor`, then `chat_color`, then `chat.default-color` |
+| under the message | the worn `shadow_color`, else whatever the server configured |
+
+A rank colour has no say over the name: it paints what the rank owns, and the name belongs to the
+player. A nick colour has no say over the prefix, for the same reason read the other way.
+
+Where a shadow colour is worn, the server's own shadow is cleared from the line first and the player's
+is drawn instead. Otherwise the line keeps whatever `text-shadow` ExyliaLib was configured with.
+
+## Related
+
+<Cards>
+  <Card title="The catalogue" href="/docs/exyliachatcosmetics/catalogue">
+    The colour grammar, the shared fields, and how a broken entry is reported.
+  </Card>
+  <Card title="Animations" href="/docs/exyliachatcosmetics/animations">
+    What `animation:` names, and how a frame is chosen for a chat line.
+  </Card>
+  <Card title="Custom cosmetics" href="/docs/exyliachatcosmetics/custom">
+    `customnick`, `customcolor` and `customrank`: the colours players mix.
+  </Card>
+  <Card title="Entitlements" href="/docs/exyliachatcosmetics/entitlements">
+    Permissions, categories, wildcards and grants that expire.
+  </Card>
+</Cards>

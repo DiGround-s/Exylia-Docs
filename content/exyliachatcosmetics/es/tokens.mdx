@@ -1,0 +1,115 @@
+---
+title: "Tokens"
+description: "Tokens de creación y de edición: los dos saldos por tipo de cosmético personalizado, cómo los reparte un rango o una tienda, y cuándo se comprueban y se gastan."
+---
+
+Lo que limita a un jugador no es cuántos cosméticos personalizados tiene, sino cuántos le dieron
+derecho a hacer. Ese derecho es un token, y hay dos:
+
+| Tipo | Compra |
+|---|---|
+| `create` | escribir una etiqueta o un color personalizado nuevo |
+| `edit` | cambiar uno que ya hizo |
+
+Los saldos viven en `chatcosmetics_tokens`, una fila por jugador, por tipo de cosmético y por clase.
+De ellos no hay nada en `config.yml`: son datos del jugador, no configuración.
+
+## Borrar no devuelve nada
+
+Un jugador que borra una creación no recupera nada. Ese es justamente el sentido de contar creaciones
+y no posesiones: a quien le dan tres creaciones hace tres, y la cuarta cuesta otro token por muchas
+que borre por el camino. Devolverlo convertiría una compra en una licencia ilimitada para hacer y
+deshacer para siempre.
+
+## Cuatro tipos, cada uno con sus dos saldos
+
+Cada tipo que un jugador escribe a mano tiene su propia pareja:
+
+| Tipo | Es |
+|---|---|
+| `customtag` | una etiqueta que escribió |
+| `customcolor` | un color para lo que escribe |
+| `customnick` | un color para su nombre |
+| `customrank` | el color con el que su rango le pinta el nombre |
+
+Las creaciones de colores personalizados no pagan etiquetas personalizadas. Un servidor que vende las
+dos cosas está vendiendo dos cosas.
+
+## Repartirlos
+
+```
+/cca tokens give  <player> <type> <create|edit> <amount>
+/cca tokens take  <player> <type> <create|edit> <amount>
+/cca tokens set   <player> <type> <create|edit> <amount>
+/cca tokens check <player>
+```
+
+`<type>` tiene que ser uno de los cuatro tipos que hace el jugador a mano. Un tipo del catálogo como
+`tag` o `font` se rechaza con un mensaje que lo dice — nadie escribe uno de esos, así que no hay nada
+que un token pueda comprar. El autocompletado solo ofrece los cuatro.
+
+`take` nunca deja un saldo por debajo de cero, y `set` lo escribe tal cual. `check` imprime todos los
+saldos que tiene un jugador, por tipo, y funciona con alguien desconectado.
+
+<Callout type="note" title="El destinatario puede estar desconectado">
+Un saldo es una fila propia, así que se escribe y le espera, exactamente igual que una concesión. El
+callback de una tienda que se dispara mientras el comprador no está sigue funcionando.
+</Callout>
+
+Tres creaciones y cinco ediciones de un color personalizado, para un jugador que acaba de comprarlas:
+
+```
+/cca tokens give Notch customcolor create 3
+/cca tokens give Notch customcolor edit 5
+```
+
+Un rango los reparte igual: ejecuta el comando desde lo que conceda el rango — la lista de comandos
+de un grupo de LuckPerms, una caja, el callback de la tienda.
+
+<Callout type="warning" title="No hay ningún nodo de permiso que lleve un saldo">
+A propósito. Un nodo no se gasta: quien lo tuviera podría hacer un color personalizado o mil, y
+quitárselo después no desharía lo que ya escribió. Un saldo es un número que baja.
+
+Sí hay un nodo para decidir si un jugador puede hacer uno **siquiera** —
+`exyliachatcosmetics.customtag.create`, y la misma forma para los tres tipos de color — pero solo
+abre la puerta. Cada creación sigue costando un token.
+</Callout>
+
+## Gastarlos
+
+Un jugador ve lo que le queda con `/cc tokens`, que lista los dos saldos de cada tipo, y en el botón
+MAKE ONE de un navegador personalizado, que lee `%create_tokens%` y `%edit_tokens%` del tipo que hay
+en pantalla.
+
+| Dónde | Cuesta |
+|---|---|
+| MAKE ONE en el navegador, y `/cc customtag create`, `/cc customcolor create`, `/cc customnick create`, `/cc customrank create` | un `create` de ese tipo |
+| Clic derecho con shift sobre una fila que hizo el jugador | un `edit` |
+| Tecla de soltar sobre una fila que hizo el jugador | nada — y no devuelve nada |
+
+El saldo se **comprueba antes de hacer las preguntas**, para que nadie escriba una etiqueta entera y
+después le digan que jamás habría podido pagarla. Se **gasta después de la última respuesta**, cuando
+el texto y el color ya pasaron sus reglas y el nombre no está cogido, así que una etiqueta rechazada
+no cuesta nada. El gasto ocurre antes de escribir la fila, así que un segundo clic mientras el
+primero todavía se guarda encuentra el saldo ya corto en vez de leer el mismo número dos veces.
+
+Una creación que se cambia conserva su número de fila. Lo que cambió es lo que dice, no qué cosmético
+es — así que una etiqueta que estaba puesta sigue puesta, y un color con estrella sigue con estrella.
+
+`/cca customtag set <player> <text> [color]` escribe una para un jugador sin gastar nada. Las reglas
+del texto se siguen aplicando, porque son las que mantienen un insulto fuera del chat.
+
+## Placeholders
+
+| Placeholder | Es |
+|---|---|
+| `%ecc_tokens_customcolor_create%` | lo que le queda para hacer colores personalizados |
+| `%ecc_tokens_customtag_edit%` | lo que le queda para cambiar etiquetas personalizadas |
+
+La forma es `%ecc_tokens_<kind>_<create\|edit>%`, así que los mismos dos existen para los cuatro
+tipos. Útil en un scoreboard, o en la descripción de la entrada de tienda que los vende.
+
+En los menús, los mismos dos por tipo se pueden leer en cualquier pantalla —
+`%customcolor_create_tokens%`, `%customtag_edit_tokens%` — y dentro de un navegador los escuetos
+`%create_tokens%` y `%edit_tokens%` se refieren al tipo que hay en pantalla. Ver
+[Menús](/docs/exyliachatcosmetics/menus).

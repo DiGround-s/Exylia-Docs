@@ -95,9 +95,110 @@ menu:
   favourites-icon: "AMETHYST_SHARD"
   favourite-on: "{highlight}★ In your favourites"
   favourite-off: "{muted}☆ Not in your favourites"
+  random-name: "{highlight}Random"
+  random-on: "{success}✔ Every hit is a surprise"
+  random-off: "{warning}➥ Click to surprise yourself"
 ```
 
+`random-name` is what the random choice is called wherever the effect a player carries is drawn,
+including placeholders. `random-on` and `random-off` are the line the random button shows while it is,
+and is not, the choice they are carrying.
+
 The screen itself is `menus/effects.yml` — see [The menu](/docs/exyliahiteffect/menu).
+
+## `tiers`
+
+The rarities effects are sorted into, and how often each one comes out of a crate.
+
+```yaml
+tiers:
+  common:
+    name: "Common"
+    material: GRAY_DYE
+    color: "{muted}"
+    chance: 60.0
+    priority: 1
+  rare: { name: "Rare", material: LIGHT_BLUE_DYE, color: "{info}", chance: 25.0, priority: 2 }
+  epic: { name: "Epic", material: PINK_DYE, color: "{accent}", chance: 12.0, priority: 3 }
+  legendary: { name: "Legendary", material: ORANGE_DYE, color: "{highlight}", chance: 3.0, priority: 4 }
+```
+
+The key is the rarity id `effects.yml` writes as `tier`. Add, rename or delete any of them — nothing
+is hard-coded, and `chance` is a weight rather than a percentage. Full detail on
+[The crate](/docs/exyliahiteffect/crate).
+
+## `crate`
+
+```yaml
+crate:
+  enabled: true
+  start-keys: 0
+  duplicate-refund: 1
+  give-token: false
+  blocks: []
+  max-at-once: 4
+  spin-frames: 34
+  stagger-seconds: 2.0
+  on-spin:
+    sound:
+      name: BLOCK_NOTE_BLOCK_HAT
+      pitch: 1.6
+  on-win:
+    sound:
+      name: ENTITY_PLAYER_LEVELUP
+      pitch: 1.2
+  on-duplicate:
+    sound:
+      name: BLOCK_NOTE_BLOCK_BASS
+      pitch: 0.8
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `enabled` | `true` | Whether the crate opens at all. Off, its button says so. |
+| `start-keys` | `0` | Keys a player is given the first time they are seen. |
+| `duplicate-refund` | `1` | Keys handed back when a crate lands on something already owned. |
+| `give-token` | `false` | Whether a win also hands over the effect's token. |
+| `blocks` | empty | Blocks that open the crate, as `server,world,x,y,z,yaw,pitch`. |
+| `max-at-once` | `4` | How many crates may be opened in one go. Capped at seven by the screen. |
+| `spin-frames` | `34` | Faces the first reel runs through. Capped at 200, about eleven seconds. |
+| `stagger-seconds` | `2.0` | How long after one reel stops the next one does. `0` stops them together. |
+
+<Callout type="tip" title="Bind the blocks in game">
+`/hiteffectsadmin crate block add` writes the block you are looking at. A bound block cannot be
+broken, blown up or pushed away while it is on the list — which hand-editing this key does not give
+you.
+</Callout>
+
+## `preview`
+
+Where preview effects are shown.
+
+```yaml
+preview:
+  location: ""
+  distance: 5.0
+  settle-ticks: 4
+  linger-ticks: 20
+  max-ticks: 600
+```
+
+A preview moves the player to the stage, plays the effect in front of them where only they can see it,
+then puts them back exactly where they were. Until `location` is set, previews are unavailable and say
+so. Set it in game with `/hiteffectsadmin preview location` rather than by hand.
+
+| Key | Default | What it does |
+|---|---|---|
+| `location` | empty | Where the player stands while a preview plays. |
+| `distance` | `5.0` | How far in front of them the effect plays, in blocks. |
+| `settle-ticks` | `4` | How long to wait after the teleport, so the client has the new position first. |
+| `linger-ticks` | `20` | How long the stage is held after the effect finishes. |
+| `max-ticks` | `600` | The longest a preview may last, whatever goes wrong. |
+
+<Callout type="note" title="Two players may share one stage">
+Everyone on the stage is hidden from everyone else, and each effect is sent to one player, so a single
+location serves a full server.
+</Callout>
 
 ## `feedback`
 
@@ -164,5 +265,14 @@ with `%prefix%`.
 | `refreshed` | `refresh` or `validate` finished. |
 | `menu-disabled` | The menu was opened on a `weapon` server. |
 | `favourite-added` / `favourite-removed` / `favourites-cleared` / `favourites-empty` | The shortlist. |
+| `random-chosen` | The random choice was turned on. |
+| `crate-won` / `crate-duplicate` | A crate landed on something new, or on something already owned. |
+| `crate-no-keys` / `crate-busy` / `crate-empty` / `crate-disabled` | The crate refusing to open. |
+| `keys-received` / `keys-taken` / `keys-given` | Crate keys changed hands. |
+| `unlock-granted` / `unlock-already` / `unlock-revoked` / `unlocks-cleared` | `unlocks` subcommands. |
+| `crate-block-*` / `crate-blocks-*` | `crate block` subcommands. |
+| `preview-location-set` | The preview stage was moved. |
+| `preview-unavailable` / `preview-unavailable-admin` | A preview asked for on a server with no stage. |
 
-Placeholders in messages: `%effect%`, `%amount%`, `%id%`, `%visibility%`, plus `%prefix%`.
+Placeholders in messages: `%effect%`, `%amount%`, `%id%`, `%visibility%`, `%keys%`, `%location%`, plus
+`%prefix%`.

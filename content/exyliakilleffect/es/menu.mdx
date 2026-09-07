@@ -18,8 +18,8 @@ Con `behaviour.mode: weapon` nada de esta pantalla se leería nunca, así que el
 | `categories` | `9,18,27,36` | Las pestañas a la izquierda, paginadas con los botones de los huecos `0` y `45`. |
 | `grid` | `11-16,20-25,29-34,38-43` | Los efectos de la categoría abierta, paginados en `47` y `52`. |
 
-Los botones fijos: **YOUR EFFECT** en el hueco `4` (clic para quitarse el efecto), **PARTICLE
-VISIBILITY** en `48` y **CLOSE** en `50`.
+Los botones fijos: **YOUR EFFECT** en el hueco `4` (clic para quitarse el efecto), **EFFECT CRATE** en
+`8`, **PARTICLE VISIBILITY** en `48`, **RANDOM EFFECT** en `49` y **CLOSE** en `50`.
 
 ## La pestaña de favoritos
 
@@ -42,7 +42,7 @@ que falló al cargar.
 | Clic | Sobre una fila de la rejilla |
 |---|---|
 | Izquierdo | Pone el efecto — o lo quita, si ya es el que lleva. |
-| Derecho | Lo previsualiza: el jugador sube a un trozo de cielo vacío, el efecto se lanza solo para él y vuelve donde estaba. También se pueden previsualizar los bloqueados. |
+| Derecho | Lo previsualiza en el escenario de previsualización del servidor, fijado con `/killeffectsadmin preview location`. También se pueden previsualizar los bloqueados. |
 | Shift | Lo marca o lo desmarca. |
 
 ## Orden y filas bloqueadas
@@ -51,6 +51,18 @@ Primero se dibujan los efectos que el jugador puede usar y después los bloquead
 usar nunca queda detrás de una página de filas que no. Con
 `behaviour.hide-without-permission: true` los bloqueados desaparecen de la rejilla, salvo en la
 pestaña de favoritos.
+
+## La elección aleatoria
+
+**RANDOM EFFECT** en el hueco `49` es una elección, no un efecto: cada baja saca uno distinto de entre
+los que el jugador tiene. Se enciende y se apaga haciéndole clic, con `/killeffect random` o con la
+acción `killeffect:random`, y cómo se llama lo dice `menu.random-name`.
+
+## La caja
+
+**EFFECT CRATE** en el hueco `8` abre `menus/crate.yml`, que pregunta cuántas abrir y pasa el relevo a
+`menus/crate_open.yml` para los rodillos. Los dos están documentados en
+[La caja](/docs/exyliakilleffect/caja).
 
 ## Plantillas
 
@@ -72,8 +84,8 @@ Cada lista elige una plantilla por fila. `item_template` es el estado normal y d
 | Dónde | Disponibles |
 |---|---|
 | `categories` | `%category_id%` `%category_name%` `%category_material%` `%category_total%` `%category_owned%` `%category_status%` |
-| `grid` | `%effect_id%` `%effect_name%` `%effect_material%` `%effect_description%` `%effect_weapons%` `%effect_favourite%` |
-| En cualquier sitio | `%current_effect%` `%favourites_count%` `%particle_visibility%` `%visibility_all%` `%visibility_none%` `%visibility_self_only%` `%visibility_others_only%` |
+| `grid` | `%effect_id%` `%effect_name%` `%effect_material%` `%effect_description%` `%effect_weapons%` `%effect_favourite%` `%effect_tier%` `%effect_tier_id%` `%effect_tier_color%` |
+| En cualquier sitio | `%current_effect%` `%random_status%` `%favourites_count%` `%keys%` `%unlocked_count%` `%catalogue_count%` `%particle_visibility%` `%visibility_all%` `%visibility_none%` `%visibility_self_only%` `%visibility_others_only%` |
 
 ## Acciones
 
@@ -87,6 +99,9 @@ Cada lista elige una plantilla por fila. `item_template` es el estado normal y d
 | `killeffect:favourites_clear` | Vacía la lista. |
 | `killeffect:preview <id>` | Previsualiza un efecto y reabre el menú después. |
 | `killeffect:visibility` | Avanza un paso en la visibilidad de quien mira. |
+| `killeffect:random` | Enciende la elección aleatoria, o la apaga si ya estaba. |
+| `killeffect:crate` | Abre la caja. |
+| `killeffect:crate_open <cantidad>` | Gasta esas llaves y suelta esos rodillos. Lo usa `menus/crate.yml`. |
 
 ## Textos
 
@@ -103,6 +118,9 @@ menu:
   favourites-icon: "AMETHYST_SHARD"
   favourite-on: "{highlight}★ In your favourites"
   favourite-off: "{muted}☆ Not in your favourites"
+  random-name: "{highlight}Random"
+  random-on: "{success}✔ Every kill is a surprise"
+  random-off: "{warning}➥ Click to surprise yourself"
 ```
 
 <Callout type="tip" title="La ventana sigue a la elección">

@@ -41,6 +41,17 @@ about their menu choice.
 | `%exyliakilleffect_visibility%` | The player's visibility mode, named as `particles.name-*` says. |
 | `%exyliakilleffect_favourites%` | How many effects they have starred. |
 | `%exyliakilleffect_favourite_<id>%` | `true` or `false` for one effect — `%exyliakilleffect_favourite_blade_storm%`. |
+| `%exyliakilleffect_random%` | `true` while every kill draws a different effect. |
+
+## The crate
+
+| Placeholder | Description |
+|---|---|
+| `%exyliakilleffect_keys%` | How many crate keys they hold. |
+| `%exyliakilleffect_unlocked%` | How many effects they have won. |
+| `%exyliakilleffect_catalogue%` | How many the server declares. Alias: `_total`. |
+| `%exyliakilleffect_unlocked_<id>%` | `true` or `false` for one effect — `%exyliakilleffect_unlocked_blade_storm%`. |
+| `%exyliakilleffect_tier_count_<tier>%` | How many effects a rarity holds — `%exyliakilleffect_tier_count_legendary%`. |
 
 `favorite` is accepted wherever `favourite` is.
 
@@ -60,7 +71,14 @@ safe to drop into a scoreboard with no fallback of their own:
 lines:
   - " {muted}❙ {letters}Effect: {highlight}%exyliakilleffect_effect_name%"
   - " {muted}❙ {letters}Weapon: {highlight}%exyliakilleffect_weapon_effect_name%"
+  - " {muted}❙ {letters}Keys: {highlight}%exyliakilleffect_keys%"
+  - " {muted}❙ {letters}Unboxed: {highlight}%exyliakilleffect_unlocked%{muted}/%exyliakilleffect_catalogue%"
 ```
+
+<Callout type="note" title="On the random choice">
+`_effect%` answers `random` and `_effect_name%` answers whatever `menu.random-name` says, so a
+scoreboard reads "Random" instead of reading as though they carry nothing.
+</Callout>
 
 <Callout type="tip" title="effect_material is for menus">
 It is the icon of whatever they chose, which is what lets another plugin's menu draw their current

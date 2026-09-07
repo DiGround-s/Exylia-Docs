@@ -1,6 +1,6 @@
 ---
 title: "Permissions"
-description: "The four kinds of node, and how a category is sold as one line."
+description: "The kinds of node, how a category is sold as one line, and the half of ownership that is not a node at all."
 ---
 
 ## The nodes
@@ -12,9 +12,16 @@ description: "The four kinds of node, and how a category is sold as one line."
 | `exyliahiteffect.effect.<id>` | One effect, by its id in lowercase. |
 | `exyliahiteffect.effect.*` | Every effect. |
 | `exyliahiteffect.category.<id>` | Every effect in that category. |
+| `exyliahiteffect.tier.<id>` | Every effect of that rarity. |
 
-An effect is owned if **any** of the three effect nodes applies: its own, the wildcard, or its
-category's.
+An effect is owned if **any** of the four effect nodes applies: its own, the wildcard, its category's,
+or its rarity's.
+
+<Callout type="note" title="Or if it was won">
+An effect out of the crate is written to the player's own row, not granted as a node. Ownership is
+read as "a permission grants it **or** their row says they unlocked it", which is what lets a win
+outlive the rank that paid for the key. See [The crate](/docs/exyliahiteffect/crate).
+</Callout>
 
 ## The id is the node
 
@@ -23,6 +30,7 @@ There is no `permission` key in `effects.yml`. The node is derived from the key,
 ```text
 CRIT_SPARK  →  exyliahiteffect.effect.crit_spark
 impact      →  exyliahiteffect.category.impact
+legendary   →  exyliahiteffect.tier.legendary
 ```
 
 Case is not part of it, so recapitalising a key changes nothing. Renaming one changes everything: it
@@ -34,11 +42,13 @@ is a different node, and everybody who had the old one loses the effect.
 /lp group default permission set exyliahiteffect.command.hiteffect true
 /lp group vip     permission set exyliahiteffect.category.impact true
 /lp group mvp     permission set exyliahiteffect.effect.crit_spark true
+/lp group elite   permission set exyliahiteffect.tier.legendary true
 /lp group legend  permission set exyliahiteffect.effect.* true
 ```
 
 Six categories of fifteen is what makes a category node worth selling: "every Impact effect" is one
-line instead of fifteen.
+line instead of fifteen. A rarity node cuts the other way — "every Legendary" is a rank sold on how
+rare its effects are rather than on what they look like.
 
 <Callout type="tip" title="Give the menu away">
 Without `exyliahiteffect.command.hiteffect` the catalogue cannot be opened at all. A player who

@@ -1,0 +1,400 @@
+---
+title: "API"
+description: "Dos servicios: leer y manejar los cosméticos, y el chat que este plugin lleva cuando se lo permites."
+badge: "dev"
+---
+
+ExyliaChatCosmetics publica dos servicios. `CosmeticsService` es el catálogo, quién posee qué, qué
+lleva puesto cada uno y qué habría dibujado el plugin. `ChatService` es el módulo de chat — canales,
+envío, moderación y los ajustes que los jugadores guardan para sí mismos — y está ahí esté el módulo
+encendido o no.
+
+```java
+ExyliaAPI.get(CosmeticsService.class).ifPresent(cosmetics ->
+    CosmeticKey.parse("tag:mvp").ifPresent(key ->
+        cosmetics.grantFor(player.getUniqueId(), key, EntitlementSource.PURCHASE,
+                Duration.ofDays(30), "order-1234", "store")));
+```
+
+<Callout type="note" title="Agregarlo a tu proyecto">
+El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
+Exylia y viven en la [página de la API pública](/docs/exylialib/api).
+</Callout>
+
+Todo lo de abajo vive en `net.exylia.lib.api.chatcosmetics`, dentro del artefacto `exylia-api` de
+ExyliaLib — no en el jar propio de este plugin. Eso es lo que hace que cada contrato sea una sola
+clase y no dos: el razonamiento completo está en la [página de la API pública](/docs/exylialib/api).
+
+## Comprobar que están
+
+Los dos servicios se registran en el `ServicesManager` de Bukkit cuando ExyliaChatCosmetics arranca,
+y a los dos se llega por `net.exylia.lib.api.ExyliaAPI`:
+
+```java
+Optional<CosmeticsService> cosmetics = ExyliaAPI.get(CosmeticsService.class);
+```
+
+El `Optional` puede venir vacío de verdad: el plugin no está instalado, está deshabilitado, o todavía
+está arrancando y aún no se registró. Contémplalo en vez de reportarlo: eso es una dependencia
+blanda. `ExyliaAPI.isAvailable(CosmeticsService.class)` es la misma pregunta como un sí o un no, y
+`ExyliaAPI.require(…)` lanza en su lugar, para un plugin que declare un `depend` duro sobre este y de
+verdad no pueda funcionar sin él.
+
+Resuelve el servicio donde lo uses, no lo guardes en tu propio `onEnable`, donde puedes estar
+preguntando antes de que el plugin que lo provee haya arrancado.
+
+## Hilos
+
+Tres reglas cubren toda la superficie.
+
+| Forma | Regla |
+|---|---|
+| Cualquier cosa sobre un jugador **conectado** que devuelva un valor | Lee memoria. Seguro desde el hilo del chat, un placeholder o el redibujado de un menú. |
+| Cualquier cosa que devuelva un `CompletableFuture` | Toca la base de datos: conceder, revocar y preguntar por alguien desconectado. |
+| Cualquier cosa que reciba un `Player` | Cambia lo que ese jugador lleva puesto, y quiere el hilo propio de ese jugador. Los que reciben un `UUID` solo leen. |
+
+Una concesión para un jugador desconectado simplemente se escribe y espera a su siguiente entrada.
+
+## `CosmeticsService`
+
+### El catálogo
+
+Solo lo que declaran los archivos. Un color o una etiqueta que un jugador se escribió pertenece a ese
+jugador y no se encuentra aquí.
+
+| Método | Qué hace |
+|---|---|
+| `Optional<Cosmetic> cosmetic(CosmeticKey key)` | Una entrada, o vacío si nada responde a esa clave. |
+| `List<Cosmetic> cosmetics(String type)` | Todas las entradas de un tipo, en el orden en que las lista un menú. Vacío para un tipo no registrado. |
+| `List<String> types()` | Todos los tipos de cosmético de este servidor. Se registran al arrancar y ya no cambian, así que es lo correcto contra lo que validar un valor de configuración. |
+
+Un `Cosmetic` es una instantánea de lo que decían los archivos cuando preguntaste. Los catálogos se
+recargan enteros, así que guarda la `key()` y no el record si vas a buscar el mismo cosmético más
+tarde.
+
+### Posesión
+
+| Método | Qué hace |
+|---|---|
+| `Ownership ownership(Player player, CosmeticKey key)` | El veredicto para un jugador conectado. El permiso se pregunta en vivo y las concesiones vienen de memoria, así que esta es a la vez la respuesta exacta y la barata. `Ownership.NONE` cuando nada responde a esa clave. |
+| `CompletableFuture<Ownership> ownership(UUID player, CosmeticKey key)` | Lo mismo para cualquiera, conectado o no. |
+| `boolean owns(Player player, CosmeticKey key)` | La forma corta. |
+| `CompletableFuture<List<Entitlement>> entitlements(UUID player)` | Todas las concesiones que tiene, activas o no — de memoria si está conectado, de la tabla si no. |
+
+<Callout type="warning" title="Un veredicto sobre alguien desconectado cubre solo las concesiones guardadas">
+Los permisos no se consultan para alguien desconectado, porque ningún plugin de permisos puede
+responder por un jugador ausente sin cargarlo. Un cosmético que un jugador tiene por nodo de permiso
+se lee como no poseído mientras está fuera.
+</Callout>
+
+`entitlements` incluye a propósito las filas caducadas y revocadas; pregunta
+`Entitlement.active(now)` por las que todavía cuentan.
+
+### Conceder y revocar
+
+| Método | Qué hace |
+|---|---|
+| `CompletableFuture<Entitlement> grant(UUID player, CosmeticKey key, EntitlementSource source, String sourceRef, String grantedBy)` | Da un cosmético para siempre. |
+| `CompletableFuture<Entitlement> grantFor(UUID player, CosmeticKey key, EntitlementSource source, Duration duration, String sourceRef, String grantedBy)` | Lo da por un tiempo. El reloj empieza ya y corre esté el jugador conectado o no, que es lo que quiere una suscripción o un alquiler. |
+| `CompletableFuture<Optional<Entitlement>> revoke(long entitlementId)` | Quita una concesión por su id. Vacío si no había tal concesión activa. |
+| `CompletableFuture<List<Entitlement>> revokeAll(UUID player, CosmeticKey key)` | Quita todas las concesiones activas de un cosmético. |
+| `CompletableFuture<List<Entitlement>> revokeAll(UUID player, CosmeticKey key, EntitlementSource source)` | Lo mismo, pero de una sola fuente. |
+
+Conceder el mismo cosmético dos veces deja dos concesiones en vez de alargar una. Esa es la gracia:
+revocar una compra no puede llevarse la recompensa que el jugador también se ganó. Y es también por
+lo que existe el `revokeAll` acotado por fuente, y por lo que un plugin de tienda debería usar
+siempre ese.
+
+Revocar no toca un nodo de permiso. Este plugin no lo dio y no puede quitarlo.
+
+### Llevar puesto
+
+| Método | Qué hace |
+|---|---|
+| `EquipResult equip(Player player, CosmeticKey key)` | Pone uno. Para un tipo que se lleva de uno en uno sustituye lo que hubiera; para un tipo que se lleva en conjunto alterna, y por eso `UNEQUIPPED` es una respuesta normal a un equip. |
+| `boolean unequip(Player player, String type)` | Quita todo lo de un tipo. `true` si llevaba algo. |
+| `List<CosmeticKey> equipped(UUID player, String type)` | Qué lleva de un tipo. Vacío si no lleva nada o no está cargado. |
+| `boolean isEquipped(UUID player, CosmeticKey key)` | Si un cosmético concreto está puesto. |
+| `List<Cosmetic> favorites(UUID player)` | Las entradas del catálogo que marcó como favoritas. |
+
+### Loadouts
+
+| Método | Qué hace |
+|---|---|
+| `List<Loadout> loadouts(UUID player)` | Los conjuntos que guardó. |
+| `Optional<Loadout> applyLoadout(Player player, long id)` | Pone uno. Vacío si no tiene ningún loadout con ese id. |
+
+Aplicar quita todo primero y luego vuelve a poner cada cosmético que el jugador siga poseyendo; lo
+que haya perdido desde entonces se omite en vez de hacer fallar el conjunto entero.
+`LoadoutAppliedEvent` dice cuántos se omitieron.
+
+### Dibujado
+
+Lo que el plugin habría dibujado — para un scoreboard, un holograma, una tab list o un plugin de chat
+que compone su propia línea. Solo memoria, y seguro desde el hilo del chat.
+
+| Método | Qué hace |
+|---|---|
+| `Component tag(Player player)` | Su etiqueta equipada dentro de su formato. Vacío si no lleva ninguna. |
+| `Component nick(Player player)` | Su nombre en su color de nick o de rango. |
+| `Component styleMessage(Player player, String message)` | Texto en su fuente, sus decoraciones y su color. |
+
+`styleMessage` recibe texto y no un componente porque los cosméticos *son* el estilo: lo que le pases
+se reestiliza entero. Es lo que espera que llames `chat.hook: off` — ver
+[Integraciones](/docs/exyliachatcosmetics/integraciones).
+
+## `ChatService`
+
+Los cosméticos funcionan lleve este servidor su propio chat o no, así que el chat es un módulo que
+una clave de configuración enciende y una recarga puede volver a apagar por debajo de ti.
+
+`isEnabled()` dice si está corriendo ahora mismo. El servicio queda registrado en cualquier caso, y
+**todos los métodos responden como si no hubiera chat cuando el módulo está apagado**: colecciones
+vacías, `false`, cero. Es a propósito: quien se olvide de comprobarlo recibe igualmente una respuesta
+sensata e inofensiva en vez de un null o una excepción. También significa que esas respuestas no son
+hechos sobre el servidor. Pregunta `isEnabled()` una vez, arriba del todo:
+
+```java
+ExyliaAPI.get(ChatService.class)
+         .filter(ChatService::isEnabled)
+         .ifPresent(chat -> chat.send("global", Component.text("Restarting in 5 minutes.")));
+```
+
+### Canales
+
+| Método | Qué hace |
+|---|---|
+| `Collection<ChatChannel> channels()` | Todos los canales que declara la configuración. |
+| `Optional<ChatChannel> channel(String id)` | Uno por id. |
+| `Optional<ChatChannel> channelOf(UUID player)` | A dónde van los mensajes normales de un jugador. Vacío si el módulo está apagado o no está cargado. |
+| `boolean switchChannel(Player player, String channelId)` | Lo mueve. Dispara antes `ChannelSwitchEvent`, así que otro plugin puede negarse. `false` si el canal no existe, si un listener se opuso, o si no está cargado. Llámalo en el hilo del jugador. |
+
+### Envío
+
+| Método | Qué hace |
+|---|---|
+| `boolean speak(Player sender, String channelId, String text)` | Dice algo en nombre de un jugador. Corre la tubería entera — la compuerta, el filtro, sus cosméticos, el formato — en un hilo propio, y la llamada vuelve enseguida. `false` solo si el canal no existe. |
+| `boolean send(String channelId, Component line)` | Una línea del servidor a todo el que lea un canal. Se envía tal cual: sin formato, sin filtro, sin cosméticos. |
+
+La diferencia importa. `speak` es para un mensaje del que responde un jugador, y un mensaje que el
+filtro bloquea no se entrega — que es justo la razón de mandarlo así y no a mano. `send` es para
+anuncios, donde la línea la escribió el servidor y no hay nada que filtrar.
+
+### Moderación
+
+| Método | Qué hace |
+|---|---|
+| `boolean muted()` | Si el chat está silenciado para todo el que no tenga el permiso de bypass. |
+| `void mute(boolean muted, Plugin by)` | Silencia o desilencia, anunciado como lo anuncia el comando propio del plugin y nombrando a tu plugin como quien lo hizo. Ponerlo en lo que ya está no hace nada. Hilo principal. |
+| `int infractionPoints(UUID player)` | Los puntos que un jugador se ha ganado rompiendo las reglas del chat. Decaen, así que quien lleve tiempo callado vuelve a leer cero. |
+
+### Lo que ajustan los jugadores
+
+| Método | Qué hace |
+|---|---|
+| `boolean isIgnoring(UUID who, UUID other)` | Si un jugador tiene a otro en su lista de ignorados. |
+| `boolean acceptsPrivateMessages(UUID player)` | `true` salvo que haya cerrado sus mensajes. |
+| `boolean isSocialSpying(UUID player)` | Si tiene el social spy encendido. |
+
+Estos son los tres ajustes que otro plugin tiene motivo legítimo para leer: una invitación de party,
+una petición de intercambio o un reto de duelo deberían respetar un ignorado igual que lo respeta un
+susurro.
+
+## Tipos
+
+### `CosmeticKey`
+
+`type` e `id`: `tag:mvp`, `chat_color:aurora`, `customtag:42`.
+
+Las dos mitades se normalizan al construirse — minúsculas, espacios a guiones bajos, y fuera todo lo
+que no sea una letra, un dígito, un guion bajo o un guion. Eso ocurre en el record y no solo dentro
+del plugin, para que una clave que construyas tú y una clave que te devuelva el servicio comparen
+igual, escribas como escribas.
+
+| Miembro | Qué hace |
+|---|---|
+| `CosmeticKey.parse(String raw)` | Lee una cadena `type:id`. Vacío si falta cualquiera de las dos mitades. |
+| `CosmeticKey.normalise(String raw)` | La misma limpieza sobre una mitad, para validar un valor de configuración. |
+| `toString()` | La forma `type:id` — lo que guarda el plugin y lo que aceptan comandos y placeholders. |
+
+### `Cosmetic`
+
+`key`, `name` (todavía con los placeholders de color del plugin dentro), `category`, `icon`,
+`description`, `priority` (menor ordena primero), `hidden`, `permissionNode`. `type()` e `id()` son
+las dos mitades de la clave. Si un jugador concreto lo posee o lo lleva no está aquí: eso depende del
+jugador y se le pregunta al servicio, para que leer el catálogo siga siendo una búsqueda simple.
+
+### `Ownership`
+
+El veredicto resuelto, no una lista que recorrer: un nodo de permiso y cualquier número de
+concesiones pueden decir que sí por su cuenta.
+
+| Componente | Qué significa |
+|---|---|
+| `owned` | Si lo tiene ahora mismo. |
+| `permanent` | Suyo para siempre: un nodo, o una concesión sin caducidad. |
+| `expiresAt` | Cuándo se acaba la última concesión activa, en milisegundos epoch. `0` si es permanente o no lo posee. |
+| `byPermission` | Si el nodo por sí solo habría dicho que sí. |
+| `grants` | Las concesiones guardadas activas ahora mismo; vacío si solo lo concede un nodo. |
+
+`Ownership.NONE` es lo que responde una búsqueda de un cosmético desconocido.
+
+### `Entitlement`
+
+Una concesión de un cosmético a un jugador: `id`, `player`, `cosmetic`, `source`, `sourceRef`,
+`grantedBy`, `grantedAt`, `expiresAt`, `revokedAt`, `note`. Revocar es una marca de tiempo y no un
+borrado, así que una concesión revocada sigue ahí para auditarla.
+
+| Método | Qué significa |
+|---|---|
+| `permanent()` | Sin caducidad. |
+| `revoked()` | Se la quitaron. |
+| `active(long now)` | Ni revocada ni caducada. |
+
+`active` recibe la hora en vez de mirar el reloj, para que un listado dibujado desde un mismo barrido
+no se contradiga a sí mismo a media lista.
+
+### `EntitlementSource`
+
+`PERMISSION` (que no es una concesión guardada en absoluto — el nodo se comprueba en vivo), `ADMIN`,
+`PURCHASE`, `REWARD`, `EVENT`, `ACHIEVEMENT`, `EXTERNAL`. Se guarda por nombre, y un nombre que tu
+versión no conozca se lee como `EXTERNAL` en vez de fallar, así que un servidor con un plugin más
+nuevo que tu integración sigue respondiendo a todo lo que le preguntes. `EXTERNAL` es para otro
+plugin; su `sourceRef` dice cuál.
+
+### `EquipResult`
+
+Se devuelve en vez de lanzarse, porque ninguno de estos es un error de programación: son las
+respuestas corrientes que un menú convierte en un mensaje.
+
+| Valor | Significado |
+|---|---|
+| `EQUIPPED` | Está puesto. |
+| `UNEQUIPPED` | Un miembro del conjunto que estaba puesto ya no lo está, porque equipar alterna. |
+| `NOT_OWNED` | El jugador no lo posee. |
+| `UNKNOWN` | Ningún cosmético responde a esa clave. |
+| `CANCELLED` | Un listener se negó. |
+| `NOT_LOADED` | Su fila todavía no está en memoria; inténtalo en un momento. |
+
+`changed()` es `true` para `EQUIPPED` y `UNEQUIPPED` — las dos respuestas que significan que deberías
+redibujar algo.
+
+### `Loadout`
+
+`id`, `player`, `name`, `createdAt`. Lo que hay *dentro* no se publica a propósito: se guarda como el
+texto empaquetado propio del plugin, y un cosmético que el jugador haya perdido desde entonces se
+omite al ponerlo. Aplícalo y lee después qué acabó llevando.
+
+### `ChatChannel` y `ChannelType`
+
+`id`, `type`, `name`, `permission` (necesario para hablar y para leer; vacío significa todo el
+mundo), `prefix` (un carácter escrito delante de un mensaje para mandarlo aquí desde cualquier otro
+canal), `radius` (bloques, para `LOCAL`), `crossServer`. `open()` es si no necesita permiso.
+
+Un canal se lee de la configuración del chat y se sustituye entero en una recarga, así que guarda el
+`id()` y no el record.
+
+| `ChannelType` | Quién lo lee |
+|---|---|
+| `GLOBAL` | Todos los conectados. |
+| `LOCAL` | Todos los que estén en el mundo del emisor dentro del radio del canal. |
+| `CUSTOM` | Todos los que tengan el permiso del canal. |
+
+## Eventos
+
+Diez, todos en `net.exylia.lib.api.chatcosmetics.event`.
+
+| Evento | Cancelable | Hilo | Cuándo |
+|---|---|---|---|
+| `CosmeticEquipEvent` | sí | el del jugador | Un cosmético está a punto de ponerse, tras comprobar la posesión y antes de escribir nada. |
+| `CosmeticUnequipEvent` | no | el del jugador | Uno se quitó: por el jugador, por un admin, por un loadout que se puso encima, o porque dejó de existir. |
+| `LoadoutAppliedEvent` | no | el del jugador | Se puso un loadout guardado, después de que cada cosmético disparara su propio equip. |
+| `EntitlementGrantedEvent` | no | el del jugador, o el global si está fuera | Se escribió una concesión y se releyó. |
+| `EntitlementRevokedEvent` | no | el del jugador, o el global si está fuera | Se quitó una concesión. |
+| `EntitlementExpiredEvent` | no | el del jugador, o el global si está fuera | Una concesión se acabó. |
+| `ChannelSwitchEvent` | sí | el del jugador | Alguien está eligiendo el canal al que van sus mensajes normales. |
+| `ChatMessageEvent` | sí | el del chat | Un mensaje pasó todos los filtros y está a punto de entregarse. |
+| `ChatInfractionEvent` | sí | el del chat | Un mensaje rompió las reglas del chat y está a punto de costarle puntos a quien lo envió. |
+| `PrivateMessageEvent` | sí | aquel por el que llegó el susurro | Un susurro está a punto de llegarle a alguien de este servidor. |
+
+Unos cuantos merecen una segunda lectura.
+
+`CosmeticEquipEvent` — cancelar rechaza el equip, y el plugin no le dice nada al jugador cuando lo
+haces. El equip simplemente responde `CANCELLED`. Dile algo tú si necesita saber por qué.
+
+`CosmeticUnequipEvent` lleva la clave y no el cosmético, porque una de las razones por las que se
+dispara es que el catálogo ya no tenga una entrada que darte.
+
+`EntitlementRevokedEvent` se dispara una vez por concesión, así que revocar todas las de un cosmético
+lo dispara varias veces — y el jugador puede seguir poseyendo el cosmético después, por un nodo o por
+otra concesión. Pregunta en vez de dar por hecho.
+
+`EntitlementExpiredEvent` lo dispara el barrido que se da cuenta, que corre cada treinta segundos, así
+que llega poco después de la caducidad y no exactamente en ella.
+
+`ChatMessageEvent` es el último vistazo antes de que lo reciban los lectores, lo que lo convierte en
+el sitio para registrar el chat, replicarlo o sacar a un lector. `viewers()` es el conjunto vivo:
+quita a un jugador y no verá el mensaje. No se puede añadir a nadie, porque un lector que nunca estuvo
+en el conjunto fue excluido por algo — un permiso de canal, un ignorado, un mundo.
+`line(Component)` sustituye la línea dibujada entera para todos; `line()` viene vacío cuando el
+formato elegido depende del lector y por tanto se construye una vez por espectador, y ponerle una lo
+colapsa a tu línea única, que es justo de lo que se trata.
+
+`ChatInfractionEvent` es el enganche para un sistema de castigos externo: las reglas que saltaron y lo
+que valía cada una están en él. Cancelar no apunta nada y nada más — el mensaje se sigue filtrando o
+bloqueando exactamente como dijeron las reglas, solo se libra el recuento. Los puntos se apuntan
+también para un mensaje bloqueado, así que esto puede llegarte por una línea que nadie llegó a leer.
+
+`PrivateMessageEvent` se dispara después de respetar los ajustes del receptor, así que los mensajes
+cerrados y los ignorados ya rechazaron el susurro cuando tú lo ves. Esto va de tus reglas, no de las
+suyas. El texto es de solo lectura: un susurro es entre dos personas, y reescribirlo por debajo sería
+peor que rechazarlo.
+
+<Callout type="warning" title="Los eventos de chat no van en el hilo principal">
+`ChatMessageEvent`, `ChatInfractionEvent` y un `PrivateMessageEvent` originado en el chat corren todos
+en el hilo del chat. Lee lo que te dan y agenda cualquier cosa que toque el mundo.
+</Callout>
+
+## Un ejemplo real
+
+Un plugin de tienda que vende una etiqueta por treinta días y la devuelve en un contracargo.
+
+```java
+public void onPurchase(UUID buyer, String orderId) {
+    ExyliaAPI.get(CosmeticsService.class).ifPresentOrElse(cosmetics ->
+            CosmeticKey.parse("tag:mvp").ifPresent(key ->
+                    cosmetics.grantFor(buyer, key, EntitlementSource.PURCHASE,
+                                    Duration.ofDays(30), orderId, "MyStore")
+                             .thenAccept(grant -> log(orderId, grant.id()))
+                             .exceptionally(failure -> {
+                                 retryLater(buyer, orderId);
+                                 return null;
+                             })),
+            () -> retryLater(buyer, orderId));
+}
+
+public void onChargeback(UUID buyer) {
+    ExyliaAPI.get(CosmeticsService.class).ifPresent(cosmetics ->
+            CosmeticKey.parse("tag:mvp").ifPresent(key ->
+                    cosmetics.revokeAll(buyer, key, EntitlementSource.PURCHASE)));
+}
+```
+
+Ahí hay tres cosas trabajando.
+
+La concesión es `PURCHASE` con el id del pedido como `sourceRef`, de modo que la fila dice de dónde
+vino mucho después de que tus propios logs hayan rotado. El contracargo usa el `revokeAll` **acotado
+por fuente**: si ese mismo jugador ganó también esa etiqueta en un evento o se la dio un admin, esas
+concesiones sobreviven y sigue llevándola puesta. El `revokeAll(player, key)` a secas se habría
+llevado las tres.
+
+Y el comprador no tiene que estar conectado nunca. La fila se escribe, el reloj arranca y el cosmético
+es suyo la próxima vez que entre — que es lo que quieres de una tienda web que dispara cuando el pago
+se confirma.
+
+Nada de esto le quita la etiqueta de lo que el jugador *lleva puesto*. No hace falta: equipado y
+poseído son preguntas separadas, la posesión se vuelve a preguntar allá donde se dibuje una línea, y
+un cosmético que alguien ya no posee simplemente deja de dibujarse — y vuelve el día en que sea suyo
+otra vez. Ver [Concesiones](/docs/exyliachatcosmetics/concesiones).
+
+Si algo que de verdad necesitas sigue faltando, pregunta en [Discord](https://discord.exylia.net).

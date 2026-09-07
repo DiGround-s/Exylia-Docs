@@ -1,0 +1,130 @@
+---
+title: "Placeholders"
+description: "Los dos identificadores, las tres notaciones, todos los nombres a los que responden, y qué le pasa a una cabeza al salir."
+---
+
+Los placeholders se registran a través del módulo de placeholders de ExyliaLib, así que funcionan
+solos en cualquier texto de ExyliaLib, y en cualquier otro plugin en cuanto instalas PlaceholderAPI.
+Dos identificadores responden exactamente a los mismos nombres:
+
+```
+%exyliachatcosmetics_<name>%
+%ecc_<name>%
+```
+
+El corto está ahí porque un formato de chat es una línea que alguien tiene que poder leer.
+
+## Las tres notaciones
+
+Algunos placeholders devuelven algo dibujado en vez de una palabra, y lo dibujado tiene que
+convertirse en texto antes de que un formato de chat pueda llevarlo. Qué texto depende de quién
+pregunta, así que cada uno viene en tres grafías salidas del mismo componente — un color nunca se
+dibuja dos veces.
+
+| Sufijo | Salida | Úsalo cuando |
+|---|---|---|
+| *(ninguno)* | MiniMessage — `<#ffd700>[MVP]</#ffd700>` | tu plugin de chat interpreta MiniMessage. Es el que va por defecto. |
+| `_legacy` | códigos `&`, con `&#rrggbb` para el hex | tu plugin de chat sigue leyendo códigos `&` |
+| `_section` | códigos `§`, con la forma hex `§x§r§r…` | tu plugin de chat manda la cadena tal cual al cliente |
+
+Los serializadores legacy de aquí están construidos con soporte hex a propósito. Los de serie bajan
+un color hex al más cercano de los dieciséis con nombre, que es lo que convierte un degradado en un
+`&6` plano.
+
+<Callout type="warning" title="Una cabeza solo sobrevive en la notación MiniMessage">
+Una etiqueta dibujada con una skin de cabeza — una bandera, una cara que hizo alguien — es un
+componente de objeto que lleva una propiedad de perfil, y ninguna de las dos notaciones legacy tiene
+dónde meter eso. En `_legacy` y `_section` la cabeza sencillamente no está; lo demás que dibuje la
+etiqueta sí.
+
+En la notación MiniMessage sobrevive, escrita como `<ecc_head:'…'>` — una etiqueta que este plugin le
+añade a MiniMessage justo para esto, y que vuelve a leer a la entrada. El único caso en que no puede
+sobrevivir es una cabeza que llega al serializador con la skin ya perdida: MiniMessage la escribiría
+como un `<head>` pelado, que a quien lo lea le dibuja una cara por defecto, así que se quita. La cara
+de un desconocido al lado del nombre de alguien es peor que ninguna cara.
+</Callout>
+
+## Texto dibujado
+
+Cada uno de estos tiene las tres notaciones: `%ecc_tag%`, `%ecc_tag_legacy%`, `%ecc_tag_section%`.
+
+| Nombre | Valor |
+|---|---|
+| `tag` | la etiqueta puesta, con el `format` a su alrededor — normalmente un espacio final. Una etiqueta propia gana a una del catálogo. |
+| `customtag` | solo una etiqueta que el jugador se escribió; vacío si lo que lleva viene del catálogo |
+| `nick` | el nombre del jugador en su color de nick |
+| `rank_prefix`, `rank_suffix` | el prefijo y el sufijo del rango, repintados con el color de rango puesto |
+| `identity` | `tag` seguido de `nick` |
+
+Cada uno queda vacío cuando no lleva nada puesto, o sea, con el valor de `placeholders.none` — vacío
+por defecto — o con el fallback que escribas.
+
+## Valores
+
+Estos son palabras y números sin más, sin notaciones.
+
+| Nombre | Valor |
+|---|---|
+| `tag_id`, `tag_name` | el id y el nombre visible de la etiqueta puesta |
+| `nick_color` | el color efectivo del nombre, como `#rrggbb` o `#a:#b:#c` |
+| `rank_color` | el color con el que se pintan el prefijo y el sufijo |
+| `rank_id` | el id del color de rango del catálogo que lleva puesto |
+| `chat_color` | el color efectivo del mensaje: un color propio, si no un color de chat, si no `chat.default-color` |
+| `chat_color_id` | el id de aquel de los tres del que salió |
+| `font`, `font_name` | el id y el nombre de la fuente puesta |
+| `modifiers` | los ids de los modificadores puestos, separados por comas |
+| `favorites_count` | cuántos cosméticos tiene marcados con estrella |
+| `loadout` | el nombre del último loadout que aplicó |
+| `equipped_<type>` | el id que lleva puesto de ese tipo — `%ecc_equipped_chat_color%` |
+| `tokens_<type>_<kind>` | un saldo de tokens — `%ecc_tokens_customtag_create%`, `%ecc_tokens_customcolor_edit%` |
+| `owns_<type:id>` | `true` o `false` — `%ecc_owns_tag:mvp%` |
+| `expires_<type:id>` | `permanent`, el tiempo que queda en forma compacta (`13d 4h`), o `placeholders.none` si no lo posee |
+
+Un nombre al que no responde nada devuelve `placeholders.unknown`, `?` por defecto. Tanto ese como
+`placeholders.none` son tuyos y se cambian en
+[`config.yml`](/docs/exyliachatcosmetics/configuracion).
+
+<Callout type="note" title="Guiones bajos en un argumento">
+Tanto un tipo (`chat_color`) como un id (`my_tag`) pueden llevar un guion bajo, y la librería parte
+los argumentos por los guiones bajos. Se vuelven a juntar antes de leerlos, así que
+`%ecc_equipped_chat_color%` y `%ecc_owns_tag:my_tag%` significan lo que parece.
+</Callout>
+
+## Fallbacks
+
+La sintaxis de fallback de ExyliaLib funciona en todos: lo que va detrás del `|` es lo que dibuja el
+placeholder cuando no tiene valor.
+
+```
+%ecc_tag|%          nada en absoluto cuando no lleva etiqueta
+%ecc_loadout|none%  la palabra "none" cuando no aplicó ningún loadout
+```
+
+Los sufijos de formato de ExyliaLib — `:upper` y los demás — funcionan sobre los placeholders de
+valor.
+
+## En un formato de chat
+
+Un plugin de chat basado en renderer, que lee MiniMessage:
+
+```
+%ecc_tag%%ecc_nick%<gray>: <white>%message%
+```
+
+Un plugin de chat que todavía compone una cadena legacy:
+
+```
+%ecc_tag_section%%ecc_nick_section%§7: §f%message%
+```
+
+En los dos, `%message%` sigue siendo lo que ponga ahí tu plugin de chat. El cuerpo del mensaje lo
+colorea el [hook de chat](/docs/exyliachatcosmetics/configuracion), no un placeholder — un
+placeholder no puede meterse dentro de una cadena que ya construyó otro. Si prefieres que el plugin
+componga la línea entera, eso es el [módulo de chat](/docs/exyliachatcosmetics/chat).
+
+## Hilos
+
+Todos los resolutores se registran como seguros en asíncrono y leen solo estado cacheado: aquí nada
+toca la API de Bukkit más allá del jugador que se les pasa, así que se les puede preguntar desde el
+hilo del chat sin saltar al principal. Un jugador cuyo perfil todavía no ha terminado de cargar
+responde como si no llevara nada, en vez de bloquear para esperarlo.

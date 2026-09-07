@@ -95,9 +95,74 @@ menu:
   favourites-icon: "AMETHYST_SHARD"
   favourite-on: "{highlight}★ In your favourites"
   favourite-off: "{muted}☆ Not in your favourites"
+  random-name: "{highlight}Random"
+  random-on: "{success}✔ Every kill is a surprise"
+  random-off: "{warning}➥ Click to surprise yourself"
 ```
 
-La pantalla en sí es `menus/effects.yml` — ver [El menú](/docs/exyliakilleffect/menu).
+Las tres claves `random-*` son cómo se llama la elección aleatoria y qué dice su botón. La pantalla
+en sí es `menus/effects.yml` — ver [El menú](/docs/exyliakilleffect/menu).
+
+## `tiers`
+
+Las rarezas en las que se ordenan los efectos, y con qué frecuencia sale cada una de una caja. Añade,
+renombra o borra las que quieras — la clave es el id que `effects.yml` escribe como `tier`. La
+referencia completa está en [La caja](/docs/exyliakilleffect/caja).
+
+```yaml
+tiers:
+  common:
+    name: "Common"
+    material: GRAY_DYE
+    color: "{muted}"
+    chance: 60.0
+    priority: 1
+  rare: { name: "Rare", material: LIGHT_BLUE_DYE, color: "{info}", chance: 25.0, priority: 2 }
+  epic: { name: "Epic", material: PINK_DYE, color: "{accent}", chance: 12.0, priority: 3 }
+  legendary: { name: "Legendary", material: ORANGE_DYE, color: "{highlight}", chance: 3.0, priority: 4 }
+```
+
+`chance` es un peso, no un porcentaje: las probabilidades que muestra el menú se calculan a partir de él.
+
+## `crate`
+
+```yaml
+crate:
+  enabled: true
+  start-keys: 0
+  duplicate-refund: 1
+  give-token: false
+  blocks: []
+  max-at-once: 4
+  spin-frames: 34
+  stagger-seconds: 2.0
+  on-spin:
+    sound:
+      name: BLOCK_NOTE_BLOCK_HAT
+      pitch: 1.6
+  on-win:
+    sound:
+      name: ENTITY_PLAYER_LEVELUP
+      pitch: 1.2
+  on-duplicate:
+    sound:
+      name: BLOCK_NOTE_BLOCK_BASS
+      pitch: 0.8
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | Apagada, el botón de la caja lo dice en vez de abrir. |
+| `start-keys` | `0` | Llaves que recibe un jugador la primera vez que se le ve. |
+| `duplicate-refund` | `1` | Llaves devueltas por un efecto que ya se tenía. |
+| `give-token` | `false` | Si ganar entrega además la ficha del efecto. |
+| `blocks` | `[]` | Los bloques que abren la caja. Átalos con `/killeffectsadmin crate block add`. |
+| `max-at-once` | `4` | Cuántas cajas puede abrir un jugador de una vez, hasta siete. |
+| `spin-frames` | `34` | Cuántas caras recorre el primer rodillo. Tope de 200. |
+| `stagger-seconds` | `2.0` | Cuánto después de parar uno para el siguiente. |
+
+Los tres bloques de efecto se lanzan en cada tick de caída, una vez al ganar, y en lugar de la
+victoria cuando no salió nada nuevo.
 
 ## `feedback`
 
@@ -165,5 +230,14 @@ empieza con `%prefix%`.
 | `refreshed` | Terminó `refresh` o `validate`. |
 | `menu-disabled` | Se abrió el menú en un servidor `weapon`. |
 | `favourite-added` / `favourite-removed` / `favourites-cleared` / `favourites-empty` | La lista de favoritos. |
+| `random-chosen` | Se activó la elección aleatoria. |
+| `crate-won` / `crate-duplicate` | Una caja cayó en algo nuevo, o en algo ya conseguido. |
+| `crate-no-keys` / `crate-busy` / `crate-empty` / `crate-disabled` | La caja se negó a abrirse. |
+| `keys-received` / `keys-taken` / `keys-given` | Las llaves cambiaron de manos. |
+| `unlock-granted` / `unlock-already` / `unlock-revoked` / `unlocks-cleared` | Subcomandos `unlocks`. |
+| `crate-block-*` / `crate-blocks-*` | Subcomandos `crate block`. |
+| `preview-location-set` | Se movió el escenario de previsualización. |
+| `preview-unavailable` / `preview-unavailable-admin` | Se pidió una previsualización sin escenario fijado. |
 
-Placeholders en los mensajes: `%effect%`, `%amount%`, `%id%`, `%visibility%` y `%prefix%`.
+Placeholders en los mensajes: `%effect%`, `%amount%`, `%id%`, `%visibility%`, `%player%`,
+`%location%` y `%prefix%`.

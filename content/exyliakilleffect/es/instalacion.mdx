@@ -24,7 +24,7 @@ description: "Los jars, los cuatro archivos que escribe y la tabla que crea."
 | Archivo | Contenido |
 |---|---|
 | `config.yml` | Comportamiento, la ficha y el removedor, las líneas del arma, textos del menú, feedback, visibilidad y todos los mensajes. |
-| `effects.yml` | Las seis categorías y los 120 efectos. Escrito a mano, sin esquema: tus comentarios y tu formato sobreviven a un reload. |
+| `effects.yml` | Las seis categorías y los 129 efectos. Escrito a mano, sin esquema: tus comentarios y tu formato sobreviven a un reload. |
 | `menus/effects.yml` | La pantalla: pestañas, rejilla, plantillas y botones. |
 | `database.yml` | Dónde se guardan las elecciones. H2 por defecto. |
 
@@ -42,9 +42,11 @@ escrito.
 |---|---|
 | `uuid` | El jugador. |
 | `name` | Su último nombre conocido. |
-| `killEffect` | El efecto que eligió, o vacío. |
+| `killEffect` | El efecto que eligió, `random` para la elección aleatoria, o vacío. |
 | `particleVisibility` | `ALL`, `NONE`, `SELF_ONLY` u `OTHERS_ONLY`. |
 | `favourites` | Los efectos marcados, separados por comas, en su propio orden. |
+| `unlocked` | Los efectos que ganó en la caja, separados por comas. |
+| `crate_keys` | Cuántas llaves tiene. |
 | `created_at` / `updated_at` | Cuándo se creó la fila y cuándo se escribió por última vez. |
 
 Los ids se guardan en minúscula y se leen sin importar mayúsculas, así que una fila escrita por una

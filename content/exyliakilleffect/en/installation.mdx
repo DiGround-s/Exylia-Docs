@@ -25,8 +25,10 @@ description: "The jars, the four files it writes, and the table it creates."
 | File | Contents |
 |---|---|
 | `config.yml` | Behaviour, the token and remover items, the weapon lines, menu wording, feedback, visibility and every message. |
-| `effects.yml` | The six categories and the 120 effects. Hand-written, not schema-managed: your comments and your layout survive a reload. |
-| `menus/effects.yml` | The one screen: tabs, grid, templates and buttons. |
+| `effects.yml` | The six categories and the 129 effects. Hand-written, not schema-managed: your comments and your layout survive a reload. |
+| `menus/effects.yml` | The main screen: tabs, grid, templates and buttons. |
+| `menus/crate.yml` | The crate's first screen: how many to open at once. |
+| `menus/crate_open.yml` | The reels falling, one column per crate. |
 | `database.yml` | Where selections are stored. H2 by default. |
 
 <Callout type="note" title="effects.yml is yours">
@@ -42,9 +44,11 @@ description: "The jars, the four files it writes, and the table it creates."
 |---|---|
 | `uuid` | The player. |
 | `name` | Their last known name. |
-| `killEffect` | The effect they chose, or empty. |
+| `killEffect` | The effect they chose, `random` for the random choice, or empty. |
 | `particleVisibility` | `ALL`, `NONE`, `SELF_ONLY` or `OTHERS_ONLY`. |
 | `favourites` | The effects they starred, comma-separated, in their own order. |
+| `unlocked` | The effects they won out of the crate, comma-separated. |
+| `crate_keys` | How many crate keys they hold. |
 | `created_at` / `updated_at` | When the row was made and last written. |
 
 Ids are stored lowercase and read back without regard to case, so a row written by an older version —

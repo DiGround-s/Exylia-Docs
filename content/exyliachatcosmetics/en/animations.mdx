@@ -1,0 +1,179 @@
+---
+title: "Animations"
+description: "The six ways a colour can move over text, the eighteen shipped, and the one clock behind all of them."
+---
+
+An animation is not something a player wears. It is a movement declared once in `animations.yml` and
+then borrowed: a tag, a nick colour, a chat colour or a rank colour says `animation: <id>`, and from
+then on it is drawn moving. Nothing in the file is browsable, nothing in it is owned, and no player
+ever picks one directly.
+
+## The entry
+
+```yaml title="plugins/ExyliaChatCosmetics/cosmetics/animations.yml"
+animations:
+  shine:
+    type: gradient_shift
+    period: 60                                 # ticks for one full cycle; 20 = one second
+    colors: ['#ffd700', '#ffffff', '#ffd700']  # optional; without it, the cosmetic's own
+    intensity: 1.0                             # 0 to 1
+```
+
+There is no `categories` section and no menu fields. An entry is four keys and nothing else.
+
+| Key | What it does |
+|---|---|
+| `type` | one of the six below. An entry naming anything else is reported with its path and skipped |
+| `period` | ticks for one full cycle. Anything below `1` is read as `1`. Default `40` |
+| `colors` | the stops to move through, written in the usual [colour grammar](/docs/exyliachatcosmetics/catalogue). Leave it out to move through the colour of whatever wears the animation |
+| `intensity` | `0` to `1`, clamped. What it means depends on the type. Default `1.0` |
+
+A stop may be a hex colour, a named colour or a palette token, and a gradient written as one stop is
+read as its stops in order — `colors: ['#a:#b']` and `colors: ['#a', '#b']` are the same thing.
+
+## The six types
+
+| `type` | What it looks like | Reads `colors` | Reads `intensity` |
+|---|---|---|---|
+| `gradient_shift` | the stops slide along the text and wrap around | yes | no |
+| `rainbow` | every hue in turn, sliding along the text | no | yes, as saturation |
+| `cycle` | the whole text is one colour, walking through the stops together | yes | no |
+| `wave` | a brightness ripple runs along the text | no | yes, as depth |
+| `pulse` | the whole text breathes brighter and darker at once | no | yes, as depth |
+| `flicker` | characters dim at random, like a bad bulb | no | yes, as how many |
+
+The split in those last two columns is the thing worth knowing. `gradient_shift` and `cycle` decide
+the colour outright, so they are the two that read `colors`. `wave`, `pulse` and `flicker` do not
+decide a colour at all — they dim the colour that is already there — so `colors` on one of them is
+read and then never used. And `rainbow` computes a hue from nothing, so it ignores both `colors` and
+the cosmetic's colour; only `intensity` reaches it, as how saturated the hues come out.
+
+`flicker` picks its victims from a cheap hash of the character's position and the moment, so the same
+frame always dims the same characters and a cached frame stays honest. At `intensity: 1.0` about one
+character in six is dimmed to just over a third of its brightness on any given frame; at `0.7`, one
+in nine; at `0.35`, one in eighteen.
+
+## What an animation moves through
+
+An entry that leaves `colors` out borrows the colour of the cosmetic that named it, which is what
+makes the same animation read differently on every gradient wearing it.
+
+| The cosmetic's own colour | The animation moves through |
+|---|---|
+| a gradient | its own stops, unchanged |
+| a single colour | that colour and white |
+| none at all | white and `{primary}` |
+
+Of the eighteen shipped, thirteen borrow like that, three carry stops of their own — `shine`,
+`cycle` and `house` — and two, `rainbow` and `spectrum`, ignore colour entirely.
+
+## The eighteen that ship
+
+| id | `type` | `period` | `intensity` | Colours |
+|---|---|---|---|---|
+| `rush` | `gradient_shift` | 30 | — | the cosmetic's own |
+| `shine` | `gradient_shift` | 60 | — | `#ffd700`, `#ffffff`, `#ffd700` |
+| `flow` | `gradient_shift` | 70 | — | the cosmetic's own |
+| `house` | `gradient_shift` | 100 | — | `{primary}`, `{secondary_light}`, `{letters}`, `{secondary}` |
+| `drift` | `gradient_shift` | 160 | — | the cosmetic's own |
+| `spectrum` | `rainbow` | 40 | 1.0 | its own hues |
+| `rainbow` | `rainbow` | 80 | 0.9 | its own hues |
+| `cycle_own` | `cycle` | 90 | — | the cosmetic's own |
+| `cycle` | `cycle` | 120 | — | `{primary}`, `{secondary}`, `{accent}` |
+| `ember` | `wave` | 28 | 0.8 | the cosmetic's own |
+| `wave` | `wave` | 40 | 0.6 | the cosmetic's own |
+| `sweep` | `wave` | 60 | 0.35 | the cosmetic's own |
+| `glow` | `pulse` | 26 | 0.7 | the cosmetic's own |
+| `pulse` | `pulse` | 40 | 0.5 | the cosmetic's own |
+| `breathe` | `pulse` | 90 | 0.3 | the cosmetic's own |
+| `static` | `flicker` | 10 | 1.0 | the cosmetic's own |
+| `sparkle` | `flicker` | 16 | 0.35 | the cosmetic's own |
+| `flicker` | `flicker` | 20 | 0.7 | the cosmetic's own |
+
+The two palette entries are the ones to look at first. `house` and `cycle` are written in palette
+tokens rather than hex, so they follow your server's `colors.yml`: a server that repaints its palette
+repaints those two animations with it, and every cosmetic wearing them.
+
+## Naming one
+
+`animation:` goes on the entry that wants it, in four of the catalogue files.
+
+| File | On |
+|---|---|
+| `tags.yml` | a tag |
+| `nick-colors.yml` | a nick colour |
+| `chat-colors.yml` | a chat colour |
+| `rank-colors.yml` | a rank colour |
+
+```yaml title="plugins/ExyliaChatCosmetics/cosmetics/chat-colors.yml"
+chat_colors:
+  aurora:
+    category: premium
+    name: '{primary}&lAURORA'
+    gradient: ['#00f260', '#0575e6', '#8a51c4']
+    animation: flow
+    icon: END_ROD
+    description: 'Northern lights, in a sentence.'
+```
+
+Shadow colours, fonts and modifiers name none — the key is not read there. A cosmetic a player made
+carries the same field on its row and is drawn with it when the row names one, though nothing in the
+commands or the menus writes one yet.
+
+An id nothing declares is not an error and stops nothing: the cosmetic is simply drawn in its own
+colour, standing still. The same is true after a reload that removed an animation some entry still
+names.
+
+## In chat, a line is one frame
+
+A chat message that has been delivered never changes. The client holds what it was sent, and no
+plugin can go back and repaint it. So a message carries the frame of the moment it was sent, and
+"animated" in chat means that every line is a different frame of the same movement — not that any
+one line moves.
+
+Menus are the other half of that. The browsers redraw on the clock, so a row wearing an animation
+moves while a player is looking at it, and what they see in the menu is what the animation actually
+does. Anything printed to chat, `/cc preview` included, is one frame of it.
+
+<Callout type="note" title="A tag is cached before it is animated">
+Rendered tags, prefixes and suffixes are kept per player so that a chat line does not rebuild them.
+What is kept is the tag *before* its animation is applied — kept after, the frame it was first drawn
+on would be the frame every later line showed, and a player would think the animation had stopped.
+</Callout>
+
+## The clock
+
+One timer for the whole server, and its only job is to count.
+
+```yaml title="plugins/ExyliaChatCosmetics/config.yml"
+animations:
+  # Ticks between animation frames. Lower is smoother and costs more
+  tick: 2
+```
+
+A cycle holds `period / tick` frames: `flow`, at a period of 70 and a tick of 2, is 35 frames long.
+
+Nothing about an animation is per player. A frame is a function of the animation, the colour under
+it, how many characters there are and which frame it is — so two players wearing the same animated
+tag are the same computed colours, and a chat line only ever reads an array somebody else already
+computed. The cache holds up to 4096 of those arrays and forgets one five minutes after it was last
+read. `/cca reload` empties it, since the animation it was computed from may have changed.
+
+That is where `animations.tick` earns its place. Raising it to `4` halves the number of frames in
+every cycle, which halves the arrays to compute and halves the redraws for every menu that is open.
+Lowering it to `1` is smoother and costs the opposite.
+
+<Callout type="note" title="Rank colours animate the letters only">
+When `rank-colors.repaint` is `letters` — the default — an animated rank colour runs its frame over
+the letters and digits alone, the same characters the colour under it paints. An animation that
+reached the brackets of `&8[&eVIP&8]` would undo the very thing letters-only mode is for.
+</Callout>
+
+<Cards>
+  <Card title="Colours" href="/docs/exyliachatcosmetics/colors">
+    The four things a colour can paint, and which of them may carry an animation.
+  </Card>
+  <Card title="Tags" href="/docs/exyliachatcosmetics/tags">
+    The animated tab, and what a tag may draw.
+  </Card>
+</Cards>
