@@ -52,11 +52,17 @@ export const dict = {
   },
   ai: {
     kicker: { en: "AI", es: "IA" },
-    title: { en: "Copy the prompt", es: "Copia el prompt" },
+    title: { en: "Write your idea", es: "Escribe tu idea" },
     lead: {
-      en: "Everything the model needs: the step language, the limits, and effects that ship. Paste it into your AI, write your idea where it asks, and paste the answer into effects.yml.",
-      es: "Todo lo que el modelo necesita: el lenguaje de pasos, los límites y efectos que ya vienen. Pégalo en tu IA, escribe tu idea donde te lo pide, y pega la respuesta en effects.yml.",
+      en: "The prompt around it is already written — the step language, the limits, and effects that ship. Copy it, paste it into your AI, and paste the answer into effects.yml.",
+      es: "El prompt que la rodea ya está escrito — el lenguaje de pasos, los límites y efectos que ya vienen. Cópialo, pégalo en tu IA y pega la respuesta en effects.yml.",
     },
+    placeholder: {
+      en: "What it is made of, what moves and where, how long it lasts, and the mood. Name the blocks and items — the more you write, the closer it lands.",
+      es: "De qué está hecho, qué se mueve y hacia dónde, cuánto dura y qué ambiente tiene. Nombra los bloques y los ítems — cuanto más escribas, más se acerca.",
+    },
+    hint: { en: "Write your idea to build the prompt", es: "Escribe tu idea para montar el prompt" },
+    ready: { en: "Prompt ready", es: "Prompt listo" },
     copy: { en: "Copy prompt", es: "Copiar prompt" },
     copied: { en: "Copied", es: "Copiado" },
     lines: { en: "lines", es: "líneas" },

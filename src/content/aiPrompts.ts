@@ -455,12 +455,17 @@ ${SEQUENCE_DSL}
 
 export type PromptId = keyof typeof AI_PROMPTS;
 
-/** Every prompt ends with the rules, then the space the owner writes their idea into. */
-export function promptText(id: PromptId): string {
+/**
+ * Every prompt ends with the rules, then the idea the owner typed on the page.
+ *
+ * With no idea written it keeps the marker, so the text stays usable for
+ * anyone who copies it and fills the idea in inside their own AI.
+ */
+export function promptText(id: PromptId, idea = ""): string {
   return `${AI_PROMPTS[id]}${OUTPUT_RULES}
 
 Write the effect for this idea, and ask me before guessing if anything about it is unclear:
 
-<<< WRITE YOUR IDEA HERE >>>
+${idea.trim() || "<<< WRITE YOUR IDEA HERE >>>"}
 `;
 }
