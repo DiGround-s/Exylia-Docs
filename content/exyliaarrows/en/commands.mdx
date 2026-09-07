@@ -1,6 +1,6 @@
 ---
 title: "Commands"
-description: "What a player can do to their own effect, and the thirteen admin subcommands."
+description: "What a player can do to their own effect, and the admin subcommands, grouped by subject."
 ---
 
 ## Player commands
@@ -11,7 +11,9 @@ needs `exyliarrows.command.arrows`.
 | Command | What it does |
 |---|---|
 | `/arrows` | Opens the menu, on the tab it was last left on. |
-| `/arrows preview <effect>` | Plays an effect against an empty sky. Owning it is not required. |
+| `/arrows preview <effect>` | Plays an effect on the server's preview stage. Owning it is not required. |
+| `/arrows crate` | Opens the crate. Aliases: `crates`, `case`. |
+| `/arrows random` | Draws a different effect from the ones they own on every shot. Alias: `shuffle`. |
 | `/arrows visibility [mode]` | Sets who sees arrow effects for them. With no mode it steps to the next one. Alias: `toggleParticles`. |
 | `/arrows favourites` | Opens the menu straight onto the shortlist. Aliases: `favorites`, `favs`. |
 | `/arrows favourite <effect>` | Stars an effect, or unstars it. Aliases: `favorite`, `fav`. |
@@ -21,25 +23,75 @@ needs `exyliarrows.command.arrows`.
 ## Admin commands
 
 `/arrowsadmin`, aliases `/arrowadmin` and `/arrowseffectsadmin`. Everything under it needs
-`exyliarrows.admin`.
+`exyliarrows.admin`. The subcommands are grouped by what they act on.
+
+### `item` — tokens and removers
 
 | Command | What it does |
 |---|---|
-| `give <player> <effect> [1-64]` | Gives effect tokens. |
-| `remover <player> [1-64]` | Gives effect removers. |
-| `bind <effect> [player]` | Binds an effect to the bow in hand, replacing whatever it carried. |
-| `unbind [player]` | Strips the effect from the bow in hand, giving nothing back. |
-| `set <player> <effect>` | Sets what a player wears. |
-| `clear <player>` | Takes a player's effect off. |
-| `favourites clear <player>` | Empties a player's shortlist. |
-| `validate [player]` | Takes off an effect the target may no longer use. With no player, everyone online. |
-| `open <player>` | Opens the menu for someone. |
-| `preview <effect> [player]` | Previews an effect, for yourself or for someone else. |
+| `item give <player> <effect> [1-64]` | Gives effect tokens. |
+| `item remover <player> [1-64]` | Gives effect removers. |
+
+### `bow` — the bow in hand
+
+| Command | What it does |
+|---|---|
+| `bow bind <effect> [player]` | Binds an effect to the bow in hand, replacing whatever it carried. |
+| `bow unbind [player]` | Strips the effect from the bow in hand, giving nothing back. |
+
+### `player` — somebody's choice
+
+| Command | What it does |
+|---|---|
+| `player set <player> <effect>` | Sets what a player wears. |
+| `player clear <player>` | Takes a player's effect off. |
+| `player favourites clear <player>` | Empties a player's shortlist. |
+| `player validate [player]` | Takes off an effect the target may no longer use. With no player, everyone online. |
+
+### `keys` — what a crate costs
+
+| Command | What it does |
+|---|---|
+| `keys give <player> <amount>` | Adds crate keys. Alias: `keys add`. |
+| `keys take <player> <amount>` | Takes them away, never below zero. Alias: `keys remove`. |
+| `keys set <player> <amount>` | Sets the number outright. |
+| `keys check <player>` | Prints what they hold. |
+
+### `unlocks` — what a crate handed over
+
+| Command | What it does |
+|---|---|
+| `unlocks grant <player> <effect>` | Marks an effect as won, without a crate. Alias: `unlocks give`. |
+| `unlocks revoke <player> <effect>` | Takes a won effect back. Alias: `unlocks take`. |
+| `unlocks clear <player>` | Wipes everything they won. |
+
+### `crate` — the blocks that open it
+
+| Command | What it does |
+|---|---|
+| `crate block add` | Binds the block you are looking at. |
+| `crate block remove` | Unbinds it. |
+| `crate block list` | Prints every bound block. |
+| `crate block clear` | Unbinds all of them. |
+
+### `menu` and `preview`
+
+| Command | What it does |
+|---|---|
+| `menu open <player>` | Opens the effects menu for someone. |
+| `menu crate <player>` | Opens the crate for someone. |
+| `preview play <effect> [player]` | Previews an effect, for yourself or for someone else. |
+| `preview location` | Sets where previews play to where you are standing. |
+
+### The rest
+
+| Command | What it does |
+|---|---|
 | `list [category]` | Prints every effect, or just one category's. |
 | `refresh [player]` | Redraws what a player is holding. With no player, everyone online. |
 | `reload` | Re-reads this plugin's files. |
 
-<Callout type="note" title="bind, set and give ignore permissions">
+<Callout type="note" title="bind, set, give and grant ignore permissions">
 They are admin verbs: a crate, a rank reward or a support ticket has already decided the player may
 have the effect. `require-permission` governs what a **player** can do, never what an admin or the
 API does.
@@ -47,22 +99,36 @@ API does.
 
 ## What each one actually does
 
-### `bind`
+### `bow bind`
 
 Acts on the target's main hand. An empty hand answers `empty-hand`. A bow that already carries an
 effect has it replaced — the old one is dropped, not returned as a token. The bow that does not fit
 the effect's `bows` list is refused.
 
-### `unbind`
+### `bow unbind`
 
 Strips the value and hands nothing back, which is the difference from a remover item. For giving the
 token back, have the player use a remover.
 
-### `validate`
+### `player validate`
 
 Re-checks the target's choice against their permissions and takes it off if it no longer holds. The
 same check runs on join, on the next shot and on every menu open — `validate` is how you make it
-immediate after changing a rank.
+immediate after changing a rank. An effect they won from the crate is theirs and is never taken off
+by it.
+
+### `keys` and `unlocks`
+
+Keys are virtual and live on the player's row, so they cannot be dropped, duped or lost to a full
+inventory, and every one of these subcommands runs from console — which is how a shop, a vote
+listener or a reward plugin hands them out. See [Rarities and the
+crate](/docs/exyliaarrows/crate).
+
+### `preview location`
+
+Previews play on one stage the whole server shares, set by standing where they should play and
+running this. Until it is set, `/arrows preview` and the menu's right click say so rather than
+playing an effect somewhere nobody can see it.
 
 ### `refresh`
 
@@ -71,8 +137,8 @@ plays no effect: it is the answer to a bow whose line went stale.
 
 ### `reload`
 
-Runs one step, `configs`, which re-reads `config.yml`, `effects.yml` and `menus/effects.yml`,
-recompiles every sequence and reapplies the message prefix. Edits made to the menu file survive.
+Runs one step, `configs`, which re-reads `config.yml`, `effects.yml` and every file in `menus/`,
+recompiles every sequence and reapplies the message prefix. Edits made to the menu files survive.
 
 It deliberately does **not** reload ExyliaLib — recolouring every plugin on the server is what
 `/exylialib reload` is for.
@@ -80,5 +146,6 @@ It deliberately does **not** reload ExyliaLib — recolouring every plugin on th
 <Callout type="warning" title="A reload republishes the catalogue">
 Effects are recompiled before the new catalogue is published, so nothing plays a half-compiled
 sequence. But an effect whose key you renamed is a new effect: anyone wearing the old one loses it,
-and any bow bound to it now carries an id the file no longer declares.
+any bow bound to it now carries an id the file no longer declares, and anyone who won it from the
+crate owns an id nothing answers for.
 </Callout>

@@ -32,12 +32,53 @@ description: "De un servidor limpio a un jugador con efecto en sus disparos."
 el efecto. Ponlo en `false` y solo lo llevan los de `projectiles.default-allowed-types`.
 </Callout>
 
+## El escenario de vistas previas
+
+<Steps>
+  <Step title="Ponte donde deban verse">
+    Una sala vacía, una esquina del hub, una plataforma en el vacío — donde un jugador pueda mirar un
+    efecto sin mirar el resto del servidor.
+  </Step>
+  <Step title="Fíjalo">
+    ```text
+    /arrowsadmin preview location
+    ```
+    Hasta fijarlo, `/arrows preview` y el clic derecho del menú dicen que no hay vistas previas en
+    vez de lanzar un efecto donde nadie lo ve.
+  </Step>
+</Steps>
+
+## Por la caja
+
+<Steps>
+  <Step title="Reparte una llave">
+    ```text
+    /arrowsadmin keys give <jugador> 1
+    ```
+    Las llaves son virtuales, así que esto corre desde consola: una tienda, un listener de votos o
+    una recompensa de rango las reparten igual.
+  </Step>
+  <Step title="Ábrelo">
+    `/arrows crate`, o el botón **EFFECT CRATE** del menú. Se tira primero una rareza por su peso, y
+    luego un efecto dentro de ella.
+  </Step>
+  <Step title="Pon un bloque de caja en el hub">
+    ```text
+    /arrowsadmin crate block add
+    ```
+    Ata el bloque que estás mirando. No se puede romper, volar ni empujar mientras esté atado.
+  </Step>
+</Steps>
+
+Lo que sale se escribe en la fila del jugador, así que es suyo tanto si un rango se lo dio como si no
+— ver [Rarezas y la caja](/docs/exyliaarrows/caja).
+
 ## Por el arco
 
 <Steps>
   <Step title="Da una ficha">
     ```text
-    /arrowsadmin give <jugador> ember_trail 1
+    /arrowsadmin item give <jugador> ember_trail 1
     ```
   </Step>
   <Step title="Arrástrala sobre un arco">
@@ -46,7 +87,7 @@ el efecto. Ponlo en `false` y solo lo llevan los de `projectiles.default-allowed
   </Step>
   <Step title="Quítalo">
     ```text
-    /arrowsadmin remover <jugador>
+    /arrowsadmin item remover <jugador>
     ```
     El removedor desata el efecto y devuelve la ficha, así que no se destruye nada.
   </Step>
@@ -56,7 +97,8 @@ el efecto. Ponlo en `false` y solo lo llevan los de `projectiles.default-allowed
 
 | Pregunta | Cómo responderla |
 |---|---|
-| ¿Existe el efecto? | `/arrows preview <id>` — se lanza contra un cielo vacío. |
+| ¿Existe el efecto? | `/arrows preview <id>` — se lanza en el escenario de vistas previas. |
 | ¿El arco lleva uno? | Su línea se dibuja bajo el lore propio del arco. |
-| ¿El permiso hizo efecto? | `/arrowsadmin validate <jugador>` quita ya lo que no pueda usar. |
+| ¿El permiso hizo efecto? | `/arrowsadmin player validate <jugador>` quita ya lo que no pueda usar. |
 | ¿Cargó el archivo? | `/arrowsadmin list` imprime todos los efectos declarados. |
+| ¿Cuántas llaves tiene? | `/arrowsadmin keys check <jugador>`. |

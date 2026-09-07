@@ -63,11 +63,6 @@ paquete por espectador. Mira cuántas líneas tiene un efecto y el `count:` de l
 
 ## ¿Puede una región apagar los efectos?
 
-Sí. ExyliaLib registra una flag de WorldGuard, `kill-effects`: negarla en una región impide que suenen
-los efectos de quien muera dentro de ella. En un servidor sin WorldGuard la flag simplemente permite.
-
-## ¿Puede una región apagar los efectos?
-
 Sí. ExyliaLib registra una flag de WorldGuard, `arrows-effects`: negarla en una región impide los
 efectos de lanzamiento, estela e impacto dentro de ella. En un servidor sin WorldGuard la flag
 simplemente permite.
@@ -78,6 +73,17 @@ O la flag de arriba, o `trail.max-active` — un lobby lleno disparando ballesta
 perder una estela se nota mucho menos que perder el tick rate. Una estela también se corta a los
 `trail.max-duration` segundos, que es lo que evita que una flecha perdida en un chunk descargado
 dibuje para siempre.
+
+## Las vistas previas dicen que no están disponibles
+
+Todavía no hay escenario de vista previa. Ponte donde deban verse y ejecuta `/arrowsadmin preview
+location`. No hay valor por defecto a propósito: uno adivinado deja al jugador dentro del terreno.
+
+## Se acabó un rango, ¿pierde lo que le dio la caja?
+
+No. Un efecto ganado en la caja se escribe en la fila del propio jugador en vez de concederse como
+permiso, así que sobrevive al rango y `player validate` nunca se lo quita. Solo lo retira
+`/arrowsadmin unlocks revoke`.
 
 ## ¿Funciona en Folia?
 

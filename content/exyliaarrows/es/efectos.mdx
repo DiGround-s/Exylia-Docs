@@ -18,6 +18,7 @@ categories:
 arrow_effects:
   EMBER_TRAIL:
     category: ember
+    tier: common
     name: "<gradient:#FFD08A:#C43A10><bold>EMBER TRAIL</bold></gradient>"
     material: BLAZE_ROD
     description: "Coals come off the shaft, {highlight}tumble, and burn out{neutral} behind it."
@@ -36,6 +37,7 @@ arrow_effects:
 | Clave | Qué hace |
 |---|---|
 | `category` | En qué pestaña aparece. Tiene que ser una clave declarada en `categories`. |
+| `tier` | Cómo de raro es. Tiene que ser una clave declarada en `tiers` de `config.yml`; sin ella el efecto es común. Decide el color de su nombre, las probabilidades de que una caja caiga en él, y lo que concede `exyliarrows.tier.<id>`. |
 | `name` | Cómo lo llaman menús y placeholders. |
 | `material` | El objeto con el que se dibuja la fila. |
 | `description` | Una lista es una línea por entrada; un solo texto se parte con `<nl>`. |

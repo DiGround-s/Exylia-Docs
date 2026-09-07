@@ -450,7 +450,7 @@ const ARMORSKIN_NAV: NavGroup[] = [
   },
 ];
 
-function effectsNav(): NavGroup[] {
+function effectsNav(extra: DocRef[] = []): NavGroup[] {
   return [
     {
       label: { en: "Getting started", es: "Empezar" },
@@ -468,6 +468,7 @@ function effectsNav(): NavGroup[] {
         page("create-with-ai", "create-with-ai", "crear-con-ia"),
         page("modes-and-tokens", "modes-and-tokens", "modos-y-fichas"),
         page("menu", "menu", "menu"),
+        ...extra,
       ],
     },
     {
@@ -826,7 +827,7 @@ export const plugins: Plugin[] = [
       en: "120 projectile effects across six categories, each one three moments — launch, trail and impact — drawn with real blocks and items: chosen from a menu or bound to a bow with a token.",
       es: "120 efectos de proyectil en seis categorías, cada uno con tres momentos — lanzamiento, estela e impacto — dibujados con bloques y objetos reales: elegidos desde un menú o atados a un arco con una ficha.",
     },
-    version: "1.0.5",
+    version: "1.2.0",
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
@@ -837,7 +838,7 @@ export const plugins: Plugin[] = [
       { en: "Projectiles", es: "Proyectiles" },
       { en: "Folia", es: "Folia" },
     ],
-    nav: effectsNav(),
+    nav: effectsNav([page("crate", "crate", "caja")]),
   },
   {
     id: "exyliashields",

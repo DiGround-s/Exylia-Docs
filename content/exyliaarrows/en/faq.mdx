@@ -65,11 +65,6 @@ shape over frames instead of sending it all at once.
 
 ## Can a region turn effects off?
 
-Yes. ExyliaLib registers a WorldGuard flag, `kill-effects`: denying it in a region stops effects
-playing where somebody died inside it. On a server without WorldGuard the flag simply allows.
-
-## Can a region turn effects off?
-
 Yes. ExyliaLib registers a WorldGuard flag, `arrows-effects`: denying it in a region stops launch,
 trail and impact effects inside it. On a server without WorldGuard the flag simply allows.
 
@@ -79,6 +74,17 @@ Either the region flag above, or `trail.max-active` — a full lobby firing cros
 and losing a trail is far less visible than losing the tick rate. A trail also stops after
 `trail.max-duration` seconds, which is what keeps an arrow lost in an unloaded chunk from drawing
 forever.
+
+## Previews say they are unavailable
+
+No preview stage is set yet. Stand where previews should play and run `/arrowsadmin preview
+location`. There is no default on purpose: a guessed one puts the player inside terrain.
+
+## A rank ran out — did they lose what the crate gave them?
+
+No. An effect won from a crate is written onto the player's own row rather than granted as a
+permission, so it survives the rank and `player validate` never takes it off. Only `/arrowsadmin
+unlocks revoke` takes one back.
 
 ## Does it work on Folia?
 

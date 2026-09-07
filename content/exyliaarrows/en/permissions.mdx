@@ -1,6 +1,6 @@
 ---
 title: "Permissions"
-description: "The four kinds of node, and how a category is sold as one line."
+description: "The kinds of node, how a category is sold as one line, and the effects a crate hands over instead."
 ---
 
 ## The nodes
@@ -12,9 +12,10 @@ description: "The four kinds of node, and how a category is sold as one line."
 | `exyliarrows.effect.<id>` | One effect, by its id in lowercase. |
 | `exyliarrows.effect.*` | Every effect. |
 | `exyliarrows.category.<id>` | Every effect in that category. |
+| `exyliarrows.tier.<id>` | Every effect of that rarity. |
 
-An effect is owned if **any** of the three effect nodes applies: its own, the wildcard, or its
-category's.
+An effect is owned if **any** of the four effect nodes applies: its own, the wildcard, its
+category's, or its rarity's — or if the player won it from the crate.
 
 ## The id is the node
 
@@ -23,6 +24,7 @@ There is no `permission` key in `effects.yml`. The node is derived from the key,
 ```text
 EMBER_TRAIL  →  exyliarrows.effect.ember_trail
 ember        →  exyliarrows.category.ember
+legendary    →  exyliarrows.tier.legendary
 ```
 
 Case is not part of it, so recapitalising a key changes nothing. Renaming one changes everything: it
@@ -34,6 +36,7 @@ is a different node, and everybody who had the old one loses the effect.
 /lp group default permission set exyliarrows.command.arrows true
 /lp group vip     permission set exyliarrows.category.ember true
 /lp group mvp     permission set exyliarrows.effect.ember_trail true
+/lp group elite   permission set exyliarrows.tier.legendary true
 /lp group legend  permission set exyliarrows.effect.* true
 ```
 
@@ -64,6 +67,13 @@ cannot see what is for sale cannot want it.
     locked. Either way it can be previewed, and on the favourites tab it is always shown.
   </Step>
 </Steps>
+
+<Callout type="tip" title="What the crate hands over is not a node">
+An effect won from the crate is written onto the player's own row, so it survives the rank they
+never had and `validate` never takes it off. Rarity nodes and the crate are two ways of selling the
+same shelf: one is rented with a rank, the other is kept. See [Rarities and the
+crate](/docs/exyliaarrows/crate).
+</Callout>
 
 <Callout type="note" title="A bound bow is not re-checked">
 The node is asked for when a token is bound, never again. After that the effect belongs to the

@@ -108,6 +108,115 @@ bow-lore:
 
 Se dibuja bajo el lore propio del arco atada, solo en paquetes. El objeto nunca lleva estas líneas.
 
+## `tiers`
+
+Las rarezas en las que se ordenan los efectos, y cada cuánto sale cada una de una caja. Añade,
+renombra o borra las que quieras — la clave es el id que `effects.yml` escribe como `tier`.
+
+```yaml
+tiers:
+  common:
+    name: "Common"
+    material: GRAY_DYE
+    color: "{muted}"
+    chance: 60.0
+    priority: 1
+  rare:
+    name: "Rare"
+    material: LIGHT_BLUE_DYE
+    color: "{info}"
+    chance: 25.0
+    priority: 2
+  epic:
+    name: "Epic"
+    material: PINK_DYE
+    color: "{accent}"
+    chance: 12.0
+    priority: 3
+  legendary:
+    name: "Legendary"
+    material: ORANGE_DYE
+    color: "{highlight}"
+    chance: 3.0
+    priority: 4
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `name` | por rareza | Cómo la llaman los menús y los placeholders. |
+| `material` | por rareza | El objeto con el que se dibuja en la caja. |
+| `color` | por rareza | El color en el que se escriben su nombre y sus efectos. |
+| `chance` | `60`, `25`, `12`, `3` | Un peso, no un porcentaje: las probabilidades salen de los pesos, así que borrar una rareza reparte sus tiradas. |
+| `priority` | `1`-`4` | Dónde va en los menús; lo más bajo va primero. |
+
+Cada rareza es además un nodo de permiso, `exyliarrows.tier.<id>`. Ver [Rarezas y el
+caja](/docs/exyliaarrows/caja).
+
+## `crate`
+
+```yaml
+crate:
+  enabled: true
+  start-keys: 0
+  duplicate-refund: 1
+  give-token: false
+  blocks: []
+  max-at-once: 4
+  spin-frames: 34
+  stagger-seconds: 2.0
+  on-spin:
+    sound:
+      name: BLOCK_NOTE_BLOCK_HAT
+      pitch: 1.6
+  on-win:
+    sound:
+      name: ENTITY_PLAYER_LEVELUP
+      pitch: 1.2
+  on-duplicate:
+    sound:
+      name: BLOCK_NOTE_BLOCK_BASS
+      pitch: 0.8
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | Si la caja se puede abrir. Apagado, su botón lo dice en vez de abrir. |
+| `start-keys` | `0` | Llaves que se le dan a un jugador la primera vez que se le ve, al crear su fila. |
+| `duplicate-refund` | `1` | Llaves que se devuelven cuando una caja cae en un efecto que ya tenía. |
+| `give-token` | `false` | Si ganar un efecto entrega también su ficha. Interesa donde `behaviour.mode` sea `bow` o `both`. |
+| `blocks` | vacío | Los bloques que abren la caja al hacerles clic. Átalos con `/arrowsadmin crate block add`, no a mano. |
+| `max-at-once` | `4` | Cuántas cajas se pueden abrir de una vez. La pantalla de apertura cabe siete. |
+| `spin-frames` | `34` | Cuántas caras recorre el primer carrete antes de parar. Tope de 200, unos once segundos. |
+| `stagger-seconds` | `2.0` | Cuánto tarda un carrete en parar después del anterior. `0` los para juntos. |
+| `on-spin` / `on-win` / `on-duplicate` | sonidos | Bloques de efecto completos de ExyliaLib: título, action bar, boss bar, sonido, partícula y firework. |
+
+## `preview`
+
+Dónde suenan `/arrows preview` y el clic derecho del menú. Al jugador se le lleva al escenario, el
+efecto suena delante de él donde solo él lo ve, y vuelve exactamente a donde estaba.
+
+```yaml
+preview:
+  location: ""
+  distance: 5.0
+  settle-ticks: 4
+  linger-ticks: 20
+  max-ticks: 600
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `location` | vacío | Dónde se pone el jugador, como `server,world,x,y,z,yaw,pitch`. Se fija en el juego con `/arrowsadmin preview location`. |
+| `distance` | `5.0` | A qué distancia delante de él suena el efecto, en bloques. |
+| `settle-ticks` | `4` | Cuánto esperar tras moverlo, para que el cliente tenga la posición nueva antes de la primera partícula. |
+| `linger-ticks` | `20` | Cuánto se mantiene el escenario después de terminar el efecto. |
+| `max-ticks` | `600` | Lo máximo que puede durar una vista previa, pase lo que pase. |
+
+<Callout type="warning" title="No hay vistas previas hasta fijar el escenario">
+No hay valor por defecto sensato — adivinarlo mete al jugador dentro del terreno. Hasta rellenar
+`location`, `/arrows preview` y el clic derecho del menú lo dicen en vez de lanzar nada.
+</Callout>
+
 ## `menu`
 
 ```yaml
@@ -120,9 +229,16 @@ menu:
   favourites-icon: "AMETHYST_SHARD"
   favourite-on: "{highlight}★ In your favourites"
   favourite-off: "{muted}☆ Not in your favourites"
+  random-name: "{highlight}Random"
+  random-on: "{success}✔ Every shot is a surprise"
+  random-off: "{warning}➥ Click to surprise yourself"
 ```
 
-La pantalla en sí es `menus/effects.yml` — ver [El menú](/docs/exyliaarrows/menu).
+`random-name` es cómo se llama la elección aleatoria allá donde se dibuje el efecto que lleva un
+jugador; `random-on` y `random-off` son la línea que muestra su botón.
+
+Las pantallas en sí son `menus/effects.yml`, `menus/crate.yml` y `menus/crate_open.yml` — ver [El
+menú](/docs/exyliaarrows/menu) y [Rarezas y la caja](/docs/exyliaarrows/caja).
 
 ## `feedback`
 
@@ -190,5 +306,13 @@ empieza con `%prefix%`.
 | `refreshed` | Terminó `refresh` o `validate`. |
 | `menu-disabled` | Se abrió el menú en un servidor `bow`. |
 | `favourite-added` / `favourite-removed` / `favourites-cleared` / `favourites-empty` | La lista de favoritos. |
+| `random-chosen` | Se puso que cada disparo saque un efecto distinto. |
+| `crate-won` / `crate-duplicate` / `crate-no-keys` | Una caja cayó en algo nuevo, en algo que ya tenía, o no se pudo pagar. |
+| `crate-busy` / `crate-empty` / `crate-disabled` | Ya hay una caja cayendo, no hay nada que entregar, o está apagado. |
+| `keys-received` / `keys-taken` / `keys-given` | Cambiaron de manos unas llaves. |
+| `unlock-granted` / `unlock-already` / `unlock-revoked` / `unlocks-cleared` | `/arrowsadmin unlocks`. |
+| `crate-block-added` / `crate-block-removed` / `crate-block-already` / `crate-block-missing` / `crate-block-none` | `/arrowsadmin crate block`. |
+| `preview-location-set` / `preview-unavailable` / `preview-unavailable-admin` | El escenario de vistas previas. |
 
-Placeholders en los mensajes: `%effect%`, `%amount%`, `%id%`, `%visibility%` y `%prefix%`.
+Placeholders en los mensajes: `%effect%`, `%amount%`, `%id%`, `%visibility%`, `%keys%`, `%player%`,
+`%location%` y `%prefix%`.

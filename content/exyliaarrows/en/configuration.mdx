@@ -107,6 +107,116 @@ bow-lore:
 
 Drawn under a bound bow's own lore, on packets only. The item itself never carries these lines.
 
+## `tiers`
+
+The rarities effects are sorted into, and how often each one comes out of a crate. Add, rename or
+delete any of them — the key is the id `effects.yml` writes as `tier`.
+
+```yaml
+tiers:
+  common:
+    name: "Common"
+    material: GRAY_DYE
+    color: "{muted}"
+    chance: 60.0
+    priority: 1
+  rare:
+    name: "Rare"
+    material: LIGHT_BLUE_DYE
+    color: "{info}"
+    chance: 25.0
+    priority: 2
+  epic:
+    name: "Epic"
+    material: PINK_DYE
+    color: "{accent}"
+    chance: 12.0
+    priority: 3
+  legendary:
+    name: "Legendary"
+    material: ORANGE_DYE
+    color: "{highlight}"
+    chance: 3.0
+    priority: 4
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `name` | per rarity | What menus and placeholders call it. |
+| `material` | per rarity | The item the rarity is drawn with in the crate. |
+| `color` | per rarity | The colour its name and its effects are written in. |
+| `chance` | `60`, `25`, `12`, `3` | A weight, not a percentage: the shares are worked out from the weights, so deleting a rarity re-spreads its odds. |
+| `priority` | `1`-`4` | Where it sits in menus; lower comes first. |
+
+Each rarity is also a permission node, `exyliarrows.tier.<id>`. See [Rarities and the
+crate](/docs/exyliaarrows/crate).
+
+## `crate`
+
+```yaml
+crate:
+  enabled: true
+  start-keys: 0
+  duplicate-refund: 1
+  give-token: false
+  blocks: []
+  max-at-once: 4
+  spin-frames: 34
+  stagger-seconds: 2.0
+  on-spin:
+    sound:
+      name: BLOCK_NOTE_BLOCK_HAT
+      pitch: 1.6
+  on-win:
+    sound:
+      name: ENTITY_PLAYER_LEVELUP
+      pitch: 1.2
+  on-duplicate:
+    sound:
+      name: BLOCK_NOTE_BLOCK_BASS
+      pitch: 0.8
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `enabled` | `true` | Whether the crate can be opened at all. Off, its button says so instead of opening. |
+| `start-keys` | `0` | Keys a player is given the first time they are seen, written once when their row is created. |
+| `duplicate-refund` | `1` | Keys handed back when a crate lands on an effect they already own. |
+| `give-token` | `false` | Whether winning an effect also hands over its token. Worth turning on where `behaviour.mode` is `bow` or `both`. |
+| `blocks` | empty | The blocks that open the crate when clicked. Bind them with `/arrowsadmin crate block add` rather than by hand. |
+| `max-at-once` | `4` | How many crates may be opened in one go. The opening screen fits seven. |
+| `spin-frames` | `34` | How many faces the first reel runs through before it stops. Capped at 200, about eleven seconds. |
+| `stagger-seconds` | `2.0` | How long after one reel stops the next one does. `0` stops them together. |
+| `on-spin` / `on-win` / `on-duplicate` | sounds | Full ExyliaLib effect blocks: title, action bar, boss bar, sound, particle and firework. |
+
+## `preview`
+
+Where `/arrows preview` and the menu's right click play an effect. The player is moved to the stage,
+the effect plays in front of them where only they can see it, and they are put back exactly where
+they were.
+
+```yaml
+preview:
+  location: ""
+  distance: 5.0
+  settle-ticks: 4
+  linger-ticks: 20
+  max-ticks: 600
+```
+
+| Key | Default | What it does |
+|---|---|---|
+| `location` | empty | Where the player stands, as `server,world,x,y,z,yaw,pitch`. Set it in game with `/arrowsadmin preview location`. |
+| `distance` | `5.0` | How far in front of them the effect plays, in blocks. |
+| `settle-ticks` | `4` | How long to wait after the move, so the client has the new position before the first particle. |
+| `linger-ticks` | `20` | How long the stage is held after the effect finishes. |
+| `max-ticks` | `600` | The longest a preview may last, whatever goes wrong. |
+
+<Callout type="warning" title="Previews are unavailable until a stage is set">
+There is no sensible default — a guess puts the player inside terrain. Until `location` is filled
+in, `/arrows preview` and the menu's right click say so instead of playing anything.
+</Callout>
+
 ## `menu`
 
 ```yaml
@@ -119,9 +229,16 @@ menu:
   favourites-icon: "AMETHYST_SHARD"
   favourite-on: "{highlight}★ In your favourites"
   favourite-off: "{muted}☆ Not in your favourites"
+  random-name: "{highlight}Random"
+  random-on: "{success}✔ Every shot is a surprise"
+  random-off: "{warning}➥ Click to surprise yourself"
 ```
 
-The screen itself is `menus/effects.yml` — see [The menu](/docs/exyliaarrows/menu).
+`random-name` is what the random choice is called wherever the effect a player carries is drawn;
+`random-on` and `random-off` are the line its button shows.
+
+The screens themselves are `menus/effects.yml`, `menus/crate.yml` and `menus/crate_open.yml` — see
+[The menu](/docs/exyliaarrows/menu) and [Rarities and the crate](/docs/exyliaarrows/crate).
 
 ## `feedback`
 
@@ -188,5 +305,13 @@ with `%prefix%`.
 | `refreshed` | `refresh` or `validate` finished. |
 | `menu-disabled` | The menu was opened on a `bow` server. |
 | `favourite-added` / `favourite-removed` / `favourites-cleared` / `favourites-empty` | The shortlist. |
+| `random-chosen` | Every shot was set to draw a different effect. |
+| `crate-won` / `crate-duplicate` / `crate-no-keys` | A crate landed on something new, on something owned, or could not be paid for. |
+| `crate-busy` / `crate-empty` / `crate-disabled` | A crate is already falling, has nothing to hand over, or is turned off. |
+| `keys-received` / `keys-taken` / `keys-given` | Keys changed hands. |
+| `unlock-granted` / `unlock-already` / `unlock-revoked` / `unlocks-cleared` | `/arrowsadmin unlocks`. |
+| `crate-block-added` / `crate-block-removed` / `crate-block-already` / `crate-block-missing` / `crate-block-none` | `/arrowsadmin crate block`. |
+| `preview-location-set` / `preview-unavailable` / `preview-unavailable-admin` | The preview stage. |
 
-Placeholders in messages: `%effect%`, `%amount%`, `%id%`, `%visibility%`, plus `%prefix%`.
+Placeholders in messages: `%effect%`, `%amount%`, `%id%`, `%visibility%`, `%keys%`, `%player%`,
+`%location%`, plus `%prefix%`.

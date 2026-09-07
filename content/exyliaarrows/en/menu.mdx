@@ -18,8 +18,13 @@ With `behaviour.mode: bow` nothing on this screen would ever be read, so the men
 | `categories` | `9,18,27,36` | The tabs down the left, paged with the buttons at slots `0` and `45`. |
 | `grid` | `11-16,20-25,29-34,38-43` | The open category's effects, paged at slots `47` and `52`. |
 
-The fixed buttons: **YOUR EFFECT** at slot `4` (click to take the effect off), **PARTICLE
-VISIBILITY** at `48`, **CLOSE** at `50`.
+The fixed buttons: **YOUR EFFECT** at slot `4` (click to take the effect off), **EFFECT CRATE** at
+`8`, **PARTICLE VISIBILITY** at `48`, **RANDOM EFFECT** at `49`, **CLOSE** at `50`.
+
+**EFFECT CRATE** opens `menus/crate.yml` and shows the keys the player holds and how much of the
+catalogue they have unboxed — see [Rarities and the crate](/docs/exyliaarrows/crate). **RANDOM
+EFFECT** sets every shot to draw a different effect from the ones they own; its line is
+`menu.random-on` while it is the choice they carry and `menu.random-off` while it is not.
 
 ## The favourites tab
 
@@ -42,7 +47,7 @@ failed to load.
 | Click | On a grid row |
 |---|---|
 | Left | Wears the effect — or takes it off, when it is already the one worn. |
-| Right | Previews it: the player is lifted to an empty patch of sky, the effect plays for them alone, and they are put back where they were. Locked rows can be previewed too. |
+| Right | Previews it: the player is moved to the server's preview stage, the effect plays for them alone, and they are put back exactly where they were. Locked rows can be previewed too. A server with no stage set says so instead — `/arrowsadmin preview location` sets it. |
 | Shift | Stars it, or unstars it. |
 
 ## Ordering and locked rows

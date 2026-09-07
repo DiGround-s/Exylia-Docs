@@ -1,6 +1,6 @@
 ---
 title: "Placeholders"
-description: "The player's effect, the bow's effect, the shortlist and the visibility mode."
+description: "The player's effect, the bow's effect, the shortlist, the collection and the visibility mode."
 ---
 
 Every placeholder below is written in full, and clicking one copies it.
@@ -16,6 +16,9 @@ Every placeholder below is written in full, and clicking one copies it.
 | `%exyliarrows_effect_category%` | The category id. |
 | `%exyliarrows_effect_category_name%` | The category's display name. |
 | `%exyliarrows_effect_bows%` | What it may be bound to, in words. |
+| `%exyliarrows_effect_tier%` | Its rarity's id. |
+| `%exyliarrows_effect_tier_name%` | The rarity's display name. |
+| `%exyliarrows_effect_tier_color%` | The colour the rarity is written in. `tier_colour` is accepted too. |
 | `%exyliarrows_has_effect%` | `true` or `false`. |
 
 ## What the bow in hand carries
@@ -32,6 +35,9 @@ about their menu choice.
 | `%exyliarrows_bow_effect_category%` | Its category id. |
 | `%exyliarrows_bow_effect_category_name%` | Its category name. |
 | `%exyliarrows_bow_effect_bows%` | What it fits. |
+| `%exyliarrows_bow_effect_tier%` | Its rarity's id. |
+| `%exyliarrows_bow_effect_tier_name%` | The rarity's display name. |
+| `%exyliarrows_bow_effect_tier_color%` | The colour that rarity is written in. |
 | `%exyliarrows_bow_has_effect%` | `true` or `false`. |
 
 ## The rest
@@ -41,8 +47,20 @@ about their menu choice.
 | `%exyliarrows_visibility%` | The player's visibility mode, named as `particles.name-*` says. |
 | `%exyliarrows_favourites%` | How many effects they have starred. |
 | `%exyliarrows_favourite_<id>%` | `true` or `false` for one effect — `%exyliarrows_favourite_ember_trail%`. |
+| `%exyliarrows_random%` | `random` while every shot is drawing a different effect, `false` otherwise. |
+| `%exyliarrows_keys%` | Crate keys they hold. |
+| `%exyliarrows_unlocked%` | How many effects they won from the crate. |
+| `%exyliarrows_unlocked_<id>%` | `true` or `false` for one effect — `%exyliarrows_unlocked_ember_trail%`. |
+| `%exyliarrows_catalogue%` | How many effects the server declares. `total` is accepted too. |
+| `%exyliarrows_tier_count_<id>%` | How many effects one rarity holds — `%exyliarrows_tier_count_legendary%`. |
 
 `favorite` is accepted wherever `favourite` is.
+
+<Callout type="note" title="Random answers as itself">
+While a player is on random, `%exyliarrows_effect%` answers `random` and `%exyliarrows_effect_name%`
+answers `menu.random-name` — a scoreboard asking what they carry would otherwise read as carrying
+nothing.
+</Callout>
 
 ## With nothing chosen
 

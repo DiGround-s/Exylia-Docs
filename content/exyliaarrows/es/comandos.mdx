@@ -1,6 +1,6 @@
 ---
 title: "Comandos"
-description: "Lo que un jugador puede hacer con su efecto, y los trece subcomandos de admin."
+description: "Lo que un jugador puede hacer con su efecto, y los subcomandos de admin, agrupados por tema."
 ---
 
 ## Comandos de jugador
@@ -11,7 +11,9 @@ description: "Lo que un jugador puede hacer con su efecto, y los trece subcomand
 | Comando | Qué hace |
 |---|---|
 | `/arrows` | Abre el menú, en la pestaña donde se dejó. |
-| `/arrows preview <efecto>` | Lanza un efecto contra un cielo vacío. No hace falta tenerlo. |
+| `/arrows preview <efecto>` | Lanza un efecto en el escenario de vistas previas del servidor. No hace falta tenerlo. |
+| `/arrows crate` | Abre la caja. Alias: `crates`, `case`. |
+| `/arrows random` | Cada disparo saca un efecto distinto de los que tiene. Alias: `shuffle`. |
 | `/arrows visibility [modo]` | Elige quién ve los efectos de flecha para él. Sin modo, avanza al siguiente. Alias: `toggleParticles`. |
 | `/arrows favourites` | Abre el menú directo en la lista de favoritos. Alias: `favorites`, `favs`. |
 | `/arrows favourite <efecto>` | Marca un efecto, o lo desmarca. Alias: `favorite`, `fav`. |
@@ -20,25 +22,76 @@ description: "Lo que un jugador puede hacer con su efecto, y los trece subcomand
 
 ## Comandos de admin
 
-`/arrowsadmin`, alias `/arrowadmin` y `/arrowseffectsadmin`. Todo necesita `exyliarrows.admin`.
+`/arrowsadmin`, alias `/arrowadmin` y `/arrowseffectsadmin`. Todo necesita `exyliarrows.admin`. Los
+subcomandos están agrupados por aquello sobre lo que actúan.
+
+### `item` — fichas y removedores
 
 | Comando | Qué hace |
 |---|---|
-| `give <jugador> <efecto> [1-64]` | Da fichas de efecto. |
-| `remover <jugador> [1-64]` | Da removedores. |
-| `bind <efecto> [jugador]` | Ata un efecto al arco en mano, reemplazando lo que llevara. |
-| `unbind [jugador]` | Quita el efecto del arco en mano, sin devolver nada. |
-| `set <jugador> <efecto>` | Fija lo que lleva un jugador. |
-| `clear <jugador>` | Le quita el efecto. |
-| `favourites clear <jugador>` | Vacía su lista de favoritos. |
-| `validate [jugador]` | Quita un efecto que el objetivo ya no puede usar. Sin jugador, a todos los conectados. |
-| `open <jugador>` | Le abre el menú a alguien. |
-| `preview <efecto> [jugador]` | Previsualiza un efecto, para ti o para otro. |
+| `item give <jugador> <efecto> [1-64]` | Da fichas de efecto. |
+| `item remover <jugador> [1-64]` | Da removedores. |
+
+### `bow` — el arco en mano
+
+| Comando | Qué hace |
+|---|---|
+| `bow bind <efecto> [jugador]` | Ata un efecto al arco en mano, reemplazando lo que llevara. |
+| `bow unbind [jugador]` | Quita el efecto del arco en mano, sin devolver nada. |
+
+### `player` — la elección de alguien
+
+| Comando | Qué hace |
+|---|---|
+| `player set <jugador> <efecto>` | Fija lo que lleva un jugador. |
+| `player clear <jugador>` | Le quita el efecto. |
+| `player favourites clear <jugador>` | Vacía su lista de favoritos. |
+| `player validate [jugador]` | Quita un efecto que el objetivo ya no puede usar. Sin jugador, a todos los conectados. |
+
+### `keys` — lo que cuesta una caja
+
+| Comando | Qué hace |
+|---|---|
+| `keys give <jugador> <cantidad>` | Añade llaves de caja. Alias: `keys add`. |
+| `keys take <jugador> <cantidad>` | Se las quita, nunca por debajo de cero. Alias: `keys remove`. |
+| `keys set <jugador> <cantidad>` | Fija la cantidad exacta. |
+| `keys check <jugador>` | Imprime cuántas tiene. |
+
+### `unlocks` — lo que entregó una caja
+
+| Comando | Qué hace |
+|---|---|
+| `unlocks grant <jugador> <efecto>` | Marca un efecto como ganado, sin caja. Alias: `unlocks give`. |
+| `unlocks revoke <jugador> <efecto>` | Le quita un efecto ganado. Alias: `unlocks take`. |
+| `unlocks clear <jugador>` | Borra todo lo que ganó. |
+
+### `crate` — los bloques que lo abren
+
+| Comando | Qué hace |
+|---|---|
+| `crate block add` | Ata el bloque que estás mirando. |
+| `crate block remove` | Lo desata. |
+| `crate block list` | Imprime todos los bloques atados. |
+| `crate block clear` | Los desata todos. |
+
+### `menu` y `preview`
+
+| Comando | Qué hace |
+|---|---|
+| `menu open <jugador>` | Le abre el menú de efectos a alguien. |
+| `menu crate <jugador>` | Le abre la caja a alguien. |
+| `preview play <efecto> [jugador]` | Previsualiza un efecto, para ti o para otro. |
+| `preview location` | Fija dónde suenan las vistas previas, donde estés parado. |
+
+### El resto
+
+| Comando | Qué hace |
+|---|---|
 | `list [categoría]` | Imprime todos los efectos, o los de una categoría. |
 | `refresh [jugador]` | Redibuja lo que un jugador tiene en la mano. Sin jugador, a todos los conectados. |
 | `reload` | Relee los archivos de este plugin. |
 
-<Callout type="note" title="bind, set y give ignoran los permisos">
+<Callout type="note" title="bind, set, give y grant ignoran los permisos">
 Son verbos de admin: una caja, una recompensa de rango o un ticket de soporte ya decidieron que el
 jugador puede tener el efecto. `require-permission` gobierna lo que hace un **jugador**, nunca lo que
 hacen un admin o la API.
@@ -46,33 +99,46 @@ hacen un admin o la API.
 
 ## Qué hace cada uno
 
-### `bind`
+### `bow bind`
 
 Actúa sobre la mano principal del objetivo. Con la mano vacía responde `empty-hand`. Un arco que ya
 lleva efecto lo pierde — el viejo se descarta, no vuelve como ficha. Un arco que no encaja en la lista
 `bows` del efecto se rechaza.
 
-### `unbind`
+### `bow unbind`
 
 Quita el valor y no devuelve nada, que es la diferencia con el removedor. Para devolver la ficha, que
 el jugador use un removedor.
 
-### `validate`
+### `player validate`
 
 Revisa la elección del objetivo contra sus permisos y se la quita si ya no se sostiene. La misma
 comprobación corre al entrar, en el siguiente disparo y al abrir el menú — `validate` es cómo hacerlo
-inmediato después de tocar un rango.
+inmediato después de tocar un rango. Un efecto ganado en la caja es suyo y nunca se lo quita.
+
+### `keys` y `unlocks`
+
+Las llaves son virtuales y viven en la fila del jugador, así que no se pueden tirar, duplicar ni
+perder por tener el inventario lleno, y todos estos subcomandos corren desde consola — que es cómo
+los reparten una tienda, un listener de votos o un plugin de recompensas. Ver [Rarezas y el
+caja](/docs/exyliaarrows/caja).
+
+### `preview location`
+
+Las vistas previas suenan en un único escenario que comparte todo el servidor: ponte donde deban
+verse y ejecútalo. Hasta que esté fijado, `/arrows preview` y el clic derecho del menú lo dicen en
+vez de lanzar un efecto donde nadie lo ve.
 
 ### `refresh`
 
-Reenvía el inventario del jugador para redibujar las líneas bajo un arco atada. No toca ningún archivo
+Reenvía el inventario del jugador para redibujar las líneas bajo un arco atado. No toca ningún archivo
 ni lanza nada: es la respuesta a un arco cuya línea quedó vieja.
 
 ### `reload`
 
-Corre un único paso, `configs`, que relee `config.yml`, `effects.yml` y `menus/effects.yml`, recompila
-todas las secuencias y vuelve a aplicar el prefijo de los mensajes. Las ediciones hechas al archivo del
-menú se conservan.
+Corre un único paso, `configs`, que relee `config.yml`, `effects.yml` y todos los archivos de
+`menus/`, recompila todas las secuencias y vuelve a aplicar el prefijo de los mensajes. Las ediciones
+hechas a los archivos de menú se conservan.
 
 A propósito **no** recarga ExyliaLib — recolorear todos los plugins del servidor es para lo que está
 `/exylialib reload`.
@@ -80,5 +146,6 @@ A propósito **no** recarga ExyliaLib — recolorear todos los plugins del servi
 <Callout type="warning" title="Un reload republica el catálogo">
 Los efectos se recompilan antes de publicar el catálogo nuevo, así que nada lanza una secuencia a
 medio compilar. Pero un efecto cuya clave renombraste es un efecto nuevo: quien llevara el viejo lo
-pierde, y cualquier arco atado a él lleva ahora un id que el archivo ya no declara.
+pierde, cualquier arco atado a él lleva ahora un id que el archivo ya no declara, y quien lo ganara
+en la caja tiene un id que ya no responde a nada.
 </Callout>

@@ -1,0 +1,167 @@
+---
+title: "Rarities and the crate"
+description: "The rarities effects are sorted into, the keys that open a crate, and what a player keeps after it lands."
+---
+
+An effect is normally sold as a permission node. The crate is the other way in: a rarity decides how
+likely it is, a key buys one roll, and what comes out is written onto the player's own row rather
+than granted as a node — so it outlives the rank that never granted it.
+
+## The rarities
+
+`config.yml`'s `tiers` block declares them. Nothing about the four below is hard-coded: rename them,
+delete one, invent `mythic`.
+
+```yaml
+tiers:
+  common:
+    name: "Common"
+    material: GRAY_DYE
+    color: "{muted}"
+    chance: 60.0
+    priority: 1
+  rare:
+    name: "Rare"
+    material: LIGHT_BLUE_DYE
+    color: "{info}"
+    chance: 25.0
+    priority: 2
+  epic:
+    name: "Epic"
+    material: PINK_DYE
+    color: "{accent}"
+    chance: 12.0
+    priority: 3
+  legendary:
+    name: "Legendary"
+    material: ORANGE_DYE
+    color: "{highlight}"
+    chance: 3.0
+    priority: 4
+```
+
+| Key | What it does |
+|---|---|
+| `name` | What menus and placeholders call it. |
+| `material` | The item the rarity is drawn with. |
+| `color` | The colour its name and its effects are written in. |
+| `chance` | How often a crate lands on it, **relative to the other rarities**. |
+| `priority` | Where it sits in menus; lower comes first. |
+
+An effect names its rarity with `tier` in `effects.yml`, and omitting it makes the effect common:
+
+```yaml title="effects.yml"
+INFERNO:
+  category: ember
+  tier: epic
+```
+
+<Callout type="note" title="chance is a weight, not a percentage">
+The shares are worked out from the weights every time they are needed, so deleting a rarity
+re-spreads its odds instead of leaving a gap, and weights that sum to seven are as honest as weights
+that sum to a hundred. A rarity nothing declares an effect for is left out of the roll entirely.
+</Callout>
+
+<Callout type="warning" title="A rarity that is gone costs its effects their colour, never their existence">
+An effect naming a `tier` the file no longer declares falls back to the first rarity — the cheapest
+one on a sane file. Renaming `legendary` to `mythic` demotes every legendary rather than deleting it.
+</Callout>
+
+## Keys
+
+Keys are not an item. They live on the player's row, which is what makes them impossible to drop,
+dupe or lose to a full inventory.
+
+| Command | What it does |
+|---|---|
+| `/arrowsadmin keys give <player> <amount>` | Adds keys. Alias: `keys add`. |
+| `/arrowsadmin keys take <player> <amount>` | Takes them away. Never below zero. Alias: `keys remove`. |
+| `/arrowsadmin keys set <player> <amount>` | Sets the number outright. |
+| `/arrowsadmin keys check <player>` | Prints what they hold. |
+
+Every one of them runs from console, which is how a shop, a vote listener, a crate key from another
+plugin or a rank reward hands keys out:
+
+```text
+/arrowsadmin keys give %player% 1
+```
+
+`crate.start-keys` is what a player is given the first time they are seen — written once, when the
+row is created, never again on later joins.
+
+## Opening it
+
+<Steps>
+  <Step title="Open the crate screen">
+    `/arrows crate`, the **EFFECT CRATE** button in the effects menu, or a crate block in the world.
+  </Step>
+  <Step title="Pick how many at once">
+    One key opens one crate. `crate.max-at-once` decides how many choices are offered, capped at
+    seven by the width of the opening screen.
+  </Step>
+  <Step title="Watch it fall">
+    One reel per crate, each landing `crate.stagger-seconds` after the one before it. What a reel
+    came within one slot of stays on screen, because half of what a crate is worth is the legendary
+    that went past the line.
+  </Step>
+</Steps>
+
+The roll itself is two rolls: a rarity by its weight, then an effect inside it with every effect
+equally likely. That is what makes the odds in the menu true — a legendary at three percent stays at
+three percent whether the file declares two legendaries or forty.
+
+<Callout type="note" title="Nothing is lost by closing the window">
+The keys are spent and the prizes written down before the first frame is drawn. A player who closes
+the window, disconnects or is kicked halfway through the fall has already won what they won, and it
+is said in chat.
+</Callout>
+
+## What a win is worth
+
+| Outcome | What happens |
+|---|---|
+| Something new | The effect is written onto the player's row, owned for good. With `crate.give-token` on, its token is handed over too, so it can be bound to a bow. |
+| Something already owned | `crate.duplicate-refund` keys are handed back instead. |
+| No keys | The crate says so and spends nothing. |
+| Nothing to hand over | A crate with no rarities, or none with effects in them, refuses rather than charging for the disappointment. |
+
+An effect is usable when **either** its permission node applies **or** the player won it. That is the
+whole difference between the two ways in: a node is a rank and stops when the rank does, a win is
+theirs.
+
+| Command | What it does |
+|---|---|
+| `/arrowsadmin unlocks grant <player> <effect>` | Marks an effect as won, without a crate. Alias: `unlocks give`. |
+| `/arrowsadmin unlocks revoke <player> <effect>` | Takes a won effect back, for a support ticket. Alias: `unlocks take`. |
+| `/arrowsadmin unlocks clear <player>` | Wipes what they won, for a new season. |
+
+## Crate blocks
+
+A block in the world that opens the crate when it is clicked: a barrel in the hub, an ender chest in
+every world, the statue somebody built.
+
+| Command | What it does |
+|---|---|
+| `/arrowsadmin crate block add` | Binds the block you are looking at. |
+| `/arrowsadmin crate block remove` | Unbinds it. |
+| `/arrowsadmin crate block list` | Prints every bound block. |
+| `/arrowsadmin crate block clear` | Unbinds all of them. |
+
+Bind them in game rather than by hand: the command writes the block you are looking at into
+`crate.blocks`, and a bound block cannot be broken, blown up or pushed away while it is on that
+list. A crate drawn as a barrel does not open a barrel either.
+
+The list lives in `config.yml`, not in the world, so the blocks survive a world edit, a schematic
+paste and a rollback — and a server that moves its hub only edits the list.
+
+## The two screens
+
+| File | What it draws |
+|---|---|
+| `menus/crate.yml` | The crate: how many keys the player holds, how much of the catalogue they have unboxed, and the one question of how many to open at once. |
+| `menus/crate_open.yml` | The crates opening: one reel per crate, falling down its own column, with the prize landing on the third row. |
+
+Both are ordinary Exylia menu files — slots, templates, sounds and actions. `crate.spin-frames`
+decides how long the first reel falls (capped at 200, about eleven seconds), and `crate.on-spin`,
+`crate.on-win` and `crate.on-duplicate` are full effect blocks: sound, title, action bar, boss bar,
+particle and firework.

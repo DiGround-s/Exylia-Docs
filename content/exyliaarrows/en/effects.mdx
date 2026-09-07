@@ -18,6 +18,7 @@ categories:
 arrow_effects:
   EMBER_TRAIL:
     category: ember
+    tier: common
     name: "<gradient:#FFD08A:#C43A10><bold>EMBER TRAIL</bold></gradient>"
     material: BLAZE_ROD
     description: "Coals come off the shaft, {highlight}tumble, and burn out{neutral} behind it."
@@ -36,6 +37,7 @@ arrow_effects:
 | Key | What it does |
 |---|---|
 | `category` | Which tab it appears under. Must be a key declared under `categories`. |
+| `tier` | How rare it is. Must be a key declared under `config.yml`'s `tiers`; without it the effect is common. It decides the colour it is named in, the odds of a crate landing on it, and what `exyliarrows.tier.<id>` grants. |
 | `name` | What menus and placeholders call it. |
 | `material` | The item the row is drawn with. |
 | `description` | A list is one line per entry; a single string breaks on `<nl>`. |

@@ -1,0 +1,168 @@
+---
+title: "Rarezas y la caja"
+description: "Las rarezas en las que se ordenan los efectos, las llaves que abren una caja y lo que el jugador se queda cuando cae."
+---
+
+Un efecto se vende normalmente como un nodo de permiso. La caja es la otra vía: una rareza decide
+cuán probable es, una llave paga una tirada, y lo que sale se escribe en la fila del propio jugador
+en vez de concederse como nodo — así que sobrevive al rango que nunca se lo dio.
+
+## Las rarezas
+
+El bloque `tiers` de `config.yml` las declara. Nada de las cuatro de abajo está fijado en el código:
+renómbralas, borra una, inventa `mythic`.
+
+```yaml
+tiers:
+  common:
+    name: "Common"
+    material: GRAY_DYE
+    color: "{muted}"
+    chance: 60.0
+    priority: 1
+  rare:
+    name: "Rare"
+    material: LIGHT_BLUE_DYE
+    color: "{info}"
+    chance: 25.0
+    priority: 2
+  epic:
+    name: "Epic"
+    material: PINK_DYE
+    color: "{accent}"
+    chance: 12.0
+    priority: 3
+  legendary:
+    name: "Legendary"
+    material: ORANGE_DYE
+    color: "{highlight}"
+    chance: 3.0
+    priority: 4
+```
+
+| Clave | Qué hace |
+|---|---|
+| `name` | Cómo la llaman los menús y los placeholders. |
+| `material` | El objeto con el que se dibuja la rareza. |
+| `color` | El color en el que se escriben su nombre y sus efectos. |
+| `chance` | Cada cuánto cae una caja en ella, **en relación con las demás rarezas**. |
+| `priority` | Dónde va en los menús; lo más bajo va primero. |
+
+Un efecto nombra su rareza con `tier` en `effects.yml`, y omitirla lo deja como común:
+
+```yaml title="effects.yml"
+INFERNO:
+  category: ember
+  tier: epic
+```
+
+<Callout type="note" title="chance es un peso, no un porcentaje">
+Las probabilidades se calculan desde los pesos cada vez que hacen falta, así que borrar una rareza
+reparte sus tiradas en vez de dejar un hueco, y unos pesos que suman siete son tan honestos como unos
+que suman cien. Una rareza para la que nada declara efectos se queda fuera de la tirada.
+</Callout>
+
+<Callout type="warning" title="Una rareza que ya no está le cuesta el color a sus efectos, nunca su existencia">
+Un efecto que nombra un `tier` que el archivo ya no declara cae en la primera rareza — la más barata
+en un archivo sensato. Renombrar `legendary` a `mythic` degrada a todos los legendarios en vez de
+borrarlos.
+</Callout>
+
+## Las llaves
+
+Las llaves no son un objeto. Viven en la fila del jugador, que es lo que hace imposible tirarlas,
+duplicarlas o perderlas por tener el inventario lleno.
+
+| Comando | Qué hace |
+|---|---|
+| `/arrowsadmin keys give <jugador> <cantidad>` | Añade llaves. Alias: `keys add`. |
+| `/arrowsadmin keys take <jugador> <cantidad>` | Se las quita. Nunca por debajo de cero. Alias: `keys remove`. |
+| `/arrowsadmin keys set <jugador> <cantidad>` | Fija la cantidad exacta. |
+| `/arrowsadmin keys check <jugador>` | Imprime cuántas tiene. |
+
+Todos corren desde consola, que es cómo las reparten una tienda, un listener de votos, una llave de
+otro plugin de cajas o una recompensa de rango:
+
+```text
+/arrowsadmin keys give %player% 1
+```
+
+`crate.start-keys` es lo que se le da a un jugador la primera vez que se le ve — escrito una sola
+vez, al crear su fila, nunca en las entradas siguientes.
+
+## Abrirlo
+
+<Steps>
+  <Step title="Abre la pantalla de la caja">
+    `/arrows crate`, el botón **EFFECT CRATE** del menú de efectos, o un bloque de caja en el mundo.
+  </Step>
+  <Step title="Elige cuántos a la vez">
+    Una llave abre una caja. `crate.max-at-once` decide cuántas opciones se ofrecen, con un tope de
+    siete por el ancho de la pantalla de apertura.
+  </Step>
+  <Step title="Mira cómo cae">
+    Un carrete por caja, cada uno parando `crate.stagger-seconds` después del anterior. Lo que un
+    carrete rozó por una casilla se queda en pantalla, porque la mitad de lo que vale una caja es el
+    legendario que pasó de largo.
+  </Step>
+</Steps>
+
+La tirada son en realidad dos: una rareza por su peso, y luego un efecto dentro de ella con todos
+igual de probables. Eso es lo que hace ciertas las probabilidades del menú — un legendario al tres
+por ciento sigue al tres por ciento tanto si el archivo declara dos legendarios como cuarenta.
+
+<Callout type="note" title="Cerrar la ventana no pierde nada">
+Las llaves se gastan y los premios se escriben antes de dibujar el primer frame. Quien cierre la
+ventana, se desconecte o sea expulsado a mitad de la caída ya ganó lo que ganó, y se le dice por
+chat.
+</Callout>
+
+## Cuánto vale un premio
+
+| Resultado | Qué pasa |
+|---|---|
+| Algo nuevo | El efecto se escribe en la fila del jugador, suyo para siempre. Con `crate.give-token` activo también se le entrega su ficha, para poder atarlo a un arco. |
+| Algo que ya tenía | Se le devuelven `crate.duplicate-refund` llaves. |
+| Sin llaves | La caja lo dice y no gasta nada. |
+| Nada que entregar | Una caja sin rarezas, o sin ninguna que tenga efectos, se niega en vez de cobrar por la decepción. |
+
+Un efecto se puede usar cuando **o bien** aplica su nodo de permiso **o bien** el jugador lo ganó.
+Esa es toda la diferencia entre las dos vías: un nodo es un rango y se acaba con él, lo ganado es
+suyo.
+
+| Comando | Qué hace |
+|---|---|
+| `/arrowsadmin unlocks grant <jugador> <efecto>` | Marca un efecto como ganado, sin caja. Alias: `unlocks give`. |
+| `/arrowsadmin unlocks revoke <jugador> <efecto>` | Le quita un efecto ganado, para un ticket de soporte. Alias: `unlocks take`. |
+| `/arrowsadmin unlocks clear <jugador>` | Borra lo que ganó, para una temporada nueva. |
+
+## Bloques de caja
+
+Un bloque del mundo que abre la caja al hacerle clic: un barril en el hub, un cofre del End en cada
+mundo, la estatua que construyó alguien.
+
+| Comando | Qué hace |
+|---|---|
+| `/arrowsadmin crate block add` | Ata el bloque que estás mirando. |
+| `/arrowsadmin crate block remove` | Lo desata. |
+| `/arrowsadmin crate block list` | Imprime todos los bloques atados. |
+| `/arrowsadmin crate block clear` | Los desata todos. |
+
+Átalos en el juego y no a mano: el comando escribe en `crate.blocks` el bloque que estás mirando, y
+un bloque atado no se puede romper, volar ni empujar mientras esté en esa lista. Una caja dibujada
+como barril tampoco abre un barril.
+
+La lista vive en `config.yml`, no en el mundo, así que los bloques sobreviven a un world edit, a
+pegar un esquema y a un rollback — y un servidor que mueve su hub solo edita la lista.
+
+## Las dos pantallas
+
+| Archivo | Qué dibuja |
+|---|---|
+| `menus/crate.yml` | La caja: cuántas llaves tiene el jugador, cuánto del catálogo lleva abierto, y la única pregunta de cuántas abrir a la vez. |
+| `menus/crate_open.yml` | Las cajas abriéndose: un carrete por caja, cayendo por su propia columna, con el premio parando en la tercera fila. |
+
+Ambos son archivos de menú de Exylia normales — casillas, plantillas, sonidos y acciones.
+`crate.spin-frames` decide cuánto cae el primer carrete (tope de 200, unos once segundos), y
+`crate.on-spin`, `crate.on-win` y `crate.on-duplicate` son bloques de efecto completos: sonido,
+título, action bar, boss bar, partícula y firework.

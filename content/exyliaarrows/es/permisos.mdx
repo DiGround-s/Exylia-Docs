@@ -1,6 +1,6 @@
 ---
 title: "Permisos"
-description: "Los cuatro tipos de nodo, y cómo se vende una categoría en una línea."
+description: "Los tipos de nodo, cómo se vende una categoría en una línea, y los efectos que entrega una caja."
 ---
 
 ## Los nodos
@@ -12,9 +12,10 @@ description: "Los cuatro tipos de nodo, y cómo se vende una categoría en una l
 | `exyliarrows.effect.<id>` | Un efecto, por su id en minúscula. |
 | `exyliarrows.effect.*` | Todos los efectos. |
 | `exyliarrows.category.<id>` | Todos los efectos de esa categoría. |
+| `exyliarrows.tier.<id>` | Todos los efectos de esa rareza. |
 
-Un efecto se tiene si aplica **cualquiera** de los tres nodos de efecto: el suyo, el comodín o el de su
-categoría.
+Un efecto se tiene si aplica **cualquiera** de los cuatro nodos de efecto: el suyo, el comodín, el de
+su categoría o el de su rareza — o si el jugador lo ganó en la caja.
 
 ## El id es el nodo
 
@@ -23,6 +24,7 @@ No hay clave `permission` en `effects.yml`. El nodo sale de la clave, en minúsc
 ```text
 EMBER_TRAIL  →  exyliarrows.effect.ember_trail
 ember        →  exyliarrows.category.ember
+legendary    →  exyliarrows.tier.legendary
 ```
 
 Las mayúsculas no cuentan, así que recapitalizar una clave no cambia nada. Renombrarla lo cambia todo:
@@ -34,6 +36,7 @@ es otro nodo, y quien tuviera el viejo pierde el efecto.
 /lp group default permission set exyliarrows.command.arrows true
 /lp group vip     permission set exyliarrows.category.ember true
 /lp group mvp     permission set exyliarrows.effect.ember_trail true
+/lp group elite   permission set exyliarrows.tier.legendary true
 /lp group legend  permission set exyliarrows.effect.* true
 ```
 
@@ -66,7 +69,14 @@ venta no puede quererlo.
   </Step>
 </Steps>
 
-<Callout type="note" title="Un arco atada no se vuelve a comprobar">
+<Callout type="tip" title="Lo que entrega la caja no es un nodo">
+Un efecto ganado en la caja se escribe en la fila del propio jugador, así que sobrevive al rango que
+nunca tuvo y `validate` nunca se lo quita. Los nodos de rareza y la caja son dos formas de vender la
+misma estantería: una se alquila con un rango, la otra se queda. Ver [Rarezas y el
+caja](/docs/exyliaarrows/caja).
+</Callout>
+
+<Callout type="note" title="Un arco atado no se vuelve a comprobar">
 El nodo se pide cuando se ata la ficha, nunca después. A partir de ahí el efecto es del arco: suena
 para quien la tenga en la mano, incluso para alguien que nunca tuvo el nodo — que es justamente la
 gracia de un efecto que se puede comerciar. Lo que gobiernan los permisos del lado del arco es quién

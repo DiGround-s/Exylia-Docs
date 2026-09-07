@@ -26,14 +26,15 @@ effect puts at least one solid object on screen.
 An arrow lives about forty ticks and four archers are four arrows in the air, so whatever `trail`
 writes is drawn on every one of those ticks, for every shot.
 
-## Two ways to own an effect
+## Three ways to own an effect
 
 | Way | Whose it is | Which server it suits |
 |---|---|---|
 | **The menu** | The player's: they pick one in `/arrows` and it plays on whatever they shoot. | Practice, PvP |
 | **A bow** | The bow's: an effect token is dropped onto a bow and travels with it through chests, trades and deaths. | Survival, economy |
+| **The crate** | Theirs for good: a key buys a roll, a rarity decides the odds, and what comes out is written onto their row rather than rented with a rank. | Anywhere keys are already a currency |
 
-`behaviour.mode` decides which is read — `player`, `bow` or `both` — and is covered in
+`behaviour.mode` decides which of the first two is read — `player`, `bow` or `both` — and is covered in
 [Modes and tokens](/docs/exyliaarrows/modes-and-tokens).
 
 ## The categories

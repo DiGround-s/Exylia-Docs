@@ -33,12 +33,54 @@ description: "From a clean server to a player with an effect on their shots."
 it to `false` and only `projectiles.default-allowed-types` do.
 </Callout>
 
+## The preview stage
+
+<Steps>
+  <Step title="Stand where previews should play">
+    An empty room, a corner of the hub, a platform in the void — anywhere a player can watch an
+    effect without watching the rest of the server.
+  </Step>
+  <Step title="Set it">
+    ```text
+    /arrowsadmin preview location
+    ```
+    Until this is set, `/arrows preview` and the menu's right click say previews are unavailable
+    rather than playing an effect somewhere nobody can see it.
+  </Step>
+</Steps>
+
+## The crate path
+
+<Steps>
+  <Step title="Hand out a key">
+    ```text
+    /arrowsadmin keys give <player> 1
+    ```
+    Keys are virtual, so this runs from console: a shop, a vote listener or a rank reward hands them
+    out the same way.
+  </Step>
+  <Step title="Open it">
+    `/arrows crate`, or the **EFFECT CRATE** button in the menu. A rarity is rolled by its weight,
+    then an effect inside it.
+  </Step>
+  <Step title="Put a crate block in the hub">
+    ```text
+    /arrowsadmin crate block add
+    ```
+    Binds the block you are looking at. It cannot be broken, blown up or pushed away while it is
+    bound.
+  </Step>
+</Steps>
+
+What comes out is written onto the player's row, so it is theirs whether or not a rank ever granted
+it — see [Rarities and the crate](/docs/exyliaarrows/crate).
+
 ## The bow path
 
 <Steps>
   <Step title="Give a token">
     ```text
-    /arrowsadmin give <player> ember_trail 1
+    /arrowsadmin item give <player> ember_trail 1
     ```
   </Step>
   <Step title="Drop it onto a bow">
@@ -47,7 +89,7 @@ it to `false` and only `projectiles.default-allowed-types` do.
   </Step>
   <Step title="Take it off again">
     ```text
-    /arrowsadmin remover <player>
+    /arrowsadmin item remover <player>
     ```
     The remover unbinds the effect and hands the token back, so nothing is destroyed.
   </Step>
@@ -57,7 +99,8 @@ it to `false` and only `projectiles.default-allowed-types` do.
 
 | Question | How to answer it |
 |---|---|
-| Is the effect there? | `/arrows preview <id>` — all three moments play against an empty sky. |
+| Is the effect there? | `/arrows preview <id>` — all three moments play on the preview stage. |
 | Does the bow carry one? | Its line is drawn under the bow's own lore. |
-| Did a permission take? | `/arrowsadmin validate <player>` takes off what they may no longer use, now. |
+| Did a permission take? | `/arrowsadmin player validate <player>` takes off what they may no longer use, now. |
 | Did the file load? | `/arrowsadmin list` prints every effect the catalogue declares. |
+| How many keys do they hold? | `/arrowsadmin keys check <player>`. |
