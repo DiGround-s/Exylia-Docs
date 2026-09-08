@@ -12,7 +12,7 @@ crate:
   enabled: true
   start-keys: 0
   duplicate-refund: 1
-  give-token: false
+  reward: UNLOCK
   blocks: []
   max-at-once: 4
   spin-frames: 34
@@ -102,8 +102,22 @@ vea.
 Un carrete que cae en algo que el jugador ya tiene devuelve `duplicate-refund` llaves. En `0` un
 duplicado no vale nada; en `1` un duplicado es un reintento gratis.
 
-Con `give-token: true` una ganancia también entrega la ficha del efecto, para poder atarlo a un arma.
-Vale la pena encenderlo donde `behaviour.mode` sea `weapon` o `both`.
+## Qué entrega una ganancia
+
+`reward` decide con qué paga la caja. Son dos economías distintas:
+
+| `reward` | Qué recibe el jugador |
+|---|---|
+| `UNLOCK` | El efecto queda desbloqueado en su cuenta y se elige desde `/hiteffect`. No se puede comerciar ni perder. |
+| `ITEM` | Solo la ficha, para atarla a un arma, venderla o regalarla. No se desbloquea nada. |
+| `BOTH` | Desbloqueado en la cuenta, y entregado como ficha además. |
+
+`ITEM` y `BOTH` quieren `behaviour.mode` en `weapon` o `both` — si no, una ficha no tiene adónde ir.
+
+<Callout type="note" title="`ITEM` no tiene duplicados">
+Con `ITEM` no se desbloquea nada, así que un carrete nunca cae en algo que ya se tiene. Toda apertura
+es una ganancia, toda llave paga, y `duplicate-refund` nunca aplica.
+</Callout>
 
 ## Bloques de caja
 

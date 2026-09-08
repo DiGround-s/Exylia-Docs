@@ -48,7 +48,7 @@ needs `exyliahiteffect.command.hiteffect`.
 | `menu open <player>` | Opens the effect menu for someone. |
 | `menu crate <player>` | Opens the crate for someone. |
 | `preview play <effect> [player]` | Previews an effect, for yourself or for someone else. |
-| `preview location` | Sets the preview stage to where you stand, facing what you face. |
+| `preview location` | Sets the preview stage to where you stand. |
 | `list [category]` | Prints every effect, or just one category's. |
 | `refresh [player]` | Redraws what a player is holding. With no player, everyone online. |
 | `reload` | Re-reads this plugin's files. |
@@ -88,8 +88,9 @@ Previews play on a stage rather than on top of the player: they are moved there,
 front of them where only they can see it, and they are put back exactly where they were. Until a stage
 is set, `/hiteffect preview` says previews are unavailable — and tells an admin how to set one.
 
-Stand where the preview should happen, face the way it should be watched, and run it. The location is
-written to `config.yml` as `preview.location`.
+Stand where the preview should happen and run it. Only the position is taken: a preview always faces
+north, so every effect is seen from the side it was drawn for — leave the north side of the room open.
+The location is written to `config.yml` as `preview.location`.
 
 ### `refresh`
 

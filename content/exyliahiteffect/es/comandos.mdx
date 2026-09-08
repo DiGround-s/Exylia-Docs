@@ -48,7 +48,7 @@ description: "Lo que un jugador puede hacer con su efecto, y los verbos de admin
 | `menu open <jugador>` | Le abre el menú de efectos a alguien. |
 | `menu crate <jugador>` | Le abre la caja a alguien. |
 | `preview play <efecto> [jugador]` | Previsualiza un efecto, para ti o para otro. |
-| `preview location` | Fija el escenario de previsualización donde estás parado, mirando a donde miras. |
+| `preview location` | Fija el escenario de previsualización donde estás parado. |
 | `list [categoría]` | Imprime todos los efectos, o los de una categoría. |
 | `refresh [jugador]` | Redibuja lo que un jugador tiene en la mano. Sin jugador, a todos los conectados. |
 | `reload` | Relee los archivos de este plugin. |
@@ -88,8 +88,9 @@ Las previsualizaciones ocurren en un escenario, no encima del jugador: se lo lle
 lanza delante de él donde solo él lo ve, y vuelve exactamente a donde estaba. Hasta que haya un
 escenario, `/hiteffect preview` dice que no hay previsualización — y a un admin le dice cómo ponerla.
 
-Párate donde debe ocurrir, mira hacia donde debe verse, y corre el comando. La ubicación se escribe en
-`config.yml` como `preview.location`.
+Párate donde debe ocurrir y corre el comando. Solo se toma la posición: una previsualización siempre
+mira al norte, así que cada efecto se ve desde el lado para el que fue dibujado — dejá libre el lado
+norte de la sala. La ubicación se escribe en `config.yml` como `preview.location`.
 
 ### `refresh`
 

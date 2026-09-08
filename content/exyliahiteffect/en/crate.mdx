@@ -12,7 +12,7 @@ crate:
   enabled: true
   start-keys: 0
   duplicate-refund: 1
-  give-token: false
+  reward: UNLOCK
   blocks: []
   max-at-once: 4
   spin-frames: 34
@@ -101,8 +101,23 @@ the legendary that went past the line, and a column that wipes itself never lets
 A reel that stops on something the player already owns hands back `duplicate-refund` keys instead.
 Set it to `0` and a duplicate is worth nothing; set it to `1` and a duplicate is a free retry.
 
-With `give-token: true` a win also hands over the effect's token, so it can be bound to a weapon.
-Worth turning on where `behaviour.mode` is `weapon` or `both`.
+## What a win hands over
+
+`reward` decides what a crate pays out. They are two different economies:
+
+| `reward` | What the player gets |
+|---|---|
+| `UNLOCK` | The effect is unlocked on their account and picked from `/hiteffect`. It cannot be traded or lost. |
+| `ITEM` | Only the token, to be bound to a weapon, sold or given away. Nothing is unlocked. |
+| `BOTH` | Unlocked on the account, and handed over as a token as well. |
+
+`ITEM` and `BOTH` want `behaviour.mode` set to `weapon` or `both` — a token has nowhere to go
+otherwise.
+
+<Callout type="note" title="`ITEM` has no duplicates">
+Nothing is unlocked under `ITEM`, so a reel can never stop on something already owned. Every opening
+is a win, every key pays out, and `duplicate-refund` never applies.
+</Callout>
 
 ## Crate blocks
 

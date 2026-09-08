@@ -135,7 +135,7 @@ crate:
   enabled: true
   start-keys: 0
   duplicate-refund: 1
-  give-token: false
+  reward: UNLOCK
   blocks: []
   max-at-once: 4
   spin-frames: 34
@@ -159,11 +159,14 @@ crate:
 | `enabled` | `true` | Si la caja se abre. Apagada, su botón lo dice. |
 | `start-keys` | `0` | Llaves que recibe un jugador la primera vez que se lo ve. |
 | `duplicate-refund` | `1` | Llaves que se devuelven cuando la caja cae en algo que ya tenía. |
-| `give-token` | `false` | Si ganar un efecto también entrega su ficha. |
+| `reward` | `UNLOCK` | Qué entrega una ganancia: `UNLOCK`, `ITEM` o `BOTH`. |
 | `blocks` | vacío | Bloques que abren la caja, como `server,world,x,y,z,yaw,pitch`. |
 | `max-at-once` | `4` | Cuántas cajas se pueden abrir de una vez. La pantalla la limita a siete. |
 | `spin-frames` | `34` | Caras por las que pasa el primer carrete. Tope 200, unos once segundos. |
 | `stagger-seconds` | `2.0` | Cuánto después de un carrete se detiene el siguiente. `0` los para juntos. |
+| `on-spin` | note block hat | Suena mientras caen los carretes. |
+| `on-win` | level up | Suena en el momento en que un carrete cae en algo nuevo, una vez por caja. |
+| `on-duplicate` | note block bass | Suena en cambio cuando ese carrete cayó en algo que ya se tenía. |
 
 <Callout type="tip" title="Atá los bloques en el juego">
 `/hiteffectsadmin crate block add` escribe el bloque que estás mirando. Un bloque atado no se puede
