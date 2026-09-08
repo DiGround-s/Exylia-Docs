@@ -120,8 +120,8 @@ is said in chat.
 
 | Outcome | What happens |
 |---|---|
-| Something new | The effect is written onto the player's row, owned for good. With `crate.give-token` on, its token is handed over too, so it can be bound to a bow. |
-| Something already owned | `crate.duplicate-refund` keys are handed back instead. |
+| Something new | Whatever `crate.reward` says: `UNLOCK` writes the effect onto the player's row, owned for good; `ITEM` hands over only its token, to be bound to a bow, sold or given away; `BOTH` does both. |
+| Something already owned | `crate.duplicate-refund` keys are handed back instead. Under `ITEM` nothing is unlocked, so no opening is ever a duplicate and every key pays out. |
 | No keys | The crate says so and spends nothing. |
 | Nothing to hand over | A crate with no rarities, or none with effects in them, refuses rather than charging for the disappointment. |
 
@@ -164,4 +164,5 @@ paste and a rollback — and a server that moves its hub only edits the list.
 Both are ordinary Exylia menu files — slots, templates, sounds and actions. `crate.spin-frames`
 decides how long the first reel falls (capped at 200, about eleven seconds), and `crate.on-spin`,
 `crate.on-win` and `crate.on-duplicate` are full effect blocks: sound, title, action bar, boss bar,
-particle and firework.
+particle and firework. They play as each reel lands rather than once at the end, so four crates
+opened together read as four prizes, each with its own sound and its own line in chat.

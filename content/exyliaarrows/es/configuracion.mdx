@@ -159,7 +159,7 @@ crate:
   enabled: true
   start-keys: 0
   duplicate-refund: 1
-  give-token: false
+  reward: UNLOCK
   blocks: []
   max-at-once: 4
   spin-frames: 34
@@ -183,12 +183,12 @@ crate:
 | `enabled` | `true` | Si la caja se puede abrir. Apagado, su botón lo dice en vez de abrir. |
 | `start-keys` | `0` | Llaves que se le dan a un jugador la primera vez que se le ve, al crear su fila. |
 | `duplicate-refund` | `1` | Llaves que se devuelven cuando una caja cae en un efecto que ya tenía. |
-| `give-token` | `false` | Si ganar un efecto entrega también su ficha. Interesa donde `behaviour.mode` sea `bow` o `both`. |
+| `reward` | `UNLOCK` | Qué entrega la caja. `UNLOCK` deja el efecto en la cuenta, `ITEM` entrega solo su ficha, `BOTH` hace las dos. `ITEM` y `BOTH` quieren `behaviour.mode` en `bow` o `both`. |
 | `blocks` | vacío | Los bloques que abren la caja al hacerles clic. Átalos con `/arrowsadmin crate block add`, no a mano. |
 | `max-at-once` | `4` | Cuántas cajas se pueden abrir de una vez. La pantalla de apertura cabe siete. |
 | `spin-frames` | `34` | Cuántas caras recorre el primer carrete antes de parar. Tope de 200, unos once segundos. |
 | `stagger-seconds` | `2.0` | Cuánto tarda un carrete en parar después del anterior. `0` los para juntos. |
-| `on-spin` / `on-win` / `on-duplicate` | sonidos | Bloques de efecto completos de ExyliaLib: título, action bar, boss bar, sonido, partícula y firework. |
+| `on-spin` / `on-win` / `on-duplicate` | sonidos | Bloques de efecto completos de ExyliaLib: título, action bar, boss bar, sonido, partícula y firework. `on-win` y `on-duplicate` suenan una vez por carrete, al parar. |
 
 ## `preview`
 

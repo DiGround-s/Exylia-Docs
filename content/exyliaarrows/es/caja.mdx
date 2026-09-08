@@ -121,8 +121,8 @@ chat.
 
 | Resultado | Qué pasa |
 |---|---|
-| Algo nuevo | El efecto se escribe en la fila del jugador, suyo para siempre. Con `crate.give-token` activo también se le entrega su ficha, para poder atarlo a un arco. |
-| Algo que ya tenía | Se le devuelven `crate.duplicate-refund` llaves. |
+| Algo nuevo | Lo que diga `crate.reward`: `UNLOCK` escribe el efecto en la fila del jugador, suyo para siempre; `ITEM` entrega solo su ficha, para atarla a un arco, venderla o regalarla; `BOTH` hace las dos. |
+| Algo que ya tenía | Se le devuelven `crate.duplicate-refund` llaves. Con `ITEM` no se desbloquea nada, así que ninguna apertura es duplicada y todas las llaves pagan. |
 | Sin llaves | La caja lo dice y no gasta nada. |
 | Nada que entregar | Una caja sin rarezas, o sin ninguna que tenga efectos, se niega en vez de cobrar por la decepción. |
 
@@ -165,4 +165,6 @@ pegar un esquema y a un rollback — y un servidor que mueve su hub solo edita l
 Ambos son archivos de menú de Exylia normales — casillas, plantillas, sonidos y acciones.
 `crate.spin-frames` decide cuánto cae el primer carrete (tope de 200, unos once segundos), y
 `crate.on-spin`, `crate.on-win` y `crate.on-duplicate` son bloques de efecto completos: sonido,
-título, action bar, boss bar, partícula y firework.
+título, action bar, boss bar, partícula y firework. `on-win` y `on-duplicate` suenan según para cada
+carrete y no una sola vez al final, así que cuatro cajas abiertas juntas se leen como cuatro premios,
+cada uno con su sonido y su línea en el chat.

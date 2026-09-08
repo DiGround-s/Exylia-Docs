@@ -158,7 +158,7 @@ crate:
   enabled: true
   start-keys: 0
   duplicate-refund: 1
-  give-token: false
+  reward: UNLOCK
   blocks: []
   max-at-once: 4
   spin-frames: 34
@@ -182,12 +182,12 @@ crate:
 | `enabled` | `true` | Whether the crate can be opened at all. Off, its button says so instead of opening. |
 | `start-keys` | `0` | Keys a player is given the first time they are seen, written once when their row is created. |
 | `duplicate-refund` | `1` | Keys handed back when a crate lands on an effect they already own. |
-| `give-token` | `false` | Whether winning an effect also hands over its token. Worth turning on where `behaviour.mode` is `bow` or `both`. |
+| `reward` | `UNLOCK` | What a crate hands over. `UNLOCK` keeps the effect on the account, `ITEM` hands over only its token, `BOTH` does both. `ITEM` and `BOTH` want `behaviour.mode` set to `bow` or `both`. |
 | `blocks` | empty | The blocks that open the crate when clicked. Bind them with `/arrowsadmin crate block add` rather than by hand. |
 | `max-at-once` | `4` | How many crates may be opened in one go. The opening screen fits seven. |
 | `spin-frames` | `34` | How many faces the first reel runs through before it stops. Capped at 200, about eleven seconds. |
 | `stagger-seconds` | `2.0` | How long after one reel stops the next one does. `0` stops them together. |
-| `on-spin` / `on-win` / `on-duplicate` | sounds | Full ExyliaLib effect blocks: title, action bar, boss bar, sound, particle and firework. |
+| `on-spin` / `on-win` / `on-duplicate` | sounds | Full ExyliaLib effect blocks: title, action bar, boss bar, sound, particle and firework. `on-win` and `on-duplicate` play once per reel, as it lands. |
 
 ## `preview`
 
