@@ -24,19 +24,46 @@ rewards.give(player, config.winnerRewards(), context);
 | `claim(player, callback)` | Entregar lo que se le debía. |
 | `editor(rewards)` | El editor de lista en el juego. |
 | `overflow(policy)` | Qué pasa cuando el inventario está lleno. |
+| `claimOnJoin(then)` | Vacía la cola en cada entrada, sin escribir un listener. |
 | `pending(store)` | Dónde se guardan las recompensas pendientes. |
 
 ### Desconectado no es premio perdido
 
-`giveLater` escribe en el `PendingRewards` que le hayas pasado — normalmente una tabla tuya — y `claim`
-lo vacía en la siguiente conexión del jugador. La cola se limpia **antes** de entregar y no después,
-así que un fallo a mitad de entrega no puede duplicar una recompensa la próxima vez.
+`giveLater` escribe en un `PendingRewards` y `claim` lo vacía en la siguiente conexión del jugador. La
+cola se limpia **antes** de entregar y no después, así que un fallo a mitad de entrega no puede
+duplicar una recompensa la próxima vez.
+
+Tres líneas son la cola entera, tabla y listener de entrada incluidos:
+
+```java
+rewards = Rewards.of(this)
+        .overflow(OverflowPolicy.QUEUE)
+        .pending(PendingRewards.database(this))
+        .claimOnJoin((player, delivery) -> messages.claimed(player, delivery.given()));
+```
+
+`PendingRewards.database(plugin)` escribe en `exylia_pending_rewards` **en la base de datos de tu
+propio plugin** — la que diga `plugins/<Plugin>/database.yml`, H2 en un archivo por defecto. ExyliaLib
+no tiene base de datos propia y nunca abre una. Dos plugins apuntando a la misma base comparten tabla
+y se distinguen por la columna que los nombra. Un jugador tiene tope de 200 lotes pendientes por
+plugin; pasado eso la escritura se rechaza y se dice una vez en consola: una cola es donde un bug
+escribe en bucle.
+
+Sigue implementando `PendingRewards` a mano cuando las filas ya existen en otro sitio — ExyliaCapture
+y ExyliaEvents tienen cada uno su tabla, y ninguno tuvo que migrar por esto.
+
+<Callout type="warning" title="`keep` corre en el hilo que debía la recompensa">
+Escribir en la base de datos ahí mismo es un parón en el hilo principal. El store de arriba programa
+la escritura él solo; uno escrito a mano tiene que llamar a `Tasks.of(plugin).runAsync(...)` y volver.
+`claim` es lo contrario — ya está fuera del hilo principal, así que lee directo.
+</Callout>
 
 ### Desbordamiento
 
-`OverflowPolicy` decide qué significa un inventario lleno: soltar a los pies, dejarlo pendiente, o
-rechazar. Elegirlo por plugin es la gracia — una caja debería soltar, un premio de evento debería
-esperar.
+`OverflowPolicy` decide qué significa un inventario lleno: soltar a los pies, encolarlo o rechazar.
+Elegirlo por plugin es la gracia — un drop de mob puede caer al suelo, un premio de caja debería
+esperar. `QUEUE` necesita un `pending`; sin él suelta y lo dice, porque pedir encolar es pedir no
+perderlo.
 
 ## Loot
 

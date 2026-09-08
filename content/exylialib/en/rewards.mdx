@@ -25,17 +25,44 @@ rewards.give(player, config.winnerRewards(), context);
 | `editor(rewards)` | The in-game list editor. |
 | `overflow(policy)` | What happens when the inventory is full. |
 | `pending(store)` | Where owed rewards are kept. |
+| `claimOnJoin(then)` | Drain the queue on every join, without writing a listener. |
 
 ### Offline is not a lost prize
 
-`giveLater` writes into whatever `PendingRewards` store you handed in — usually a table of your own —
-and `claim` empties it on the player's next join. The queue is cleared **before** delivery rather than
-after, so a failure mid-delivery cannot duplicate a reward next time.
+`giveLater` writes into a `PendingRewards` store and `claim` empties it on the player's next join. The
+queue is cleared **before** delivery rather than after, so a failure mid-delivery cannot duplicate a
+reward next time.
+
+Three lines is the whole queue, table and join listener included:
+
+```java
+rewards = Rewards.of(this)
+        .overflow(OverflowPolicy.QUEUE)
+        .pending(PendingRewards.database(this))
+        .claimOnJoin((player, delivery) -> messages.claimed(player, delivery.given()));
+```
+
+`PendingRewards.database(plugin)` writes to `exylia_pending_rewards` **in your own plugin's database**
+— whatever `plugins/<Plugin>/database.yml` says, H2 in a file by default. ExyliaLib has no database of
+its own and never opens one. Two plugins pointed at the same database share the table and are told
+apart by the column naming them. One player is capped at 200 waiting batches per plugin, past which
+the write is refused and said once in the console: a queue is where a bug writes in a loop.
+
+Keep implementing `PendingRewards` yourself when the rows already exist somewhere — ExyliaCapture and
+ExyliaEvents each keep their own table, and neither had to migrate for this.
+
+<Callout type="warning" title="`keep` runs on the thread that owed the reward">
+Writing to a database inline there is a stall on the main thread. The store above schedules the write
+itself; a hand-written one must call `Tasks.of(plugin).runAsync(...)` and return. `claim` is the
+opposite — it is already off the main thread, so read directly.
+</Callout>
 
 ### Overflow
 
-`OverflowPolicy` decides what a full inventory means: drop at the player's feet, keep it pending, or
-refuse. Choosing per plugin is the point — a crate should drop, an event prize should wait.
+`OverflowPolicy` decides what a full inventory means: drop at the player's feet, queue it, or refuse.
+Choosing per plugin is the point — a mob drop can fall on the floor, a crate prize should wait. `QUEUE`
+needs a `pending` store; without one it drops instead and says so, because asking to queue is asking
+not to lose it.
 
 ## Loot
 

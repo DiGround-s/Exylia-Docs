@@ -20,18 +20,19 @@ scripts/doc-drift.sh exyliaevents # just one
 | `exyliaarrows` | `ExyliaArrows` | 1.0.5 | `2a7335b` 2026-09-03 | Current — rewritten for the 120 display-driven effects, the three triggers, tokens, the menu and the `arrows-effects` flag. |
 | `exyliacapture` | `ExyliaCapture` | 1.1.0 | `c8c2ec7` 2026-09-02 | Current — typed durations noted. The database indexes and the admin menu layout were not worth a page. |
 | `exyliachatcosmetics` | `ExyliaChatCosmetics` | 1.0.0 | `e1bf009` 2026-09-07 | Current — first full documentation: the shipped catalogue (180 tags in seven tabs, 90 nick, 96 chat, 90 shadow and 77 rank colours, 18 fonts, 5 modifiers, 18 animations), tag marks as sprites, particles and head skins with the 1.21.9 ceiling, the four custom kinds and the create/edit token economy, entitlements and expiry, the menus, and the whole built-in chat module across five pages, mentions included: a name is a mention with or without the `@`, and the nudge ships as a sound alone. Written against the source: the repository's own `docs/` predates the current catalogue by twelve commits. |
-| `exyliaclans` | `ExyliaClans` | 1.0.1 | `94c78fe` 2026-08-31 | Current. |
+| `exyliaclans` | `ExyliaClans` | 1.1.0 | `7d014e2` 2026-09-08 | Current — reviewed for 1.1.0. `visibility-mode` now ships as `DISABLED` and has five values; the kick truce, the cross-server clan home, the 32-character role-name clean, the level-table bounds and the configurable `placeholders.na` / `placeholders.none` fallbacks are documented. Corrected against the source: the DTR regeneration arithmetic, `setdtr` having no lower clamp and clearing the freeze, the backfill running on every start, an expired regroup point still teleporting whoever is counting down, `pillar-duration-seconds` and the camp `duration-seconds` being inert, the sneak-any-click claim confirm, the camelCase columns, and SQLite never having been a backend. The standalone reflection jar is named on the API page. |
 | `exyliaclasses` | `ExyliaClasses` | 1.0.0 | `d48bfe0` 2026-08-31 | Current — the only change since was a database index. |
 | `exyliaevents` | `ExyliaEvents` | 1.2.0 | `3c6b6aa` 2026-09-02 | 49 types, gauntlets, the 33 Mace Roulette modifiers, PvP during the hunt, the shrinking floor and event chat isolation. The 1.3.0 statistics and leaderboard placeholders are documented ahead of the rest (`fb7782d`). **Gap:** everything else in 1.3.0 — the team King of the Hill event, one dodgeball ball per player, hidden names in Hide & Seek, the TNT Run block break, 15 more trivia questions and the move of player-facing text into `messages.yml`. |
 | `exyliaffa` | `ExyliaFFA` | 1.1.1 | `569a4f1` 2026-09-02 | Current — arena chat isolation and duration inputs documented. |
 | `exyliahiteffect` | `ExyliaHitEffect` | 1.0.10 | `1fe222a` 2026-09-03 | Current. |
 | `exyliakilleffect` | `ExyliaKillEffect` | 1.3.0 | `1dd9f79` 2026-09-08 | Current — the 183 effects in seven categories, the Ragdoll category and the `[RAGDOLL]` step 161 of them are built on, `crate.reward` (`UNLOCK`/`ITEM`/`BOTH`) in place of `give-token`, the per-reel win and duplicate effects, and the preview stage taking only the position. |
-| `exylialib` | `ExyliaLib` | 1.126.0 | `b5c6a32` 2026-09-08 | Current — chat rules, cosmetic rules, the display ceiling, region flags, log cleanup, the extra NPC motion, and the ragdoll module: a body cut into its six parts, in eleven poses. |
+| `exylialib` | `ExyliaLib` | 1.128.0 | `4325202` 2026-09-08 | Current — chat rules, cosmetic rules, the display ceiling, region flags, log cleanup, the extra NPC motion, the ragdoll module (a body cut into its six parts, in eleven poses), and the pending-reward store the library keeps with `claimOnJoin`. |
 | `exyliapractice` | `ExyliaPracticeCore` | 1.0.0 | `a8b3bf6` 2026-09-03 | Arena usages, the short `practice` identifier, `total_bot_players` and typed kit-rule durations documented. **Gap:** the Bot PvP module has no page at all — difficulties, its menus and `bot-name`/`bot-skin` are undocumented. |
 | `exyliapracticebot` | `ExyliaPracticeBotV3` | 1.2.2 | `20ca313` 2026-09-06 | Current — first full documentation: the seven combat models and their per-mode config, the five-rung skill ladder, the gear and buffs a player tunes, both menu files and the eleven `practicebot` actions, attack/follow and the three automatic removals, `max-bots` against the slider bounds, and the API. Written against the source, not the config comments: two of those are stale (see below). |
+| `exyliasandbox` | `ExyliaSandBox` | 1.0.3 | `7e6b005` 2026-09-06 | Current — first full documentation, eighteen pages: the generated worlds and their five terrain presets, the RTP and its 1v1 queue matcher, kits and the permission tier that counts down from 100, the kit room, the teleport pads, the admin panel, the nineteen menus, the seven tables and `SandBoxService`. Two things are documented as broken rather than as promised: the kit-room category editor never writes back, and finishing a pre-generation shuts the server down. |
 | `exyliashields` | `ExyliaShields` | 1.0.4 | `83a54f9` 2026-09-01 | Current — the only change since was a database index. |
 | `exyliastaff` | `ExyliaStaff` | 1.3.1 | `5434a74` 2026-09-08 | Current — reviewed for 1.3.0. Four module pages added: inventory restore (causes, retention, the five screens, the eleven parts and the offline queue), reveal, AFK and the action bar. The staff armour is no longer really worn: it is stated to the players around the wearer as an overlay, corrected on **Staff mode** and **First steps**. Left out on purpose: global chat, which is one hotbar button and three modes, and the scoreboard, documented inside **Staff mode**. |
-| `exyliasurvivalcore` | `ExyliaSurvivalCore` | 1.0.6 | `1e1dc33` 2026-09-02 | Current for the two pages that exist (placeholders, permissions). The plugin is not finished, and the rest of its documentation is deliberately unwritten. |
+| `exyliasurvivalcore` | `ExyliaSurvivalCore` | 1.1.2 | `0a08aea` 2026-09-08 | Current — first full documentation, sixteen pages added to the three that existed. The thirty-two modules grouped into eight pages, the fifty-eight menus and which folder survives a reload, the thirty-one tables, the commands, the generated files and the crates module in full. Written against the source, not the config comments: four of those are stale and are documented as such (see below). The permissions and placeholders pages were corrected for the crates and player-settings nodes and for the stat ids. |
 | `exyliatotemtrainer` | `ExyliaTotemTrainer` | 1.0.0 | `6ec68a0` 2026-09-04 | Current — first full documentation: the six shipped modes as four choices, grading and score, duels with draws and the even-format rule, arenas from the admin menu, per-mode leaderboards, the `totem_` PlaceholderAPI spelling. Blackout and `close-inventory` documented. |
 
 ## The API pages
@@ -51,7 +52,8 @@ ExyliaLib `befa514` — release tag `v1.113.0`, the tag JitPack builds and the o
 | Rewritten | The 14 plugins that already had an API page. |
 | New | `exyliasurvivalcore`, which had none and now publishes 31 methods and 6 cancellable events. Registered in `SURVIVALCORE_NAV`. |
 | Added later | `exyliachatcosmetics` (`CosmeticsService` and `ChatService`) and `PracticeBotService`, which the artifact already published but the hub table had not listed. |
-| Not documented | ExyliaBetCore, ExyliaSandBox, ExyliaSpecialsV3, ExyliaPearls and ExyliaTotems all publish a service, but have no documentation set on this site at all. They are absent from the hub's service table for that reason. |
+| Added later | `exyliasandbox` (`SandBoxService`), once that plugin's set was written. |
+| Not documented | ExyliaBetCore, ExyliaSpecialsV3, ExyliaPearls and ExyliaTotems all publish a service, but have no documentation set on this site at all. They are absent from the hub's service table for that reason. |
 
 The source of truth for these pages is
 `~/Java/Exylia/ExyliaLib/exylia-api/src/main/java/net/exylia/lib/api/`, not the plugin repositories:
@@ -118,3 +120,51 @@ that moved; a rule a player can feel; a limit an owner can hit.
   short group prefix (`staff_`, `totem_`, `classes_`) is a different case: the reference page writes the
   PlaceholderAPI form, and the pages that document that plugin's own YAML keep the registered name and
   say once why the two differ.
+
+### What ExyliaSandBox does that the docs call out rather than promise
+
+Both are behaviour, not roadmap. The pages describe what the code does.
+
+- **The kit-room category editor never saves.** The grid opens, accepts drops and closes; the listener
+  that would write it back is written but never registered, so every change is discarded. The pages
+  point owners at **Reset to Defaults** instead.
+- **Finishing a pre-generation shuts the server down.** `Bukkit.shutdown()` is called when the queue
+  drains, with the log line *"All worlds pregenereted. Restarting server..."*. Intended for the first
+  boot; it fires the same way when a world is created from the panel on a live server.
+
+Smaller ones, all documented in place: `disable_powder_snow` is toggled and read but never persisted;
+`heightVariation` and `stoneVariants` are stored and never read; the three `kit-creator.*-input-title`
+blocks in `config.yml` are orphaned; `back.outside-world` and `queue.select-kit` are never sent;
+deleting a teleport pad or a kit-room category asks for no confirmation; and the five seeded kit-room
+categories are still Spanish.
+
+### Four stale comments in ExyliaSurvivalCore
+
+The generated files disagree with the code in four places. The documentation follows the code and says
+so on the page where it matters.
+
+- **All thirty-six `menus/admin/*.yml` claim to be the owner's.** Every one opens with *"This file is
+  yours to edit… written once, when it is missing, and never overwritten"*, and the whole directory is
+  deleted and re-extracted from the jar on every enable **and every `/sc reload`**. The header is
+  correct only in the twenty-two menus under `modules/*/menus/`. The one editable admin screen is
+  `modules/warps/menus/warp_setup.yml`, which lives outside that directory.
+- **`ranks.yml`'s header lists requirement types `kills` and `level`.** Neither exists. The real set is
+  `money`, `playtime`, `placeholder` and `permission`; anything else is dropped silently, leaving the
+  rank free.
+- **`messages.yml` → `admin.usage`** names `delhome` and `listhomes` as `/survivalcore` subcommands.
+  They are on `/homesadmin`; `/survivalcore` has only `reload`.
+- **Eight defaults are still in Spanish** despite the commit that translated the rest: the warmup
+  action bars and titles for spawn, homes, back, TPA and RTP.
+
+### Things ExyliaSurvivalCore does not do, documented as such
+
+- `/stats` is **never registered** — the command method is missing its annotation, so the server never
+  receives it and both `stats` nodes are unreachable. The screens open from `survivalcore:stats_open`.
+- `/bounty cancel` opens the list `/bounty` opens and cancels nothing.
+- `exyliasurvivalcore.bounties.anonymous` is inert: the shipped `bounty_place_confirm.yml` hard-codes
+  the anonymous argument to `false`.
+- `/spawn`, `/reclaim` and `/playtime` check no permission, and the last two write.
+- There is no bare `/afkzone` and no bare `/repair`; `/powerupsadmin` is silent when its module is off;
+  `/autotpaaccept` duplicates `/tpatoggle autoaccept`.
+- `spawner_import_from_chest` and `lc_import_from_chest` are complete and unreachable — no shipped menu
+  binds either.

@@ -108,8 +108,10 @@ larga, con tope en 200, unos once segundos.
 Las llaves se gastan y los premios se deciden antes del primer cuadro, pero no se entrega nada hasta
 que un carrete para en la línea. Cuatro cajas abiertas de golpe se pagan de una en una, con
 `stagger-seconds` entre ellas, cada una con su sonido y su línea en el chat. Cerrar la ventana no
-cuesta nada: los carretes dejan de dibujarse y los premios siguen cayendo con su propio reloj. Salir
-del servidor sí lo corta: un carrete que nunca paró devuelve su llave a la fila del jugador.
+cuesta nada: los carretes dejan de dibujarse y los premios siguen cayendo con su propio reloj. Salir del
+servidor corta el temporizador, así que un carrete que seguía en el aire se liquida al salir:
+desbloqueado en su fila, y cualquier ficha guardada en la cola de recompensas hasta su siguiente
+entrada.
 </Callout>
 
 Lo que un carrete pasó por un solo hueco se queda en pantalla cuando para. La mitad de lo que vale una
