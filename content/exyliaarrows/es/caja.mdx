@@ -70,8 +70,11 @@ borrarlos.
 
 ## Las llaves
 
-Las llaves no son un objeto. Viven en la fila del jugador, que es lo que hace imposible tirarlas,
-duplicarlas o perderlas por tener el inventario lleno.
+Dos tipos, y la caja acepta los dos. Un número en la fila del jugador es imposible de tirar, duplicar
+o perder por tener el inventario lleno; un objeto se puede vender en un puesto, meter en un kit y
+regalar.
+
+### En la fila
 
 | Comando | Qué hace |
 |---|---|
@@ -89,6 +92,18 @@ otro plugin de cajas o una recompensa de rango:
 
 `crate.start-keys` es lo que se le da a un jugador la primera vez que se le ve — escrito una sola
 vez, al crear su fila, nunca en las entradas siguientes.
+
+### En la mano
+
+```text
+/arrowsadmin item key <jugador> [1-64]
+```
+
+Click derecho a un bloque de caja con una en la mano y se abre ahí mismo: una llave, un carrete, sin
+pantalla de cuántas. La llave sale de la mano en cuanto el carrete empieza a caer. El click izquierdo
+nunca gasta una, y el click derecho en cualquier otro sitio tampoco — una llave no se puede colocar
+como bloque, así que no se pierde contra una pared. Cómo se dibuja es `key-item` en `config.yml`, y se
+reconoce por lo que lleva en sus datos, no por su nombre ni su material.
 
 ## Abrirlo
 
@@ -111,10 +126,12 @@ La tirada son en realidad dos: una rareza por su peso, y luego un efecto dentro 
 igual de probables. Eso es lo que hace ciertas las probabilidades del menú — un legendario al tres
 por ciento sigue al tres por ciento tanto si el archivo declara dos legendarios como cuarenta.
 
-<Callout type="note" title="Cerrar la ventana no pierde nada">
-Las llaves se gastan y los premios se escriben antes de dibujar el primer frame. Quien cierre la
-ventana, se desconecte o sea expulsado a mitad de la caída ya ganó lo que ganó, y se le dice por
-chat.
+<Callout type="note" title="Se paga cuando cada carrete para">
+Las llaves se gastan y los premios se escriben antes del primer frame, pero no se entrega nada hasta
+que un carrete para en la línea. Cuatro cajas abiertas de golpe se pagan de una en una, con
+`stagger-seconds` entre ellas, cada una con su sonido y su línea en el chat. Cerrar la ventana no
+cuesta nada: los carretes dejan de dibujarse y los premios siguen cayendo con su propio reloj. Salir
+del servidor sí lo corta: un carrete que nunca paró devuelve su llave a la fila del jugador.
 </Callout>
 
 ## Cuánto vale un premio

@@ -44,7 +44,7 @@ Los efectos de golpe suelen ser para PvP: deja la lista salvo que quieras chispa
 pegues.
 </Callout>
 
-## `token-item` y `remover-item`
+## `token-item`, `remover-item` y `key-item`
 
 ```yaml
 token-item:
@@ -67,10 +67,18 @@ remover-item:
   material: SCRAPE_POTTERY_SHERD
   name: "{primary}&lEFFECT REMOVER"
   glow: true
+
+key-item:
+  material: TRIPWIRE_HOOK
+  name: "{primary}&lCRATE KEY"
+  glow: true
 ```
 
 `%effect%` es el nombre del efecto y `%weapons%` a qué encaja. `material` solo se usa cuando el efecto
 no trae icono propio — normalmente la ficha se dibuja con el material del efecto.
+
+`key-item` es la llave que se lleva en la mano: click derecho a un bloque de caja y se abre. Ver
+[La caja](/docs/exyliahiteffect/caja).
 
 ## `weapon-lore`
 
@@ -263,7 +271,7 @@ empieza con `%prefix%`.
 | `inventory-full` | Un removedor necesita un hueco libre. |
 | `no-permission` | El jugador no tiene el efecto. |
 | `empty-hand` | Un subcomando de mano con la mano vacía. |
-| `given` / `given-remover` | Se dieron fichas o removedores. |
+| `given` / `given-remover` / `given-key` | Se dieron fichas, removedores o llaves. |
 | `list-header` / `list-entry` / `list-empty` | `/hiteffectsadmin list`. |
 | `visibility-set` | Cambió la visibilidad. |
 | `refreshed` | Terminó `refresh` o `validate`. |

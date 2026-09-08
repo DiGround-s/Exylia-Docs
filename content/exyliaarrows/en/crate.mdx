@@ -69,8 +69,10 @@ one on a sane file. Renaming `legendary` to `mythic` demotes every legendary rat
 
 ## Keys
 
-Keys are not an item. They live on the player's row, which is what makes them impossible to drop,
-dupe or lose to a full inventory.
+Two kinds, and the crate takes both. A number on the player's row is impossible to drop, dupe or
+lose to a full inventory; an item can be sold at a stall, put in a kit and given to a friend.
+
+### On the row
 
 | Command | What it does |
 |---|---|
@@ -88,6 +90,18 @@ plugin or a rank reward hands keys out:
 
 `crate.start-keys` is what a player is given the first time they are seen — written once, when the
 row is created, never again on later joins.
+
+### In the hand
+
+```text
+/arrowsadmin item key <player> [1-64]
+```
+
+Right click a bound crate block holding one and it opens on the spot: one key, one reel, no question
+screen. The key leaves the hand as the reel starts falling. A left click never spends one, and
+neither does a right click anywhere else — a key cannot be placed as a block, so it cannot be lost to
+a wall. How it is drawn is `key-item` in `config.yml`, and it is told apart by what it carries in its
+data rather than by its name or material.
 
 ## Opening it
 
@@ -110,10 +124,12 @@ The roll itself is two rolls: a rarity by its weight, then an effect inside it w
 equally likely. That is what makes the odds in the menu true — a legendary at three percent stays at
 three percent whether the file declares two legendaries or forty.
 
-<Callout type="note" title="Nothing is lost by closing the window">
-The keys are spent and the prizes written down before the first frame is drawn. A player who closes
-the window, disconnects or is kicked halfway through the fall has already won what they won, and it
-is said in chat.
+<Callout type="note" title="Paid out as each reel lands">
+The keys are spent and the prizes written down before the first frame, but nothing is handed over
+until a reel stops on the line. Four crates opened at once pay out one at a time, `stagger-seconds`
+apart, each with its own sound and its own line in chat. Closing the window costs nothing — the reels
+stop being drawn and the prizes still land on their own clock. Leaving the server does end it: a reel
+that never landed hands its key back to the player's row instead.
 </Callout>
 
 ## What a win is worth

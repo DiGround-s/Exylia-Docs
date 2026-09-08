@@ -31,6 +31,7 @@ needs `exyliarrows.command.arrows`.
 |---|---|
 | `item give <player> <effect> [1-64]` | Gives effect tokens. |
 | `item remover <player> [1-64]` | Gives effect removers. |
+| `item key <player> [1-64]` | Gives crate keys as items, to be right clicked on a crate block. Alias: `item keys`. |
 
 ### `bow` — the bow in hand
 
@@ -52,7 +53,7 @@ needs `exyliarrows.command.arrows`.
 
 | Command | What it does |
 |---|---|
-| `keys give <player> <amount>` | Adds crate keys. Alias: `keys add`. |
+| `keys give <player> <amount>` | Adds crate keys to the player's row. Alias: `keys add`. The keys that can be held are `item key`. |
 | `keys take <player> <amount>` | Takes them away, never below zero. Alias: `keys remove`. |
 | `keys set <player> <amount>` | Sets the number outright. |
 | `keys check <player>` | Prints what they hold. |

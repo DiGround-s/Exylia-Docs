@@ -28,13 +28,14 @@ description: "Lo que un jugador puede hacer con su efecto, y los verbos de admin
 |---|---|
 | `item give <jugador> <efecto> [1-64]` | Da fichas de efecto. |
 | `item remover <jugador> [1-64]` | Da removedores. |
+| `item key <jugador> [1-64]` | Da llaves como objeto, para click derecho en un bloque de caja. Alias: `item keys`. |
 | `weapon bind <efecto> [jugador]` | Ata un efecto al arma en mano, reemplazando lo que llevara. |
 | `weapon unbind [jugador]` | Quita el efecto del arma en mano, sin devolver nada. |
 | `player set <jugador> <efecto>` | Fija lo que lleva un jugador. |
 | `player clear <jugador>` | Le quita el efecto. |
 | `player favourites clear <jugador>` | Vacía su lista de favoritos. |
 | `player validate [jugador]` | Quita un efecto que el objetivo ya no puede usar. Sin jugador, a todos los conectados. |
-| `keys give <jugador> <cantidad>` | Suma llaves de caja. Alias: `keys add`. |
+| `keys give <jugador> <cantidad>` | Suma llaves a la fila del jugador. Alias: `keys add`. Las llaves que se llevan en la mano son `item key`. |
 | `keys take <jugador> <cantidad>` | Resta llaves. Alias: `keys remove`. |
 | `keys set <jugador> <cantidad>` | Fija el saldo directamente. |
 | `keys check <jugador>` | Imprime cuántas tiene. También se escribe `keys <jugador>`. |

@@ -19,13 +19,15 @@ crate:
   stagger-seconds: 2.0
 ```
 
-## Keys are not an item
+## Two kinds of key
 
-A key lives on the player's row, next to their chosen effect and their shortlist. Nothing can drop
-one, dupe one, or lose one to a full inventory, and nothing picks one up off the floor.
+The crate takes both, and a server may sell either or both.
 
-The only way in is the admin command, which a shop, a vote listener or a reward plugin runs as
-console:
+### On the row
+
+A number that lives on the player's row, next to their chosen effect and their shortlist. Nothing can
+drop one, dupe one, or lose one to a full inventory, and nothing picks one up off the floor. A shop,
+a vote listener or a reward plugin runs the admin command as console:
 
 ```text
 /hiteffectsadmin keys give <player> <amount>
@@ -36,6 +38,20 @@ console:
 
 `start-keys` is what a player is handed the first time the plugin sees them — a way to let everybody
 open one before they are asked to buy the next.
+
+### In the hand
+
+An item, so it can be sold at a shop stall, put in a kit, dropped and given to a friend:
+
+```text
+/hiteffectsadmin item key <player> [1-64]
+```
+
+Right click a bound crate block holding one and it opens on the spot: one key, one reel, no question
+screen. The key leaves the hand as the reel starts falling. A left click never spends one, and
+neither does a right click anywhere else — a key cannot be placed as a block, so it cannot be lost to
+a wall. How it is drawn is `key-item` in `config.yml`, and it is told apart by what it carries in its
+data rather than by its name or material.
 
 ## Rarities
 
@@ -88,9 +104,12 @@ falls down its own column, and each stops `stagger-seconds` after the one before
 at a time with a pause to look at each. `spin-frames` is how many faces the first reel runs through
 before it stops — higher is a longer fall, capped at 200, which is about eleven seconds.
 
-<Callout type="note" title="Closing mid-fall costs nothing">
-The keys are spent and the prizes decided before the first frame is drawn. What a player won is
-already theirs and is said in chat, so a disconnect halfway down loses them nothing.
+<Callout type="note" title="Paid out as each reel lands">
+The keys are spent and the prizes decided before the first frame, but nothing is handed over until a
+reel stops on the line. Four crates opened at once pay out one at a time, `stagger-seconds` apart,
+each with its own sound and its own line in chat. Closing the window costs nothing — the reels stop
+being drawn and the prizes still land on their own clock. Leaving the server does end it: a reel that
+never landed hands its key back to the player's row instead.
 </Callout>
 
 What a reel came within one slot of stays on screen when it stops. Half of what a crate is worth is

@@ -43,7 +43,7 @@ effects:
 effects are usually meant for PvP: keep the list unless you want sparks on every mob you punch.
 </Callout>
 
-## `token-item` and `remover-item`
+## `token-item`, `remover-item` and `key-item`
 
 ```yaml
 token-item:
@@ -66,10 +66,18 @@ remover-item:
   material: SCRAPE_POTTERY_SHERD
   name: "{primary}&lEFFECT REMOVER"
   glow: true
+
+key-item:
+  material: TRIPWIRE_HOOK
+  name: "{primary}&lCRATE KEY"
+  glow: true
 ```
 
 `%effect%` is the effect's name, `%weapons%` what it fits. `material` is only used when the effect
 sets no icon of its own — a token is normally drawn as the effect's own material.
+
+`key-item` is the key a player holds: right click a crate block with one and it opens. See
+[The crate](/docs/exyliahiteffect/crate).
 
 ## `weapon-lore`
 
@@ -262,7 +270,7 @@ with `%prefix%`.
 | `inventory-full` | A remover needs a free slot. |
 | `no-permission` | The player does not own the effect. |
 | `empty-hand` | A hand-held subcommand with nothing in hand. |
-| `given` / `given-remover` | Tokens or removers were given. |
+| `given` / `given-remover` / `given-key` | Tokens, removers or crate keys were given. |
 | `list-header` / `list-entry` / `list-empty` | `/hiteffectsadmin list`. |
 | `visibility-set` | Visibility changed. |
 | `refreshed` | `refresh` or `validate` finished. |

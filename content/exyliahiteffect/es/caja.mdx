@@ -19,13 +19,15 @@ crate:
   stagger-seconds: 2.0
 ```
 
-## Las llaves no son un objeto
+## Dos tipos de llave
 
-Una llave vive en la fila del jugador, al lado de su efecto elegido y su lista de favoritos. Nada la
-puede tirar, duplicar ni perder en un inventario lleno, y nadie la levanta del suelo.
+La caja acepta los dos, y un servidor puede vender uno o los dos.
 
-La única entrada es el comando de admin, que una tienda, un listener de votos o un plugin de
-recompensas corre por consola:
+### En la fila
+
+Un número que vive en la fila del jugador, al lado de su efecto elegido y su lista de favoritos. Nada
+la puede tirar, duplicar ni perder en un inventario lleno, y nadie la levanta del suelo. Una tienda,
+un listener de votos o un plugin de recompensas corre el comando de admin por consola:
 
 ```text
 /hiteffectsadmin keys give <jugador> <cantidad>
@@ -36,6 +38,20 @@ recompensas corre por consola:
 
 `start-keys` es lo que recibe un jugador la primera vez que el plugin lo ve — una forma de dejar que
 todos abran una antes de pedirles que compren la siguiente.
+
+### En la mano
+
+Un objeto, así que se puede vender en un puesto, meter en un kit, tirar y regalar:
+
+```text
+/hiteffectsadmin item key <jugador> [1-64]
+```
+
+Click derecho a un bloque de caja con una en la mano y se abre ahí mismo: una llave, un carrete, sin
+pantalla de cuántas. La llave sale de la mano en cuanto el carrete empieza a caer. El click izquierdo
+nunca gasta una, y el click derecho en cualquier otro sitio tampoco — una llave no se puede colocar
+como bloque, así que no se pierde contra una pared. Cómo se dibuja es `key-item` en `config.yml`, y se
+reconoce por lo que lleva en sus datos, no por su nombre ni su material.
 
 ## Rarezas
 
@@ -88,9 +104,12 @@ Elegir cuatro gasta cuatro llaves y abre cuatro carretes uno al lado del otro en
 `spin-frames` es por cuántas caras pasa el primer carrete antes de parar — más alto es una caída más
 larga, con tope en 200, unos once segundos.
 
-<Callout type="note" title="Cerrar a mitad de caída no cuesta nada">
-Las llaves se gastan y los premios se deciden antes de dibujar el primer cuadro. Lo que ganó el
-jugador ya es suyo y se dice en el chat, así que una desconexión a mitad de camino no le quita nada.
+<Callout type="note" title="Se paga cuando cada carrete para">
+Las llaves se gastan y los premios se deciden antes del primer cuadro, pero no se entrega nada hasta
+que un carrete para en la línea. Cuatro cajas abiertas de golpe se pagan de una en una, con
+`stagger-seconds` entre ellas, cada una con su sonido y su línea en el chat. Cerrar la ventana no
+cuesta nada: los carretes dejan de dibujarse y los premios siguen cayendo con su propio reloj. Salir
+del servidor sí lo corta: un carrete que nunca paró devuelve su llave a la fila del jugador.
 </Callout>
 
 Lo que un carrete pasó por un solo hueco se queda en pantalla cuando para. La mitad de lo que vale una
