@@ -108,6 +108,9 @@ Caer en algo que ya se tiene devuelve llaves — tantas como diga `crate.duplica
 por defecto un duplicado es una tirada gratis en vez de una pérdida, que es lo que mantiene una
 colección casi completa digna de seguir abriendo.
 
+Con `crate.reward: ITEM` no se desbloquea nada, así que ninguna apertura es un duplicado y la
+devolución no llega a aplicarse: cada llave paga una ficha.
+
 ## Ajustes
 
 ```yaml
@@ -115,7 +118,7 @@ crate:
   enabled: true
   start-keys: 0
   duplicate-refund: 1
-  give-token: false
+  reward: UNLOCK
   blocks: []
   max-at-once: 4
   spin-frames: 34
@@ -127,15 +130,15 @@ crate:
 | `enabled` | `true` | Apagada, el botón lo dice en vez de abrir. |
 | `start-keys` | `0` | Llaves que recibe un jugador la primera vez que se le ve. |
 | `duplicate-refund` | `1` | Llaves devueltas por algo que ya se tenía. |
-| `give-token` | `false` | Si ganar entrega también la ficha del efecto, para poder atarlo a un arma. Vale la pena con `behaviour.mode` en `weapon` o `both`. |
+| `reward` | `UNLOCK` | Qué entrega la caja. `UNLOCK` deja el efecto en la cuenta, `ITEM` entrega solo su ficha, `BOTH` hace las dos cosas. `ITEM` y `BOTH` quieren `behaviour.mode` en `weapon` o `both`. |
 | `blocks` | `[]` | Los bloques que abren la caja. Átalos en el juego, no a mano. |
 | `max-at-once` | `4` | Cuántas cajas puede abrir un jugador de una vez. La pantalla admite siete. |
 | `spin-frames` | `34` | Cuántas caras recorre el primer rodillo antes de parar. Tope de 200, unos once segundos. |
 | `stagger-seconds` | `2.0` | Cuánto después de parar uno para el siguiente. `0` los para a la vez. |
 
 `on-spin`, `on-win` y `on-duplicate` son bloques de efecto completos de ExyliaLib — título, action
-bar, boss bar, sonido, partícula y firework — lanzados en cada tick de caída, una vez al ganar, y en
-lugar de la victoria cuando no salió nada nuevo.
+bar, boss bar, sonido, partícula y firework — lanzados en cada tick de caída, y después una vez por
+rodillo en cuanto para: la victoria, o el duplicado cuando ese rodillo cayó en algo ya conseguido.
 
 ## Bloques de caja
 

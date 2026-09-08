@@ -82,7 +82,7 @@ lo que tiene desbloqueado, la caja, las pantallas y las previsualizaciones.
 | `menu open <jugador>` | Le abre el menú de efectos a alguien. |
 | `menu crate <jugador>` | Le abre la caja a alguien, sin gastar nada. |
 | `preview play <efecto> [jugador]` | Previsualiza un efecto, para ti o para otro. |
-| `preview location` | Fija el escenario de previsualización donde estás, mirando a donde miras. |
+| `preview location` | Fija el escenario de previsualización donde estás. Solo se toma la posición. |
 
 ### El resto
 
@@ -128,7 +128,9 @@ dibujada sobre un barril no debe abrir un barril.
 
 ### `preview location`
 
-Guarda dónde se lanzan las previsualizaciones: donde estás, mirando a donde miras. Hasta que se fija,
+Guarda dónde se lanzan las previsualizaciones: donde estás. Solo se toma la posición — una
+previsualización siempre mira al norte, así que cada efecto se ve por el lado para el que fue dibujado
+y el lado norte del escenario es el que hay que dejar libre. Hasta que se fija,
 `/killeffect preview` responde `preview-unavailable` en vez de montar el efecto encima de quien pidió
 verlo. A los admins se les dice qué comando lo fija.
 

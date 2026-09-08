@@ -107,6 +107,9 @@ Landing on something already owned hands keys back — as many as `crate.duplica
 default of `1` a duplicate is a free re-roll rather than a loss, which is what keeps a nearly complete
 collection worth opening.
 
+Under `crate.reward: ITEM` nothing is unlocked at all, so no opening is ever a duplicate and the
+refund never comes into it: every key pays out a token.
+
 ## Settings
 
 ```yaml
@@ -114,7 +117,7 @@ crate:
   enabled: true
   start-keys: 0
   duplicate-refund: 1
-  give-token: false
+  reward: UNLOCK
   blocks: []
   max-at-once: 4
   spin-frames: 34
@@ -126,15 +129,15 @@ crate:
 | `enabled` | `true` | Off, the button says so instead of opening. |
 | `start-keys` | `0` | Keys a player is given the first time they are seen. |
 | `duplicate-refund` | `1` | Keys handed back for something already owned. |
-| `give-token` | `false` | Whether winning also hands over the effect's token, so it can be bound to a weapon. Worth turning on where `behaviour.mode` is `weapon` or `both`. |
+| `reward` | `UNLOCK` | What a crate hands over. `UNLOCK` keeps the effect on the account, `ITEM` hands over only its token, `BOTH` does both. `ITEM` and `BOTH` want `behaviour.mode` on `weapon` or `both`. |
 | `blocks` | `[]` | The blocks that open the crate. Bind them in game, not by hand. |
 | `max-at-once` | `4` | How many crates one player may open in one go. The screen fits seven. |
 | `spin-frames` | `34` | How many faces the first reel runs through before it stops. Capped at 200, about eleven seconds. |
 | `stagger-seconds` | `2.0` | How long after one reel stops the next one does. `0` stops them together. |
 
 `on-spin`, `on-win` and `on-duplicate` are full ExyliaLib effect blocks — title, action bar, boss bar,
-sound, particle and firework — played on every falling tick, once on a win, and instead of the win
-when nothing new came out.
+sound, particle and firework — played on every falling tick, and then once per reel the moment it
+lands: the win, or the duplicate instead when that reel stopped on something already owned.
 
 ## Crate blocks
 

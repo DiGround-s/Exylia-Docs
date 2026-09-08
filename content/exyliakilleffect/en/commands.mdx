@@ -82,7 +82,7 @@ what they own, the crate, the screens and the previews.
 | `menu open <player>` | Opens the effects menu for someone. |
 | `menu crate <player>` | Opens the crate screen for someone, without spending anything. |
 | `preview play <effect> [player]` | Previews an effect, for yourself or for someone else. |
-| `preview location` | Sets the preview stage to where you stand, facing what you face. |
+| `preview location` | Sets the preview stage to where you stand. Only the position is taken. |
 
 ### The rest
 
@@ -127,7 +127,9 @@ does: a crate drawn on a barrel must not open a barrel.
 
 ### `preview location`
 
-Stores where previews play: where you stand, facing what you face. Until one is set,
+Stores where previews play: where you stand. Only the position is taken — a preview always faces
+north, so every effect is seen from the side it was drawn for, and the north side of the stage is the
+one to leave open. Until one is set,
 `/killeffect preview` answers `preview-unavailable` rather than staging an effect on top of whoever asked to see
 it. Admins are told which command sets it.
 

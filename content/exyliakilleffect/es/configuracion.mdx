@@ -131,7 +131,7 @@ crate:
   enabled: true
   start-keys: 0
   duplicate-refund: 1
-  give-token: false
+  reward: UNLOCK
   blocks: []
   max-at-once: 4
   spin-frames: 34
@@ -155,7 +155,7 @@ crate:
 | `enabled` | `true` | Apagada, el botón de la caja lo dice en vez de abrir. |
 | `start-keys` | `0` | Llaves que recibe un jugador la primera vez que se le ve. |
 | `duplicate-refund` | `1` | Llaves devueltas por un efecto que ya se tenía. |
-| `give-token` | `false` | Si ganar entrega además la ficha del efecto. |
+| `reward` | `UNLOCK` | Qué entrega la caja: `UNLOCK`, `ITEM` (solo la ficha) o `BOTH`. |
 | `blocks` | `[]` | Los bloques que abren la caja. Átalos con `/killeffectsadmin crate block add`. |
 | `max-at-once` | `4` | Cuántas cajas puede abrir un jugador de una vez, hasta siete. |
 | `spin-frames` | `34` | Cuántas caras recorre el primer rodillo. Tope de 200. |

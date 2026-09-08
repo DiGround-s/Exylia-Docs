@@ -131,7 +131,7 @@ crate:
   enabled: true
   start-keys: 0
   duplicate-refund: 1
-  give-token: false
+  reward: UNLOCK
   blocks: []
   max-at-once: 4
   spin-frames: 34
@@ -155,14 +155,14 @@ crate:
 | `enabled` | `true` | Off, the crate button says so instead of opening. |
 | `start-keys` | `0` | Keys a player is given the first time they are seen. |
 | `duplicate-refund` | `1` | Keys handed back for an effect already owned. |
-| `give-token` | `false` | Whether winning also hands over the effect's token. |
+| `reward` | `UNLOCK` | What a crate hands over: `UNLOCK`, `ITEM` (only the token) or `BOTH`. |
 | `blocks` | `[]` | The blocks that open the crate. Bind them with `/killeffectsadmin crate block add`. |
 | `max-at-once` | `4` | How many crates one player may open in one go, up to seven. |
 | `spin-frames` | `34` | How many faces the first reel runs through. Capped at 200. |
 | `stagger-seconds` | `2.0` | How long after one reel stops the next one does. |
 
-The three effect blocks are played on every falling tick, once on a win, and instead of the win when
-nothing new came out.
+The three effect blocks are played on every falling tick, and then once per reel as it lands — the
+win, or the duplicate when that reel stopped on something already owned.
 
 ## `feedback`
 
