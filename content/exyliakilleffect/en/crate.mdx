@@ -1,6 +1,6 @@
 ---
 title: "The crate"
-description: "Rarities, virtual keys, the reels that fall, and the blocks that open them."
+description: "Rarities, both kinds of key, the reels that fall, and the blocks that open them."
 ---
 
 The crate is how effects are won rather than given. A key is spent, a reel falls, and what it lands
@@ -58,8 +58,11 @@ the rest instead of leaving a three-percent hole.
 
 ## Keys
 
-Keys are not an item. They live on the player's row, so nothing can be dropped, duped, or lost to a
-full inventory:
+Two kinds, and the crate takes both.
+
+### On the row
+
+A number on the player's own row. Nothing can be dropped, duped, or lost to a full inventory:
 
 ```text
 /killeffectsadmin keys give <player> <amount>
@@ -68,17 +71,39 @@ full inventory:
 /killeffectsadmin keys check <player>
 ```
 
-That is the only way in, which is what makes it safe to run from console — a shop, a vote listener,
-a reward plugin or a crate on another plugin all hand keys over the same way.
+Safe to run from console — a shop, a vote listener, a reward plugin or a crate on another plugin all
+hand keys over the same way.
 
 ```text
 [console] killeffectsadmin keys give %player% 1
 ```
 
+### In the hand
+
+An item, so it can be sold at a shop stall, put in a kit, dropped, and given to a friend:
+
+```text
+/killeffectsadmin item key <player> [1-64]
+```
+
+Right click a bound crate block holding one and it opens on the spot: one key, one reel, no question
+screen. The key leaves the hand the moment the reel starts falling. Left clicking never spends one —
+that is how a player asks what a block is — and neither does right clicking anywhere else: a key
+cannot be placed as a block, so it cannot be lost to a wall.
+
+How it is drawn is `key-item` in `config.yml`. It is told apart by what it carries in its data rather
+than by its name or material, so renaming one changes nothing and a lookalike opens nothing.
+
+<Callout type="note" title="Which kind to sell">
+An item is worth having when keys are traded between players or sold in a physical shop. A number on
+the row is worth having when they are not: it cannot be scammed, lost on death, or duplicated by a
+duping bug in another plugin. Servers that want both simply run both commands.
+</Callout>
+
 ## Opening
 
-`/killeffect crate`, the button in the corner of the effects menu, or a bound block. The first screen
-asks only one thing: how many at once. Picking four spends four keys and drops four reels side by
+`/killeffect crate`, the button in the corner of the effects menu, or a bound block clicked
+empty-handed. The first screen asks only one thing: how many at once. Picking four spends four keys and drops four reels side by
 side on the next screen.
 
 <Steps>

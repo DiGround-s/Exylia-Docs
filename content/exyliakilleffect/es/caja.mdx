@@ -1,6 +1,6 @@
 ---
 title: "La caja"
-description: "Rarezas, llaves virtuales, los rodillos que caen y los bloques que los abren."
+description: "Rarezas, los dos tipos de llave, los rodillos que caen y los bloques que los abren."
 ---
 
 La caja es cómo se ganan los efectos en vez de regalarlos. Se gasta una llave, cae un rodillo, y lo
@@ -58,8 +58,12 @@ probabilidades entre las demás en vez de dejar un hueco del tres por ciento.
 
 ## Llaves
 
-Las llaves no son un objeto. Viven en la fila del jugador, así que no se pueden tirar, duplicar ni
-perder por tener el inventario lleno:
+Dos tipos, y la caja acepta los dos.
+
+### En la fila
+
+Un número en la fila del propio jugador. No se puede tirar, duplicar ni perder por tener el
+inventario lleno:
 
 ```text
 /killeffectsadmin keys give <jugador> <cantidad>
@@ -68,16 +72,39 @@ perder por tener el inventario lleno:
 /killeffectsadmin keys check <jugador>
 ```
 
-Es la única puerta de entrada, que es lo que hace seguro correrlo desde consola — una tienda, un
-listener de votos, un plugin de recompensas o una caja de otro plugin entregan llaves igual.
+Seguro desde consola — una tienda, un listener de votos, un plugin de recompensas o una caja de otro
+plugin entregan llaves igual.
 
 ```text
 [console] killeffectsadmin keys give %player% 1
 ```
 
+### En la mano
+
+Un objeto, así que se puede vender en un puesto, meter en un kit, tirar y regalar:
+
+```text
+/killeffectsadmin item key <jugador> [1-64]
+```
+
+Click derecho a un bloque de caja con una en la mano y se abre ahí mismo: una llave, un rodillo, sin
+pantalla de cuántas. La llave sale de la mano en cuanto el rodillo empieza a caer. El click izquierdo
+nunca gasta una — así es como un jugador pregunta qué es un bloque — y el click derecho en cualquier
+otro sitio tampoco: una llave no se puede colocar como bloque, así que no se pierde contra una pared.
+
+Cómo se dibuja es `key-item` en `config.yml`. Se reconoce por lo que lleva en sus datos, no por su
+nombre ni su material, así que renombrarla no cambia nada y una imitación no abre nada.
+
+<Callout type="note" title="Cuál vender">
+El objeto vale la pena cuando las llaves se cambian entre jugadores o se venden en una tienda física.
+El número en la fila vale la pena cuando no: no se puede estafar, ni perder al morir, ni duplicar por
+un bug de otro plugin. Un servidor que quiera las dos cosas simplemente usa los dos comandos.
+</Callout>
+
 ## Abrirla
 
-`/killeffect crate`, el botón de la esquina del menú de efectos, o un bloque atado. La primera
+`/killeffect crate`, el botón de la esquina del menú de efectos, o un bloque atado con la mano
+vacía. La primera
 pantalla pregunta una sola cosa: cuántas a la vez. Elegir cuatro gasta cuatro llaves y suelta cuatro
 rodillos en paralelo en la pantalla siguiente.
 
