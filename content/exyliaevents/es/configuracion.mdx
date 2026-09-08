@@ -34,6 +34,24 @@ settings:
 Si a los jugadores se les envía al lobby principal guardado al salir de un evento.
 </Field>
 
+<Field name="frozen-timeout" type="entero" defaultValue="6">
+Segundos que un jugador puede quedarse inmóvil en el aire dentro de un evento antes de ser eliminado
+de él. Un cliente congelado o con lag switch deja de enviar movimiento y se queda flotando donde se
+detuvo, algo que ningún jugador puede hacer por su cuenta. Quedarse quieto en el suelo, nadar, trepar,
+montar y planear no cuentan. `0` lo desactiva.
+</Field>
+
+### network
+
+```yaml
+network:
+  enabled: false
+  return-on-end: true
+```
+
+Si este servidor anuncia sus eventos al resto de la red y acepta a los jugadores que otros servidores
+le envían. Apagado por defecto, y explicado en [Red](/docs/exyliaevents/red).
+
 ### main-lobby
 
 Un resto de una versión anterior. El lobby vive ahora en la base de datos; esta sección se lee una

@@ -33,6 +33,24 @@ settings:
 Whether players are sent to the stored main lobby when they leave an event.
 </Field>
 
+<Field name="frozen-timeout" type="integer" defaultValue="6">
+Seconds a player may hang motionless in mid-air inside an event before being eliminated from it. A
+frozen or lag-switched client stops sending movement and keeps floating where it stopped, which no
+player can do on their own. Standing still on the ground, swimming, climbing, riding and gliding are
+not counted. `0` turns it off.
+</Field>
+
+### network
+
+```yaml
+network:
+  enabled: false
+  return-on-end: true
+```
+
+Whether this server announces its events to the rest of the network and accepts the players other
+servers send to them. Off by default, and covered in [Network](/docs/exyliaevents/network).
+
 ### main-lobby
 
 A leftover from an older layout. The lobby lives in the database now; this section is read once, on

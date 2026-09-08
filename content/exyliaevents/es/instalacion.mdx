@@ -16,6 +16,8 @@ Tres plugins deben estar en `plugins/` **antes** del primer arranque.
 Opcionales, y cada uno solo añade algo:
 
 - **PlaceholderAPI** — leer los contadores del plugin desde fuera.
+- **ExyliaProxyUtils** — solo para una red: lo que mueve al jugador al servidor donde está el evento.
+  Ver [Red](/docs/exyliaevents/red).
 - **Worlds** — es como se crea el mundo automático **en Folia**. Fuera de Folia el plugin lo crea con
   Bukkit y no hace falta.
 - **ExyliaPracticeCore**, **ExyliaFFA**, **ExyliaSandBox** — un jugador ocupado en uno de ellos no
@@ -61,7 +63,8 @@ En `plugins/ExyliaEvents/`:
 | `events_player_stats` | Estadísticas globales de jugador. |
 | `events_player_event_stats` | Estadísticas por jugador y evento. |
 | `events_player_preferences` | Preferencias por jugador, hoy el interruptor de música. |
-| `events_settings` | Ajustes del servidor, hoy la ubicación del lobby principal. |
+| `events_settings` | La fila única de ajustes que escribió una versión anterior, leída una vez y adoptada. |
+| `events_server_settings` | Ajustes por backend, hoy la ubicación del lobby principal de cada servidor. |
 | `event_kits` | Kits de una configuración. |
 | `event_loot_entries` | Tablas de loot para los tipos con cofres. |
 | `event_inscriptions` | Listas de inscripción. |

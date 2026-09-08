@@ -16,6 +16,8 @@ Three plugins must be in `plugins/` **before** the first boot.
 Optional, and each only adds something:
 
 - **PlaceholderAPI** — read the plugin's counters elsewhere.
+- **ExyliaProxyUtils** — only for a network: what moves a player to the server an event is on. See
+  [Network](/docs/exyliaevents/network).
 - **Worlds** — how the auto world is created **on Folia**. Off Folia the plugin creates it through
   Bukkit itself and this is not needed.
 - **ExyliaPracticeCore**, **ExyliaFFA**, **ExyliaSandBox** — a player busy in one of those cannot be
@@ -60,7 +62,8 @@ In `plugins/ExyliaEvents/`:
 | `events_player_stats` | Global player statistics. |
 | `events_player_event_stats` | Statistics per player per event. |
 | `events_player_preferences` | Per-player preferences, currently the music toggle. |
-| `events_settings` | Server-wide settings, currently the main lobby location. |
+| `events_settings` | The single settings row an older version wrote, read once and adopted. |
+| `events_server_settings` | Per-backend settings, currently each server's main lobby location. |
 | `event_kits` | Kits belonging to a configuration. |
 | `event_loot_entries` | Loot tables for chest-based types. |
 | `event_inscriptions` | Sign-up lists. |

@@ -1,0 +1,94 @@
+---
+title: "Red"
+description: "Anunciar los eventos de un servidor a toda la red y llevar a los jugadores hasta ellos."
+---
+
+Un servidor solo no necesita nada de esta página. Apagado —que es como viene— no se abre ningún
+canal, no se publica nada y cada entrada toma el mismo camino local de siempre.
+
+Encendido, un servidor anuncia sus eventos al resto de la red. Un jugador que está en el lobby lee que
+hay un evento esperando en el servidor de arenas, hace clic en la misma línea que imprime cualquier
+servidor, y se le conecta y se le mete en él. Lo que viaja es el anuncio y la intención de entrar,
+nunca una ubicación: en cuanto el jugador está en el servidor dueño del evento, se encarga el
+teletransporte local de siempre al lobby de ese evento.
+
+## Qué necesita
+
+| Requisito | Para qué |
+|---|---|
+| Redis, encendido en `database.yml` en cada servidor | El canal por el que viajan los anuncios. |
+| Un `server-id` distinto en cada servidor | Cómo el proxy y los anuncios se dirigen a un backend. |
+| `ExyliaProxyUtils` en el proxy | Lo que realmente mueve al jugador entre servidores. |
+| La misma base de datos en cada servidor | Las arenas y las estadísticas se leen de un solo sitio. |
+
+Si falta cualquiera de ellos el plugin se queda callado, lo dice una vez en la consola y sigue
+funcionando como un servidor solo.
+
+<Callout type="warning" title="Redis por sí solo no es consentimiento">
+`database.redis` y `network.enabled` son dos interruptores separados a propósito. Un servidor puede
+perfectamente compartir la caché con la red y aun así querer sus eventos para él.
+</Callout>
+
+## Encenderlo
+
+```yaml title="config.yml"
+network:
+  enabled: true
+  return-on-end: true
+```
+
+<Field name="enabled" type="booleano" defaultValue="false">
+Si este servidor anuncia sus eventos al resto de la red y acepta a los jugadores que otros servidores
+le envían.
+</Field>
+
+<Field name="return-on-end" type="booleano" defaultValue="true">
+Si a un jugador que la red trajo hasta aquí se le devuelve al servidor del que vino cuando su evento
+lo suelta —terminó, se salió, o llegó y lo encontró lleno—. Solo deshace un movimiento que hizo este
+plugin: a un jugador que entró a este servidor por su cuenta no se le mueve nunca. Apágalo en un
+servidor en el que los jugadores deban quedarse.
+</Field>
+
+## Las arenas pertenecen a un backend
+
+Una arena guarda el servidor en el que se configuró. Ese servidor es el único que puede editarla,
+iniciarla o volver a guardarla: es la regla que mantiene segura una base de datos compartida, porque
+ningún otro backend tiene el mundo en el que está la arena y guardaría una fila llena de sitios que no
+puede ver.
+
+- La lista de configuraciones del panel de admin muestra el servidor de cada arena.
+- `/events start <id>` sobre una arena que vive en otro sitio le pasa el inicio al servidor que la
+  tiene, e informa de si arrancó. Todos los límites —cooldowns, topes de eventos— los aplica el
+  servidor dueño de la arena, no el que preguntó.
+- El autocompletado ofrece las arenas iniciables de toda la red, locales y remotas por igual.
+
+Una arena configurada antes de todo esto no nombra ningún servidor, y decide el mundo: pertenece al
+backend que tenga el mundo en el que está. En un servidor solo eso siempre es el local, así que nada
+de lo que un admin ya configuró cambia ni hay que tocarlo.
+
+<Callout type="tip" title="Sin cambios de esquema">
+La propiedad de la arena se guarda dentro de los ajustes que la arena ya tenía, así que una base de
+datos existente no se altera y no hay nada que migrar.
+</Callout>
+
+## Un lobby por backend
+
+El lobby principal se guarda por `server-id` en `events_server_settings`. Los backends que compartían
+una base de datos compartían también una sola fila de lobby, así que el último admin en configurar el
+suyo movía el de todos los demás, a un mundo que solo tenía su servidor. Ahora cada servidor responde
+por el suyo y no lee el de nadie más.
+
+La fila única que escribió una versión anterior se adopta una sola vez, por el único servidor que
+realmente tiene ese mundo. En un servidor solo eso siempre se cumple y el lobby se conserva sin que
+nadie haga nada.
+
+## Ids de evento en toda la red
+
+Un evento que viaja se direcciona como `servidor:evento`. Los ids sin servidor son locales, que son
+todos los ids que escribe un admin: un id de configuración solo puede llevar `a-z`, `0-9`, `_` y `-`,
+así que nunca se pueden confundir.
+
+## Los mensajes siguen siendo locales
+
+Solo viajan los datos: el evento, su tipo, su estado, cuántos jugadores tiene y quién lo inició. Cada
+servidor los muestra con su propio `messages.yml`, así que una red con dos idiomas conserva los dos.
