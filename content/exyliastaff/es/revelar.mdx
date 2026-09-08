@@ -1,0 +1,35 @@
+---
+title: "Revelar"
+description: "El staff ve a los jugadores que esconde una poción de invisibilidad, dibujados solo en su cliente."
+---
+
+Una poción de invisibilidad esconde a un jugador de todo el mundo, staff incluido. Revelar le
+devuelve al staff lo que la poción le quitó: ve quién está ahí de pie, y la pantalla de nadie más
+cambia.
+
+Id de módulo `reveal`, interruptor `modules.reveal`, archivos en `modules/reveal/`. Necesita
+PacketEvents.
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/reveal` | `exyliastaff.reveal` | Alterna. `/seeinvis` y `/seeinvisible` son alias. |
+
+## Estilos
+
+`style` en `modules/reveal/config.yml` elige cómo se dibuja a un jugador escondido:
+
+| Estilo | Qué ves |
+|---|---|
+| `OUTLINE` | Sigue invisible y se resalta su contorno a través de las paredes. El valor por defecto: se lee más rápido en una cueva. |
+| `SOLID` | Se dibuja entero, como si la poción no estuviera. |
+
+En cualquiera de los dos casos esto es un paquete que recibe el cliente del staff. La poción sigue
+corriendo, el jugador la sigue teniendo, y todos los demás jugadores siguen sin ver nada.
+
+## Dónde encaja
+
+Vanish esconde a un miembro del staff de los jugadores; revelar le muestra al staff a un jugador que
+se esconde. Son direcciones opuestas de la misma pregunta y ninguna toca a la otra: revelar no rompe
+un vanish, y un miembro del staff en vanish puede revelar.

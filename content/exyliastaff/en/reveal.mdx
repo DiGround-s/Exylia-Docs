@@ -1,0 +1,33 @@
+---
+title: "Reveal"
+description: "Staff can see the players an invisibility potion hides, drawn on the client only."
+---
+
+An invisibility potion hides a player from everyone, staff included. Reveal gives a staff member
+back the thing the potion took: they see who is standing there, and nobody else's screen changes.
+
+Module id `reveal`, switch `modules.reveal`, files under `modules/reveal/`. Needs PacketEvents.
+
+## Commands
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/reveal` | `exyliastaff.reveal` | Toggles. `/seeinvis` and `/seeinvisible` are aliases. |
+
+## Styles
+
+`style` in `modules/reveal/config.yml` picks how a hidden player is drawn:
+
+| Style | What you see |
+|---|---|
+| `OUTLINE` | They stay invisible and are outlined through walls. The default: it reads faster in a cave. |
+| `SOLID` | They are drawn whole, as if the potion were not there. |
+
+Either way this is a packet the staff member's client receives. The potion is still running, the
+player still has it, and every other player still sees nothing.
+
+## Where it fits
+
+Vanish hides a staff member from players; reveal shows a staff member a player who is hiding. They
+are opposite directions of the same question, and neither one touches the other: revealing does not
+break a vanish, and a vanished staff member can reveal.

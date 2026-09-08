@@ -1,0 +1,42 @@
+---
+title: "AFK"
+description: "Who is at the keyboard and who is not, read rather than ticked."
+---
+
+AFK answers one question — is this player actually there — and lets the rest of the plugin act on
+it. Random teleport stops dropping people onto empty bodies, and the staff sidebar can say how much
+of the player count is real.
+
+Module id `afk`, switch `modules.afk`, files under `modules/afk/`.
+
+There is no command and no permission. Nothing to toggle: the answer is a read, not a state a player
+sets.
+
+## How idle is measured
+
+One timestamp per online player. Moving, interacting, chatting or typing a command marks them as
+being at the keyboard; the answer is the distance between now and the last of those. Nothing runs on
+a timer, so the cost of this module does not grow with the player count.
+
+| Key | Default | What it means |
+|---|---|---|
+| `after-seconds` | `300` | Seconds without moving, interacting, chatting or typing a command before a player counts as AFK. |
+
+A player who just joined is at the keyboard, whatever they did last session. The timestamp is
+written at most once a second per player: walking changes block several times a second, and the
+threshold is in seconds, so a second of slack costs nothing.
+
+## Placeholders
+
+| Placeholder | What it answers |
+|---|---|
+| `%staff_afk_count%` | How many players are idle right now. |
+| `%staff_afk_is%` | Whether the viewer is idle. |
+
+Both resolve off the main thread, which is what lets the staff sidebar read them on its own refresh.
+
+## What reads it
+
+The staff sidebar shows `%staff_afk_count%` out of the box. Random teleport skips idle players when
+`random-skip-afk` is on in `modules/teleport/config.yml` — that key needs this module: with it off,
+nobody is skipped for being idle.

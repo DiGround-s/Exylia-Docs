@@ -77,8 +77,9 @@ ese módulo está activado, y una entrada con `permission:` solo se muestra a lo
 Las entradas de dos objetos muestran uno u otro leyendo un placeholder como `%staff_vanished%`, así que
 la hotbar se redibuja sola cuando el estado cambia. Hacer clic derecho con la mano vacía sobre un cofre
 lo abre en silencio. Los slots van de `0` a `35`, más `offhand`, `helmet`, `chestplate`, `leggings` y
-`boots`. Las cuatro piezas de armadura se llevan puestas de verdad, así que el resto de jugadores las ven;
-todo lo demás se dibuja en el cliente y nunca entra en el inventario.
+`boots`. Las cuatro piezas de armadura también se dibujan en el cliente, encima de lo que el miembro del
+staff lleve puesto de verdad, así que una sesión que termina en cualquier sitio no deja equipo de
+staff detrás. Nada de la hotbar ni de las casillas de armadura entra nunca en el inventario.
 
 Las acciones se escriben como `staff:<name>`; los comandos como `player: <cmd>`, `console: <cmd>` o
 `player-proxy: <cmd>`. Los clics pueden ser `left`, `right`, `shift_left`, `shift_right`, `drop`, `swap`,

@@ -1,0 +1,54 @@
+---
+title: "Action bar"
+description: "One line above the hotbar summarising the toggles that are on and how the server is doing."
+---
+
+A staff member on duty has half a dozen toggles running at once, and reading each one means opening
+something. The action bar puts the answer on screen: which switches are on, and how the server is
+holding up, on a single line that redraws itself.
+
+Module id `actionbar`, switch `modules.actionbar`, files under `modules/actionbar/`.
+
+There is no command: the line appears while it applies and is gone when it does not.
+
+## The two lines
+
+| Key | When it shows |
+|---|---|
+| `staff-mode` | While in staff mode. |
+| `vanish` | While vanished off duty. |
+
+Staff mode wins, because somebody on duty and vanished is reading the staff line, which already says
+the vanish. Leaving a line empty turns that situation off.
+
+The vanish line exists for the state nothing else reports: `/vanish` on its own leaves no staff
+hotbar to read and no staff sidebar, so without it nothing on screen says you are hidden.
+
+Both are ordinary text with placeholders in them, so a server that wants a different summary edits
+the file rather than the plugin.
+
+| Key | Default | What it means |
+|---|---|---|
+| `refresh-ticks` | `20` | Ticks between redraws. Once a second. The client fades an action bar after about 60, so this stays well below that. |
+| `icon-on` | `{success}✔` | Drawn for a toggle that is on. |
+| `icon-off` | `{error}✖` | Drawn for a toggle that is off. |
+
+## Ticks and crosses
+
+`%staff_actionbar_check_<placeholder>%` writes `icon-on` or `icon-off` for any other placeholder
+that reads as true or false. The placeholder named after `check` is written without its percent
+signs, so `%staff_actionbar_check_staff_vanished%` asks `%staff_vanished%`.
+
+`true`, `yes`, `on`, `1` and `enabled` are the answers that get the tick. Everything else gets the
+cross, an unresolved placeholder included: a module that is switched off is off, and saying so is
+more honest than an error across the screen.
+
+## The shipped line
+
+```yaml
+staff-mode: '{primary}STAFF {letters_black}▎ %staff_actionbar_check_staff_vanished% {letters}Vanish {letters_black}· %staff_actionbar_check_staff_mining_alerts_active% {letters}Alerts {letters_black}· %staff_actionbar_check_staff_staffchat_active% {letters}Chat {letters_black}▎ {letters}TPS {info}%server_tps% {letters_black}· {letters}MSPT {info}%server_mspt% {letters_black}· {letters}CPU {info}%server_cpu_process:percent%'
+vanish: '{warning}VANISH {letters_black}▎ {letters}Hidden and {highlight}off duty {letters_black}▎ {letters}TPS {info}%server_tps% {letters_black}· {letters}MSPT {info}%server_mspt%'
+```
+
+Vanish, mining alerts and staff chat as ticks or crosses; TPS, MSPT and CPU as numbers. Any
+placeholder your server resolves works here, so the summary is whatever your staff need to see.

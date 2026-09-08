@@ -73,8 +73,9 @@ enabled, and an entry with `permission:` only shows to players holding it.
 The two-item entries show one item or the other by reading a placeholder such as `%staff_vanished%`,
 so the hotbar redraws itself when the state flips. Right clicking with an empty hand on a chest opens
 it silently. Slots go from `0` to `35`, plus `offhand`, `helmet`, `chestplate`, `leggings` and `boots`.
-The four armour pieces are really worn, so other players see them; everything else is drawn on the
-client and never enters the inventory.
+The four armour pieces are drawn on the client too, over whatever the staff member is really
+wearing, so a session that ends anywhere leaves no staff gear behind. Nothing in the hotbar or the
+armour slots ever enters the inventory.
 
 Actions are written as `staff:<name>`; commands as `player: <cmd>`, `console: <cmd>` or
 `player-proxy: <cmd>`. Clicks can be `left`, `right`, `shift_left`, `shift_right`, `drop`, `swap`,

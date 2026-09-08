@@ -1,0 +1,112 @@
+---
+title: "Restaurar inventario"
+description: "Una copia de lo que llevaba cada jugador, guardada los días que el staff necesita para devolvérsela."
+---
+
+Restaurar inventario guarda una copia de lo que llevaba un jugador, para que un miembro del staff
+que lee un reporte tres días después vea lo que realmente tenía y se lo pueda devolver. Las copias
+son filas en la base de datos, no archivos, así que toda la red lee el mismo historial.
+
+Id de módulo `restore`, interruptor `modules.restore`, archivos en `modules/restore/`.
+
+## Comandos
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/invrestore <player>` | `exyliastaff.restore` | Abre los inventarios guardados de ese jugador. `/inventoryrestore` y `/restoreinv` son alias. |
+
+Ese es todo el comando. Lo demás — guardar una copia ahora, borrar una, purgar a un jugador, leer el
+historial — es un botón en los menús, así que hay una sola cosa que recordar y un solo sitio donde
+mirar.
+
+El argumento es un nombre de red: se sugiere todo el que esté conectado al proxy, no solo los
+jugadores que este servidor haya visto. Un nombre que este servidor nunca vio se le pregunta al
+proxy a través del miembro del staff que lo escribió, y por eso la consola no puede alcanzarlo. El
+comando a secas responde con sus propias líneas de uso en vez del error del parser del servidor.
+
+Otros dos permisos abren botones, no comandos:
+
+| Permiso | Qué abre |
+|---|---|
+| `exyliastaff.restore.log` | El historial de restauraciones, desde cualquiera de los dos lados. |
+| `exyliastaff.restore.purge` | Borrar todas las copias de un jugador. |
+
+## Cuándo se toma una copia
+
+| Motivo | Icono | Interruptor |
+|---|---|---|
+| Muerte | `SKELETON_SKULL` | `causes.death` |
+| Salida | `IRON_DOOR` | `causes.quit` |
+| Entrada | `OAK_DOOR` | `causes.join` |
+| Cambio de mundo | `ENDER_PEARL` | `causes.world-change` |
+| Guardado manual | `WRITABLE_BOOK` | Siempre activo |
+| Antes de restaurar | `CLOCK` | Siempre activo |
+
+Los dos últimos no tienen interruptor a propósito. Un guardado manual lo pide el staff, y la copia
+que se toma antes de restaurar es lo que hace que una restauración se pueda deshacer.
+
+Solo se escribe una copia cuando hay algo que copiar. `min-seconds-between` (60) es el hueco entre
+dos copias ordinarias del mismo jugador, para que alguien que rebota por un portal no escriba una
+fila por segundo — las muertes y los guardados manuales lo ignoran, porque son justo los que el
+staff viene a buscar. Dos copias separadas por minutos con los mismos ítems siguen siendo dos
+copias: la que el staff quiere es la del momento por el que está preguntando.
+
+La copia de salida se salta mientras el servidor se está apagando. Paper desconecta a todo el mundo
+antes de deshabilitar un plugin, así que ahí una copia de salida es una fila por jugador conectado
+escrita en el mismo segundo, y la copia de entrada dice lo mismo.
+
+## Cuánto se guardan
+
+| Clave | Por defecto | Qué significa |
+|---|---|---|
+| `keep-per-player` | `20` | Copias guardadas por jugador. Las más antiguas se descartan según llegan nuevas. |
+| `keep-days` | `14` | Días que se guarda una copia. `0` las mantiene hasta que el conteo las descarte. |
+| `history-keep-days` | `90` | Días que se guarda el historial de restauraciones. `0` lo guarda para siempre. |
+
+Las muertes y los guardados manuales no los desplaza el conteo. Son de lo que trata un reporte, así
+que se quedan hasta que `keep-days` se los lleve en vez de que los eche a un lado una entrada
+cualquiera. La purga corre al arrancar el módulo y una vez por hora después.
+
+## Las pantallas
+
+**Servidores** abre primero: en qué servidor se tomó cada copia, el actual primero y brillando.
+**Inventarios** lista las copias del jugador, la más reciente arriba, con pestañas por evento, cada
+una dibujada con el icono de su motivo y una línea que dice qué fue ese evento. **Copia** es una de
+ellas, con sus propias zonas de armadura y mano secundaria — los ítems de la vista previa son
+botones, y su lore lo dice. Las casillas vacías se dibujan como aire y no como paneles de relleno,
+así que lo que ves es lo que llevaba.
+
+**Restaurar** es donde marcas las partes, e **Historial de restauraciones** es el registro de quién
+le dio qué a quién, legible desde los dos lados: lo que un miembro del staff entregó y lo que un
+jugador recibió.
+
+## Qué se puede devolver
+
+Once partes, marcadas una a una antes de confirmar:
+
+`INVENTORY`, `ARMOR`, `OFF_HAND`, `ENDER_CHEST`, `EXPERIENCE`, `HEALTH`, `HUNGER`,
+`POTION_EFFECTS`, `GAME_MODE`, `FLIGHT`, `LOCATION`.
+
+`default-parts` es lo que ya viene marcado al abrir la pantalla; por defecto son inventario,
+armadura, mano secundaria, experiencia, vida y hambre. Un nombre que este servidor no conoce se
+salta en vez de reventar, y una lista que no deja nada cae en esas seis: una errata no puede abrir
+una pantalla con todas las casillas vacías.
+
+Las cuatro partes hechas de ítems — inventario, armadura, mano secundaria y cofre de ender — se
+pueden *añadir* a lo que lleva el jugador en vez de escribirse encima. `default-replace` (`true`)
+decide con cuál de las dos abre la pantalla. Reemplazar guarda antes lo que lleva puesto en
+cualquier caso, así que la elección equivocada está a una restauración de deshacerse.
+
+`LOCATION` es la única parte que devuelve este módulo y no la librería, porque las coordenadas viven
+en la fila de la copia. Nunca se aplica entre servidores: una ubicación tomada en otro sitio no es
+un lugar de este.
+
+`notify-target` (`true`) le dice al jugador cuándo un miembro del staff le devuelve sus cosas.
+
+## Jugadores desconectados
+
+Una devolución para alguien que no está conectado se encola con su propia copia de los ítems y de
+las partes que marcaste, y aterriza en cuanto entra — su copia de entrada se escribe primero, así
+que las dos nunca se mezclan en una fila. Si está conectado en otro servidor, a ese servidor se le
+avisa por Redis para que la entrega ocurra al momento en vez de esperar a una reconexión. Quien
+encoló una por error puede descartar lo que aún se le debe.
