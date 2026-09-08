@@ -1104,7 +1104,7 @@ export const plugins: Plugin[] = [
       en: "Staff mode with a hotbar of tools, packet-level vanish with rank levels, freeze for screenshares, silent inventory mirrors, staff and network chat, reports and help requests with alerts on every server, a punishment ladder run through your ban plugin, an x-ray suspicion detector, inventory restore with a queue for players who are offline, a staff log and an admin panel that audits the team.",
       es: "Modo staff con una hotbar de herramientas, vanish a nivel de paquetes con niveles de rango, freeze para screenshares, espejos silenciosos de inventarios, chat de staff y de red, reportes y peticiones de ayuda con alertas en todos los servidores, una escalera de sanciones ejecutada por tu plugin de baneos, un detector de sospecha de x-ray, restauración de inventarios con cola para jugadores desconectados, un registro del staff y un panel de administración que audita al equipo.",
     },
-    version: "1.3.0",
+    version: "1.3.1",
     status: "stable",
     category: { en: "Moderation", es: "Moderación" },
     minecraft: "1.21+",
