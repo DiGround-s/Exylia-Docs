@@ -142,6 +142,7 @@ espadas:
 | `[MESSAGE] texto` | Una línea de chat. |
 | `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
 | `[NPC] {victim}` | El cuerpo, abajo. |
+| `[RAGDOLL] {victim}` | El cuerpo deshaciéndose, abajo. |
 
 ## `[NPC]` — el cuerpo
 
@@ -168,6 +169,54 @@ espadas:
 | `pitch` | Inclinación de la cabeza en grados, negativo hacia arriba. |
 
 Es un display, no una entidad: nadie puede golpearlo, saquearlo ni chocar con él.
+
+## `[RAGDOLL]` — el cuerpo en sí
+
+El mismo cuerpo, cortado en sus seis partes — cabeza, torso, dos brazos, dos piernas — y animado como
+una escena propia. 161 de los 183 efectos de fábrica abren con una de estas líneas en vez de un
+`[NPC]`.
+
+```yaml
+- '[RAGDOLL] {victim};intact:0.3;life:2.6;speed:4.2;up:6.4;spin:2.2;detail:2;light:15'
+- '[RAGDOLL] {victim};pose:vortex;rise:3.0;open:0.7;turns:1.8;life:3.0;detail:2;glow:{highlight}'
+```
+
+| Pose | Qué pasa |
+|---|---|
+| `burst` | Reventado: las piezas salen hacia fuera, caen, rebotan y se quedan. La de por defecto. |
+| `spread` | Se levanta del suelo y se abre, girando despacio, y luego se suelta. |
+| `knocked` | Abierto en el aire y golpeado varias veces desde distintos lados. |
+| `vortex` | Llevado hacia arriba en espiral. No queda nada en el suelo. |
+| `balloon` | La cabeza se hincha demasiado, se tambalea y revienta. |
+| `helicopter` | Los brazos se vuelven un rotor y se va hacia delante. |
+| `plane` | Brazos como alas, inclinándose mientras sube. |
+| `flatten` | Clavado contra el suelo y dejado plano. |
+| `melt` | Se hunde donde está y se va. |
+| `sign` | Las piezas se colocan formando letras y aguantan ahí. |
+| `thrown` | Enviado a algún sitio de una pieza, dando vueltas. |
+
+| Parámetro | Qué hace |
+|---|---|
+| *(la cabeza)* | `{victim}`, `{killer}` o una textura en base64 — misma regla que `[NPC]`. |
+| `pose` | Una de las once de arriba. `burst` por defecto. |
+| `life`, `intact` | Segundos que duran las piezas, y segundos que el cuerpo aguanta entero antes. |
+| `detail` | Celdas en que se corta cada parte, de `1` a `4`. Seis partes cuestan `6 × detail²` displays. |
+| `speed`, `up`, `spread`, `gravity`, `bounce`, `spin` | Cómo salen, caen y giran las piezas. |
+| `rise`, `open`, `lift`, `hang`, `turns` | Para un cuerpo sostenido en el aire antes de soltarlo. |
+| `hits`, `every`, `force` | Para `knocked`: cuántos golpes, cada cuánto y con cuánta fuerza. |
+| `swell`, `squash` | Para `balloon` y `flatten`. |
+| `sign`, `letters` | Para `sign`: qué deletrea y cuánto mide una letra. |
+| `dir` | Hacia dónde se lanza o vuela, en grados. `0` es este, `90` es sur. |
+| `size`, `light`, `glow`, `fade`, `settle`, `y`, `face` | Como en `[NPC]`. |
+
+La tabla completa de parámetros, con todos los valores por defecto, está en
+[Displays y NPCs](/docs/exylialib/displays-y-npcs).
+
+<Callout type="tip" title="Cuadra el resto de la escena con el cuerpo">
+`intact` es el tiempo antes de que le pase nada: lo que cae sobre el cuerpo — el yunque, la hoja, la
+bola de nieve — se escribe en sus propias líneas y se retrasa para llegar justo ahí. Esa es toda la
+diferencia entre un cuerpo que explota y un cuerpo al que golpean.
+</Callout>
 
 ## Cuando una línea está mal
 

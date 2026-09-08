@@ -7,15 +7,28 @@ Every placeholder below is written in full, and clicking one copies it.
 
 ## The viewer's clan
 
+<Callout type="note" title="Two lines in `messages.yml` decide what “nothing” looks like">
+Nothing here ever resolves to an empty string. A player with no clan, an empty roster slot and an
+unranked clan all answer with a configurable word:
+
+| Key | Ships as | Used by |
+|---|---|---|
+| `placeholders.none` | `{muted}None` | `clan_name`, `clan_role` |
+| `placeholders.na` | `{muted}N/A` | Empty roster slots, unranked leaderboard positions |
+
+Both live in `messages.yml` under `placeholders`, alongside the words the menus use. Change them there
+and every placeholder on this page follows.
+</Callout>
+
 | Placeholder | Description |
 |---|---|
-| `%exyliaclans_clan_name%` | The clan's name, or `None` |
+| `%exyliaclans_clan_name%` | The clan's name, or `placeholders.none` |
 | `%exyliaclans_clan_id%` | Its id, or empty |
 | `%exyliaclans_clan_members%` | Total members |
 | `%exyliaclans_clan_online%` | Members online |
 | `%exyliaclans_clan_max_members%` | The cap, level bonus included |
 | `%exyliaclans_clan_balance%` | The bank, formatted |
-| `%exyliaclans_clan_role%` | The viewer's rank name |
+| `%exyliaclans_clan_role%` | The viewer's rank name, or `placeholders.none` |
 | `%exyliaclans_clan_is_leader%` | `true` / `false` |
 | `%exyliaclans_clan_ff%` | Friendly fire, `true` / `false` |
 | `%exyliaclans_clan_allies%` | Number of allied clans |
@@ -23,7 +36,7 @@ Every placeholder below is written in full, and clicking one copies it.
 | `%exyliaclans_clan_deaths%` | Clan deaths |
 | `%exyliaclans_clan_kdr%` | Clan KDR, two decimals |
 | `%exyliaclans_clan_playtime%` | Total clan playtime, formatted |
-| `%exyliaclans_clan_level%` | Clan level, `0` with no clan |
+| `%exyliaclans_clan_level%` | Clan level. A player with no clan reads `1`, not `0` |
 | `%exyliaclans_clan_exp%` | Current EXP |
 | `%exyliaclans_clan_exp_next%` | EXP needed for the next level |
 | `%exyliaclans_clan_mail_unread%` | Unread mail for this viewer |
@@ -54,7 +67,7 @@ Every placeholder below is written in full, and clicking one copies it.
 ## The online roster
 
 Up to **thirty** slots each, sorted by rank weight — heaviest first — then alphabetically. A slot with
-nobody in it resolves to nothing, so the fallback syntax is worth using. Replace `<n>` with the slot
+nobody in it answers with `placeholders.na`, which ships as `{muted}N/A`. Replace `<n>` with the slot
 number, from `1` to `30`.
 
 | Placeholder | Description |
@@ -82,7 +95,7 @@ one rebuild.
 ## Leaderboards
 
 Valid stat keys: `online`, `members`, `kills`, `deaths`, `kdr`, `playtime`, `balance`. Anything
-unranked returns `-`.
+unranked returns `placeholders.na`.
 
 | Placeholder | Description |
 |---|---|

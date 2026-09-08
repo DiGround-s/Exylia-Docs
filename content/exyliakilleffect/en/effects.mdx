@@ -1,6 +1,6 @@
 ---
 title: "Effects and categories"
-description: "How effects.yml is written, and the 159 effects that ship in it."
+description: "How effects.yml is written, and the 183 effects that ship in it."
 ---
 
 ## The file
@@ -79,7 +79,8 @@ in.
 
 ## The catalogue
 
-Twenty-five effects per category and thirty-four in Bonk, 159 in total. Each carries a `tier` — see
+Twenty-five effects per category, thirty-four in Bonk and twenty-four in Ragdoll, 183 in total. Each
+carries a `tier` — see
 [The crate](/docs/exyliakilleffect/crate).
 
 ### Siege — `NETHERITE_SWORD`
@@ -137,11 +138,25 @@ Jokes.
 `PRESS_F` `WASTED` `NYAN_CAT` `MOAI` `OLD_PHONE`
 `BLUE_SHELL` `BLUE_SCREEN` `PINATA` `ROLLING_BOULDER` `LOADING`
 
+### Ragdoll — `SKELETON_SKULL`
+
+Deaths where the body itself is the effect.
+
+`SHATTER` `CANNONBALL` `SPILLED` `UPDRAFT` `LAST_RITES` `SUSPENDED` `SNOWBALLED` `RAPTURE` `EZ`
+`BIG_HEAD` `SMOOCH` `BOBBLEHEAD` `BUBBLEGUM` `CHOPPER` `CROP_DUSTER` `DEPARTURE` `KAMIKAZE`
+`ABDUCTION` `PANCAKE` `STEAMROLLED` `QUICKSAND` `DISSOLVED` `PUPPET` `BATTING_PRACTICE`
+
 ## The body on the ground
 
-Every one of the 159 effects uses the `[NPC]` step: a copy of the victim, wearing what they wore, left
-lying — or thrown, or slumping — where they fell for a couple of seconds. It is a display, not an entity anyone can hit — nothing can
-be looted from it and nothing collides with it.
+Every one of the 183 effects puts the victim in the scene, and 161 of them do it with the `[RAGDOLL]`
+step: the body is cut into its six parts, each one wearing the colours of their own skin, and then
+thrown apart, held open, flattened, spelled into letters or carried off in one piece. The other
+twenty-two use `[NPC]`: a whole copy of the victim, wearing what they wore, left lying — or thrown, or
+slumping — where they fell.
+
+Both are displays, not entities anyone can hit — nothing can be looted from them and nothing collides
+with them. The poses and their parameters are in
+[Sequences](/docs/exyliakilleffect/sequences).
 
 ## Writing your own
 

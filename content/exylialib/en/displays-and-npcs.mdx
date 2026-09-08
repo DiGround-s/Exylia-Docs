@@ -3,18 +3,19 @@ title: "Displays and NPCs"
 description: "Solid objects and player-shaped bodies, sent as packets and animated by the client."
 ---
 
-Two modules with the same shape: neither creates a real entity, both are drawn straight to a client,
-and both own the lifetime of what they show.
+Three modules with the same shape: none of them creates a real entity, all three are drawn straight to
+a client, and all three own the lifetime of what they show.
 
 | Module | Entry point | What it draws |
 |---|---|---|
 | Displays | `Displays.of(plugin)` | Item, block, head and text displays that move, spin and fall. |
 | NPCs | `Npcs.of(plugin)` | Player-shaped bodies: a corpse, a statue, a double. |
+| Ragdolls | `Ragdolls.of(plugin)` | A body cut into its six parts, thrown, opened out or carried off. |
 
-Both need **PacketEvents**. Without it the module says so once and draws nothing.
+All three need **PacketEvents**. Without it the module says so once and draws nothing.
 
 <Callout type="note" title="Most callers never touch either API">
-Both are reachable from a [sequence](/docs/exylialib/sequences) line, which is how every cosmetic
+All three are reachable from a [sequence](/docs/exylialib/sequences) line, which is how every cosmetic
 plugin in the ecosystem uses them. The API is for what configuration cannot describe.
 </Callout>
 
@@ -202,7 +203,87 @@ takes that player's skin off their own body until they relog. It is also announc
 it never appears in the tab list beside real players.
 </Callout>
 
-## What both of them guarantee
+## Ragdolls
+
+A body that comes apart. The player is cut into its six parts — head, torso, two arms, two legs — each
+one wearing the colours of their own skin, and then those parts are moved as a single piece of
+choreography: thrown, opened out, spun, flattened, spelled into letters, or carried off whole.
+
+```yaml
+effects:
+  # Thrown apart. The pieces leave outwards, fall, bounce and rest.
+  - '[RAGDOLL] {victim};intact:0.3;life:2.6;speed:4.2;up:6.4;spin:2.2;detail:2;light:15'
+  # Lifted, opened out, and taken upwards. Nothing is left on the floor.
+  - '[RAGDOLL] {victim};pose:vortex;rise:3.0;open:0.7;turns:1.8;life:3.0;detail:2;glow:{highlight}'
+```
+
+The head takes `{victim}`, `{killer}`, or a base64 texture, exactly as `[NPC]` does. If what died was
+not a player the line says so once and draws nothing.
+
+### The poses
+
+| Pose | What happens | Also written |
+|---|---|---|
+| `burst` | Thrown apart: the pieces leave outwards, fall, bounce and rest. The default. | |
+| `spread` | Lifted off the ground and opened out, arms and legs wide, turning slowly — then let go. | `starfish`, `open` |
+| `knocked` | Held open like `spread`, then struck several times from different sides. | `knock`, `batted`, `hit` |
+| `vortex` | Taken: the pieces spiral inwards and upwards and are gone at the top. Nothing is left. | `taken`, `ascend`, `spiral` |
+| `balloon` | The head swells far too big, wobbles, and bursts. The body waits underneath it. | `bighead`, `swell`, `pop` |
+| `helicopter` | The arms go flat above the head as a rotor, the body counter-turns, and it leaves forwards. | `chopper`, `rotor` |
+| `plane` | Arms out as wings, nose up, banking as it climbs. A negative climb is a dive. | `fly`, `glide`, `jet` |
+| `flatten` | Driven straight down and left flat: a player-shaped stain, not a pile of blocks. | `pancake`, `squash`, `flat` |
+| `melt` | Sinks. The pieces lose their height where they stand and are gone. No throw, no bounce. | `sink`, `dissolve` |
+| `sign` | The pieces lay themselves out into letters and hold there, then let go and fall. | `letters`, `spell`, `word` |
+| `thrown` | Sent somewhere in one piece, turning end over end. With no gravity it never comes back. | `launched`, `ejected`, `carried` |
+
+### Its parameters
+
+| Parameter | What it does | Default |
+|---|---|---|
+| `pose:` | Which of the eleven above. | `burst` |
+| `life:` | Seconds the pieces last. | `2.2` |
+| `intact:` | Seconds the body stands whole before anything happens to it. | `0.3` |
+| `detail:` | Cells each part is cut into on each axis, `1` to `4`. `1` is one colour per limb. | `1` |
+| `size:` | How big it is; `1` is player-sized. | `1` |
+| `light:` | Light level, `0` to `15`. | the world's own |
+| `glow:` | Outline colour — a name, `#rrggbb` or a `{palette}` token. | none |
+| `fade:` | Shrinks away at the end instead of vanishing. | `false` |
+| `settle:` | Stops turning once it lands. | `true` |
+| `y:` | Height above the anchor. | `0` |
+| `face:` | Turns to face whoever set the sequence off. | `true` |
+| `speed:` `up:` | How fast the pieces leave, outwards and upwards. | `3.2` / `6.5` |
+| `spread:` | How much the pieces differ from each other, `0` to `1`. | `0.45` |
+| `gravity:` `bounce:` | Blocks per second squared, and the speed kept on landing. | `26` / `0.32` |
+| `spin:` | Turns a second. | `1.8` |
+| `rise:` `open:` | How far off the ground a held body hangs, and how far its arms and legs open out. | `1.1` / `0.55` |
+| `lift:` `hang:` `turns:` | Seconds the lift takes, seconds it hangs there, and turns it makes while it hangs. | `0.45` / `0.9` / `0.35` |
+| `hits:` `every:` `force:` | For `knocked`: how many blows, seconds between them, and how far one shoves it in blocks. | `3` / `0.32` / `0.85` |
+| `swell:` | For `balloon`: how many times its own size the head reaches. | `3` |
+| `squash:` | For `flatten`: what is left of a piece's height. | `0.14` |
+| `sign:` `letters:` | For `sign`: what the body spells, and how tall one letter is in blocks. | `EZ` / `2.4` |
+| `dir:` | Which way it is thrown or flies, in degrees. `0` is east, `90` is south. | the anchor's own facing |
+
+```java
+PluginRagdolls ragdolls = Ragdolls.of(this);
+
+ragdolls.show(RagdollModel.of(victim).detail(2).light(15),
+        RagdollMotion.builder().pose(RagdollPose.VORTEX).rise(3.0).build(),
+        victim.getLocation(), observers);
+```
+
+<Callout type="tip" title="`detail` is the only expensive parameter here">
+A part is drawn as a `detail` × `detail` grid, so six parts cost `6 × detail²` displays: `detail:1` is
+six, `detail:2` is twenty-four, and `detail:4` is ninety-six. Two reads as a body at any distance
+somebody actually watches one from; four is for a body that hangs still in front of the camera.
+</Callout>
+
+<Callout type="note" title="A pose is choreography, not physics">
+Every one of these is solved in advance and handed to the client as poses, so what separates them is
+what the file wanted to say, never what the server could afford. Nothing here is simulated, and
+nothing here is ticked.
+</Callout>
+
+## What all three guarantee
 
 | | |
 |---|---|

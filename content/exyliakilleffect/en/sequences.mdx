@@ -141,6 +141,7 @@ facing south with its tip up and to the right, so `roll:135` points it down.
 | `[MESSAGE] text` | A chat line. |
 | `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
 | `[NPC] {victim}` | The body, below. |
+| `[RAGDOLL] {victim}` | The body coming apart, below. |
 
 ## `[NPC]` — the body
 
@@ -167,6 +168,53 @@ facing south with its tip up and to the right, so `roll:135` points it down.
 | `pitch` | Head pitch in degrees, negative being up. |
 
 It is a display, not an entity: nothing can hit it, loot it or walk into it.
+
+## `[RAGDOLL]` — the body itself
+
+The same body, cut into its six parts — head, torso, two arms, two legs — and animated as a scene of
+its own. 161 of the 183 shipped effects open with one of these instead of an `[NPC]`.
+
+```yaml
+- '[RAGDOLL] {victim};intact:0.3;life:2.6;speed:4.2;up:6.4;spin:2.2;detail:2;light:15'
+- '[RAGDOLL] {victim};pose:vortex;rise:3.0;open:0.7;turns:1.8;life:3.0;detail:2;glow:{highlight}'
+```
+
+| Pose | What happens |
+|---|---|
+| `burst` | Thrown apart: the pieces leave outwards, fall, bounce and rest. The default. |
+| `spread` | Lifted off the ground and opened out, turning slowly, then let go. |
+| `knocked` | Held open and struck several times, from different sides. |
+| `vortex` | Taken upwards in a spiral. Nothing is left on the floor. |
+| `balloon` | The head swells far too big, wobbles, and bursts. |
+| `helicopter` | The arms become a rotor and it leaves forwards. |
+| `plane` | Arms out as wings, banking as it climbs. |
+| `flatten` | Driven straight down and left flat. |
+| `melt` | Sinks where it stands and is gone. |
+| `sign` | The pieces lay themselves out into letters and hold there. |
+| `thrown` | Sent somewhere in one piece, turning end over end. |
+
+| Parameter | What it does |
+|---|---|
+| *(the head)* | `{victim}`, `{killer}`, or a base64 texture — same rule as `[NPC]`. |
+| `pose` | One of the eleven above. `burst` by default. |
+| `life`, `intact` | Seconds the pieces last, and seconds the body stands whole first. |
+| `detail` | Cells each part is cut into, `1` to `4`. Six parts cost `6 × detail²` displays. |
+| `speed`, `up`, `spread`, `gravity`, `bounce`, `spin` | How the pieces leave, fall and turn. |
+| `rise`, `open`, `lift`, `hang`, `turns` | For a body held in the air before it is let go. |
+| `hits`, `every`, `force` | For `knocked`: how many blows, how often, how hard. |
+| `swell`, `squash` | For `balloon` and `flatten`. |
+| `sign`, `letters` | For `sign`: what it spells, and how tall a letter is. |
+| `dir` | Which way it is thrown or flies, in degrees. `0` is east, `90` is south. |
+| `size`, `light`, `glow`, `fade`, `settle`, `y`, `face` | As `[NPC]`. |
+
+The full parameter table, with every default, is in
+[Displays and NPCs](/docs/exylialib/displays-and-npcs).
+
+<Callout type="tip" title="Time the rest of the scene to the body">
+`intact` is the beat before anything happens: what lands on the body — the anvil, the blade, the
+snowball — is written as its own lines and delayed to arrive exactly then. That is the whole
+difference between a body that explodes and a body that is hit.
+</Callout>
 
 ## When a line is wrong
 

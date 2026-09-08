@@ -1,6 +1,6 @@
 ---
 title: "Efectos y categorías"
-description: "Cómo se escribe effects.yml y los 159 efectos que trae."
+description: "Cómo se escribe effects.yml y los 183 efectos que trae."
 ---
 
 ## El archivo
@@ -79,7 +79,8 @@ leerlos.
 
 ## El catálogo
 
-Veinticinco efectos por categoría y treinta y cuatro en Bonk, 159 en total. Cada uno lleva un `tier` — ver
+Veinticinco efectos por categoría, treinta y cuatro en Bonk y veinticuatro en Ragdoll, 183 en total.
+Cada uno lleva un `tier` — ver
 [La caja](/docs/exyliakilleffect/caja).
 
 ### Siege — `NETHERITE_SWORD`
@@ -137,11 +138,24 @@ Bromas.
 `PRESS_F` `WASTED` `NYAN_CAT` `MOAI` `OLD_PHONE`
 `BLUE_SHELL` `BLUE_SCREEN` `PINATA` `ROLLING_BOULDER` `LOADING`
 
+### Ragdoll — `SKELETON_SKULL`
+
+Muertes donde el efecto es el cuerpo mismo.
+
+`SHATTER` `CANNONBALL` `SPILLED` `UPDRAFT` `LAST_RITES` `SUSPENDED` `SNOWBALLED` `RAPTURE` `EZ`
+`BIG_HEAD` `SMOOCH` `BOBBLEHEAD` `BUBBLEGUM` `CHOPPER` `CROP_DUSTER` `DEPARTURE` `KAMIKAZE`
+`ABDUCTION` `PANCAKE` `STEAMROLLED` `QUICKSAND` `DISSOLVED` `PUPPET` `BATTING_PRACTICE`
+
 ## El cuerpo en el suelo
 
-Los 159 efectos usan el paso `[NPC]`: una copia de la víctima, con lo que llevaba puesto,
-tirada — o lanzada, o desplomándose — donde cayó durante un par de segundos. Es un display, no una
-entidad: nadie puede golpearla, saquearla ni chocar con ella.
+Los 183 efectos meten a la víctima en la escena, y 161 lo hacen con el paso `[RAGDOLL]`: el cuerpo se
+corta en sus seis partes, cada una con los colores de su propia skin, y se revienta, se abre en el
+aire, se aplasta, se deletrea en letras o se lo llevan de una pieza. Los otros veintidós usan `[NPC]`:
+una copia entera de la víctima, con lo que llevaba puesto, tirada — o lanzada, o desplomándose — donde
+cayó.
+
+Los dos son displays, no entidades: nadie puede golpearlas, saquearlas ni chocar con ellas. Las poses
+y sus parámetros están en [Secuencias](/docs/exyliakilleffect/secuencias).
 
 ## Escribir los tuyos
 

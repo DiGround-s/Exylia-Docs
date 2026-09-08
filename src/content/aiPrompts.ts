@@ -111,6 +111,7 @@ Every shape also understands:
     [MESSAGE] text
     [COMMAND] give {player} …             {player} {world} {x} {y} {z}
     [NPC] {victim}                        a body, below
+    [RAGDOLL] {victim}                    that body coming apart, below
 
 ### [NPC] — a body
 
@@ -135,6 +136,47 @@ Every shape also understands:
     pitch       head pitch in degrees, negative being up
 
 It is a display, not an entity: nothing can hit it, loot it or walk into it.
+
+### [RAGDOLL] — that body coming apart
+
+    '[RAGDOLL] {victim};intact:0.3;life:2.6;speed:4.2;up:6.4;spin:2.2;detail:2;light:15'
+    '[RAGDOLL] {victim};pose:vortex;rise:3.0;open:0.7;turns:1.8;life:3.0;detail:2;glow:{highlight}'
+
+The same body, cut into its six parts — head, torso, two arms, two legs — each wearing the colours
+of that player's own skin, and moved as one piece of choreography. The head takes {victim},
+{killer} or a base64 texture, exactly as [NPC] does.
+
+    pose        what happens to the body, one of:
+                burst       thrown apart: the pieces leave outwards, fall, bounce and rest (default)
+                spread      lifted off the ground and opened out, turning slowly, then let go
+                knocked     held open and struck several times, from different sides
+                vortex      taken upwards in a spiral. Nothing is left on the floor
+                balloon     the head swells far too big, wobbles, and bursts
+                helicopter  the arms become a rotor and it leaves forwards
+                plane       arms out as wings, banking as it climbs
+                flatten     driven straight down and left flat
+                melt        sinks where it stands and is gone
+                sign        the pieces lay themselves out into letters and hold there
+                thrown      sent somewhere in ONE PIECE, turning end over end
+    life        seconds the pieces last. Defaults to 2.2
+    intact      seconds the body stands whole before anything happens to it. Defaults to 0.3
+    detail      cells each part is cut into, 1 to 4. Six parts cost 6 x detail^2 displays.
+                Use 2 for almost everything; 3 only for a body that hangs still
+    speed up spread gravity bounce spin   how the pieces leave, fall and turn
+                                          3.2 / 6.5 / 0.45 / 26 / 0.32 / 1.8
+    rise open lift hang turns   for a body held in the air before it is let go
+                                1.1 / 0.55 / 0.45 / 0.9 / 0.35
+    hits every force    for knocked: how many blows, seconds between them, blocks each shoves it
+    swell       for balloon: how many times its own size the head reaches. Defaults to 3
+    squash      for flatten: what is left of a piece's height. Defaults to 0.14
+    sign letters    for sign: what the body spells, and how tall one letter is in blocks
+    dir         which way it is thrown or flies, in degrees. 0 is east, 90 is south
+    size light glow fade settle y face   as [NPC]
+
+Use pose:thrown for a body SENT somewhere — out of an airlock, into a wave, off a battering ram.
+It keeps its shape the whole way, which is the difference between being ejected and being blown up.
+Time whatever lands on the body — the anvil, the blade, the snowball — to arrive exactly at
+intact, with its own [DELAY] lines.
 
 ## Three rules that save an afternoon
 
@@ -216,8 +258,8 @@ The effect key is the permission: BLADE_STORM is \`exyliakilleffect.effect.blade
 
 A kill effect is a scene, and it is allowed to be one: about ten to fifteen steps, a second and a
 half to three seconds end to end. That is the ceiling, not a target — every line is a packet per
-viewer. Almost every shipped effect opens with an \`[NPC] {victim}\` line, because the body going
-down is what the effect is about.
+viewer. Almost every shipped effect opens with a \`[RAGDOLL] {victim}\` line, because what happens
+to the body is what the effect is about; \`[NPC]\` is for the ones that leave it whole.
 
 ${SEQUENCE_DSL}
 
@@ -232,7 +274,7 @@ ${SEQUENCE_DSL}
         - 'for a beat, then {highlight}close all at once{neutral}.'
       priority: 1
       effects:
-        - '[NPC] {victim};pose:standing;hold:NETHERITE_SWORD;swing:0.28;turn:-70;over:0.55;pose_to:lying;after:1.13;life:3.58;hurt:true;move_after:0.58'
+        - '[RAGDOLL] {victim};intact:1.26;life:2.9;speed:4.2;up:6.4;spread:0.55;spin:2.2;detail:2;light:15'
         - '[SOUND] ENTITY_BREEZE_INHALE;1.5;1.7'
         - '[CIRCLE] NETHERITE_SWORD;as:item;radius:3.4;points:12;from:0,10,0;to:0,1.0,0;ease:in;life:0.55;roll:135;face_out:true;size:1.4;light:15;ticks:5;interval:0.025'
         - '[DELAY] 0.58'
@@ -245,22 +287,28 @@ ${SEQUENCE_DSL}
         - '[SOUND] ENTITY_PLAYER_ATTACK_CRIT;2.0;0.5'
         - '[PARTICLE] SWEEP_ATTACK;count:6;offset:0.5,0.4,0.5;speed:0.0'
 
-Read it as a script: the body is placed and holds a sword, twelve blades fall point first from ten
-blocks up over half a second, the ground plates crack under them, the blades close on the centre,
-and a sweep particle lands the last frame. Every \`[DELAY]\` is the length of the movement before it.
+Read it as a script: the body stands for a beat and then bursts apart, twelve blades fall point
+first from ten blocks up over half a second, the ground plates crack under them, the blades close on
+the centre, and a sweep particle lands the last frame. Every \`[DELAY]\` is the length of the movement before it.
 
     CRATER:
       category: cataclysm
-      name: "<gradient:#FFD9A0:#8A3B00><bold>CRATER</bold></gradient>"
-      material: MAGMA_BLOCK
-      description: "The floor {highlight}gives out{neutral} under them."
-      priority: 14
+      tier: common
+      name: "<gradient:#C7B49A:#705E49><bold>CRATER</bold></gradient>"
+      material: GRAVEL
+      description: "Nothing falls. The ground simply<nl>{highlight}leaves{neutral}, in every direction."
+      priority: 13
       effects:
-        - '[NPC] {victim};pose:standing;pitch:-70;pose_to:lying;after:0.7;hurt:true;life:3.2'
-        - '[SOUND] ENTITY_GENERIC_EXPLODE;1.6;0.6'
-        - '[DISC] MAGMA_BLOCK;as:block;radius:3.0;rings:3;points:14;size:0.9,0.1,0.9;size_to:1.0,0.06,1.0;ease:out;life:0.7;y:-0.1;light:14'
-        - '[SCATTER] BLACKSTONE;as:block;radius:2.4;points:14;seed:5;height:1.2;size:0.35;size_to:0.05;vary:0.9;pull:-3;to:0,2.4,0;gravity:9;ease:out;life:1.0;spin:1,1,1;light:12'
-        - '[PARTICLE] LARGE_SMOKE;count:22;offset:1.6,0.6,1.6;speed:0.06'
+        - '[RAGDOLL] {victim};pose:melt;intact:0.15;hang:0.95;squash:0.06;open:0.35;life:2.4;detail:2;light:15'
+        - '[SOUND] ENTITY_GENERIC_EXPLODE;2.0;0.3'
+        - '[DISC] GRAVEL;as:block;radius:4.5;rings:4;points:7;from:0,0,0;to:0,0,0;size:0.6;size_to:0.45;pull:-0.55;ease:out;life:1.4;y:0.0;vary:0.7;spin:0.2,0.4,0.2;light:11'
+        - '[DISC] DIRT;as:block;radius:3.0;rings:3;points:7;from:0,0,0;to:0,1.20,0;gravity:2.1;pull:-1.2;ease:out;life:1.2;y:0.0;size:0.4;vary:0.9;size_to:0.05;spin:1,1,1;light:10'
+        - '[PARTICLE] LARGE_SMOKE;count:80;offset:2.4,0.3,2.4;speed:0.2'
+        - '[DELAY] 0.9'
+        - '[SOUND] BLOCK_GRAVEL_BREAK;2.0;0.4'
+        - '[DELAY] 0.5'
+        - '[SOUND] BLOCK_GRAVEL_PLACE;1.6;0.6'
+        - '[DISC] GRAVEL;as:block;radius:4.5;rings:4;points:7;size:0.45;size_to:0.02;ease:in;life:0.7;y:0.0;light:11'
 `,
 
   hiteffect: `You are writing a hit effect for the Minecraft plugin ExyliaHitEffect (Paper/Folia 1.21+),
@@ -310,8 +358,8 @@ UNDER SIX TENTHS OF A SECOND end to end. That is the budget, not a coincidence: 
 about 0.5, sizes small, \`life\` at 0.2–0.5, and use at most one sound. Anything longer reads as lag,
 not as an effect.
 
-None of the shipped hit effects uses \`[NPC]\` — a body left behind on every blow is a kill effect,
-not a hit effect — but the step exists if you want one.
+None of the shipped hit effects uses \`[NPC]\` or \`[RAGDOLL]\` — a body left behind on every blow is
+a kill effect, not a hit effect — but both steps exist if you want one.
 
 ${SEQUENCE_DSL}
 

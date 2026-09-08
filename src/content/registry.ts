@@ -673,6 +673,47 @@ const SURVIVALCORE_NAV: NavGroup[] = [
   },
 ];
 
+const SANDBOX_NAV: NavGroup[] = [
+  {
+    label: { en: "Getting started", es: "Empezar" },
+    pages: [
+      page("introduction", "introduction", "introduccion"),
+      page("installation", "installation", "instalacion"),
+      page("first-steps", "first-steps", "primeros-pasos"),
+    ],
+  },
+  {
+    label: { en: "Configuring", es: "Configurar" },
+    pages: [
+      page("worlds", "worlds", "mundos"),
+      page("kits", "kits", "kits"),
+      page("kit-room", "kit-room", "sala-de-kits"),
+      page("tp-regions", "tp-regions", "regiones-tp"),
+    ],
+  },
+  {
+    label: { en: "Systems", es: "Sistemas" },
+    pages: [
+      page("rtp-and-queue", "rtp-and-queue", "rtp-y-cola"),
+      page("teleports", "teleports", "teletransportes"),
+      page("admin-panel", "admin-panel", "panel-admin"),
+    ],
+  },
+  {
+    label: { en: "Reference", es: "Referencia" },
+    pages: [
+      page("commands", "commands", "comandos"),
+      page("permissions", "permissions", "permisos"),
+      page("placeholders", "placeholders", "placeholders"),
+      page("configuration", "configuration", "configuracion"),
+      page("menus", "menus", "menus"),
+      page("database", "database", "base-de-datos"),
+      page("api", "api", "api"),
+      page("faq", "faq", "faq"),
+    ],
+  },
+];
+
 const STAFF_NAV: NavGroup[] = [
   {
     label: { en: "Getting started", es: "Empezar" },
@@ -796,8 +837,8 @@ export const plugins: Plugin[] = [
     name: "ExyliaKillEffect",
     tagline: { en: "Kill effects drawn with display entities", es: "Efectos de muerte hechos con display entities" },
     summary: {
-      en: "129 kill effects across six categories, drawn with real items and blocks that fall, turn and slam: chosen from a menu, won out of a crate or bound to a weapon with a token, and written as sequences a server owner can edit.",
-      es: "129 efectos de muerte en seis categorías, dibujados con objetos y bloques reales que caen, giran y se clavan: elegidos desde un menú, ganados en una caja o atados a un arma con una ficha, y escritos como secuencias que el dueño puede editar.",
+      en: "183 kill effects across seven categories, drawn with real items and blocks that fall, turn and slam: chosen from a menu, won out of a crate or bound to a weapon with a token, and written as sequences a server owner can edit.",
+      es: "183 efectos de muerte en siete categorías, dibujados con objetos y bloques reales que caen, giran y se clavan: elegidos desde un menú, ganados en una caja o atados a un arma con una ficha, y escritos como secuencias que el dueño puede editar.",
     },
     version: "1.1.0",
     status: "stable",
@@ -948,7 +989,7 @@ export const plugins: Plugin[] = [
       en: "Per-clan ranks written by the players themselves, a bank, rectangular land claims, deaths till raidable, levels, alliances and rivalries, a recruitment board in both directions, and a clan mailbox.",
       es: "Rangos que cada clan escribe por su cuenta, banco, terrenos rectangulares, deaths till raidable, niveles, alianzas y rivalidades, un tabl\u00f3n de reclutamiento en los dos sentidos y un buz\u00f3n de clan.",
     },
-    version: "1.0.1",
+    version: "1.1.0",
     status: "stable",
     category: { en: "Social", es: "Social" },
     minecraft: "1.21+",
@@ -1030,6 +1071,31 @@ export const plugins: Plugin[] = [
       { en: "Folia", es: "Folia" },
     ],
     nav: SURVIVALCORE_NAV,
+  },
+  {
+    id: "exyliasandbox",
+    name: "ExyliaSandBox",
+    tagline: {
+      en: "Disposable PvP worlds, generated",
+      es: "Mundos PvP desechables, generados",
+    },
+    summary: {
+      en: "Generated PvP worlds with their own terrain presets and border, a random-teleport entry, a 1v1 queue that drops two players facing each other, kits players write themselves, a kit room, and teleport pads that send everybody standing on them at once.",
+      es: "Mundos PvP generados con sus propios presets de terreno y su borde, entrada por teletransporte aleatorio, una cola 1v1 que suelta a dos jugadores mir\u00e1ndose, kits que escribe cada jugador, una sala de kits y plataformas que mandan a la vez a todo el que est\u00e9 encima.",
+    },
+    version: "1.0.3",
+    status: "stable",
+    category: { en: "PvP", es: "PvP" },
+    minecraft: "1.21+",
+    banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/sandbox/ExyliaSandBoxBanner.webp",
+    purchase: "https://builtbybit.com/resources/exylia-sandbox.123503/",
+    tags: [
+      { en: "PvP", es: "PvP" },
+      { en: "Worlds", es: "Mundos" },
+      { en: "Kits", es: "Kits" },
+      { en: "Folia", es: "Folia" },
+    ],
+    nav: SANDBOX_NAV,
   },
   {
     id: "exylialib",
