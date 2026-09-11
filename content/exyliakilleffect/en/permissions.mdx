@@ -23,8 +23,8 @@ out of [the crate](/docs/exyliakilleffect/crate), which is written to the player
 There is no `permission` key in `effects.yml`. The node is derived from the key, lowercased:
 
 ```text
-BLADE_STORM  →  exyliakilleffect.effect.blade_storm
-siege        →  exyliakilleffect.category.siege
+GRIDDY       →  exyliakilleffect.effect.griddy
+meme         →  exyliakilleffect.category.meme
 legendary    →  exyliakilleffect.tier.legendary
 ```
 
@@ -35,13 +35,13 @@ is a different node, and everybody who had the old one loses the effect.
 
 ```text
 /lp group default permission set exyliakilleffect.command.killeffect true
-/lp group vip     permission set exyliakilleffect.category.siege true
-/lp group mvp     permission set exyliakilleffect.effect.blade_storm true
+/lp group vip     permission set exyliakilleffect.category.meme true
+/lp group mvp     permission set exyliakilleffect.effect.griddy true
 /lp group elite   permission set exyliakilleffect.tier.legendary true
 /lp group legend  permission set exyliakilleffect.effect.* true
 ```
 
-Seven categories and four rarities are what make those nodes worth selling: "every Siege effect" or
+Five categories and four rarities are what make those nodes worth selling: "every Meme effect" or
 "every legendary" is one line instead of twenty.
 
 <Callout type="tip" title="Give the menu away">

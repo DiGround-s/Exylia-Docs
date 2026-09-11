@@ -41,8 +41,8 @@ That is each observer's own choice: `ALL`, `NONE`, `SELF_ONLY` or `OTHERS_ONLY`,
 
 ## Are the bodies real entities?
 
-No. `[NPC]` draws a display: nothing can hit it, loot it or collide with it, and it disappears when
-its `life` runs out.
+No. `[RAGDOLL]` and `[NPC]` draw displays: nothing can hit them, loot them or collide with them, and
+they disappear when their `life` runs out.
 
 ## Does the weapon lore get written to the item?
 
@@ -51,8 +51,8 @@ it always had, and renaming an effect updates every weapon on the server at once
 
 ## Can I write my own effects?
 
-Yes — that is what `effects.yml` is for. Twenty-five shapes, thirteen other tokens and the display
-parameters are in [Sequences](/docs/exyliakilleffect/sequences). A line that cannot be read is
+Yes — that is what `effects.yml` is for. Twenty-five shapes, `PIXELS` for pictures and words, thirteen other tokens and the
+display parameters are in [Sequences](/docs/exyliakilleffect/sequences). A line that cannot be read is
 reported on the console and skipped; the rest of the effect still plays.
 
 ## Effects lag during big fights

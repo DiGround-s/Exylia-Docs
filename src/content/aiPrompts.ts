@@ -31,7 +31,7 @@ A shape line draws DISPLAY ENTITIES when it carries \`as:\`, and PARTICLES when 
 
 CIRCLE SPHERE DOME CUBE LINE RIBBON SCATTER BEAM SPIRAL DOUBLE_HELIX TORNADO STAR CAGE DISC
 VORTEX WAVE CROSS GALAXY TORUS BURST PYRAMID RING_PULSE WINGS ARCH CLAW, plus DISPLAY for a
-single object at the anchor.
+single object at the anchor and PIXELS for a picture or a word.
 
 Each shape's own parameters:
 
@@ -59,6 +59,7 @@ Each shape's own parameters:
     RIBBON                  radius points waves amplitude
     SCATTER                 radius height points seed floor
     DISPLAY                 (none)
+    PIXELS                  art or word, pixel pick depth — below
 
 Every shape also understands:
 
@@ -89,6 +90,21 @@ Every shape also understands:
     light      0 to 15. Use light:15 for anything that must read at night
     model billboard hold   the display's own model, billboard mode and hold time
 
+### PIXELS — a picture or a word out of blocks
+
+    '[PIXELS] RED_CONCRETE;as:block;word:SLAP;pixel:0.12;face:true;y:2.7;ease:out;life:0.25;size:0.02;size_to:0.12;light:15'
+
+    art        heart heart_big broken_heart star crown skull bolt note cloud trophy ufo moon
+               guillotine blade grave portal eye clock rift flag
+    word       letters instead of a picture
+    pixel      the size of one cell, in blocks
+    pick       which characters of the picture this line draws: # body, o outline, w shine,
+               y gems. Two lines in two materials colour one picture
+    depth      moves it towards whoever it faces
+    face:true  turns it to whoever did it, which keeps a word the right way round
+
+Everything under Moving a display applies to it.
+
 ### Repeating any step
 
     repeat     how many times the line plays
@@ -110,8 +126,8 @@ Every shape also understands:
     [ACTION_BAR] text
     [MESSAGE] text
     [COMMAND] give {player} …             {player} {world} {x} {y} {z}
-    [NPC] {victim}                        a body, below
-    [RAGDOLL] {victim}                    that body coming apart, below
+    [RAGDOLL] {victim}                    the body itself, choreographed, below
+    [NPC] {victim}                        a whole fake player, below
 
 ### [NPC] — a body
 
@@ -137,46 +153,62 @@ Every shape also understands:
 
 It is a display, not an entity: nothing can hit it, loot it or walk into it.
 
-### [RAGDOLL] — that body coming apart
+### [RAGDOLL] — the body itself
 
-    '[RAGDOLL] {victim};intact:0.3;life:2.6;speed:4.2;up:6.4;spin:2.2;detail:2;light:15'
-    '[RAGDOLL] {victim};pose:vortex;rise:3.0;open:0.7;turns:1.8;life:3.0;detail:2;glow:{highlight}'
+    '[RAGDOLL] {victim};intact:0.1;detail:2;light:15;then:burst;keys:0.25 crouch ease=anticipate | 0.4 stand up=1.6 flip=~-360 ease=out | 0.35 up=0 ease=bounce'
 
-The same body, cut into its six parts — head, torso, two arms, two legs — each wearing the colours
-of that player's own skin, and moved as one piece of choreography. The head takes {victim},
-{killer} or a base64 texture, exactly as [NPC] does.
+A player's body with every joint kept — head, torso, two arms, two legs — each wearing the colours
+of that player's own skin, choreographed frame by frame.
 
-    pose        what happens to the body, one of:
-                burst       thrown apart: the pieces leave outwards, fall, bounce and rest (default)
-                spread      lifted off the ground and opened out, turning slowly, then let go
-                knocked     held open and struck several times, from different sides
-                vortex      taken upwards in a spiral. Nothing is left on the floor
-                balloon     the head swells far too big, wobbles, and bursts
-                helicopter  the arms become a rotor and it leaves forwards
-                plane       arms out as wings, banking as it climbs
-                flatten     driven straight down and left flat
-                melt        sinks where it stands and is gone
-                sign        the pieces lay themselves out into letters and hold there
-                thrown      sent somewhere in ONE PIECE, turning end over end
-    life        seconds the pieces last. Defaults to 2.2
-    intact      seconds the body stands whole before anything happens to it. Defaults to 0.3
-    detail      cells each part is cut into, 1 to 4. Six parts cost 6 x detail^2 displays.
-                Use 2 for almost everything; 3 only for a body that hangs still
-    speed up spread gravity bounce spin   how the pieces leave, fall and turn
-                                          3.2 / 6.5 / 0.45 / 26 / 0.32 / 1.8
-    rise open lift hang turns   for a body held in the air before it is let go
-                                1.1 / 0.55 / 0.45 / 0.9 / 0.35
-    hits every force    for knocked: how many blows, seconds between them, blocks each shoves it
-    swell       for balloon: how many times its own size the head reaches. Defaults to 3
-    squash      for flatten: what is left of a piece's height. Defaults to 0.14
-    sign letters    for sign: what the body spells, and how tall one letter is in blocks
-    dir         which way it is thrown or flies, in degrees. 0 is east, 90 is south
-    size light glow fade settle y face   as [NPC]
+    (the head)  whose body it is: {victim}; {killer}, a copy of whoever did it, acting the death
+                out; or {crowd} with seat:N, the Nth player watching nearby, or a stranger when
+                nobody is. Every body faces the killer's side, so at=0,0,2 turn=180 is someone two
+                blocks away looking at the victim
 
-Use pose:thrown for a body SENT somewhere — out of an airlock, into a wave, off a battering ram.
-It keeps its shape the whole way, which is the difference between being ejected and being blown up.
-Time whatever lands on the body — the anvil, the blade, the snowball — to arrive exactly at
-intact, with its own [DELAY] lines.
+keys: is the choreography. Frames are separated by |. Each starts with the seconds it takes to
+reach it from the one before — the same numbers the effect's [DELAY] lines add up to — then lists
+only what changes. The body starts standing where it died, once intact is over. A frame of 0
+seconds is where it starts instead, which is how a second body stands across the room from the very
+first tick.
+
+    at=right,up,forward    moves the hips, in blocks; also right= up= forward=
+    flip= turn= lean=      turns the whole body: forwards, to its left, to its right
+    head= body=            pitch,yaw,roll: nods forward, turns left, tilts right
+    arm_r= arm_l= leg_r= leg_l=
+                           pitch,yaw,roll: swings forward and up, swings a raised limb outwards,
+                           raises it away from the body
+    arms= legs=            both sides at once, mirrored
+    <joint>_at=out,up,forward   pulls a part off its joint
+    size= <joint>_size=    how big the body, or one part of it, is
+    shake=                 how hard it trembles, in blocks
+    ease=                  in_out (default) in out linear back anticipate elastic bounce snap smooth
+
+Angles are degrees. ~90 adds to where a channel already is, so turn=~360 is one more full turn.
+smooth flows through a frame instead of stopping at it, which is what a sway or a path needs.
+
+A bare word is a whole pose, and what follows it in the frame is written on top: stand tpose star
+cheer reach zombie hug crouch sit kneel lie prone bow pray dab superman splits float limp fetal
+swoon heart arabesque
+
+    then        what happens after the last frame: hold, burst, collapse, implode or dissolve.
+                burst reads speed up spread gravity bounce spin; implode reads turns
+    then:spell  lays every piece out into the word in sign: (letters: tall, rise: off the floor)
+                with the head floating over it, holds, and drops it
+    follow      how much the loose joints lag and overshoot. 1 is a body, 2 is a cartoon
+    hold offhand hat   an item in a hand or on the head, carried wherever the body goes.
+                       hold_size hat_size hat_y size and place them
+    strings     puppet strings from the hands and head, up to that height
+    chains      shackles both wrists to the floor that far out to each side
+    snip        the second the strings or chains break
+    intact      seconds the body stands whole before its frames begin
+    life        leave it out and the body lives as long as its frames and its finish need
+    detail      cells each part is cut into, 1 to 4. 1 is six boxes and the cheapest; 2 keeps a
+                sleeve apart from a hand. Shipped effects use 3 for the victim, 2 for anyone else
+    size glow light y face   as on any display
+
+The older poses still work — pose:burst spread knocked vortex balloon helicopter plane flatten
+melt sign thrown — but write new bodies with keys:. Time whatever lands on the body — the slap, the
+anvil, the blade — so its [DELAY] lines add up to the second its frame arrives.
 
 ## Three rules that save an afternoon
 
@@ -225,20 +257,20 @@ Read everything below, then write the effect the user asks for at the end.
 \`plugins/ExyliaKillEffect/effects.yml\`, under \`kill_effects:\`. An entry looks like this:
 
     kill_effects:
-      BLADE_STORM:
-        category: siege
+      GRIDDY:
+        category: meme
         tier: common
-        name: "<gradient:#DCE6F2:#8FA6C4><bold>BLADE STORM</bold></gradient>"
-        material: NETHERITE_SWORD
+        name: "<gradient:#B8FF9E:#59A4FF><bold>HIT THE GRIDDY</bold></gradient>"
+        material: NOTE_BLOCK
         description:
-          - 'Twelve blades come down point first, stand'
-          - 'for a beat, then {highlight}close all at once{neutral}.'
+          - 'Two bars of the griddy, a spin, a dab, and'
+          - 'then {highlight}the whole dance goes everywhere{neutral}.'
         priority: 1
         effects:
-          - '[SOUND] ENTITY_BREEZE_INHALE;1.5;1.7'
+          - '[SOUND] BLOCK_NOTE_BLOCK_BIT;0.8;1.0'
 
     category      which tab it appears under; must be a key declared under categories:
-                  the shipped ones are siege, cataclysm, abyss, aurora, verdant, bonk
+                  the shipped ones are meme, void, cataclysm, lovestruck, cosmic
     tier          how rare it is; must be a key declared under tiers: in config.yml
                   the shipped ones are common, rare, epic, legendary. Omit it and it falls back
                   to the first rarity
@@ -250,65 +282,99 @@ Read everything below, then write the effect the user asks for at the end.
     weapons       optional, only read while behaviour.mode reads weapons. Accepts item names and
                   the families ANY SWORD AXE TRIDENT MACE BOW CROSSBOW MELEE RANGED
 
-The effect key is the permission: BLADE_STORM is \`exyliakilleffect.effect.blade_storm\`.
+The effect key is the permission: GRIDDY is \`exyliakilleffect.effect.griddy\`.
 
 ## The anchor and the budget
 
 \`(0,0,0)\` is where the victim fell. Positive Y is up.
 
-A kill effect is a scene, and it is allowed to be one: about ten to fifteen steps, a second and a
-half to three seconds end to end. That is the ceiling, not a target — every line is a packet per
-viewer. Almost every shipped effect opens with a \`[RAGDOLL] {victim}\` line, because what happens
-to the body is what the effect is about; \`[NPC]\` is for the ones that leave it whole.
+A kill effect is a scene, and it is allowed to be one: the shipped ones run about twenty to thirty
+steps, three to five and a half seconds end to end. That is the ceiling, not a target — every line is
+a packet per viewer. Every shipped effect opens with a \`[RAGDOLL] {victim}\` line choreographed with
+keys:, because what happens to the body is what the effect is about; many add a \`{killer}\` body
+that walks in and acts the death out, or \`{crowd}\` bodies that watch and join in. Keep every
+[SOUND] volume at 1.0 or below: a louder sound only carries further, and anything above is read as 1.0.
 
 ${SEQUENCE_DSL}
 
 ## Two effects that ship, in full
 
-    BLADE_STORM:
-      category: siege
-      name: "<gradient:#DCE6F2:#8FA6C4><bold>BLADE STORM</bold></gradient>"
-      material: NETHERITE_SWORD
+    GRIDDY:
+      category: meme
+      tier: common
+      name: "<gradient:#B8FF9E:#59A4FF><bold>HIT THE GRIDDY</bold></gradient>"
+      material: NOTE_BLOCK
       description:
-        - 'Twelve blades come down point first, stand'
-        - 'for a beat, then {highlight}close all at once{neutral}.'
+        - 'Two bars of the griddy, a spin, a dab, and'
+        - 'then {highlight}the whole dance goes everywhere{neutral}.'
       priority: 1
       effects:
-        - '[RAGDOLL] {victim};intact:1.26;life:2.9;speed:4.2;up:6.4;spread:0.55;spin:2.2;detail:2;light:15'
-        - '[SOUND] ENTITY_BREEZE_INHALE;1.5;1.7'
-        - '[CIRCLE] NETHERITE_SWORD;as:item;radius:3.4;points:12;from:0,10,0;to:0,1.0,0;ease:in;life:0.55;roll:135;face_out:true;size:1.4;light:15;ticks:5;interval:0.025'
-        - '[DELAY] 0.58'
-        - '[SOUND] BLOCK_STONE_BREAK;1.8;0.6'
-        - '[CIRCLE] DEEPSLATE;as:block;radius:3.4;points:12;size:0.05,0.05,0.05;size_to:0.9,0.12,0.9;ease:out;life:0.4;y:-0.05;light:12'
-        - '[DELAY] 0.4'
-        - '[SOUND] ENTITY_PLAYER_ATTACK_SWEEP;2.0;0.7'
-        - '[CIRCLE] NETHERITE_SWORD;as:item;radius:3.4;points:12;pull:1;ease:in;life:0.28;roll:135;face_out:true;size:1.4;size_to:1.0;y:1.0;light:15'
+        - '[RAGDOLL] {victim};keys:0.18 up=-0.1 body=20 arms=45,0,25 legs=12 head=10 ease=out | 0.22 leg_l=48 leg_r=-16 arm_r=85,0,15 arm_l=-45,0,15 up=0.04 forward=0.15 turn=16 head=-10 body=14 ease=smooth | 0.22 leg_l=-16 leg_r=48 arm_r=-45,0,15 arm_l=85,0,15 up=-0.1 forward=0.3 turn=-16 head=14 body=22 ease=smooth | 0.22 leg_l=48 leg_r=-16 arm_r=85,0,15 arm_l=-45,0,15 up=0.04 forward=0.45 turn=16 head=-10 body=14 ease=smooth | 0.22 leg_l=-16 leg_r=48 arm_r=-45,0,15 arm_l=85,0,15 up=-0.1 forward=0.3 turn=-16 head=14 body=22 ease=smooth | 0.22 leg_l=48 leg_r=-16 arm_r=85,0,15 arm_l=-45,0,15 up=0.04 forward=0.15 turn=16 head=-10 body=14 ease=smooth | 0.22 leg_l=-16 leg_r=48 arm_r=-45,0,15 arm_l=85,0,15 up=-0.1 forward=0 turn=-16 head=14 body=22 ease=smooth | 0.22 leg_l=48 leg_r=-16 arm_r=85,0,15 arm_l=-45,0,15 up=0.04 forward=-0.15 turn=16 head=-10 body=14 ease=smooth | 0.22 leg_l=-16 leg_r=48 arm_r=-45,0,15 arm_l=85,0,15 up=-0.1 forward=0 turn=-16 head=14 body=22 ease=smooth | 0.14 crouch forward=0 turn=0 ease=out | 0.4 stand up=0.75 turn=~360 arms=0,0,60 legs=0,0,10 ease=out | 0.2 dab up=0 ease=in | 0.14 up=-0.08 ease=out | 0.14 up=0 ease=in | 0.4 head=40,-24,-8;intact:0.1;detail:3;light:15;then:burst;speed:2.6;up:5.5;follow:1.1'
+        - '[SOUND] BLOCK_NOTE_BLOCK_BIT;0.8;1.0'
         - '[DELAY] 0.28'
-        - '[SOUND] ENTITY_PLAYER_ATTACK_CRIT;2.0;0.5'
-        - '[PARTICLE] SWEEP_ATTACK;count:6;offset:0.5,0.4,0.5;speed:0.0'
+        - '[SOUND] BLOCK_NOTE_BLOCK_HAT;0.7;1.3;repeat:8;every:0.22'
+        - '[SOUND] BLOCK_NOTE_BLOCK_BASS;0.8;0.8;repeat:4;every:0.44'
+        - '[PARTICLE] NOTE;count:2;offset:0.7,0.3,0.7;speed:1.0;y:2.3;repeat:8;every:0.22'
+        - '[CIRCLE] LIME_CONCRETE;as:block;radius:1.4;points:8;y:0.04;size:0.32,0.03,0.32;orbit:0.5;life:1.9;light:15;glow:{success}'
+        - '[CIRCLE] MAGENTA_CONCRETE;as:block;radius:2.1;points:10;y:0.04;size:0.32,0.03,0.32;orbit:-0.5;life:1.9;light:15;glow:{accent}'
+        - '[DELAY] 1.9'
+        - '[SOUND] ENTITY_PLAYER_ATTACK_SWEEP;0.7;1.4'
+        - '[DELAY] 0.6'
+        - '[SOUND] BLOCK_NOTE_BLOCK_PLING;0.9;2.0'
+        - '[PARTICLE] CRIT;count:18;offset:0.5,0.5,0.5;speed:0.3;y:1.8'
+        - '[DELAY] 0.68'
+        - '[SOUND] ENTITY_FIREWORK_ROCKET_BLAST;0.9;1.3'
+        - '[SOUND] ENTITY_CHICKEN_EGG;1.0;0.7'
+        - '[SCATTER] LIME_CONCRETE;as:block;radius:0.5;points:12;seed:301;from:0,1.1,0;pull:-7;to:0,2.4,0;gravity:9;ease:out;spin:1,1,1;life:1.5;size:0.12;vary:1.0;light:15;glow:{success}'
+        - '[SCATTER] MAGENTA_CONCRETE;as:block;radius:0.5;points:12;seed:302;from:0,1.1,0;pull:-7;to:0,2.1,0;gravity:9;ease:out;spin:1,1,1;life:1.5;size:0.12;vary:1.0;light:15;glow:{accent}'
+        - '[SCATTER] YELLOW_CONCRETE;as:block;radius:0.5;points:12;seed:303;from:0,1.1,0;pull:-7;to:0,2.6,0;gravity:9;ease:out;spin:1,1,1;life:1.5;size:0.12;vary:1.0;light:15;glow:{highlight}'
+        - '[PARTICLE] TOTEM_OF_UNDYING;count:30;offset:0.5,0.6,0.5;speed:0.4;y:1.0'
 
-Read it as a script: the body stands for a beat and then bursts apart, twelve blades fall point
-first from ten blocks up over half a second, the ground plates crack under them, the blades close on
-the centre, and a sweep particle lands the last frame. Every \`[DELAY]\` is the length of the movement before it.
+Read it as a script: the victim hits two bars of the griddy on its own frames while the note sounds
+and the two rings of floor tiles keep the beat, then crouches, spins up, dabs and lands; then:burst
+throws the pieces out as the confetti goes up. Every \`[DELAY]\` is the length of the movement before it.
 
-    CRATER:
-      category: cataclysm
-      tier: common
-      name: "<gradient:#C7B49A:#705E49><bold>CRATER</bold></gradient>"
-      material: GRAVEL
-      description: "Nothing falls. The ground simply<nl>{highlight}leaves{neutral}, in every direction."
-      priority: 13
+    SLAPPED:
+      category: meme
+      tier: rare
+      name: "<gradient:#FFD1DC:#FF6B6B><bold>SLAPPED</bold></gradient>"
+      material: LEATHER
+      description:
+        - 'The killer walks up, winds up, and delivers a'
+        - 'slap so hard they {highlight}spin into the dirt{neutral}.'
+      priority: 11
       effects:
-        - '[RAGDOLL] {victim};pose:melt;intact:0.15;hang:0.95;squash:0.06;open:0.35;life:2.4;detail:2;light:15'
-        - '[SOUND] ENTITY_GENERIC_EXPLODE;2.0;0.3'
-        - '[DISC] GRAVEL;as:block;radius:4.5;rings:4;points:7;from:0,0,0;to:0,0,0;size:0.6;size_to:0.45;pull:-0.55;ease:out;life:1.4;y:0.0;vary:0.7;spin:0.2,0.4,0.2;light:11'
-        - '[DISC] DIRT;as:block;radius:3.0;rings:3;points:7;from:0,0,0;to:0,1.20,0;gravity:2.1;pull:-1.2;ease:out;life:1.2;y:0.0;size:0.4;vary:0.9;size_to:0.05;spin:1,1,1;light:10'
-        - '[PARTICLE] LARGE_SMOKE;count:80;offset:2.4,0.3,2.4;speed:0.2'
-        - '[DELAY] 0.9'
-        - '[SOUND] BLOCK_GRAVEL_BREAK;2.0;0.4'
-        - '[DELAY] 0.5'
-        - '[SOUND] BLOCK_GRAVEL_PLACE;1.6;0.6'
-        - '[DISC] GRAVEL;as:block;radius:4.5;rings:4;points:7;size:0.45;size_to:0.02;ease:in;life:0.7;y:0.0;light:11'
+        - '[RAGDOLL] {victim};keys:0 | 0.2 head=0,-15 arms=0,0,18 ease=smooth | 0.2 head=0,15 arms=0,0,18 ease=smooth | 0.2 head=0,-15 arms=0,0,18 ease=smooth | 0.2 head=0,15 arms=0,0,18 ease=smooth | 0.3 head=-8,0,0 ease=smooth | 0.12 | 0.12 head=0,-75,25 flip=8 lean=20 right=0.3 arms=0,0,60 ease=out | 0.55 star right=1.4 turn=~-540 up=0.5 ease=out | 0.35 lie right=1.7 turn=~-90 ease=in | 0.2 up=-0.46 ease=out | 0.2 up=-0.56 ease=in;intact:0.1;detail:3;light:15;then:burst;speed:2;up:3;follow:1.1;life:3.94'
+        - '[RAGDOLL] {killer};keys:0 at=0,0,2.4 turn=180 ease=snap | 0.2 forward=2.00 leg_r=30 leg_l=-20 arm_r=-25,0,8 arm_l=25,0,8  ease=smooth | 0.2 forward=1.60 leg_r=-30 leg_l=20 arm_r=25,0,8 arm_l=-25,0,8  ease=smooth | 0.2 forward=1.20 leg_r=30 leg_l=-20 arm_r=-25,0,8 arm_l=25,0,8  ease=smooth | 0.2 forward=0.80 leg_r=-30 leg_l=20 arm_r=25,0,8 arm_l=-25,0,8  ease=smooth | 0.3 legs=0 arm_r=-50,0,95 arm_l=10,0,20 lean=-12 turn=~-25 body=-10 ease=out | 0.12 arm_r=70,-100,85 lean=10 turn=~55 body=10 ease=linear | 0.12 arm_r=40,-60,60 ease=out | 0.55 stand arm_r=0,0,20 head=-10 ease=in_out | 0.35 arms=30,-40,0 ease=smooth | 0.2 arms=40,-20,0 ease=smooth | 0.2 arms=0,0,10;intact:0.1;detail:2;light:15;then:hold;follow:1.0;life:3.94'
+        - '[DELAY] 0.1'
+        - '[SOUND] BLOCK_GRAVEL_STEP;0.6;1.0;repeat:4;every:0.2'
+        - '[DELAY] 0.8'
+        - '[SOUND] ENTITY_PLAYER_ATTACK_SWEEP;0.6;1.6'
+        - '[DELAY] 0.42'
+        - '[SOUND] ENTITY_PLAYER_ATTACK_KNOCKBACK;1.0;1.6'
+        - '[SOUND] BLOCK_NOTE_BLOCK_SNARE;1.0;1.4'
+        - '[PARTICLE] CRIT;count:24;offset:0.3,0.3,0.3;speed:0.4;y:1.7'
+        - '[PARTICLE] SWEEP_ATTACK;count:1;y:1.7'
+        - '[PIXELS] RED_CONCRETE;as:block;word:SLAP;pixel:0.12;face:true;y:2.7;ease:out;life:0.25;size:0.02;size_to:0.12;light:15'
+        - '[DELAY] 0.12'
+        - '[SOUND] ENTITY_BREEZE_WIND_BURST;0.6;1.6'
+        - '[DELAY] 0.13'
+        - '[PIXELS] RED_CONCRETE;as:block;word:SLAP;pixel:0.12;face:true;y:2.7;from:0,0,0;to:0,0.4,0;ease:in;life:0.8;size:0.12;size_to:0.02;light:15'
+        - '[DELAY] 0.77'
+        - '[SOUND] ENTITY_PLAYER_BIG_FALL;0.8;1.0'
+        - '[PARTICLE] CLOUD;count:14;offset:1.2,0.1,1.2;speed:0.03;y:0.2'
+        - '[DELAY] 0.4'
+        - '[SOUND] ENTITY_CHICKEN_EGG;0.9;0.8'
+        - '[SOUND] BLOCK_NOTE_BLOCK_DIDGERIDOO;0.8;0.7'
+        - '[PIXELS] WHITE_CONCRETE;as:block;word:REKT;pixel:0.12;face:true;y:2.4;ease:out;life:0.25;size:0.02;size_to:0.12;light:15'
+        - '[DELAY] 0.25'
+        - '[PIXELS] WHITE_CONCRETE;as:block;word:REKT;pixel:0.12;face:true;y:2.4;from:0,0,0;to:0,0.4,0;ease:in;life:0.9;size:0.12;size_to:0.02;light:15'
+
+Two bodies from the first tick: the killer's copy starts 2.4 blocks away (at=0,0,2.4 turn=180),
+walks up in four steps and winds up while the victim sways on the spot. The victim stands whole for
+intact:0.1, and the frame that snaps its head round begins 1.22 seconds into its frames — 1.32 in all,
+exactly where the [DELAY] lines put the slap's sound. Then it spins into the dirt, SLAP and REKT grow
+in and float away as [PIXELS], and the killer holds its last pose.
 `,
 
   hiteffect: `You are writing a hit effect for the Minecraft plugin ExyliaHitEffect (Paper/Folia 1.21+),

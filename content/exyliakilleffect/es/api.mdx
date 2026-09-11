@@ -1,11 +1,12 @@
 ---
 title: "API"
-description: "Qué puede hacer otro plugin con los efectos de muerte: el catálogo, lo que eligió un jugador y lo que lleva un arma."
+description: "Qué puede hacer otro plugin con los efectos de muerte: el catálogo, lo que eligió un jugador, lo que lleva un arma, lanzar un efecto, los menús y entregar efectos y llaves."
 badge: "dev"
 ---
 
-`KillEffectService` lee el catálogo de ExyliaKillEffect, cambia lo que lleva un jugador y ata efectos a
-las armas. Con una sola búsqueda tienes toda la superficie.
+`KillEffectService` lee el catálogo de ExyliaKillEffect, cambia lo que lleva un jugador, ata efectos a
+las armas, lanza un efecto cuando se lo pides, abre las pantallas del propio plugin y entrega efectos y
+llaves de caja. Con una sola búsqueda tienes toda la superficie.
 
 ```java
 ExyliaAPI.get(KillEffectService.class).ifPresent(effects ->
@@ -18,7 +19,9 @@ no que algo haya fallado.
 
 <Callout type="note" title="Agregarlo a tu proyecto">
 El artefacto, el repositorio y la línea del `plugin.yml` son los mismos para todos los plugins de
-Exylia y están en la [página de la API pública](/docs/exylialib/api).
+Exylia y están en la [página de la API pública](/docs/exylialib/api). Lanzar un efecto, los menús, los
+desbloqueos, las llaves y `KillEffectPlayEvent` llegaron en `exylia-api` `v1.133.0` y ExyliaKillEffect
+1.4.0: compila contra esa etiqueta o una más nueva para usarlos.
 </Callout>
 
 ## Todo funciona con ids
@@ -79,6 +82,63 @@ base de datos.
 siga dentro de una vista de inventario abierta: lo que ve el jugador se redibuja cuando devuelves el
 stack a su sitio.
 
+## Lanzar un efecto
+
+| Método | Qué hace |
+|---|---|
+| `boolean play(String effectId, Location where, Player killer, @Nullable LivingEntity victim)` | Lanza un efecto en un lugar, como si allí hubiera ocurrido una baja. La bandera de región, `KillEffectPlayEvent` y la visibilidad de cada espectador siguen decidiendo; el arma, la elección del menú, la lista de mobs y el permiso se saltan, porque quien llama ya nombró el efecto. `victim` es el cuerpo que dibujan sus pasos, o `null` para ninguno. `false` si ningún efecto lleva ese id, no dibuja nada, la región lo silencia o un listener lo canceló. |
+| `boolean playFor(Player killer, LivingEntity victim)` | Lanza el efecto que gana una baja, decidiendo todo lo que decide una muerte real y en el mismo orden: si ese tipo de víctima lanza efectos, el efecto que llevaba el último golpe del asesino, y si no, su arma y su elección del menú según el modo del servidor. `false` si la baja no gana nada, o si `play` habría respondido `false`. |
+| `boolean preview(Player viewer, String effectId)` | Muestra el efecto en el escenario de previsualización del servidor, a solas, y devuelve al jugador — no hace falta tenerlo, así que sirve de "prueba antes de comprar" para una tienda. `false` si no hay escenario fijado, y se le avisa al jugador. |
+
+`play` sirve para una cinemática, un jefe que muere fuera del sistema de daño o una victoria que debe
+verse como una baja. `playFor` sirve para un plugin que detiene un golpe mortal antes de que el
+servidor lo cuente como muerte — un tótem, un duelo que acaba en el último corazón. Una muerte que el
+servidor sí reporta ya lanza su efecto, así que llamar a `playFor` también para ella lo lanza dos veces.
+
+<Callout type="warning" title="El hilo dueño del lugar">
+Llama a `play` en el hilo dueño de `where` y a `playFor` en el dueño de la víctima: el hilo principal
+en Paper, el hilo de región en Folia. `preview` corresponde al hilo dueño del jugador.
+</Callout>
+
+## Menús
+
+| Método | Qué hace |
+|---|---|
+| `void openMenu(Player player)` | Abre el menú de efectos igual que `/killeffect`, para un NPC, un objeto del hub o una tienda. Si la fila del jugador no está en memoria se lee antes, así que el menú puede aparecer un momento después de la llamada. En un servidor `weapon` se le avisa de que el menú está apagado. Seguro desde cualquier hilo. |
+| `void openCrate(Player player)` | Abre la caja igual que el comando y los bloques de caja: la pantalla que pregunta cuántas abrir y gasta las llaves. Con la caja apagada se le avisa. Seguro desde cualquier hilo. |
+
+## Tener efectos, y llaves de caja
+
+| Método | Qué hace |
+|---|---|
+| `boolean unlock(Player player, String effectId)` | Le da un efecto para siempre, igual que ganarlo en la caja — posesión sin nodo de permiso, que `mayUse` cuenta desde entonces. No elige nada ni entrega ningún objeto: sigue con `chooseEffect` o `token` para eso. `false` si ningún efecto lleva ese id, la caja ya se lo dio o su fila todavía no llegó; no se cambió nada. |
+| `int keys(UUID player)` | Cuántas llaves de caja tiene. `0` si no tiene ninguna o su fila todavía no llegó. |
+| `void addKeys(Player player, int keys)` | Da llaves, o las quita con un número negativo — así paga una tirada una tienda, un voto o una misión. La cuenta nunca baja de cero. Un jugador cuya fila todavía no llegó queda igual. |
+
+## KillEffectPlayEvent
+
+`net.exylia.lib.api.killeffect.event.KillEffectPlayEvent` se lanza cuando todo lo demás ya aceptó que
+un efecto debe sonar: existe, dibuja algo y la región permite efectos de muerte. Se lanza para las
+bajas que reporta el servidor y para `play` y `playFor` por igual, y a propósito no se distinguen — una
+arena que quiere los efectos callados los quiere callados en los dos casos.
+
+```java
+@EventHandler
+public void onKillEffect(KillEffectPlayEvent event) {
+    if (event.getLocation().getWorld().getName().equals("lobby")) event.setCancelled(true);
+}
+```
+
+| Método | Qué devuelve |
+|---|---|
+| `Player getPlayer()` | El asesino: de quién es el efecto. |
+| `@Nullable LivingEntity getVictim()` | Sobre qué se lanza. `null` si un plugin lo lanzó en un lugar y no sobre un cuerpo. |
+| `String getEffectId()` | El efecto que va a sonar, normalizado. |
+| `Location getLocation()` | Dónde se lanza. Una copia: cambiarla no mueve nada. |
+
+Cancelarlo no dibuja nada ni dice nada; la baja en sí queda intacta. El evento se llama en el hilo
+dueño del lugar, que en Folia es un hilo de región y no el principal.
+
 ## KillEffectBindResult
 
 Todas las comprobaciones corren antes de escribir nada, así que cualquier resultado que no sea `BOUND`
@@ -112,7 +172,7 @@ nodo.
 
 `KillEffectCategory` lleva `id()`, `name()`, `icon()`, `priority()` y `permission()`. Su permiso concede
 todos los efectos de la categoría de una vez, que es lo que permite vender un rango como "todos los
-efectos infernales" en vez de como una lista de ids que crece cada vez que el dueño agrega uno.
+efectos cósmicos" en vez de como una lista de ids que crece cada vez que el dueño agrega uno.
 
 Los dos son fotos de lo que decía el archivo cuando preguntaste. Una recarga reemplaza el catálogo
 entero, así que un efecto guardado de una recarga a otra es la descripción vieja de un id que quizá ya
@@ -126,11 +186,11 @@ orden, mismos resultados. Una integración escrita contra uno se pasa al otro ca
 
 ## Lo que no expone
 
-Lo que el efecto dibuja de verdad — los pasos de partículas que compila el motor de secuencias — no
-está aquí. Es la implementación de esa versión del efecto, cambia cada vez que el dueño edita una
-línea, y no significa nada fuera del plugin que lo reproduce. Los abridores de menú, el editor
-in-game y las escrituras administrativas quedan afuera por lo mismo: un contrato público no se puede
-romper después, así que lleva lo que una integración realmente necesita y nada que solo tuviera
-sentido dentro de una versión.
+Lo que el efecto dibuja de verdad — los pasos que compila el motor de secuencias — no está aquí. Es la
+implementación de esa versión del efecto, cambia cada vez que el dueño edita una línea, y no significa
+nada fuera del plugin que lo reproduce. El editor in-game y las escrituras administrativas — revocar
+desbloqueos, atar bloques de caja — quedan afuera por lo mismo: un contrato público no se puede romper
+después, así que lleva lo que una integración realmente necesita y nada que solo tuviera sentido
+dentro de una versión.
 
 Si te falta algo, pídelo en [Discord](https://discord.exylia.net).

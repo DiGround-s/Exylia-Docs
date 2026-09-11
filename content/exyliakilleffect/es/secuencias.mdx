@@ -1,6 +1,6 @@
 ---
 title: "Secuencias"
-description: "La sintaxis de los pasos: cada token, cada forma y los parámetros que mueven un display."
+description: "La sintaxis de los pasos: cada token, cada forma, los parámetros que mueven un display y la coreografía de un cuerpo."
 ---
 
 Un efecto es una lista de **pasos**, en orden. Cada paso es un token entre corchetes, con qué se
@@ -31,11 +31,11 @@ Una línea de forma dibuja **displays** cuando lleva `as:`, y partículas cuando
 
 ## Formas
 
-Veinticinco, más `DISPLAY` para un solo objeto en el ancla:
+Veinticinco, más `DISPLAY` para un solo objeto en el ancla y `PIXELS` para un dibujo o una palabra:
 
 `CIRCLE` `SPHERE` `DOME` `CUBE` `LINE` `RIBBON` `SCATTER` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO`
 `STAR` `CAGE` `DISC` `VORTEX` `WAVE` `CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS`
-`ARCH` `CLAW` `DISPLAY`
+`ARCH` `CLAW` `DISPLAY` `PIXELS`
 
 Cada una tiene sus parámetros:
 
@@ -65,6 +65,7 @@ Cada una tiene sus parámetros:
 | `RIBBON` | `radius` `points` `waves` `amplitude` |
 | `SCATTER` | `radius` `height` `points` `seed` `floor` |
 | `DISPLAY` | *(ninguno — un objeto en el ancla)* |
+| `PIXELS` | `art` o `word`, `pixel` `pick` `depth` — abajo |
 
 ### Lo que entiende cualquier forma
 
@@ -110,6 +111,32 @@ cuadrado de `life` es cuánto cae. Y `roll:` apunta una hoja, no `tilt:`: el mod
 placa plana mirando al sur con la punta arriba y a la derecha, así que `roll:135` la baja.
 </Callout>
 
+El escenario se escribe sobre los ejes del mundo: x es el este, z es el sur. Un cuerpo no — mira hacia
+quien lo mató — así que el escenario que tenga que cuadrar con él se pone a su alrededor (círculos,
+rayos, lo que esté justo encima) o se escribe como texto, que mira a quien lo ve.
+
+## `[PIXELS]` — dibujos y palabras
+
+Un dibujo o una palabra hechos de bloques, celda a celda. `SLAPPED` hace crecer su palabra, y luego la
+deja subir y encogerse hasta desaparecer:
+
+```yaml
+- '[PIXELS] RED_CONCRETE;as:block;word:SLAP;pixel:0.12;face:true;y:2.7;ease:out;life:0.25;size:0.02;size_to:0.12;light:15'
+- '[DELAY] 0.25'
+- '[PIXELS] RED_CONCRETE;as:block;word:SLAP;pixel:0.12;face:true;y:2.7;from:0,0,0;to:0,0.4,0;ease:in;life:0.8;size:0.12;size_to:0.02;light:15'
+```
+
+| Parámetro | Qué hace |
+|---|---|
+| `art` | Un dibujo: `heart` `heart_big` `broken_heart` `star` `crown` `skull` `bolt` `note` `cloud` `trophy` `ufo` `moon` `guillotine` `blade` `grave` `portal` `eye` `clock` `rift` `flag`. |
+| `word` | Letras en vez de un dibujo. |
+| `pixel` | El tamaño de una celda, en bloques. |
+| `pick` | Qué caracteres del dibujo pinta esta línea: `#` el cuerpo, `o` el contorno, `w` el brillo, `y` las gemas. Dos líneas con dos materiales colorean un solo dibujo. |
+| `depth` | Lo acerca a quien mira. |
+| `face:true` | Lo gira hacia quien hizo la baja, que es lo que mantiene una palabra al derecho. |
+
+Todo lo de [Mover un display](#mover-un-display) funciona también aquí.
+
 ## Repetir una línea
 
 `repeat` `every` `turn_each` funcionan en **cualquier** paso — un sonido, una forma, un anillo de
@@ -131,7 +158,7 @@ espadas:
 |---|---|
 | `[DELAY] 0.15` | Segundos de espera antes de la línea siguiente. |
 | `[PARTICLE] FLAME` | `count` `speed` `y` `color` `size` `offset:x,y,z` `block` |
-| `[SOUND] NOMBRE;volumen;tono` | También `volume:` `pitch:` |
+| `[SOUND] NOMBRE;volumen;tono` | También `volume:` `pitch:`. Un volumen por encima de `1.0` se lee como `1.0`: un sonido más fuerte solo llega más lejos, dieciséis bloques por punto. |
 | `[LIGHTNING]` | `volume:` `pitch:` — destello, chispas y trueno. Sin rayo real, sin fuego, sin daño. |
 | `[EXPLOSION]` | `count:` `y:` |
 | `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
@@ -141,10 +168,111 @@ espadas:
 | `[ACTION_BAR] texto` | |
 | `[MESSAGE] texto` | Una línea de chat. |
 | `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
-| `[NPC] {victim}` | El cuerpo, abajo. |
-| `[RAGDOLL] {victim}` | El cuerpo deshaciéndose, abajo. |
+| `[RAGDOLL] {victim}` | El cuerpo en sí, coreografiado, abajo. |
+| `[NPC] {victim}` | Un jugador falso entero, abajo. |
 
-## `[NPC]` — el cuerpo
+## `[RAGDOLL]` — el cuerpo en sí
+
+El cuerpo de la propia víctima con todas sus articulaciones — cabeza, torso, dos brazos, dos piernas,
+cada parte con los colores de su propia skin — movido fotograma a fotograma como una escena propia.
+Los 100 efectos de fábrica se construyen sobre él.
+
+```yaml
+- '[RAGDOLL] {victim};intact:0.1;detail:2;light:15;then:burst;keys:0.25 crouch ease=anticipate | 0.4 stand up=1.6 flip=~-360 ease=out | 0.35 up=0 ease=bounce'
+```
+
+### De quién es el cuerpo
+
+La primera palabra dice de quién es:
+
+| Cabecera | Cuerpo |
+|---|---|
+| `{victim}` | Quien murió. |
+| `{killer}` | Una copia de quien hizo la baja, actuando la muerte. |
+| `{crowd}` | Con `seat:N`, el enésimo jugador que mira cerca — o un desconocido si no mira nadie. |
+
+Todos los cuerpos miran hacia el lado del asesino, así que `at=0,0,2 turn=180` es alguien a dos
+bloques mirando a la víctima.
+
+### `keys` — la coreografía
+
+Los fotogramas se separan con `|`. Cada uno empieza con los segundos que tarda en llegar desde el
+anterior — los mismos números que suman las líneas `[DELAY]` del efecto — y luego lista solo lo que
+cambia. El cuerpo empieza de pie donde murió, en cuanto acaba `intact`. Un fotograma de `0` segundos
+es donde empieza en su lugar, que es como un segundo cuerpo aparece al otro lado desde el primer tick.
+
+| Canal | Qué mueve |
+|---|---|
+| `at=right,up,forward` | La cadera, en bloques. También `right=` `up=` `forward=` por separado. |
+| `flip=` `turn=` `lean=` | El cuerpo entero: hacia delante, hacia su izquierda, hacia su derecha. |
+| `head=` `body=` | `pitch,yaw,roll`: asiente hacia delante, gira a la izquierda, se inclina a la derecha. |
+| `arm_r=` `arm_l=` `leg_r=` `leg_l=` | `pitch,yaw,roll`: balancea hacia delante y arriba, abre hacia fuera un miembro levantado, lo separa del cuerpo. |
+| `arms=` `legs=` | Los dos lados a la vez, en espejo. |
+| `<joint>_at=out,up,forward` | Separa una parte de su articulación. |
+| `size=` `<joint>_size=` | Cuánto mide el cuerpo, o una de sus partes. |
+| `shake=` | Cuánto tiembla, en bloques. |
+| `ease=` | `in_out` (por defecto), `in`, `out`, `linear`, `back`, `anticipate`, `elastic`, `bounce`, `snap`, `smooth`. |
+
+Los ángulos van en grados. `~90` suma a donde ya está un canal, así que `turn=~360` es una vuelta
+completa más. `smooth` pasa por un fotograma sin detenerse en él, que es lo que necesita un balanceo o
+un recorrido.
+
+Una palabra suelta es una pose entera, y lo que la sigue en el fotograma se escribe encima:
+
+`stand` `tpose` `star` `cheer` `reach` `zombie` `hug` `crouch` `sit` `kneel` `lie` `prone` `bow`
+`pray` `dab` `superman` `splits` `float` `limp` `fetal` `swoon` `heart` `arabesque`
+
+### Cómo termina
+
+`then:` es lo que pasa después del último fotograma, calculado a partir de cómo se movía cada pieza.
+
+| Valor | Qué pasa |
+|---|---|
+| `hold` | Se queda como lo dejó el último fotograma. |
+| `burst` | Revienta. Lee `speed` `up` `spread` `gravity` `bounce` `spin`. |
+| `collapse` | Cae al suelo donde está. |
+| `implode` | Se recoge sobre sí mismo. Lee `turns`. |
+| `dissolve` | Se deshace hasta desaparecer. |
+| `spell` | Cada pieza se coloca formando la palabra de `sign:` — de `letters:` de alto, a `rise:` del suelo — con la cabeza flotando encima, aguanta y cae. |
+
+### Objetos, cuerdas y cadenas
+
+| Parámetro | Qué hace |
+|---|---|
+| `follow` | Cuánto se retrasan y se pasan las articulaciones sueltas: brazos que se quedan atrás en un salto, una cabeza que cabecea al aterrizar. `1` es un cuerpo, `2` es un dibujo animado. |
+| `hold`, `offhand`, `hat` | Un objeto en una mano o en la cabeza, llevado a donde vaya el cuerpo. `hold_size`, `hat_size` y `hat_y` les dan tamaño y altura. |
+| `strings` | Cuerdas de marioneta desde las manos y la cabeza, hasta esa altura. |
+| `chains` | Encadena las dos muñecas al suelo a esa distancia a cada lado, arrastradas por cada movimiento de los brazos. |
+| `snip` | El segundo en que se rompen las cuerdas o las cadenas. |
+
+### El resto
+
+| Parámetro | Qué hace |
+|---|---|
+| `intact` | Segundos que el cuerpo aguanta entero antes de que empiecen sus fotogramas. |
+| `life` | Segundos que dura. Sin él, el cuerpo vive lo que necesiten sus fotogramas y su final. |
+| `detail` | Celdas en que se corta cada parte, de `1` a `4`. `1` son seis cajas y lo más barato que puede costar una muerte; `2` separa una manga de una mano. |
+| `size`, `glow`, `light`, `y`, `face` | Como en cualquier display. |
+
+La cabeza es la cabeza real, con cara y todo. El resto es el bloque más parecido al color que tiene de
+verdad esa parte de la skin, y cada celda es un display — así que `detail:3` delante de mucha gente es
+para lo que está el techo de displays.
+
+Las poses antiguas siguen funcionando — `pose:burst`, `spread`, `knocked`, `vortex`, `balloon`,
+`helicopter`, `plane`, `flatten`, `melt`, `sign` y `thrown` — con sus parámetros en
+[Displays y NPCs](/docs/exylialib/displays-y-npcs).
+
+<Callout type="tip" title="Cuadra el resto de la escena con los fotogramas">
+Los fotogramas y las líneas `[DELAY]` cuentan los mismos segundos. En `SLAPPED` el cuerpo aguanta
+entero `intact:0.1`, y el fotograma que le gira la cabeza de golpe empieza a 1,22 segundos de sus
+fotogramas — 1,32 en total. El sonido de la bofetada va detrás de líneas `[DELAY]` que suman
+exactamente 1,32. Esa es toda la diferencia entre un cuerpo que se encoge y un cuerpo al que golpean.
+</Callout>
+
+## `[NPC]` — un jugador falso entero
+
+Ningún efecto de fábrica lo usa ya, pero sigue funcionando: una copia entera del jugador, con lo que
+llevaba puesto, movida teletransportándola.
 
 ```yaml
 - '[NPC] {victim};pose:lying;life:2.2;equip:true;face:false'
@@ -170,54 +298,6 @@ espadas:
 
 Es un display, no una entidad: nadie puede golpearlo, saquearlo ni chocar con él.
 
-## `[RAGDOLL]` — el cuerpo en sí
-
-El mismo cuerpo, cortado en sus seis partes — cabeza, torso, dos brazos, dos piernas — y animado como
-una escena propia. 161 de los 183 efectos de fábrica abren con una de estas líneas en vez de un
-`[NPC]`.
-
-```yaml
-- '[RAGDOLL] {victim};intact:0.3;life:2.6;speed:4.2;up:6.4;spin:2.2;detail:2;light:15'
-- '[RAGDOLL] {victim};pose:vortex;rise:3.0;open:0.7;turns:1.8;life:3.0;detail:2;glow:{highlight}'
-```
-
-| Pose | Qué pasa |
-|---|---|
-| `burst` | Reventado: las piezas salen hacia fuera, caen, rebotan y se quedan. La de por defecto. |
-| `spread` | Se levanta del suelo y se abre, girando despacio, y luego se suelta. |
-| `knocked` | Abierto en el aire y golpeado varias veces desde distintos lados. |
-| `vortex` | Llevado hacia arriba en espiral. No queda nada en el suelo. |
-| `balloon` | La cabeza se hincha demasiado, se tambalea y revienta. |
-| `helicopter` | Los brazos se vuelven un rotor y se va hacia delante. |
-| `plane` | Brazos como alas, inclinándose mientras sube. |
-| `flatten` | Clavado contra el suelo y dejado plano. |
-| `melt` | Se hunde donde está y se va. |
-| `sign` | Las piezas se colocan formando letras y aguantan ahí. |
-| `thrown` | Enviado a algún sitio de una pieza, dando vueltas. |
-
-| Parámetro | Qué hace |
-|---|---|
-| *(la cabeza)* | `{victim}`, `{killer}` o una textura en base64 — misma regla que `[NPC]`. |
-| `pose` | Una de las once de arriba. `burst` por defecto. |
-| `life`, `intact` | Segundos que duran las piezas, y segundos que el cuerpo aguanta entero antes. |
-| `detail` | Celdas en que se corta cada parte, de `1` a `4`. Seis partes cuestan `6 × detail²` displays. |
-| `speed`, `up`, `spread`, `gravity`, `bounce`, `spin` | Cómo salen, caen y giran las piezas. |
-| `rise`, `open`, `lift`, `hang`, `turns` | Para un cuerpo sostenido en el aire antes de soltarlo. |
-| `hits`, `every`, `force` | Para `knocked`: cuántos golpes, cada cuánto y con cuánta fuerza. |
-| `swell`, `squash` | Para `balloon` y `flatten`. |
-| `sign`, `letters` | Para `sign`: qué deletrea y cuánto mide una letra. |
-| `dir` | Hacia dónde se lanza o vuela, en grados. `0` es este, `90` es sur. |
-| `size`, `light`, `glow`, `fade`, `settle`, `y`, `face` | Como en `[NPC]`. |
-
-La tabla completa de parámetros, con todos los valores por defecto, está en
-[Displays y NPCs](/docs/exylialib/displays-y-npcs).
-
-<Callout type="tip" title="Cuadra el resto de la escena con el cuerpo">
-`intact` es el tiempo antes de que le pase nada: lo que cae sobre el cuerpo — el yunque, la hoja, la
-bola de nieve — se escribe en sus propias líneas y se retrasa para llegar justo ahí. Esa es toda la
-diferencia entre un cuerpo que explota y un cuerpo al que golpean.
-</Callout>
-
 ## Cuando una línea está mal
 
 Un paso que no se puede leer se descarta y se avisa en consola con la línea que lo causó — un token
@@ -226,5 +306,6 @@ no entiende. El resto del efecto se lanza igual, así que una errata cuesta una 
 
 <Callout type="tip" title="El coste es por línea y por baja">
 Un display es barato de animar — lo hace el cliente — pero cada línea sigue siendo un paquete por
-espectador. Los efectos de fábrica rondan las diez o quince líneas; ese techo es deliberado.
+espectador. Los efectos de fábrica rondan las veinte o treinta líneas, de tres a cinco segundos y
+medio de principio a fin; ese techo es deliberado.
 </Callout>

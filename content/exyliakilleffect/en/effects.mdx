@@ -1,6 +1,6 @@
 ---
 title: "Effects and categories"
-description: "How effects.yml is written, and the 183 effects that ship in it."
+description: "How effects.yml is written, and the 100 effects that ship in it."
 ---
 
 ## The file
@@ -9,26 +9,31 @@ description: "How effects.yml is written, and the 183 effects that ship in it."
 
 ```yaml title="effects.yml"
 categories:
-  siege:
-    material: NETHERITE_SWORD
-    name: 'Siege'
+  meme:
+    material: JUKEBOX
+    name: 'Meme'
     priority: 1
 
 kill_effects:
-  BLADE_STORM:
-    category: siege
+  GRIDDY:
+    category: meme
     tier: common
-    name: "<gradient:#DCE6F2:#8FA6C4><bold>BLADE STORM</bold></gradient>"
-    material: NETHERITE_SWORD
+    name: "<gradient:#B8FF9E:#59A4FF><bold>HIT THE GRIDDY</bold></gradient>"
+    material: NOTE_BLOCK
     description:
-      - 'Twelve blades come down point first, stand'
-      - 'for a beat, then {highlight}close all at once{neutral}.'
+      - 'Two bars of the griddy, a spin, a dab, and'
+      - 'then {highlight}the whole dance goes everywhere{neutral}.'
     priority: 1
     effects:
-      - '[SOUND] ENTITY_BREEZE_INHALE;1.5;1.7'
-      - '[CIRCLE] NETHERITE_SWORD;as:item;radius:3.4;points:12;from:0,10,0;to:0,1.0,0;ease:in;life:0.55;roll:135;face_out:true;size:1.4;light:15'
-      - '[DELAY] 0.58'
-      - '[NPC] {victim};pose:lying;life:2.2;equip:true;face:false'
+      - '[RAGDOLL] {victim};keys:0.18 up=-0.1 body=20 arms=45,0,25 legs=12 head=10 ease=out | 0.22 leg_l=48 leg_r=-16 arm_r=85,0,15 arm_l=-45,0,15 up=0.04 forward=0.15 turn=16 head=-10 body=14 ease=smooth | 0.22 leg_l=-16 leg_r=48 arm_r=-45,0,15 arm_l=85,0,15 up=-0.1 forward=0.3 turn=-16 head=14 body=22 ease=smooth | 0.22 leg_l=48 leg_r=-16 arm_r=85,0,15 arm_l=-45,0,15 up=0.04 forward=0.45 turn=16 head=-10 body=14 ease=smooth | 0.22 leg_l=-16 leg_r=48 arm_r=-45,0,15 arm_l=85,0,15 up=-0.1 forward=0.3 turn=-16 head=14 body=22 ease=smooth | 0.22 leg_l=48 leg_r=-16 arm_r=85,0,15 arm_l=-45,0,15 up=0.04 forward=0.15 turn=16 head=-10 body=14 ease=smooth | 0.22 leg_l=-16 leg_r=48 arm_r=-45,0,15 arm_l=85,0,15 up=-0.1 forward=0 turn=-16 head=14 body=22 ease=smooth | 0.22 leg_l=48 leg_r=-16 arm_r=85,0,15 arm_l=-45,0,15 up=0.04 forward=-0.15 turn=16 head=-10 body=14 ease=smooth | 0.22 leg_l=-16 leg_r=48 arm_r=-45,0,15 arm_l=85,0,15 up=-0.1 forward=0 turn=-16 head=14 body=22 ease=smooth | 0.14 crouch forward=0 turn=0 ease=out | 0.4 stand up=0.75 turn=~360 arms=0,0,60 legs=0,0,10 ease=out | 0.2 dab up=0 ease=in | 0.14 up=-0.08 ease=out | 0.14 up=0 ease=in | 0.4 head=40,-24,-8;intact:0.1;detail:3;light:15;then:burst;speed:2.6;up:5.5;follow:1.1'
+      - '[SOUND] BLOCK_NOTE_BLOCK_BIT;0.8;1.0'
+      - '[DELAY] 0.28'
+      - '[SOUND] BLOCK_NOTE_BLOCK_HAT;0.7;1.3;repeat:8;every:0.22'
+      - '[SOUND] BLOCK_NOTE_BLOCK_BASS;0.8;0.8;repeat:4;every:0.44'
+      - '[PARTICLE] NOTE;count:2;offset:0.7,0.3,0.7;speed:1.0;y:2.3;repeat:8;every:0.22'
+      - '[CIRCLE] LIME_CONCRETE;as:block;radius:1.4;points:8;y:0.04;size:0.32,0.03,0.32;orbit:0.5;life:1.9;light:15;glow:{success}'
+      - '[DELAY] 1.9'
+      # … the sweep, the dab and the confetti burst follow
 ```
 
 | Key | What it does |
@@ -72,90 +77,66 @@ day it exists. `ANY_SWORD` reads the same as `SWORD`. None of the shipped effect
 so out of the box every one of them fits every weapon.
 
 <Callout type="note" title="The effect id is the permission">
-`BLADE_STORM` is `exyliakilleffect.effect.blade_storm`. Renaming the key renames the node, and
-everybody who had the old one loses the effect. Case is not part of it: ids are lowercased on the way
-in.
+`GRIDDY` is `exyliakilleffect.effect.griddy`. Renaming the key renames the node, and everybody who
+had the old one loses the effect. Case is not part of it: ids are lowercased on the way in.
 </Callout>
 
 ## The catalogue
 
-Twenty-five effects per category, thirty-four in Bonk and twenty-four in Ragdoll, 183 in total. Each
-carries a `tier` — see
+Twenty effects per category, 100 in total. Each carries a `tier` — see
 [The crate](/docs/exyliakilleffect/crate).
 
-### Siege — `NETHERITE_SWORD`
+### Meme — `JUKEBOX`
 
-Weapons, engines and the weight of things arriving.
+Deaths that know exactly how ridiculous they are.
 
-`BLADE_STORM` `JUDGEMENT` `GUILLOTINE` `SIEGE_VOLLEY` `COLOSSUS_FIST` `PHALANX` `TREBUCHET`
-`CROSSFIRE` `WAR_DRUM` `CHAIN_SNARE` `EXECUTIONER` `BALLISTA` `SPEAR_WALL` `IRON_MAIDEN` `CANNONADE`
-`RAMPART` `SHIELD_BREAK` `BLADE_DANCE` `ARTILLERY` `LAST_STAND`
-`BATTERING_RAM` `SIEGE_TOWER` `OIL_CAULDRON` `BANNER_CLAIM` `WARHORN`
+`GRIDDY` `FLOSS` `T_POSE` `HEADSPIN` `RAGE_QUIT` `WORSHIP_ME` `YEET` `CLOWNED` `OSCAR_WORTHY` `EZ`
+`SLAPPED` `PUNTED` `BONK` `CROWD_SURF` `TOUGH_CROWD` `NOT_WORTHY` `PINATA` `SUPLEX` `DANCE_OFF`
+`BOWLING`
+
+### Void — `END_PORTAL_FRAME`
+
+Taken apart, pulled under, fed to the dark.
+
+`NULL_SPACE` `ABYSS_SWIM` `UNMADE` `HUNGRY_DARK` `POSSESSED` `ABYSSAL_RITE` `MARIONETTE` `SOUL_REAP`
+`EVENT_HORIZON` `DOPPELGANGER` `PORTAL_PUSH` `SOUL_THEFT` `PHASE_STRIKE` `DARK_CHOIR`
+`INTO_THE_VOID` `THE_EYE` `RIFT` `SHADOW_PEOPLE` `REFLECTION` `VOODOO`
 
 ### Cataclysm — `MAGMA_BLOCK`
 
-Fire, rock and weather.
+The world itself, arriving all at once.
 
-`METEOR_STRIKE` `CINDER_COLLAPSE` `VOLCANIC_VENT` `PYROCLAST` `MAGMA_TIDE` `EMBER_SWARM` `FISSURE`
-`INFERNO_PILLAR` `ASHFALL` `QUAKE` `ROCKSLIDE` `SOLAR_FLARE` `CRATER` `FIREWHIRL` `OBSIDIAN_SPIKE`
-`SCORCH` `THUNDER_ANVIL` `STORMFRONT` `HAILSTORM` `TECTONIC`
-`TSUNAMI` `SINKHOLE` `SANDSTORM` `WILDFIRE` `TWISTER`
+`EARTHQUAKE` `SINKHOLE` `SHOCKWAVE` `THUNDERSTRIKE` `HOT_FLOOR` `AVALANCHE` `ERUPTION` `TORNADO`
+`METEOR` `TIDAL_WAVE` `IMPALED` `SMITE` `SIX_FEET_UNDER` `BODY_SLAM` `GUILLOTINE` `ONE_PUNCH`
+`STONE_SPIRE` `STAMPEDE` `PYRE` `CHAINED`
 
-### Abyss — `CRYING_OBSIDIAN`
+### Lovestruck — `PINK_PETALS`
 
-Void and gravity.
+Swoons, serenades and petals: death, but romantic.
 
-`VOID_IMPLOSION` `BLACK_HOLE` `OBSIDIAN_MAUSOLEUM` `SOUL_HARVEST` `EVENT_HORIZON` `NULL_FIELD`
-`WRAITH` `GRAVEWELL` `SHADOW_HANDS` `ENTROPY` `ECHO_CHAMBER` `UNMAKING` `THE_QUIET` `TETHER`
-`ABYSSAL_MAW` `COLD_STAR` `REVENANT` `SINGULARITY_LANCE` `FADE` `OBLIVION_GATE`
-`NIGHTFALL` `THE_DESCENT` `CHAINS_BELOW` `WARDEN_CALL` `LAST_LIGHT`
+`LOVE_LETTER` `BLOWN_KISS` `CUPIDS_ARROW` `BLOSSOM_WALTZ` `LOVE_POTION` `SWEET_DREAMS` `SERENADE`
+`HEARTBEAT` `HEAD_OVER_HEELS` `LAST_DANCE` `CHEEK_KISS` `SAY_YES` `TANGO` `BRIDAL_CARRY` `FAN_CLUB`
+`PILLOW_FIGHT` `PICNIC_DATE` `RUNWAY` `BOUQUET_TOSS` `CORONATION`
 
-### Aurora — `AMETHYST_CLUSTER`
+### Cosmic — `NETHER_STAR`
 
-Crystal, starlight and cold.
+Zero gravity, starlight and a sky that answers.
 
-`CRYSTAL_SHATTER` `FROZEN_TOMB` `STARFALL` `SUPERNOVA` `PRISM` `AURORA_VEIL` `GLACIER` `COMET`
-`CONSTELLATION` `LUMEN` `SHARD_RAIN` `ORBITAL` `FROSTBLOOM` `NORTHERN_LIGHT` `SOLSTICE` `SNOWGLOBE`
-`ZENITH` `REFRACTION` `MOONFALL` `STARLIGHT_CHOIR`
-`ICE_SPIRE` `HALO` `NEBULA` `ASCENSION` `FROST_CROWN`
-
-### Verdant — `SPORE_BLOSSOM`
-
-Growth, petals and rot.
-
-`VENOM_BLOOM` `SAKURA_FALL` `OVERGROWTH` `THORNCAGE` `SPORE_BURST` `ROOTGRASP` `MYCELIUM`
-`PETAL_STORM` `WITHER_ROT` `HONEY_TRAP` `BAMBOO_STRIKE` `LOTUS` `SWARM` `TERRARIUM` `AUTUMN`
-`VINE_SNARE` `GARDEN_OF_BONES` `SEEDFALL` `NIGHT_ORCHID` `MOSS_CLAIM`
-`TREE_FALL` `CARNIVORE` `AMBER` `PUMPKIN_PATCH` `WORLD_TREE`
-
-### Bonk — `ANVIL`
-
-Jokes.
-
-`THE_CLASSIC` `BONK` `ANVIL_CHORUS` `PIANO` `SKILL_ISSUE` `GG_EZ` `YEET` `RUBBER_DUCK` `CAKE`
-`TNT_DELIVERY` `FISH_SLAP` `BIG_BOOT` `FRYING_PAN` `BANANA_PEEL` `CHICKEN_JOCKEY` `SAFE_DELIVERY`
-`TOO_SLOW` `RATIO` `BALLOON_POP` `VENDING_MACHINE` `EJECTED` `AW_MAN` `PORTAL_LOOP` `STONKS`
-`PRESS_F` `WASTED` `NYAN_CAT` `MOAI` `OLD_PHONE`
-`BLUE_SHELL` `BLUE_SCREEN` `PINATA` `ROLLING_BOULDER` `LOADING`
-
-### Ragdoll — `SKELETON_SKULL`
-
-Deaths where the body itself is the effect.
-
-`SHATTER` `CANNONBALL` `SPILLED` `UPDRAFT` `LAST_RITES` `SUSPENDED` `SNOWBALLED` `RAPTURE` `EZ`
-`BIG_HEAD` `SMOOCH` `BOBBLEHEAD` `BUBBLEGUM` `CHOPPER` `CROP_DUSTER` `DEPARTURE` `KAMIKAZE`
-`ABDUCTION` `PANCAKE` `STEAMROLLED` `QUICKSAND` `DISSOLVED` `PUPPET` `BATTING_PRACTICE`
+`ZERO_GRAVITY` `SHOOTING_STAR` `WORMHOLE` `SPACEWALK` `MOONWALK` `ALIEN_ABDUCTION` `CONSTELLATION`
+`GALAXY_BRAIN` `SUPERNOVA` `SOLAR_SYSTEM` `FALLING_STARS` `COSMIC_HIGH_FIVE` `ROCKET_RIDE`
+`GRAVITY_GUN` `SPACE_CIRCLE` `ORBITAL_STRIKE` `GRAVITY_FLIP` `FLAG_PLANTED` `TIME_STOP`
+`HEAVENS_LIGHT`
 
 ## The body on the ground
 
-Every one of the 183 effects puts the victim in the scene, and 161 of them do it with the `[RAGDOLL]`
-step: the body is cut into its six parts, each one wearing the colours of their own skin, and then
-thrown apart, held open, flattened, spelled into letters or carried off in one piece. The other
-twenty-two use `[NPC]`: a whole copy of the victim, wearing what they wore, left lying — or thrown, or
-slumping — where they fell.
+Every one of the 100 effects is built on the `[RAGDOLL]` step: the victim's own body, every joint
+kept and each part wearing the colours of their own skin, choreographed frame by frame. It dances, is
+slapped, carried off or spelled into a word, and then bursts, collapses or dissolves. In 37 of them a
+copy of the killer walks in and acts the death out, and in 16 the players watching nearby — or
+strangers, when nobody is — join in.
 
-Both are displays, not entities anyone can hit — nothing can be looted from them and nothing collides
-with them. The poses and their parameters are in
+Every piece is a display, not an entity anyone can hit — nothing can be looted from them and nothing
+collides with them. The choreography and its parameters are in
 [Sequences](/docs/exyliakilleffect/sequences).
 
 ## Writing your own

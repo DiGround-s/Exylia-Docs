@@ -1,6 +1,6 @@
 ---
 title: "Sequences"
-description: "The step syntax: every token, every shape, and the parameters that move a display."
+description: "The step syntax: every token, every shape, the parameters that move a display, and the choreography of a body."
 ---
 
 An effect is a list of **steps**, played in order. Every step is a token in brackets, then what it is
@@ -31,11 +31,12 @@ A shape line draws **displays** when it carries `as:`, and particles when it doe
 
 ## Shapes
 
-Twenty-five of them, plus `DISPLAY` for a single object at the anchor:
+Twenty-five of them, plus `DISPLAY` for a single object at the anchor and `PIXELS` for a picture or a
+word:
 
 `CIRCLE` `SPHERE` `DOME` `CUBE` `LINE` `RIBBON` `SCATTER` `BEAM` `SPIRAL` `DOUBLE_HELIX` `TORNADO`
 `STAR` `CAGE` `DISC` `VORTEX` `WAVE` `CROSS` `GALAXY` `TORUS` `BURST` `PYRAMID` `RING_PULSE` `WINGS`
-`ARCH` `CLAW` `DISPLAY`
+`ARCH` `CLAW` `DISPLAY` `PIXELS`
 
 Each has its own parameters:
 
@@ -65,6 +66,7 @@ Each has its own parameters:
 | `RIBBON` | `radius` `points` `waves` `amplitude` |
 | `SCATTER` | `radius` `height` `points` `seed` `floor` |
 | `DISPLAY` | *(none — one object at the anchor)* |
+| `PIXELS` | `art` or `word`, `pixel` `pick` `depth` — below |
 
 ### What every shape understands
 
@@ -110,6 +112,32 @@ life squared is how far it drops. And `roll:` aims a blade, not `tilt:`: an item
 facing south with its tip up and to the right, so `roll:135` points it down.
 </Callout>
 
+Scenery is written on the world's own axes: x is east, z is south. A body is not — it faces whoever
+killed it — so scenery that has to line up with one is kept round it (circles, beams, anything
+straight above) or written as text, which faces whoever is looking.
+
+## `[PIXELS]` — pictures and words
+
+A picture or a word built out of blocks, cell by cell. `SLAPPED` grows its word in, then lets it drift
+up and shrink away:
+
+```yaml
+- '[PIXELS] RED_CONCRETE;as:block;word:SLAP;pixel:0.12;face:true;y:2.7;ease:out;life:0.25;size:0.02;size_to:0.12;light:15'
+- '[DELAY] 0.25'
+- '[PIXELS] RED_CONCRETE;as:block;word:SLAP;pixel:0.12;face:true;y:2.7;from:0,0,0;to:0,0.4,0;ease:in;life:0.8;size:0.12;size_to:0.02;light:15'
+```
+
+| Parameter | What it does |
+|---|---|
+| `art` | A picture: `heart` `heart_big` `broken_heart` `star` `crown` `skull` `bolt` `note` `cloud` `trophy` `ufo` `moon` `guillotine` `blade` `grave` `portal` `eye` `clock` `rift` `flag`. |
+| `word` | Letters instead of a picture. |
+| `pixel` | The size of one cell, in blocks. |
+| `pick` | Which characters of the picture this line draws: `#` the body, `o` the outline, `w` the shine, `y` the gems. Two lines in two materials colour one picture. |
+| `depth` | Moves it towards whoever it faces. |
+| `face:true` | Turns it to whoever did it, which keeps a word the right way round. |
+
+Everything in [Moving a display](#moving-a-display) applies to it.
+
 ## Repeating a line
 
 `repeat` `every` `turn_each` work on **any** step — a sound, a shape, a ring of blades:
@@ -130,7 +158,7 @@ facing south with its tip up and to the right, so `roll:135` points it down.
 |---|---|
 | `[DELAY] 0.15` | Seconds to wait before the next line. |
 | `[PARTICLE] FLAME` | `count` `speed` `y` `color` `size` `offset:x,y,z` `block` |
-| `[SOUND] NAME;volume;pitch` | Also `volume:` `pitch:` |
+| `[SOUND] NAME;volume;pitch` | Also `volume:` `pitch:`. A volume above `1.0` is read as `1.0`: a louder sound only carries further, sixteen blocks per point. |
 | `[LIGHTNING]` | `volume:` `pitch:` — flash, sparks and thunder. No strike, no fire, no damage. |
 | `[EXPLOSION]` | `count:` `y:` |
 | `[FIREWORK]` | `color:` `fade:` `type:` `trail:` `flicker:` `power:` |
@@ -140,10 +168,110 @@ facing south with its tip up and to the right, so `roll:135` points it down.
 | `[ACTION_BAR] text` | |
 | `[MESSAGE] text` | A chat line. |
 | `[COMMAND] give {player} …` | `{player}` `{world}` `{x}` `{y}` `{z}` |
-| `[NPC] {victim}` | The body, below. |
-| `[RAGDOLL] {victim}` | The body coming apart, below. |
+| `[RAGDOLL] {victim}` | The body itself, choreographed, below. |
+| `[NPC] {victim}` | A whole fake player, below. |
 
-## `[NPC]` — the body
+## `[RAGDOLL]` — the body itself
+
+The victim's own body with every joint kept — head, torso, two arms, two legs, each wearing the
+colours of their own skin — moved frame by frame as a scene of its own. All 100 shipped effects are
+built on it.
+
+```yaml
+- '[RAGDOLL] {victim};intact:0.1;detail:2;light:15;then:burst;keys:0.25 crouch ease=anticipate | 0.4 stand up=1.6 flip=~-360 ease=out | 0.35 up=0 ease=bounce'
+```
+
+### Whose body
+
+The first word is whose body it is:
+
+| Head | Body |
+|---|---|
+| `{victim}` | Whoever died. |
+| `{killer}` | A copy of whoever did it, acting the death out. |
+| `{crowd}` | With `seat:N`, the Nth player watching nearby — or a stranger when nobody is. |
+
+Every body faces the killer's side, so `at=0,0,2 turn=180` is someone two blocks away looking at the
+victim.
+
+### `keys` — the choreography
+
+Frames are separated by `|`. Each starts with the seconds it takes to reach it from the one before —
+the same numbers the effect's `[DELAY]` lines add up to — and then lists only what changes. The body
+starts standing where it died, once `intact` is over. A frame of `0` seconds is where it starts
+instead, which is how a second body stands across the room from the very first tick.
+
+| Channel | What it moves |
+|---|---|
+| `at=right,up,forward` | The hips, in blocks. Also `right=` `up=` `forward=` on their own. |
+| `flip=` `turn=` `lean=` | The whole body: forwards, to its left, to its right. |
+| `head=` `body=` | `pitch,yaw,roll`: nods forward, turns left, tilts right. |
+| `arm_r=` `arm_l=` `leg_r=` `leg_l=` | `pitch,yaw,roll`: swings forward and up, swings a raised limb outwards, raises it away from the body. |
+| `arms=` `legs=` | Both sides at once, mirrored. |
+| `<joint>_at=out,up,forward` | Pulls a part off its joint. |
+| `size=` `<joint>_size=` | How big the body, or one part of it, is. |
+| `shake=` | How hard it trembles, in blocks. |
+| `ease=` | `in_out` (default), `in`, `out`, `linear`, `back`, `anticipate`, `elastic`, `bounce`, `snap`, `smooth`. |
+
+Angles are degrees. `~90` adds to where a channel already is, so `turn=~360` is one more full turn.
+`smooth` flows through a frame instead of stopping at it, which is what a sway or a path needs.
+
+A bare word is a whole pose, and whatever follows it in the frame is written on top of it:
+
+`stand` `tpose` `star` `cheer` `reach` `zombie` `hug` `crouch` `sit` `kneel` `lie` `prone` `bow`
+`pray` `dab` `superman` `splits` `float` `limp` `fetal` `swoon` `heart` `arabesque`
+
+### How it ends
+
+`then:` is what happens after the last frame, worked out from how each piece was moving.
+
+| Value | What happens |
+|---|---|
+| `hold` | It stays as the last frame left it. |
+| `burst` | Thrown apart. Reads `speed` `up` `spread` `gravity` `bounce` `spin`. |
+| `collapse` | Falls to the floor where it is. |
+| `implode` | Pulled into itself. Reads `turns`. |
+| `dissolve` | Comes away to nothing. |
+| `spell` | Every piece lays itself out into the word in `sign:` — `letters:` tall, `rise:` off the floor — with the head floating over it, holds, and drops. |
+
+### Props, strings and chains
+
+| Parameter | What it does |
+|---|---|
+| `follow` | How much the loose joints lag and overshoot: arms left behind by a jump, a head that nods on landing. `1` is a body, `2` is a cartoon. |
+| `hold`, `offhand`, `hat` | An item in a hand or on the head, carried wherever the body goes. `hold_size`, `hat_size` and `hat_y` size and place them. |
+| `strings` | Puppet strings from the hands and the head, up to that height. |
+| `chains` | Shackles both wrists to the floor that far out to each side, dragged along by every move of the arms. |
+| `snip` | The second the strings or chains break. |
+
+### The rest
+
+| Parameter | What it does |
+|---|---|
+| `intact` | Seconds the body stands whole before its frames begin. |
+| `life` | Seconds it lasts. Leave it out and the body lives as long as its frames and its finish need. |
+| `detail` | Cells each part is cut into, `1` to `4`. `1` is six boxes and the cheapest a death can be; `2` keeps a sleeve apart from a hand. |
+| `size`, `glow`, `light`, `y`, `face` | As on any display. |
+
+The head is the real head, face and all. Everything else is the nearest block to the colour that part
+of the skin actually is, and every cell is a display — so `detail:3` in front of a crowd is what the
+display ceiling is there for.
+
+The older poses still work — `pose:burst`, `spread`, `knocked`, `vortex`, `balloon`, `helicopter`,
+`plane`, `flatten`, `melt`, `sign` and `thrown` — with their parameters in
+[Displays and NPCs](/docs/exylialib/displays-and-npcs).
+
+<Callout type="tip" title="Time the rest of the scene to the frames">
+Frames and `[DELAY]` lines count the same seconds. In `SLAPPED` the body stands whole for
+`intact:0.1`, and the frame that snaps its head round begins 1.22 seconds into its frames — 1.32 in
+all. The slap's sound sits behind `[DELAY]` lines that add up to exactly 1.32. That is the whole
+difference between a body that flinches and a body that is hit.
+</Callout>
+
+## `[NPC]` — a whole fake player
+
+None of the shipped effects uses it any more, but it still works: a whole copy of the player, wearing
+what they wore, moved by teleporting it.
 
 ```yaml
 - '[NPC] {victim};pose:lying;life:2.2;equip:true;face:false'
@@ -169,53 +297,6 @@ facing south with its tip up and to the right, so `roll:135` points it down.
 
 It is a display, not an entity: nothing can hit it, loot it or walk into it.
 
-## `[RAGDOLL]` — the body itself
-
-The same body, cut into its six parts — head, torso, two arms, two legs — and animated as a scene of
-its own. 161 of the 183 shipped effects open with one of these instead of an `[NPC]`.
-
-```yaml
-- '[RAGDOLL] {victim};intact:0.3;life:2.6;speed:4.2;up:6.4;spin:2.2;detail:2;light:15'
-- '[RAGDOLL] {victim};pose:vortex;rise:3.0;open:0.7;turns:1.8;life:3.0;detail:2;glow:{highlight}'
-```
-
-| Pose | What happens |
-|---|---|
-| `burst` | Thrown apart: the pieces leave outwards, fall, bounce and rest. The default. |
-| `spread` | Lifted off the ground and opened out, turning slowly, then let go. |
-| `knocked` | Held open and struck several times, from different sides. |
-| `vortex` | Taken upwards in a spiral. Nothing is left on the floor. |
-| `balloon` | The head swells far too big, wobbles, and bursts. |
-| `helicopter` | The arms become a rotor and it leaves forwards. |
-| `plane` | Arms out as wings, banking as it climbs. |
-| `flatten` | Driven straight down and left flat. |
-| `melt` | Sinks where it stands and is gone. |
-| `sign` | The pieces lay themselves out into letters and hold there. |
-| `thrown` | Sent somewhere in one piece, turning end over end. |
-
-| Parameter | What it does |
-|---|---|
-| *(the head)* | `{victim}`, `{killer}`, or a base64 texture — same rule as `[NPC]`. |
-| `pose` | One of the eleven above. `burst` by default. |
-| `life`, `intact` | Seconds the pieces last, and seconds the body stands whole first. |
-| `detail` | Cells each part is cut into, `1` to `4`. Six parts cost `6 × detail²` displays. |
-| `speed`, `up`, `spread`, `gravity`, `bounce`, `spin` | How the pieces leave, fall and turn. |
-| `rise`, `open`, `lift`, `hang`, `turns` | For a body held in the air before it is let go. |
-| `hits`, `every`, `force` | For `knocked`: how many blows, how often, how hard. |
-| `swell`, `squash` | For `balloon` and `flatten`. |
-| `sign`, `letters` | For `sign`: what it spells, and how tall a letter is. |
-| `dir` | Which way it is thrown or flies, in degrees. `0` is east, `90` is south. |
-| `size`, `light`, `glow`, `fade`, `settle`, `y`, `face` | As `[NPC]`. |
-
-The full parameter table, with every default, is in
-[Displays and NPCs](/docs/exylialib/displays-and-npcs).
-
-<Callout type="tip" title="Time the rest of the scene to the body">
-`intact` is the beat before anything happens: what lands on the body — the anvil, the blade, the
-snowball — is written as its own lines and delayed to arrive exactly then. That is the whole
-difference between a body that explodes and a body that is hit.
-</Callout>
-
 ## When a line is wrong
 
 A step that cannot be read is dropped and reported to the console with the line that caused it — an
@@ -225,5 +306,6 @@ whole catalogue.
 
 <Callout type="tip" title="Cost is per line, per kill">
 A display is cheap to animate — the client does it — but every line is still a packet per viewer.
-The shipped effects sit around ten to fifteen lines; that is a deliberate ceiling.
+The shipped effects sit around twenty to thirty lines, three to five and a half seconds end to end;
+that is a deliberate ceiling.
 </Callout>

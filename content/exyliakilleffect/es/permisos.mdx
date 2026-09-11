@@ -23,8 +23,8 @@ en [la caja](/docs/exyliakilleffect/caja), que se escribe en la fila del jugador
 No hay clave `permission` en `effects.yml`. El nodo sale de la clave, en minúscula:
 
 ```text
-BLADE_STORM  →  exyliakilleffect.effect.blade_storm
-siege        →  exyliakilleffect.category.siege
+GRIDDY       →  exyliakilleffect.effect.griddy
+meme         →  exyliakilleffect.category.meme
 legendary    →  exyliakilleffect.tier.legendary
 ```
 
@@ -35,14 +35,14 @@ es otro nodo, y quien tuviera el viejo pierde el efecto.
 
 ```text
 /lp group default permission set exyliakilleffect.command.killeffect true
-/lp group vip     permission set exyliakilleffect.category.siege true
-/lp group mvp     permission set exyliakilleffect.effect.blade_storm true
+/lp group vip     permission set exyliakilleffect.category.meme true
+/lp group mvp     permission set exyliakilleffect.effect.griddy true
 /lp group elite   permission set exyliakilleffect.tier.legendary true
 /lp group legend  permission set exyliakilleffect.effect.* true
 ```
 
-Siete categorías y cuatro rarezas son lo que hace que valga la pena vender esos nodos: "todos los
-efectos de Siege" o "todos los legendarios" es una línea en vez de veinte.
+Cinco categorías y cuatro rarezas son lo que hace que valga la pena vender esos nodos: "todos los
+efectos de Meme" o "todos los legendarios" es una línea en vez de veinte.
 
 <Callout type="tip" title="Regala el menú">
 Sin `exyliakilleffect.command.killeffect` no se puede abrir el catálogo. Quien no ve lo que hay a la

@@ -57,6 +57,10 @@ inventory of whoever removed it.
 | Unknown effects | A weapon carrying an id the file no longer declares is refused rather than turned into nothing. |
 | Consumed | `consume-remover` decides whether the remover is spent. |
 
+Nothing this plugin hands over lands on the floor. A token, a remover or a key given by a command or
+won from the crate that does not fit waits in the reward queue, and is handed over the next time the
+player joins.
+
 ## The lines under a bound weapon
 
 ```yaml title="config.yml"

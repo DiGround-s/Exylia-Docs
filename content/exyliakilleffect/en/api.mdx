@@ -1,11 +1,12 @@
 ---
 title: "API"
-description: "What another plugin can do with kill effects: the catalogue, what a player chose, and what a weapon carries."
+description: "What another plugin can do with kill effects: the catalogue, what a player chose, what a weapon carries, playing an effect, the menus, and handing out effects and keys."
 badge: "dev"
 ---
 
-`KillEffectService` reads ExyliaKillEffect's catalogue, sets what a player wears, and binds effects onto
-weapons. One lookup gets you the whole surface.
+`KillEffectService` reads ExyliaKillEffect's catalogue, sets what a player wears, binds effects onto
+weapons, plays an effect on demand, opens the plugin's own screens and hands out effects and crate
+keys. One lookup gets you the whole surface.
 
 ```java
 ExyliaAPI.get(KillEffectService.class).ifPresent(effects ->
@@ -18,7 +19,9 @@ something failed.
 
 <Callout type="note" title="Adding it to your project">
 The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
-on the [public API page](/docs/exylialib/api).
+on the [public API page](/docs/exylialib/api). Playing an effect, the menus, unlocks, keys and
+`KillEffectPlayEvent` arrived in `exylia-api` `v1.133.0` and ExyliaKillEffect 1.4.0: compile against
+that tag or a newer one to reach them.
 </Callout>
 
 ## Everything is an id
@@ -76,6 +79,63 @@ not arrived yet answers as though they chose nothing, rather than blocking the c
 `bind` and `unbind` write on the caller's own copy of the stack. Pass a copy rather than an item still
 sitting in an open inventory view: what a player sees is redrawn when the stack is set back.
 
+## Playing an effect
+
+| Method | What it does |
+|---|---|
+| `boolean play(String effectId, Location where, Player killer, @Nullable LivingEntity victim)` | Plays an effect at a place, as though a kill had happened there. The region flag, `KillEffectPlayEvent` and every observer's own visibility still decide; the weapon, the menu choice, the mob list and permission are skipped, because the caller named the effect. `victim` is the body its steps draw, or `null` for none. `false` when no effect goes by that id, it draws nothing, the region silences it or a listener cancelled it. |
+| `boolean playFor(Player killer, LivingEntity victim)` | Plays the effect a kill earns, deciding everything a real death decides, in the same order: whether this kind of victim plays effects, the effect the killer's last blow carried, and otherwise their weapon and menu choice under the server's mode. `false` when the kill earns nothing, or when `play` would have said `false`. |
+| `boolean preview(Player viewer, String effectId)` | Shows the effect on the server's preview stage, alone, and puts the player back — owning it is not required, which makes it a shop's "try before you buy". `false` when no stage is set, and the player is told so. |
+
+`play` is for a cutscene, a boss that dies outside the damage system, or a win that should look like a
+kill. `playFor` is for a plugin that stops a lethal blow before the server calls it a death — a totem,
+a duel that ends at the last heart. A death the server does report already plays its effect, so
+calling `playFor` for it as well plays it twice.
+
+<Callout type="warning" title="The thread that owns the place">
+Call `play` on the thread that owns `where` and `playFor` on the one that owns the victim: the main
+thread on Paper, the region thread on Folia. `preview` belongs to the thread that owns the viewer.
+</Callout>
+
+## Menus
+
+| Method | What it does |
+|---|---|
+| `void openMenu(Player player)` | Opens the effect menu exactly as `/killeffect` does, for an NPC, a hub item or a shop. The player's row is read first when it is not in memory, so the menu can appear a moment after the call. On a `weapon` server the player is told the menu is off. Safe from any thread. |
+| `void openCrate(Player player)` | Opens the crate exactly as the command and the crate blocks do: the screen that asks how many to open and spends keys. With the crate turned off the player is told so. Safe from any thread. |
+
+## Owning, and crate keys
+
+| Method | What it does |
+|---|---|
+| `boolean unlock(Player player, String effectId)` | Gives a player an effect for good, as winning it from the crate does — ownership without a permission node, counted by `mayUse` from then on. Nothing is chosen and no item is given: follow it with `chooseEffect` or `token` for that. `false` when no effect goes by that id, the crate already gave it to them, or their row has not arrived yet; nothing changed. |
+| `int keys(UUID player)` | How many crate keys a player holds. `0` when they have none or their row has not arrived yet. |
+| `void addKeys(Player player, int keys)` | Gives keys, or takes them with a negative number — how a store, a vote or a quest pays out a spin. The count never goes below zero. A player whose row has not arrived yet is left unchanged. |
+
+## KillEffectPlayEvent
+
+`net.exylia.lib.api.killeffect.event.KillEffectPlayEvent` fires once everything else has agreed an
+effect should play: it exists, it draws something, and the region allows kill effects. It fires for
+the kills the server reports and for `play` and `playFor` alike, and the two are not told apart on
+purpose — an arena that wants kill effects quiet wants both quiet.
+
+```java
+@EventHandler
+public void onKillEffect(KillEffectPlayEvent event) {
+    if (event.getLocation().getWorld().getName().equals("lobby")) event.setCancelled(true);
+}
+```
+
+| Method | What it returns |
+|---|---|
+| `Player getPlayer()` | The killer: whose effect it is. |
+| `@Nullable LivingEntity getVictim()` | What it plays on. `null` when a plugin played it at a place rather than on a body. |
+| `String getEffectId()` | The effect about to play, normalised. |
+| `Location getLocation()` | Where it plays. A copy: changing it moves nothing. |
+
+Cancelling draws nothing and says nothing; the kill itself is untouched. The event is called on the
+thread that owns the location, which on Folia is a region thread rather than the main one.
+
 ## KillEffectBindResult
 
 Every check runs before anything is written, so any result other than `BOUND` or `UNBOUND` means both
@@ -106,7 +166,7 @@ everything else fall through one branch.
 permission that grants this one effect, so a shop can sell it without knowing how the node is built.
 
 `KillEffectCategory` carries `id()`, `name()`, `icon()`, `priority()` and `permission()`. Its
-permission grants every effect in it at once, which is what lets a rank be sold as "every infernal
+permission grants every effect in it at once, which is what lets a rank be sold as "every cosmic
 effect" instead of as a list of ids that grows whenever the owner adds one.
 
 Both are snapshots of what the file said when you asked. A reload replaces the whole catalogue, so an
@@ -121,10 +181,10 @@ integration written against one ports to the other by changing the types.
 
 ## What it does not expose
 
-What an effect actually draws — the particle steps the sequence engine compiles — is not here. It is
-this version's implementation of the effect, changes whenever the owner edits a line, and means
-nothing outside the plugin that plays it. Menu openers, the in-game editor and administrative writes
-are left out for the same reason: a public contract cannot be broken later, so it holds what an
-integration genuinely needs and nothing that only made sense inside one version.
+What an effect actually draws — the steps the sequence engine compiles — is not here. It is this
+version's implementation of the effect, changes whenever the owner edits a line, and means nothing
+outside the plugin that plays it. The in-game editor and the administrative writes — revoking unlocks,
+binding crate blocks — are left out for the same reason: a public contract cannot be broken later, so
+it holds what an integration genuinely needs and nothing that only made sense inside one version.
 
 If something you need is missing, ask on [Discord](https://discord.exylia.net).
