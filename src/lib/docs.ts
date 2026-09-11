@@ -171,7 +171,10 @@ export function buildSearchIndex(lang: Lang): SearchEntry[] {
     entry.nav.flatMap((group) =>
       group.pages.map((ref) => {
         const slug = ref.slugs[lang];
-        const doc = readDoc(entry.id, lang, slug)!;
+        const doc = readDoc(entry.id, lang, slug);
+        if (!doc) {
+          throw new Error(`Missing content/${entry.id}/${lang}/${slug}.mdx (declared in the registry)`);
+        }
         const text = doc.body
           .replace(/```[\s\S]*?```/g, " ")
           .replace(/[#*`|>_-]/g, " ")
