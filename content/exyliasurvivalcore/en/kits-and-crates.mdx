@@ -1,0 +1,173 @@
+---
+title: "Kits and crates"
+description: "Kits with cooldowns and previews, crates with keys, tiers, pity and ten animations, refilling loot chests and item spawners."
+---
+
+## Kits
+
+A kit is a database row, built entirely from `/kitadmin`. There is no kit file.
+
+`/kit` lists them, `/kit preview <id>` shows one without claiming, `/kit claim <id>` takes it.
+
+| Field | What it does |
+|---|---|
+| Icon, name, description | How it looks in the list |
+| Permission | Who may see and claim it |
+| Enabled | Whether it exists for players at all |
+| Items | Edited with ExyliaLib's loadout editor |
+| Commands | Run alongside the items |
+| Cooldown | Per player, in milliseconds. Default 24 hours |
+| Max uses | `-1` for unlimited |
+| First-join kit | Given automatically the first time a player joins |
+| Auto-equip armour | Armour goes on rather than into the bag |
+| Drop when full | Overflow is dropped rather than refused |
+| Sort order | Where it sits in the list |
+
+The list draws a kit in one of four states — ready, on cooldown, used up, or locked — each with its own
+template in `modules/kits/menus/list.yml`.
+
+The preview is worth knowing about: a shulker box or a bundle inside a kit is **openable in the
+preview**, so a player can see what is inside before claiming. `settings.preview.container-hint` is the
+lore appended to those containers, with `%items%`.
+
+| Setting | Default |
+|---|---|
+| `default-cooldown-ms` | 86400000 — 24 hours |
+| `default-max-uses` | `-1` |
+| `show-locked-kits` | `true` |
+
+`exyliasurvivalcore.kits.bypass` skips cooldowns and use limits. `/kitadmin give`, `reset` and
+`resetall` handle a player's record.
+
+## Crates
+
+A crate is a block in the world, a key, a reward table and an animation. Right-clicking the block
+spends a key and plays the animation; `/crates` opens the list, `/crates preview <id>` shows the
+rewards, `/crates open <id> [all]` opens without the block, and `/crates history` shows what has been
+won.
+
+Everything is built from `/cratesadmin`.
+
+### Keys
+
+Keys are **physical items** by default: a `TRIPWIRE_HOOK` with the crate's own name, given with
+`/cratesadmin key give`. Virtual keys — a counter on the player rather than an item — are given with
+`/cratesadmin key virtual`.
+
+Those five `key` subcommands are the only ones that run from the console, which is what a web store
+needs:
+
+```text
+/cratesadmin key give <player> <crate> <amount>
+/cratesadmin key giveall <crate> <amount>
+/cratesadmin key virtual <player> <crate> <amount>
+/cratesadmin key take <player> <crate> <amount>
+/cratesadmin key set <player> <crate> <amount>
+```
+
+### Tiers
+
+`modules/crates/tiers.yml` turns a reward's weight into a rarity.
+
+```yaml
+tiers:
+  legendary: { display: "…", color: "…", max-weight: 1.0,       broadcast: true,  sound: "…" }
+  epic:      { max-weight: 5.0,       broadcast: true }
+  rare:      { max-weight: 25.0 }
+  common:    { max-weight: 1000000.0 }
+```
+
+A reward belongs to the **first tier, in ascending `max-weight`, whose `max-weight` it does not
+exceed**. So a reward with weight 3 is `epic`, and one with weight 0.5 is `legendary`. `broadcast: true`
+announces a win of that tier to the server — one of the seven broadcasts a player can turn off in
+`/settings`.
+
+### Pity
+
+Each crate has a `pityAfter` count and a `pityTier`: after that many openings without hitting the tier,
+the next opening is guaranteed to. It is per player, per crate.
+
+### Animations
+
+`modules/crates/animations.yml` ships ten, one per style.
+
+| Animation | Style |
+|---|---|
+| `cosmic_orbit` | `ORBIT` |
+| `nebula_reel` | `REEL` |
+| `void_slot` | `SLOT` |
+| `triple_slots` | `SLOTS` |
+| `supernova` | `BURST` |
+| `singularity` | `VORTEX` |
+| `gauntlet` | `KNOCKOUT` |
+| `ascension` | `HELIX` |
+| `wheel_of_fate` | `SPOTLIGHT` |
+| `meteor_strike` | `COMET` |
+
+`NONE` is the eleventh style: no animation, straight to the reward.
+
+Each animation takes `duration`, `radius`, `height`, `spins`, `scale`, `items`, `glow`, `win-hold`,
+`tick-sound`, and `intro` and `win` effect lists. Not every field means the same thing to every style:
+
+- `radius` is ignored by `SLOT` and `SLOTS`, and read by `REEL` as how far in front of the player the
+  strip is drawn.
+- `spins` is ignored by `KNOCKOUT` and `COMET`, and read by `SPOTLIGHT` as how many laps it takes.
+- `items` is rounded down to 4, 8 or 16 by `KNOCKOUT`, so its bracket divides evenly.
+- `height` needs to stay above the hologram, which sits at 1.6.
+- `tick-sound` rises in pitch as the spin slows. An empty string is a silent spin.
+
+The winning reward appears throughout the reel like any other, so the outcome is not visible before the
+animation lands, and the block reappears when the opening ends.
+
+### The idle animation
+
+A crate can play something on a loop while nobody is opening it:
+
+| Setting | Default |
+|---|---|
+| `idle-animation` | `""` |
+| `idle-interval-seconds` | 8 |
+| `idle-radius` | 24.0 |
+
+`idle-interval-seconds: 0` turns the whole idle loop off, floating icon included.
+
+`history-retention-days` defaults to 30; `0` keeps everything.
+
+## Loot chests
+
+A **template** is a loot table with a name. A **chest** is a template placed in the world with its own
+cooldown.
+
+`/lootchestsadmin` opens the template list. **Place** gives you a wand — a `BLAZE_ROD` by default —
+and clicking a chest with it binds that template to it.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `wand-material` | `BLAZE_ROD` | What the placement wand is |
+| `allow-open-on-cooldown` | `false` | Whether a chest on cooldown opens empty rather than refusing |
+| `hologram-enabled` | `true` | The floating text above a chest |
+| `hologram-offset-y` | 1.5 | How high above it |
+
+The hologram has three states — ready, on cooldown with `%time%`, and disabled.
+
+A chest may be **dispersed**, which spreads its loot across the container rather than filling it from
+the first slot. `exyliasurvivalcore.lootchests.bypass` ignores the cooldown.
+
+## Item spawners
+
+A block that drops a glowing item on a random interval, under a countdown hologram. Built from
+`/spawnersadmin`: a spawner has a loot table, a minimum and maximum interval, and a list of locations.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `detection-radius` | 2.0 | How far to look for an item already lying there |
+| `hologram-offset-y` | 2 | Height of the countdown |
+| `glow-enabled`, `glow-color` | `true`, `gold` | The dropped item's outline. The colour must be one of the sixteen named text colours |
+| `particle-type` | `END_ROD` | Drawn at the spawner |
+| `sound-radius` | 16.0 | How far the spawn sound carries |
+
+<Callout type="note" title="There is no chest-import button">
+Both the item spawners and the loot-chest templates carry a complete "click a chest to import its
+contents as the loot table" flow in the code, but no menu button anywhere calls it. Build loot tables
+in the loot editor.
+</Callout>

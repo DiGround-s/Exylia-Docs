@@ -1,0 +1,120 @@
+---
+title: "Combat"
+description: "Kill rewards and streaks, bounties on players' heads, tracked statistics with leaderboards, and what happens on death."
+---
+
+## Kill rewards
+
+Every kill can pay, and consecutive kills build a streak. Both are written in
+`modules/kill-rewards/rewards.yml`.
+
+```yaml
+on-kill:
+  commands: []
+  killer:   { chat: "", actionbar: "", title: "", sound: "" }
+  victim:   { chat: "", actionbar: "", title: "", sound: "" }
+  server-broadcast: ""
+streak-milestones:
+  '3':  { … }
+  '5':  { … }
+  '10': { … }
+streak-end:
+  min-streak: 3
+  commands: []
+  killer: { … }
+  victim: { … }
+  server-broadcast: ""
+```
+
+`%killer%`, `%victim%`, `%streak%` and `%victim_streak%` are available throughout. Commands take a
+`console:` or `player:` prefix.
+
+`settings.worlds` is a whitelist — empty means every world. `settings.streak-reset-on-logout` decides
+whether a streak survives a disconnect.
+
+## Bounties
+
+`/bounty place <player> <amount>` puts money on a head. Whoever kills that player collects it. Several
+players can contribute to the same head, and `/bounty` lists the open ones with their contributions.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `min-amount` | 100 | Smallest contribution |
+| `max-amount` | 1000000 | Largest, `-1` for unlimited |
+| `max-bounties-per-placer` | 5 | How many heads one player may fund |
+| `max-target-pool` | `-1` | Ceiling on one head's total |
+| `allow-self-bounty` | `false` | Whether a player may fund their own head |
+| `cancel-penalty-percent` | 10 | Kept back when a contribution is cancelled |
+| `expiry-hours` | `-1` | `-1` never expires |
+| `allow-anonymous` | `true` | Whether the placer's name may be hidden |
+| `notify-target-on-login` | `true` | Whether the hunted player is told when they log in |
+| `target-bossbar-duration-seconds` | 10 | How long the boss bar shows on the target |
+
+Administrators get `/bountyadmin add`, `remove` and `clear`.
+
+<Callout type="warning" title="Two things on this module do not work as they read">
+`/bounty cancel` opens the same list `/bounty` does and cancels nothing — cancel a contribution from
+the menu instead.
+
+`exyliasurvivalcore.bounties.anonymous` has no effect through the normal flow. `/bounty place` works
+the flag out correctly and hands it to the confirmation screen, but the shipped
+`bounty_place_confirm.yml` passes `false` for it regardless, so every bounty placed that way is named.
+</Callout>
+
+## Statistics
+
+Kills, deaths, best streak and current streak are tracked per player, and `modules/stats/stats.yml`
+decides which of them are shown and ranked.
+
+```yaml
+stats:
+  kills:            { enabled: true, type: INTERNAL, format: NUMBER, leaderboard: true,  … }
+  deaths:           { enabled: true, type: INTERNAL, format: NUMBER, leaderboard: true,  … }
+  best_kill_streak: { enabled: true, type: INTERNAL, format: NUMBER, leaderboard: true,  … }
+  current_streak:   { enabled: true, type: INTERNAL, format: NUMBER, leaderboard: false, … }
+  playtime:         { enabled: true, type: PAPI,     format: TIME,   placeholder: "%exyliasurvivalcore_playtime_millis%" }
+  kdr:              { enabled: true, type: COMPUTED, format: DECIMAL, formula: KILLS_PER_DEATH }
+```
+
+| `type` | Where the number comes from |
+|---|---|
+| `INTERNAL` | One of the four counters the plugin keeps itself |
+| `COMPUTED` | A formula over other stats |
+| `PAPI` | Any PlaceholderAPI name |
+| `VAULT` | The player's balance |
+
+`format` is `NUMBER`, `DECIMAL`, `MONEY` or `TIME`. `leaderboard: false` keeps a stat off the boards
+while still showing it on the profile.
+
+<Callout type="note" title="`COMPUTED` has exactly one formula">
+`KILLS_PER_DEATH` is the only value `formula` accepts. Anything else silently falls back to it.
+</Callout>
+
+| Setting | Default | What it does |
+|---|---|---|
+| `leaderboard-refresh-interval` | 300 | Seconds between leaderboard rebuilds |
+| `papi-sample-interval` | 60 | Seconds between samples of a `PAPI` stat |
+| `leaderboard-size` | 100 | How deep a board goes |
+
+A reload reschedules both timers with the new values.
+
+<Callout type="danger" title="`/stats` does not exist at runtime">
+The command class is registered but its method is missing the annotation that makes it a command, so
+nothing is added to the server. `exyliasurvivalcore.stats` and `exyliasurvivalcore.stats.others` are
+therefore unreachable.
+
+The screens themselves work: bind `survivalcore:stats_open` to a button in any menu, an NPC or a
+hotbar item and the profile and its leaderboards open normally.
+</Callout>
+
+## Death
+
+The death module is three settings.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `scatter-radius` | 0.3 | How far drops are spread, so a stack is not one pile |
+| `fire-protection` | `true` | Drops survive fire — **not** lava |
+| `custom-messages` | `true` | The death line comes from `messages.yml` rather than vanilla |
+
+The death broadcast is one of the seven that respect a player's `/settings` preferences.

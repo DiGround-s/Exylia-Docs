@@ -1,0 +1,149 @@
+---
+title: "Comodidad"
+description: "Los comandos de utilidad, /repair y sus grupos, mensajes de entrada y salida, comandos programados y la pantalla de preferencias."
+---
+
+## Utilidades de jugador
+
+Nueve comandos, un nodo cada uno, todos bajo `exyliasurvivalcore.playerutils.`:
+
+| Comando | Alias | Nodo |
+|---|---|---|
+| `/heal` | — | `.heal` |
+| `/feed` | — | `.feed` |
+| `/fly` | — | `.fly` |
+| `/hat` | — | `.hat` |
+| `/craft` | `/workbench`, `/wb` | `.craft` |
+| `/anvil` | — | `.anvil` |
+| `/ec` | `/enderchest` | `.ec` |
+| `/nightvision` | `/nv` | `.nightvision` |
+| `/ping` | — | `.ping` |
+
+| Ajuste | Por defecto |
+|---|---|
+| `night-vision-amplifier` | 0 |
+| `heal-cooldown-seconds` | 0 |
+| `feed-cooldown-seconds` | 0 |
+
+El vuelo y la visión nocturna se recuerdan entre sesiones.
+
+## Reparar
+
+`/repair hand` repara lo que el jugador tenga en la mano; `/repair all` repara todo lo que lleve. `/fix`
+y `/reparar` son alias.
+
+| Ajuste | Por defecto |
+|---|---|
+| `default-hand-price` | 5000.0 |
+| `default-hand-cooldown` | 120 |
+| `default-all-price` | 10000.0 |
+| `default-all-cooldown` | 120 |
+
+`modules/repair/groups.yml` los sobrescribe por grupo de permisos. Viene **vacío**, con un ejemplo `vip`
+comentado:
+
+```yaml
+groups:
+  vip:
+    hand: { price: 2500.0, cooldown-seconds: 60 }
+    all:  { price: 5000.0, cooldown-seconds: 60 }
+```
+
+Un jugador de ese grupo necesita `exyliasurvivalcore.repair.group.vip`.
+
+<Callout type="warning" title="Los grupos se resuelven en orden de archivo, no por precio">
+Aplica el **primer** grupo del archivo cuyo nodo tenga el jugador. Alguien con dos grupos recibe el que
+esté escrito más arriba, aunque el otro sea más barato. Escribe primero el mejor grupo.
+</Callout>
+
+`/repair hand <jugador>` y `/repair all <jugador>` reparan a otro, con `.repair.hand.others` y
+`.repair.all.others`. `/repair lock` y `/repair unlock` protegen un objeto de ser reparado.
+`exyliasurvivalcore.repair.bypass.price` y `.bypass.cooldown` se saltan los dos costes.
+
+Un `/repair` a secas imprime la línea de uso del framework de comandos: no hay forma raíz.
+
+## Entrada y salida
+
+`modules/join-leave/config.yml` lleva los mensajes por defecto y el de primer login; `groups.yml` lleva
+las versiones por rango.
+
+```yaml
+settings:
+  counter-enabled: true
+  hide-vanilla-messages: true
+default-join:
+  enabled: true
+  chat: ""
+  sound: ""
+  commands: []
+  actionbar: ""
+  title: ""
+default-quit: { … }
+first-join:   { … }
+```
+
+`%player%` y `%count%` — el contador de entradas — están disponibles. Los comandos aceptan un prefijo
+`console:` o `player:`.
+
+```yaml title="modules/join-leave/groups.yml"
+groups:
+  vip:
+    permission: survivalcore.joinleave.vip
+    priority: 10
+    join: { enabled: true, chat: "", sound: "", actionbar: "", title: "", … }
+    quit: { … }
+```
+
+Gana el grupo de **mayor prioridad** cuyo permiso tenga el jugador. Ojo: el ejemplo que viene nombra
+`survivalcore.joinleave.vip` — con el prefijo corto — así que dalo exactamente así o cambia la cadena.
+
+Los mensajes de entrada y salida son uno de los siete anuncios que un jugador puede apagar en
+`/settings`.
+
+## Comandos programados
+
+Comandos de consola y anuncios en un temporizador.
+
+```yaml
+sections:
+  resource_drop:
+    enabled: true
+    interval: 1800
+    commands: []
+    broadcast: ""
+  daily_bonus:
+    enabled: false
+    interval: 86400
+    commands: []
+    broadcast: ""
+```
+
+`interval` va en segundos. El archivo es de formato libre: nada de lo que añadas se poda, y nada de lo
+que borres vuelve.
+
+## Preferencias del jugador
+
+`/settings` — alias `/preferences` y `/options` — es una pantalla que tiene cada jugador. Diez
+interruptores deciden qué le llega.
+
+| Ajuste | Qué apaga |
+|---|---|
+| Mensajes de muerte | El anuncio de muerte del plugin |
+| Mensajes de entrada y salida | Los dos sentidos |
+| Anuncios de rankup | Que otro suba de rango |
+| Anuncios de bajas | Los hitos de racha |
+| Anuncios de recompensas | Recompensas puestas y cobradas |
+| Anuncios de cajas | Premios de caja de un tier que anuncia |
+| Anuncios de compra | Los anuncios de reclaim |
+| Peticiones de TPA | Si recibe peticiones |
+| Auto-aceptar TPA | Aceptar sin preguntar |
+| Confirmar TPA | La confirmación antes de enviar una |
+
+<Callout type="note" title="Todo viene encendido, y solo se guardan las excepciones">
+La fila guarda los ajustes que el jugador ha **apagado**, así que una preferencia añadida en una
+versión posterior está encendida para todos sin ninguna migración que ejecutar. Las tres filas de TPA
+son del propio módulo tpa: no se guardan dos veces.
+</Callout>
+
+Un ajuste cuyo módulo está apagado se lee como no disponible y no hace nada. El nodo del comando es
+`exyliasurvivalcore.settings`.

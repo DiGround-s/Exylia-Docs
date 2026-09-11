@@ -1,0 +1,179 @@
+---
+title: "Commands"
+description: "Every command every module registers, its arguments, its aliases and the node it checks."
+---
+
+Nothing is declared in `plugin.yml`: commands are registered at runtime by the module that owns them,
+so a module that is off has no commands at all.
+
+`<x>` is required, `[x]` optional.
+
+## Core
+
+| Command | Aliases | Permission |
+|---|---|---|
+| `/survivalcore` | `/sc` | `survivalcore.admin` |
+| `/survivalcore reload` | | `survivalcore.admin.reload` |
+
+Runs from the console. It reloads the configs, the module settings and the menus — not the module
+switches.
+
+## Movement
+
+| Command | Permission |
+|---|---|
+| `/spawn` | **none** |
+| `/spawn set` | `exyliasurvivalcore.spawn.set` |
+| `/home [name]` | `exyliasurvivalcore.homes.tp` |
+| `/homes` | `exyliasurvivalcore.homes` |
+| `/homes set [name]` | `exyliasurvivalcore.homes.set` |
+| `/homes del <name>` | `exyliasurvivalcore.homes.del` |
+| `/homes tp <name>` | `exyliasurvivalcore.homes.tp` |
+| `/sethome [name]` | `exyliasurvivalcore.homes.set` |
+| `/homesadmin delhome <player> <home>` | `survivalcore.admin.homes` |
+| `/homesadmin listhomes <player>` | `survivalcore.admin.homes` |
+| `/warp [id]` (`/warps`) | `exyliasurvivalcore.warps.use` |
+| `/warpadmin` | `exyliasurvivalcore.warps.admin` |
+| `/back` | `exyliasurvivalcore.back` |
+| `/rtp [world]` | `exyliasurvivalcore.rtp` |
+| `/rtpadmin` (`/rtpa`) | `exyliasurvivalcore.rtp.admin` |
+| `/rtpadmin forcertp <player> <world>` | `exyliasurvivalcore.rtp.admin.forcertp` |
+| `/rtpadmin pool` | `exyliasurvivalcore.rtp.admin` |
+| `/near` | `exyliasurvivalcore.near` |
+
+### TPA
+
+| Command | Permission |
+|---|---|
+| `/tpa <player>` | `exyliasurvivalcore.tpa` |
+| `/tpahere <player>` | `exyliasurvivalcore.tpa.here` |
+| `/tpaccept [player]` | `exyliasurvivalcore.tpa.accept` |
+| `/tpadeny [player]` | `exyliasurvivalcore.tpa.deny` |
+| `/tpatoggle` | `exyliasurvivalcore.tpa.toggle` |
+| `/tpatoggle autoaccept` | `exyliasurvivalcore.tpa.autoaccept` |
+| `/tpatoggle confirm` | `exyliasurvivalcore.tpa.confirm` |
+| `/autotpaaccept` | `exyliasurvivalcore.tpa.autoaccept` |
+
+`/autotpaaccept` and `/tpatoggle autoaccept` are the same command twice — same behaviour, same node.
+
+## Combat
+
+| Command | Aliases | Permission |
+|---|---|---|
+| `/bounty` | | `exyliasurvivalcore.bounties.use` |
+| `/bounty place <player> <amount>` | | `exyliasurvivalcore.bounties.use` |
+| `/bounty cancel` | | `exyliasurvivalcore.bounties.use` |
+| `/bountyadmin add <player> <amount>` | | `exyliasurvivalcore.bounties.admin` |
+| `/bountyadmin remove <bountyId>` | | `exyliasurvivalcore.bounties.admin` |
+| `/bountyadmin clear <player>` | | `exyliasurvivalcore.bounties.admin` |
+| `/killrewardsadmin reset <player>` | `/kra` | `exyliasurvivalcore.killrewards.admin` |
+| `/killrewardsadmin resetbest <player>` | `/kra` | `exyliasurvivalcore.killrewards.admin` |
+
+<Callout type="warning" title="`/bounty cancel` does not cancel">
+It opens the same list `/bounty` opens. Cancel a contribution from the menu.
+</Callout>
+
+<Callout type="danger" title="`/stats` is never registered">
+`/stats [player]` exists in the source but is missing the annotation that turns it into a command, so
+the server never gets it — and `exyliasurvivalcore.stats` and `.stats.others` are unreachable with it.
+The screens still open from the `survivalcore:stats_open` action.
+</Callout>
+
+## Progression
+
+| Command | Aliases | Permission |
+|---|---|---|
+| `/rankup` | | `exyliasurvivalcore.rankup` |
+| `/rankup claim` | | `exyliasurvivalcore.rankup` |
+| `/rankupadmin set <player> <rank>` | `/rua` | `survivalcore.rankup.admin.set` |
+| `/rankupadmin reset <player>` | `/rua` | `survivalcore.rankup.admin.set` |
+| `/rankupadmin prestige <player> <level>` | `/rua` | `survivalcore.rankup.admin.set` |
+| `/rankupadmin info <player>` | `/rua` | `survivalcore.rankup.admin` |
+| `/playtime [rewardId]` | | **none** |
+| `/playtimeadmin reset <player> <rewardId>` | `/pta` | `exyliasurvivalcore.playtimerewards.admin` |
+| `/playtimeadmin resetall <player>` | `/pta` | `exyliasurvivalcore.playtimerewards.admin` |
+| `/farming` | | `exyliasurvivalcore.farming` |
+| `/farmingadmin set <player> <category> <count>` | `/fa` | `survivalcore.farming.admin.set` |
+| `/farmingadmin reset <player> <category>` | `/fa` | `survivalcore.farming.admin.set` |
+| `/farmingadmin resetall <player>` | `/fa` | `survivalcore.farming.admin.set` |
+| `/farmingadmin info <player>` | `/fa` | `survivalcore.farming.admin` |
+| `/reclaim` | | **none** |
+| `/reclaimadmin reset <player>` | | `exyliasurvivalcore.reclaim.admin` |
+| `/reclaimadmin resetsection <player> <section>` | | `exyliasurvivalcore.reclaim.admin` |
+
+`/playtime <rewardId>` **claims** that reward, and neither it nor `/reclaim` checks any node of its own.
+
+## Kits and crates
+
+| Command | Aliases | Permission |
+|---|---|---|
+| `/kit` | | `exyliasurvivalcore.kits` |
+| `/kit preview <id>` | | `exyliasurvivalcore.kits` |
+| `/kit claim <id>` | | `exyliasurvivalcore.kits` |
+| `/kitadmin give <player> <id>` | | `exyliasurvivalcore.kits.admin` |
+| `/kitadmin preview <id>` | | `exyliasurvivalcore.kits.admin` |
+| `/kitadmin reset <player> <id>` | | `exyliasurvivalcore.kits.admin` |
+| `/kitadmin resetall <player>` | | `exyliasurvivalcore.kits.admin` |
+| `/crates` | | `exyliasurvivalcore.crates.use` |
+| `/crates preview <id>` | | `exyliasurvivalcore.crates.use` |
+| `/crates open <id> [all]` | | `exyliasurvivalcore.crates.use` |
+| `/crates history` | | `exyliasurvivalcore.crates.use` |
+| `/cratesadmin` | `/cratesa` | `exyliasurvivalcore.crates.admin` |
+| `/cratesadmin key give <player> <crate> <amount>` | `/cratesa` | `exyliasurvivalcore.crates.admin` |
+| `/cratesadmin key giveall <crate> <amount>` | `/cratesa` | `exyliasurvivalcore.crates.admin` |
+| `/cratesadmin key virtual <player> <crate> <amount>` | `/cratesa` | `exyliasurvivalcore.crates.admin` |
+| `/cratesadmin key take <player> <crate> <amount>` | `/cratesa` | `exyliasurvivalcore.crates.admin` |
+| `/cratesadmin key set <player> <crate> <amount>` | `/cratesa` | `exyliasurvivalcore.crates.admin` |
+| `/cratesadmin history` | `/cratesa` | `exyliasurvivalcore.crates.admin` |
+| `/lootchestsadmin` | | `exyliasurvivalcore.lootchests.admin` |
+| `/spawnersadmin` | | `exyliasurvivalcore.itemspawners.admin` |
+
+The five `/cratesadmin key` subcommands are the only crate commands that run from the console, which is
+what a web store needs. `/cratesadmin` itself and `/cratesadmin history` are player-only.
+
+## Zones
+
+| Command | Permission |
+|---|---|
+| `/minesadmin` | `exyliasurvivalcore.mines.admin` |
+| `/regenzonesadmin` | `exyliasurvivalcore.regenzones.admin` |
+| `/afkzone preview <id>` | `exyliasurvivalcore.afkzones.use` |
+| `/afkzonesadmin` | `exyliasurvivalcore.afkzones.admin` |
+| `/portalsadmin` | `survivalcore.portals.admin` |
+| `/jumpadmin` | `exyliasurvivalcore.jumpads.admin` |
+| `/powerupsadmin` | `exyliasurvivalcore.powerups.admin` |
+
+There is no bare `/afkzone`, and `/powerupsadmin` says nothing at all when its module is off.
+
+## Quality of life
+
+| Command | Aliases | Permission |
+|---|---|---|
+| `/heal` | | `exyliasurvivalcore.playerutils.heal` |
+| `/feed` | | `exyliasurvivalcore.playerutils.feed` |
+| `/fly` | | `exyliasurvivalcore.playerutils.fly` |
+| `/hat` | | `exyliasurvivalcore.playerutils.hat` |
+| `/craft` | `/workbench`, `/wb` | `exyliasurvivalcore.playerutils.craft` |
+| `/anvil` | | `exyliasurvivalcore.playerutils.anvil` |
+| `/ec` | `/enderchest` | `exyliasurvivalcore.playerutils.ec` |
+| `/nightvision` | `/nv` | `exyliasurvivalcore.playerutils.nightvision` |
+| `/ping` | | `exyliasurvivalcore.playerutils.ping` |
+| `/repair hand [player]` | `/fix`, `/reparar` | `exyliasurvivalcore.repair.hand` |
+| `/repair all [player]` | `/fix`, `/reparar` | `exyliasurvivalcore.repair.all` |
+| `/repair lock` | `/fix`, `/reparar` | `exyliasurvivalcore.repair.lock` |
+| `/repair unlock` | `/fix`, `/reparar` | `exyliasurvivalcore.repair.lock` |
+| `/settings` | `/preferences`, `/options` | `exyliasurvivalcore.settings` |
+
+Repairing somebody else needs `.repair.hand.others` or `.repair.all.others` on top. Bare `/repair`
+prints a usage line.
+
+## From the console
+
+`/survivalcore`, every `*admin` command of farming, homes, kill rewards, playtime, rankup, reclaim and
+RTP, and the five `/cratesadmin key` subcommands. Everything else is player-only.
+
+## Tab completion
+
+Thirteen suggestion providers fill in the arguments live: AFK zone ids, bounty ids, crate ids, farming
+category ids, the player's own home names, another player's home names, kit ids, playtime reward ids,
+rank ids, reclaim section ids, RTP world ids, online player names and warp ids.

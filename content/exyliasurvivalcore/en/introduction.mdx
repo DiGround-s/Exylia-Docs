@@ -1,0 +1,88 @@
+---
+title: "Introduction"
+description: "What ExyliaSurvivalCore is: thirty-two modules on one plugin, each one switchable, each one registering nothing when it is off."
+---
+
+ExyliaSurvivalCore is the survival server in one jar. Homes, warps, TPA, random teleport, kits, crates,
+mines, bounties, loot chests, power-ups, rankup, farming milestones, AFK zones, regenerating zones and
+twenty more, each of them a **module** you switch on or off in `config.yml`.
+
+A module that is off registers nothing at all: no commands, no listeners, no database tables, no
+placeholders. Turning one off is not a flag the code checks in a hundred places — it is a feature that
+never loads.
+
+It is **thirty-two modules, fifty-eight menus, thirty-one database tables and two hundred and
+thirty-two menu actions**, and almost everything an administrator configures is edited from an in-game
+screen rather than a file.
+
+## What is included
+
+<Cards>
+  <Card title="Getting around" href="/docs/exyliasurvivalcore/movement">
+    Spawn, homes, warps, TPA, `/back`, random teleport and `/near`. Homes and warps work across the
+    network.
+  </Card>
+  <Card title="Combat" href="/docs/exyliasurvivalcore/combat">
+    Kill rewards with streaks, bounties on players' heads, tracked statistics with leaderboards, and
+    death handling.
+  </Card>
+  <Card title="Progression" href="/docs/exyliasurvivalcore/progression">
+    A rank ladder with prestige, playtime rewards, farming milestones and a `/reclaim` for donors.
+  </Card>
+  <Card title="Kits and crates" href="/docs/exyliasurvivalcore/kits-and-crates">
+    Kits with cooldowns and previews, ten crate animations drawn in the world, loot chests and item
+    spawners.
+  </Card>
+  <Card title="Zones" href="/docs/exyliasurvivalcore/zones">
+    Mines that reset whole or block by block, regenerating zones from schematics, AFK zones, portals,
+    jump pads and power-ups.
+  </Card>
+  <Card title="Restrictions" href="/docs/exyliasurvivalcore/restrictions">
+    Enchantment caps per world or region, and items that cannot be used or crafted where you say.
+  </Card>
+  <Card title="Quality of life" href="/docs/exyliasurvivalcore/quality-of-life">
+    `/heal`, `/fly`, `/repair`, join and leave messages, scheduled commands, and a preferences screen
+    every player owns.
+  </Card>
+  <Card title="Commands" href="/docs/exyliasurvivalcore/commands">
+    Every command of every module, with its arguments and its permission.
+  </Card>
+</Cards>
+
+## How a server is set up
+
+<Steps>
+  <Step title="Turn off what you do not want">
+    All thirty-two ship as `true`. Set the ones you do not need to `false` in `config.yml` and restart
+    — module switches are the one thing a reload does not pick up.
+  </Step>
+  <Step title="Set the spawn">
+    `/spawn set`. The spawn module can also force players there on first join, on every join and on
+    respawn.
+  </Step>
+  <Step title="Build the content from menus">
+    Mines, crates, warps, kits, loot chests, portals, jump pads, power-ups, AFK zones and regen zones
+    are all built from admin screens and stored in the database. There is no list to hand-edit.
+  </Step>
+  <Step title="Write the ladders in YAML">
+    Ranks, playtime rewards, farming categories, kill rewards, RTP worlds, repair groups, join groups
+    and the stat list are files, because they are ladders rather than objects.
+  </Step>
+</Steps>
+
+## At a glance
+
+| | |
+|---|---|
+| Version documented | 1.1.2 |
+| Minecraft | 1.21+ |
+| Platforms | Spigot, Paper and Folia |
+| Required | `ExyliaLib`, `FastAsyncWorldEdit`, `packetevents` |
+| Optional | `PlaceholderAPI`, `WorldGuard`, `Apollo`, `FeatherServerAPI`, an economy plugin, the `Worlds` plugin on Folia |
+| Database | H2 by default; MySQL, MariaDB, PostgreSQL and MongoDB through ExyliaLib |
+
+<Callout type="note" title="Where the numbers come from">
+Every default, message, node and rule on these pages was read from the plugin's source at version
+1.1.2 — not from the comments in the generated files, several of which are out of date. Where a page
+says something does not work, that is because the code does not do it.
+</Callout>

@@ -1,0 +1,109 @@
+---
+title: "Primeros pasos"
+description: "Un primer grupo de permisos, el spawn, el primer warp y kit, y las escaleras que conviene escribir antes de abrir."
+badge: "guía"
+---
+
+## Los nodos que necesita un jugador
+
+No hay nada declarado en `plugin.yml`. No existe bloque `permissions:`, así que ningún nodo lleva
+`default:` — un operador pasa todas las comprobaciones porque los operadores las pasan, y el resto
+empieza sin nada.
+
+Un grupo por defecto, con todos los módulos encendidos, quiere más o menos esto:
+
+```text
+exyliasurvivalcore.homes
+exyliasurvivalcore.homes.set
+exyliasurvivalcore.homes.del
+exyliasurvivalcore.homes.tp
+exyliasurvivalcore.homes.max_homes.3
+exyliasurvivalcore.back
+exyliasurvivalcore.tpa
+exyliasurvivalcore.tpa.here
+exyliasurvivalcore.tpa.accept
+exyliasurvivalcore.tpa.deny
+exyliasurvivalcore.tpa.toggle
+exyliasurvivalcore.rtp
+exyliasurvivalcore.warps.use
+exyliasurvivalcore.near
+exyliasurvivalcore.kits
+exyliasurvivalcore.crates.use
+exyliasurvivalcore.bounties.use
+exyliasurvivalcore.afkzones.use
+exyliasurvivalcore.farming
+exyliasurvivalcore.rankup
+exyliasurvivalcore.settings
+exyliasurvivalcore.repair.hand
+exyliasurvivalcore.playerutils.ping
+```
+
+<Callout type="warning" title="Tres comandos no comprueban ningún permiso">
+`/spawn`, `/reclaim` y `/playtime` no tienen nodo. `/spawn` es inofensivo; los otros dos **escriben**:
+`/reclaim` ejecuta los comandos de la sección de mayor prioridad que tenga el jugador, y
+`/playtime <rewardId>` reclama esa recompensa. Lo que un jugador consigue de verdad lo deciden el
+permiso de la sección de reclaim y haber acumulado el tiempo — pero los comandos en sí están abiertos
+a todo el mundo.
+</Callout>
+
+<Callout type="note" title="Ocho nodos siguen empezando por `survivalcore.`">
+El prefijo en todo lo demás es `exyliasurvivalcore.`, pero los nodos de administración del núcleo, de
+rankup, de farming y de portales se escribieron sin él. Dalos exactamente como están escritos en la
+página de [Permisos](/docs/exyliasurvivalcore/permisos); un `exyliasurvivalcore.admin` no hace nada.
+</Callout>
+
+Un administrador quiere `survivalcore.admin` más el nodo de administración de cada módulo: no se
+cubren unos a otros.
+
+## Montar el mundo
+
+<Steps>
+  <Step title="Pon el spawn">
+    `/spawn set` donde estés. `modules/spawn/config.yml` decide si además se manda ahí a los jugadores
+    en el primer login, en cada login y al reaparecer, y si eso ignora una cama.
+  </Step>
+  <Step title="Haz un warp">
+    `/warpadmin` → **create**. Cada warp tiene nombre visible, icono, coste, permiso y posición, y
+    `/warp` lista los que puede usar cada jugador.
+  </Step>
+  <Step title="Haz un kit">
+    `/kitadmin` → **create**, y después **Edit items** para llenarlo. Cooldown, límite de usos,
+    permiso, si equipa la armadura sola y si se da en el primer login están en la misma pantalla.
+  </Step>
+  <Step title="Apunta el RTP a un mundo">
+    `modules/rtp/worlds.yml` trae `world` activado y `world_nether` desactivado. Un mundo que no esté
+    en ese archivo no se puede alcanzar con `/rtp`. Pregenera la zona con Chunky y el pool se llena en
+    segundos en vez de minutos.
+  </Step>
+</Steps>
+
+## Las escaleras que conviene escribir primero
+
+Casi todo el contenido se monta desde menús in-game y vive en la base de datos. Seis cosas son
+archivos, porque son escaleras y no objetos:
+
+| Archivo | Qué es |
+|---|---|
+| `modules/rankup/ranks.yml` | La escalera de rangos: orden, requisitos, recompensas |
+| `modules/playtime-rewards/rewards.yml` | Qué se puede reclamar a los 30m, 1h, 5h, 25h y 100h |
+| `modules/farming/categories.yml` | Qué cuenta como farmeo, recompensas por cada N y hitos |
+| `modules/kill-rewards/rewards.yml` | Qué paga una baja, y los hitos de racha |
+| `modules/reclaim/config.yml` | Las secciones de `/reclaim` y sus cooldowns |
+| `modules/repair/groups.yml` | Precios y cooldowns de reparación por grupo de permisos |
+
+<Callout type="warning" title="La cabecera de `ranks.yml` lista dos tipos de requisito que no existen">
+El comentario menciona `kills` y `level`. El conjunto real es `money`, `playtime`, `placeholder` y
+`permission`. Un requisito de cualquier otro tipo se descarta en silencio al leer el archivo, así que
+el rango sale gratis. Mira [Progresión](/docs/exyliasurvivalcore/progresion#requisitos).
+</Callout>
+
+## Un primer vistazo
+
+- `/sc reload` desde consola relee la configuración y los menús. Los interruptores de módulo necesitan
+  reinicio.
+- `/settings` es lo que usa un jugador para apagar los anuncios que no quiere.
+- Cada comando de administración abre un menú: `/minesadmin`, `/cratesadmin`, `/warpadmin`,
+  `/kitadmin`, `/lootchestsadmin`, `/spawnersadmin`, `/powerupsadmin`, `/regenzonesadmin`,
+  `/portalsadmin`, `/jumpadmin`, `/afkzonesadmin`, `/bountyadmin`.
+- Todo lo que hay bajo `menus/admin/` se reescribe desde el jar en cada arranque **y en cada recarga**.
+  Edita en su lugar los menús de jugador de `modules/<id>/menus/`.

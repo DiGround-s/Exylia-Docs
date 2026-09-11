@@ -1,0 +1,131 @@
+---
+title: "Installation"
+description: "Dependencies, first boot, the files the plugin generates, where the database is set, and what a reload actually reloads."
+---
+
+## Before you start
+
+Two plugins are declared as **hard** dependencies. Without either of them the server refuses to load
+this one, even if you only wanted `/home` and `/spawn`.
+
+| Plugin | What for |
+|---|---|
+| `FastAsyncWorldEdit` | Regenerating zones save and paste schematics through it. |
+| `packetevents` | Power-ups are drawn as packet-level floating items. |
+
+`ExyliaLib` is listed under `softdepend` on purpose — the loader that installs ExyliaLib is the one
+that has to load first for that install to happen — but nothing here runs without it. It provides the
+configuration, menus, database, placeholders, holograms, scoreboards, regions, wizards, chat inputs,
+teleports, the economy facade and the scheduler.
+
+Optional:
+
+- **PlaceholderAPI** to use the plugin's placeholders outside it.
+- **WorldGuard** for the region scopes in the enchantment and blocked-item rules.
+- **An economy plugin** through ExyliaLib's economy facade — Vault or PlayerPoints. Without one, prices
+  and payouts are skipped and the console says so once at boot.
+- **Apollo** or **FeatherServerAPI** so spawn and homes show as client waypoints.
+- **The `Worlds` plugin** on Folia.
+
+## Installing
+
+<Steps>
+  <Step title="Drop in the jars">
+    Copy `ExyliaSurvivalCore.jar`, `ExyliaLib.jar`, `FastAsyncWorldEdit.jar` and `packetevents.jar`
+    into `plugins/`.
+  </Step>
+  <Step title="Start the server">
+    The first boot writes `config.yml`, `messages.yml`, one folder per module under `modules/`, the
+    menus and the tables of every module that is on.
+  </Step>
+  <Step title="Turn off what you do not want">
+    All thirty-two switches ship as `true`. Set the rest to `false` and restart — see
+    [Modules](/docs/exyliasurvivalcore/modules).
+  </Step>
+  <Step title="Set the spawn and grant the nodes">
+    `/spawn set`, then grant your groups their nodes. Nothing is declared in `plugin.yml`, so no node
+    has a default. See [First steps](/docs/exyliasurvivalcore/first-steps).
+  </Step>
+</Steps>
+
+Two warnings are worth recognising in the console at boot:
+
+- `No economy is installed: prices and payouts are skipped.` — no economy provider was found.
+- `Regen zones are off: <reason>` — FastAsyncWorldEdit's schematic support is not usable, so the
+  regen-zones module loads but never regenerates anything.
+
+## Generated files
+
+All of them live in `plugins/ExyliaSurvivalCore/`.
+
+| Path | Contents |
+|---|---|
+| `config.yml` | `debug` and the thirty-two module switches. Nothing else. |
+| `messages.yml` | Every line the plugin sends, in thirty-four sections. |
+| `modules/<id>/config.yml` | One per module, its own settings. |
+| `modules/<id>/<data>.yml` | The ladders: ranks, rewards, categories, groups, worlds, stats, rules. |
+| `modules/<id>/menus/` | The twenty-two player-facing screens. **Yours to edit.** |
+| `menus/admin/` | The thirty-six admin screens. **Rewritten from the jar on every start and every reload.** |
+| `database.yml` | Database engine and Redis, written by ExyliaLib. |
+
+Nothing but the menus exists inside the jar: the configuration files are generated from the plugin's
+own schema, comments included. A key the schema does not recognise is reported once as `UNKNOWN_KEY`
+and removed.
+
+<Callout type="danger" title="Do not edit anything under `menus/admin/`">
+That whole directory is deleted and re-extracted from the jar every time the plugin enables **and**
+every time you run `/sc reload`. Edits there are lost, without a warning.
+
+Each of those thirty-six files opens with a header saying it is yours and is never overwritten. **That
+header is wrong.** It is correct only in the twenty-two menus under `modules/*/menus/`, which really
+are written once and left alone.
+
+The one exception is `modules/warps/menus/warp_setup.yml` — an admin editor that lives outside
+`menus/admin/` and therefore survives.
+</Callout>
+
+## Database
+
+By default the plugin uses **H2**: a file inside the plugin folder, with no server and no maintenance.
+To share homes, warps, kits, ranks and statistics across servers, point every server at the same
+database:
+
+```yaml title="plugins/ExyliaSurvivalCore/database.yml"
+database:
+  type: mysql
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Supported engines: `h2`, `mysql`, `mariadb`, `postgresql` and `mongodb`. An engine the library does not
+recognise falls back to H2 with a console warning. The file is ExyliaLib's; its full reference,
+including the `redis` block, is in the [library's database page](/docs/exylialib/database).
+
+The thirty-one tables are listed on the [Database](/docs/exyliasurvivalcore/database) page. A module
+that is off never creates its own.
+
+## Reloading
+
+```
+/survivalcore reload
+```
+
+Aliases `/sc`. It runs from the console, and it reloads **three** things: the configuration files, each
+module's own cached configuration, and the menus.
+
+| Reloaded | Not reloaded |
+|---|---|
+| `config.yml`, including `debug` | The module switches — a module turned on or off needs a restart |
+| Every `modules/<id>/` file, including the nine modules that cache theirs | The database connection |
+| `messages.yml` | Anything stored in the database, which is read when it changes |
+| The menus — which also wipes `menus/admin/` back to the jar | |
+
+## Updating
+
+Replace the jar and restart. Your edits to `config.yml`, `messages.yml`, every file under `modules/`
+and the twenty-two module menus are kept; `menus/admin/` is refreshed from the jar. Everything in the
+database is untouched.

@@ -1,0 +1,106 @@
+---
+title: "Database"
+description: "The thirty-one tables, which module owns each, what is indexed, and the two schema quirks worth knowing."
+---
+
+Every module that stores anything opens its own tables, and a module that is off creates none. All of
+them go through one connection, configured in `database.yml`.
+
+Tables are created from the record definitions with `CREATE TABLE IF NOT EXISTS`, the first time each
+repository is opened. There is no schema file to apply and no migration to run.
+
+## Movement
+
+| Table | Key | Holds |
+|---|---|---|
+| `spawn_data` | `id` | The spawn location. One row |
+| `homes` | `id` = a UUID | The owner (indexed), name, location and icon |
+| `sc_warps` | `id` | Display name, enabled, cost, permission, icon, location |
+| `tpa_settings` | `playeruuid` | Whether they accept requests, auto-accept and confirm |
+| `rtp_cooldowns` | `id` | Player (indexed), world, when it was used |
+
+`/back` keeps nothing: its point is in memory and a restart clears it.
+
+## Combat
+
+| Table | Key | Holds |
+|---|---|---|
+| `player_stats` | `playeruuid` | Name, kills, deaths, best kill streak |
+| `stat_cache` | `<uuid>:<statId>` | One cached stat value per player, for the leaderboards |
+| `sc_bounties` | `id` | Target, placer, amount, when it was placed, when it expires, anonymous |
+
+`player_stats` carries three descending indexes — on kills, deaths and best streak — so a leaderboard is
+a bounded read. `stat_cache` has the plugin's only multi-column index, on the stat id and its value.
+
+## Progression
+
+| Table | Key | Holds |
+|---|---|---|
+| `rankup_data` | `playeruuid` | Current rank, completed ranks, prestige level |
+| `playtime_data` | `playeruuid` | Total playtime and the claimed rewards |
+| `farming_data` | `playeruuid` | Per-category counts and claimed milestones |
+| `reclaim_data` | `playeruuid` | What has been claimed once, and the last claim per section |
+| `player_join_data` | `id` = the player UUID | First join, join number, total joins |
+
+## Kits and crates
+
+| Table | Key | Holds |
+|---|---|---|
+| `sc_kits` | `id` | The whole kit: items, commands, cooldown, uses, icon, order, flags |
+| `sc_kit_player_data` | `<playerId>:<kitId>` | Last claim and use count. Player indexed |
+| `sc_crates` | `id` | Rewards, animation, key icon and name, pity, the icon and hologram offsets |
+| `sc_crate_blocks` | `id` | Which crate a placed block is |
+| `sc_crate_players` | `<uuid>:<crateId>` | Keys held, openings since pity, total opened. Player indexed |
+| `sc_crate_openings` | `id` | The history: who, which crate, which reward, which tier, when. Player indexed |
+| `sc_loot_chest_templates` | `id` | The loot table and who made it |
+| `sc_loot_chests` | `id` | A placed chest: template, location, cooldown, last refill |
+| `sc_item_spawners` | `id` | Locations, the interval range and the loot table |
+
+## Zones
+
+| Table | Key | Holds |
+|---|---|---|
+| `sc_mines` | `id` | The region, type, composition, levels, reset settings, teleports, flags |
+| `sc_mine_broken_blocks` | `id` | One row per block mid-regeneration in a realistic mine. Mine indexed |
+| `sc_regen_zones` | `id` | The region, mode, intervals and flags |
+| `sc_afk_zones` | `id` | The region, reward interval and reward list |
+| `survival_portals` | `id` | The region, the destination and the command list |
+| `sc_jumpads` | `id` | Power, direction, glide, and the block locations |
+| `sc_powerup_zones` | `id` | Mode, area or locations, timings and the power-up entries |
+
+`survival_portals` is the one table with the `survival_` prefix rather than `sc_`.
+
+## Quality of life
+
+| Table | Key | Holds |
+|---|---|---|
+| `player_utils_data` | `playeruuid` | Whether flight and night vision are on |
+| `sc_player_settings` | `playeruuid` | The preferences the player has turned **off** |
+
+## Modules that store nothing
+
+`back`, `blocked-items`, `death`, `enchantments`, `kill-rewards`, `near`, `repair` and
+`scheduled-commands`. Kill streaks are counted in memory and lost on a restart.
+
+## Two things worth knowing before you touch a table by hand
+
+<Callout type="note" title="A stored location can name another server">
+Homes, warps, portals and crate blocks store `server,world,x,y,z,yaw,pitch`, where `-` means "this
+server". That is what makes `/home` and `/warp` work across a network. A row naming a server that is
+not this one has no local location at all — which is why the API offers a teleport method rather than
+coordinates.
+</Callout>
+
+<Callout type="warning" title="Two tables have both `createdat` and `created_at`">
+`sc_bounties` and `sc_loot_chest_templates` each carry two timestamp columns differing only by an
+underscore, holding different things: the domain timestamp — when the bounty was placed, when the
+template was made — and the row's own creation time. Read the right one.
+</Callout>
+
+Every table also carries `created_at` and `updated_at`. Nothing has a unique constraint beyond its
+primary key.
+
+## Sharing across servers
+
+Point every server at the same database and homes, warps, kits, ranks, statistics, crates and the rest
+are shared. Nothing is pushed live between servers: a row is picked up the next time it is read.

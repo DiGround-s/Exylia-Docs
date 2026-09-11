@@ -1,0 +1,117 @@
+---
+title: "Configuración"
+description: "Los archivos generados, cómo se escriben, cuáles son tuyos para dar forma y qué comentarios están desactualizados."
+---
+
+Todo vive en `plugins/ExyliaSurvivalCore/`. Dentro del jar no hay nada salvo los menús: la
+configuración se genera desde el propio esquema del plugin en la primera ejecución, comentarios
+incluidos.
+
+## Tres clases de archivo
+
+| Clase | Comportamiento | Qué archivos |
+|---|---|---|
+| **Con esquema** | Claves fijas, generadas con comentarios. Una clave que el esquema no conoce se avisa una vez como `UNKNOWN_KEY` y se elimina | `config.yml`, `messages.yml` y cada `modules/<id>/config.yml` |
+| **De formato libre** | Se escriben una vez con una cabecera y no se reescriben. No se poda nada, y lo que borres no vuelve | `modules/reclaim/config.yml`, `modules/scheduled-commands/config.yml`, `modules/blocked-items/rules.yml`, `modules/enchantments/rules.yml` |
+| **Sacados fuera** | Un mapa que no cabe en un record de esquema, movido a un archivo hermano la primera vez | `farming/categories.yml`, `join-leave/groups.yml`, `kill-rewards/rewards.yml`, `playtime-rewards/rewards.yml`, `rankup/ranks.yml`, `repair/groups.yml`, `rtp/worlds.yml`, `stats/stats.yml` |
+
+Un archivo sacado fuera que ya existe se trata como ya movido, así que uno que vaciaste a propósito se
+queda vacío en vez de recibir otra vez los valores por defecto encima.
+
+## `config.yml`
+
+Dos claves: `debug` y los treinta y dos interruptores de módulo. Eso es el archivo entero — mira
+[Módulos](/docs/exyliasurvivalcore/modulos).
+
+Aquí **no hay sección de base de datos**. La base de datos se configura en `database.yml`, escrito por
+ExyliaLib.
+
+## `messages.yml`
+
+Un `prefix` y treinta y cuatro secciones: una por módulo, más `errors`, `admin` y unas pocas
+compartidas. Cada línea que manda el plugin está en este archivo; no queda nada escrito a fuego.
+
+`errors` es el bloque compartido: `module-disabled`, `no-permission`, `player-not-found`,
+`invalid-number`, `world-blacklisted`.
+
+Una línea puede empezar por una etiqueta de efecto como `[sound:ENTITY_VILLAGER_NO|1.0|1.0]`, que es
+una instrucción y no llega nunca a la pantalla. `%prefix%` se sustituye desde la clave `prefix`.
+
+## Formas compartidas
+
+Varios módulos dibujan las mismas tres cosas, y aceptan las mismas claves en todos lados.
+
+| Forma | Claves |
+|---|---|
+| Título | `text`, `subtitle`, `fade-in`, `stay`, `fade-out`, `time-style` |
+| Barra de acción | `text`, `duration`, `time-style` |
+| Barra de jefe | `text`, `colour`, `overlay`, `count-up`, `progress`, `time-style` |
+
+`colour` acepta `PINK`, `BLUE`, `RED`, `GREEN`, `YELLOW`, `PURPLE` o `WHITE`. `overlay` acepta
+`PROGRESS`, `NOTCHED_6`, `NOTCHED_10`, `NOTCHED_12` o `NOTCHED_20`. `time-style` acepta `auto`,
+`seconds`, `tenths`, `hundredths`, `clock` o `full`. Un `stay` o `duration` de `0` significa "hasta que
+algo lo pare".
+
+Los sonidos son siempre `NOMBRE_SONIDO|VOLUMEN|TONO`, y una cadena vacía desactiva uno.
+
+## Archivos por módulo
+
+| Módulo | Archivos |
+|---|---|
+| `spawn`, `tpa`, `homes`, `back`, `warps` | `config.yml` — el warmup, el nodo de bypass, los mundos vetados, los sonidos y los tres efectos |
+| `rtp` | `config.yml` más `worlds.yml` |
+| `join-leave` | `config.yml` más `groups.yml` |
+| `kill-rewards` | `config.yml` más `rewards.yml` |
+| `playtime-rewards` | `config.yml` más `rewards.yml` |
+| `rankup` | `config.yml` más `ranks.yml` |
+| `farming` | `config.yml` más `categories.yml` |
+| `stats` | `config.yml` más `stats.yml` |
+| `repair` | `config.yml` más `groups.yml` |
+| `crates` | `config.yml` más `tiers.yml` y `animations.yml` |
+| `enchantments` | `config.yml` más `rules.yml` |
+| `blocked-items` | Solo `rules.yml` |
+| `reclaim`, `scheduled-commands` | Solo `config.yml`, de formato libre |
+| `player-utils`, `near`, `jumpads`, `kits`, `bounties`, `afk-zones`, `item-spawners`, `loot-chests`, `death`, `powerups`, `mines` | Solo `config.yml` |
+| `regen-zones` | `modules/regenzones/config.yml` — **sin guion en el nombre de la carpeta** |
+| `portals`, `player-settings` | **Ningún archivo de configuración** |
+
+Qué hace cada clave está en la página de su módulo:
+[Movimiento](/docs/exyliasurvivalcore/movimiento), [Combate](/docs/exyliasurvivalcore/combate),
+[Progresión](/docs/exyliasurvivalcore/progresion), [Kits y cajas](/docs/exyliasurvivalcore/kits-y-cajas),
+[Zonas](/docs/exyliasurvivalcore/zonas), [Restricciones](/docs/exyliasurvivalcore/restricciones) y
+[Comodidad](/docs/exyliasurvivalcore/utilidades).
+
+## Comentarios desactualizados
+
+Los archivos generados llevan sus propias explicaciones, y cuatro de ellas son falsas. Están aquí para
+que un archivo que contradiga esta documentación no sea una sorpresa.
+
+<Callout type="danger" title="`menus/admin/` no es tuyo, diga lo que diga su cabecera">
+Los treinta y seis archivos de menú de administración empiezan con *"This file is yours to edit…
+written once, when it is missing, and never overwritten"*. El directorio se borra y se vuelve a extraer
+del jar en **cada** arranque y **cada** `/sc reload`. La cabecera solo es cierta en los veintidós menús
+de `modules/*/menus/`.
+</Callout>
+
+<Callout type="warning" title="`ranks.yml` lista tipos de requisito que no existen">
+Su cabecera menciona `kills` y `level`. El conjunto real es `money`, `playtime`, `placeholder` y
+`permission`; un requisito de cualquier otro tipo se descarta en silencio al leer el archivo.
+</Callout>
+
+<Callout type="note" title="`admin.usage` nombra dos subcomandos que `/survivalcore` no tiene">
+La línea dice *"Subcommands: reload, delhome, listhomes"*. `/survivalcore` solo tiene `reload`;
+`delhome` y `listhomes` están en `/homesadmin`.
+</Callout>
+
+<Callout type="note" title="Ocho valores por defecto siguen en español">
+Una instalación nueva muestra el texto de warmup en español para spawn, homes, back, TPA y RTP:
+*"Teleportando en %time%"*, *"Teleportando a %world%"*, *"Buscando…"*. Son valores de configuración
+normales; edítalos en el `config.yml` de cada módulo.
+</Callout>
+
+## Recargar
+
+`/survivalcore reload`, desde consola o en el juego, relee `config.yml` incluido `debug`, todos los
+archivos de cada módulo — los nueve que cacheaban el suyo incluidos —, `messages.yml` y los menús.
+
+Lo que **no** hace es aplicar un interruptor de módulo. Encender o apagar un módulo necesita reinicio.

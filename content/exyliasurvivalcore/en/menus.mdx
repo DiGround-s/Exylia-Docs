@@ -1,0 +1,152 @@
+---
+title: "Menus"
+description: "The fifty-eight screens, which folder is safe to edit, the file schema, and the actions you can bind elsewhere."
+---
+
+Fifty-eight menu files ship, in two places that behave completely differently.
+
+| Folder | Files | Behaviour |
+|---|---|---|
+| `modules/<id>/menus/` | 22 | Written once when missing, then left alone. **Yours.** |
+| `menus/admin/` | 36 | Deleted and re-extracted from the jar on every start **and every reload**. |
+
+<Callout type="danger" title="Every file in `menus/admin/` claims to be yours, and none of them is">
+Each of those thirty-six opens with a header saying it is written once and never overwritten. It is
+copied from the module menus, where it is true. Edits under `menus/admin/` are destroyed silently on
+the next restart or `/sc reload`.
+
+The one exception in the other direction is `modules/warps/menus/warp_setup.yml`: an admin editor that
+lives outside `menus/admin/`, and therefore does survive.
+</Callout>
+
+A malformed file is named in the log and left unregistered, rather than silently loading empty.
+
+## The player-facing menus
+
+These twenty-two are the ones worth styling.
+
+| Menu | Opened by |
+|---|---|
+| `homes/homes` | `/home`, `/homes` |
+| `homes/home_edit` | A home in that list |
+| `warps/warp_list` | `/warp` |
+| `warps/warp_setup` | `/warpadmin` — the editable admin screen |
+| `rtp/rtp` | `/rtp` with no world |
+| `near/near_list` | `/near`, when `display-mode: UI` |
+| `tpa/tpa_confirm` | Sending a `/tpa` with confirm on |
+| `kits/list` | `/kit` |
+| `kits/preview` | `/kit preview`, `/kitadmin preview` |
+| `kits/container` | A shulker or bundle inside a kit preview |
+| `crates/preview` | `/crates`, `/crates preview`, right-clicking a crate block |
+| `crates/history` | `/crates history` |
+| `bounties/bounty_list` | `/bounty` |
+| `bounties/bounty_contributions` | A head in that list |
+| `bounties/bounty_place_confirm` | `/bounty place` |
+| `rankup/rankup` | `/rankup` |
+| `playtime-rewards/playtime-rewards` | `/playtime` |
+| `farming/farming` | `/farming` |
+| `stats/stats` | The `stats_open` action |
+| `stats/stats-leaderboard` | A stat row in that screen |
+| `afk-zones/afkzone_preview` | `/afkzone preview <id>` |
+| `player-settings/settings` | `/settings` |
+
+## The admin screens
+
+Thirty-six files, one flow per module, all reached from that module's `*admin` command: mines with
+their levels, composition and degrade chains; crates with their rewards, animation and pity; loot chest
+templates and placed chests; item spawners and their locations; power-up zones, their entries and their
+locations; regen zones and their flag grid; portals; jump pads; AFK zones; warps; kits; bounties; and a
+shared confirmation.
+
+They work, and you should not edit them. The plugin refreshes them from the jar so that a button added
+in a release reaches servers that already have the folder.
+
+## The file schema
+
+A menu file is:
+
+```yaml
+title: "…"
+size: 54
+type: PAGINATION
+open_sounds: ["UI_BUTTON_CLICK|1.0|1.0"]
+click_sounds: []
+refresh: { mode: SMART, interval: 40 }
+filler:
+  global: { material: GRAY_STAINED_GLASS_PANE, name: " " }
+  pagination: { material: BARRIER, name: "Nothing here" }
+pagination:
+  slots: '10-16,19-25,28-34'
+  item_template: { material: "%icon%", name: "%name%", lore: [], actions: ["survivalcore:…"] }
+  navigation:
+    previous: { slot: 45, material: ARROW }
+    next:     { slot: 53, material: ARROW }
+items:
+  close: { slot: 49, material: BARRIER, name: "Close", actions: ["survivalcore:close_menu"] }
+```
+
+| Key | What it does |
+|---|---|
+| `size` | Always `size`, never `rows` |
+| `type` | Decorative. A menu paginates because it has a `pagination:` block, not because of this |
+| `refresh` | `{mode: ON_CLICK, click_delay: 4}` or `{mode: SMART, interval: N}` |
+| `filler.global` | The background |
+| `filler.custom.<name>` | A second filler with its own `slots` |
+| `filler.pagination` | What is drawn when the list is empty |
+| `pagination.slots` | `'0-35'`, or a comma-separated set of ranges |
+| `sections` | Named slot groups with their own templates and navigation. Only the kit preview and its container screen use them |
+| `animation` | `center_out` |
+
+### State templates
+
+A paginated list can draw a row differently depending on its state. `modules/kits/menus/list.yml` has
+four — `item_template`, `cooldown_template`, `used_template`, `locked_template` — and the kit preview's
+claim section has six.
+
+### Actions
+
+The key is always `actions:`, a list of strings. The click type is a **prefix inside the string**:
+
+```yaml
+actions:
+  - "left: survivalcore:mine_edit %mine_id%"
+  - "right: survivalcore:mine_delete %mine_id%"
+  - "shift_left: survivalcore:mine_set_weight %mine_id%"
+```
+
+`left:`, `right:`, `middle:`, `shift_left:`, `shift_right:` and `drop:` are the prefixes; no prefix
+means any click. `survivalcore:<name>` is one of this plugin's two hundred and thirty-two actions;
+`close`, `previous_page` and `next_page` are ExyliaLib's own.
+
+### Materials
+
+A Bukkit material, a placeholder (`%kit_icon%`), `basehead-<base64>`, `playerhead-%name%` or
+`playerhead:%name%`. Both head forms are in use in the shipped files.
+
+## Actions worth binding elsewhere
+
+The plugin registers 232 actions under the `survivalcore:` namespace, and they work from **any**
+ExyliaLib menu in any plugin — a hub selector, an NPC, a hotbar item. The ones most worth knowing:
+
+| Action | What it opens |
+|---|---|
+| `survivalcore:homes_open` | The player's homes |
+| `survivalcore:warp_open_list` | The warp list |
+| `survivalcore:rankup_open` | The rank ladder |
+| `survivalcore:settings_open` | The preferences screen |
+| `survivalcore:stats_open` | The statistics profile — **the only way in, since `/stats` is not registered** |
+| `survivalcore:crate_open_list` | The crate list |
+| `survivalcore:kit_open_list` | The kit list |
+| `survivalcore:close_menu` | Close |
+
+<Callout type="warning" title="An admin action still checks its node">
+Every action that changes admin state re-checks its module's admin permission inside the handler. Adding
+an admin button to a player menu does not give anybody access to it — it just gives them a button that
+refuses.
+</Callout>
+
+<Callout type="note" title="Two registered actions have no button anywhere">
+`survivalcore:spawner_import_from_chest` and `survivalcore:lc_import_from_chest` implement a complete
+"click a chest to import its contents as the loot table" flow, and no shipped menu calls either one.
+Binding one in your own menu is the only way to reach it.
+</Callout>

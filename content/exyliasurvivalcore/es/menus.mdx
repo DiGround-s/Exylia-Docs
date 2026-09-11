@@ -1,0 +1,155 @@
+---
+title: "Menús"
+description: "Las cincuenta y ocho pantallas, qué carpeta se puede editar, el esquema de archivo y las acciones que puedes enlazar en otro sitio."
+---
+
+Vienen cincuenta y ocho archivos de menú, en dos sitios que se comportan de forma completamente
+distinta.
+
+| Carpeta | Archivos | Comportamiento |
+|---|---|---|
+| `modules/<id>/menus/` | 22 | Se escriben una vez si faltan y se dejan en paz. **Tuyos.** |
+| `menus/admin/` | 36 | Se borran y se vuelven a extraer del jar en cada arranque **y cada recarga**. |
+
+<Callout type="danger" title="Todos los archivos de `menus/admin/` dicen ser tuyos, y ninguno lo es">
+Cada uno de esos treinta y seis empieza con una cabecera que dice que se escribe una vez y nunca se
+sobrescribe. Está copiada de los menús de módulo, donde sí es cierta. Lo que edites bajo `menus/admin/`
+se destruye en silencio en el siguiente reinicio o `/sc reload`.
+
+La única excepción en el otro sentido es `modules/warps/menus/warp_setup.yml`: un editor de
+administración que vive fuera de `menus/admin/` y por tanto sí sobrevive.
+</Callout>
+
+Un archivo malformado se nombra en el log y se deja sin registrar, en vez de cargarse vacío en silencio.
+
+## Los menús de jugador
+
+Estos veintidós son los que merece la pena estilizar.
+
+| Menú | Lo abre |
+|---|---|
+| `homes/homes` | `/home`, `/homes` |
+| `homes/home_edit` | Un home de esa lista |
+| `warps/warp_list` | `/warp` |
+| `warps/warp_setup` | `/warpadmin` — la pantalla de administración editable |
+| `rtp/rtp` | `/rtp` sin mundo |
+| `near/near_list` | `/near`, con `display-mode: UI` |
+| `tpa/tpa_confirm` | Enviar un `/tpa` con la confirmación activada |
+| `kits/list` | `/kit` |
+| `kits/preview` | `/kit preview`, `/kitadmin preview` |
+| `kits/container` | Una shulker o un bundle dentro de la vista previa de un kit |
+| `crates/preview` | `/crates`, `/crates preview`, clic derecho en un bloque de caja |
+| `crates/history` | `/crates history` |
+| `bounties/bounty_list` | `/bounty` |
+| `bounties/bounty_contributions` | Una cabeza de esa lista |
+| `bounties/bounty_place_confirm` | `/bounty place` |
+| `rankup/rankup` | `/rankup` |
+| `playtime-rewards/playtime-rewards` | `/playtime` |
+| `farming/farming` | `/farming` |
+| `stats/stats` | La acción `stats_open` |
+| `stats/stats-leaderboard` | Una fila de stat de esa pantalla |
+| `afk-zones/afkzone_preview` | `/afkzone preview <id>` |
+| `player-settings/settings` | `/settings` |
+
+## Las pantallas de administración
+
+Treinta y seis archivos, un flujo por módulo, todos alcanzables desde el comando `*admin` de ese
+módulo: minas con sus niveles, composición y cadenas de desgaste; cajas con sus premios, animación y
+pity; plantillas de cofre y cofres colocados; spawners de objetos y sus posiciones; zonas de power-up,
+sus entradas y sus posiciones; zonas de regeneración y su rejilla de flags; portales; plataformas de
+salto; zonas AFK; warps; kits; recompensas por cabeza; y una confirmación compartida.
+
+Funcionan, y no deberías editarlas. El plugin las refresca desde el jar para que un botón añadido en una
+versión llegue a servidores que ya tienen la carpeta.
+
+## El esquema de archivo
+
+Un archivo de menú es:
+
+```yaml
+title: "…"
+size: 54
+type: PAGINATION
+open_sounds: ["UI_BUTTON_CLICK|1.0|1.0"]
+click_sounds: []
+refresh: { mode: SMART, interval: 40 }
+filler:
+  global: { material: GRAY_STAINED_GLASS_PANE, name: " " }
+  pagination: { material: BARRIER, name: "Nada aquí" }
+pagination:
+  slots: '10-16,19-25,28-34'
+  item_template: { material: "%icon%", name: "%name%", lore: [], actions: ["survivalcore:…"] }
+  navigation:
+    previous: { slot: 45, material: ARROW }
+    next:     { slot: 53, material: ARROW }
+items:
+  close: { slot: 49, material: BARRIER, name: "Cerrar", actions: ["survivalcore:close_menu"] }
+```
+
+| Clave | Qué hace |
+|---|---|
+| `size` | Siempre `size`, nunca `rows` |
+| `type` | Decorativo. Un menú pagina porque tiene un bloque `pagination:`, no por esto |
+| `refresh` | `{mode: ON_CLICK, click_delay: 4}` o `{mode: SMART, interval: N}` |
+| `filler.global` | El fondo |
+| `filler.custom.<nombre>` | Un segundo relleno con sus propios `slots` |
+| `filler.pagination` | Lo que se dibuja cuando la lista está vacía |
+| `pagination.slots` | `'0-35'`, o un conjunto de rangos separados por comas |
+| `sections` | Grupos de ranuras con nombre, con sus propias plantillas y navegación. Solo los usan la vista previa de kit y su pantalla de contenedor |
+| `animation` | `center_out` |
+
+### Plantillas de estado
+
+Una lista paginada puede dibujar una fila distinta según su estado.
+`modules/kits/menus/list.yml` tiene cuatro — `item_template`, `cooldown_template`, `used_template`,
+`locked_template` — y la sección de reclamo de la vista previa de kit tiene seis.
+
+### Acciones
+
+La clave es siempre `actions:`, una lista de cadenas. El tipo de clic es un **prefijo dentro de la
+cadena**:
+
+```yaml
+actions:
+  - "left: survivalcore:mine_edit %mine_id%"
+  - "right: survivalcore:mine_delete %mine_id%"
+  - "shift_left: survivalcore:mine_set_weight %mine_id%"
+```
+
+`left:`, `right:`, `middle:`, `shift_left:`, `shift_right:` y `drop:` son los prefijos; sin prefijo
+vale cualquier clic. `survivalcore:<nombre>` es una de las doscientas treinta y dos acciones de este
+plugin; `close`, `previous_page` y `next_page` son de ExyliaLib.
+
+### Materiales
+
+Un material de Bukkit, un placeholder (`%kit_icon%`), `basehead-<base64>`, `playerhead-%name%` o
+`playerhead:%name%`. Las dos formas de cabeza se usan en los archivos que vienen.
+
+## Acciones que merece la pena enlazar en otro sitio
+
+El plugin registra 232 acciones bajo el espacio `survivalcore:`, y funcionan desde **cualquier** menú de
+ExyliaLib de cualquier plugin: un selector de hub, un NPC, un objeto de hotbar. Las que más merece la
+pena conocer:
+
+| Acción | Qué abre |
+|---|---|
+| `survivalcore:homes_open` | Los homes del jugador |
+| `survivalcore:warp_open_list` | La lista de warps |
+| `survivalcore:rankup_open` | La escalera de rangos |
+| `survivalcore:settings_open` | La pantalla de preferencias |
+| `survivalcore:stats_open` | El perfil de estadísticas — **la única entrada, ya que `/stats` no se registra** |
+| `survivalcore:crate_open_list` | La lista de cajas |
+| `survivalcore:kit_open_list` | La lista de kits |
+| `survivalcore:close_menu` | Cerrar |
+
+<Callout type="warning" title="Una acción de administración sigue comprobando su nodo">
+Cada acción que cambia estado de administración vuelve a comprobar el permiso de su módulo dentro del
+manejador. Poner un botón de administración en un menú de jugador no le da acceso a nadie: solo le da un
+botón que se niega.
+</Callout>
+
+<Callout type="note" title="Dos acciones registradas no tienen botón en ningún sitio">
+`survivalcore:spawner_import_from_chest` y `survivalcore:lc_import_from_chest` implementan un flujo
+completo de "haz clic en un cofre para importar su contenido como tabla de loot", y ningún menú que
+viene llama a ninguna de las dos. Enlazarla en tu propio menú es la única forma de alcanzarla.
+</Callout>

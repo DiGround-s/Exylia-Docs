@@ -1,0 +1,150 @@
+---
+title: "Movement"
+description: "Spawn, homes, warps, TPA, /back, random teleport and /near — the seven modules that move a player."
+---
+
+Seven modules move players. Five of them share the same warmup: a countdown drawn as an action bar and
+a title, cancelled by moving or by taking damage, with a per-second sound and a permission that skips
+it entirely. Each module has its own copy of those settings, so a home can be instant while a warp
+takes five seconds.
+
+## Spawn
+
+`/spawn` teleports to the server spawn. `/spawn set` stores it, and needs
+`exyliasurvivalcore.spawn.set`.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `warmup-seconds` | 3 | Countdown before the teleport |
+| `cancel-on-move`, `cancel-on-damage` | `true` | What stops it |
+| `permission-bypass-warmup` | `exyliasurvivalcore.spawn.bypass` | The node that skips the countdown — the string is yours to change |
+| `blacklisted-worlds` | `[]` | Worlds `/spawn` refuses from |
+| `teleport-on-join` | `false` | Every join goes to spawn |
+| `teleport-on-first-join` | `true` | A first join goes to spawn |
+| `respawn-at-spawn` | `true` | Death sends them to spawn |
+| `override-bed-spawn` | `true` | Even when they have a bed |
+
+`/spawn` itself checks **no permission**. The spawn is also pushed to clients as a waypoint where
+Apollo or Feather is installed.
+
+## Homes
+
+Personal named locations. `/sethome [name]`, `/home [name]`, and `/homes` for the menu — rename,
+re-icon, teleport, delete.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `max-homes` | 3 | The floor for everybody |
+| `default-home-name` | `home` | What `/sethome` with no name is called |
+| `default-icon` | `GRASS_BLOCK` | The icon a new home gets |
+| `home-name-max-length` | 16 | Longest name |
+| `warmup-seconds` and friends | 3 | As above |
+
+How many homes a player gets is a permission tier: `exyliasurvivalcore.homes.max_homes.<n>`, and the
+**highest** node they hold wins. `max-homes` is only what somebody with no node gets.
+
+<Callout type="note" title="A home knows which server it was set on">
+Homes store a server alongside the coordinates, so `/home` works from anywhere on the network. A home
+on another server has no local location at all — which is why the API exposes a teleport method rather
+than leaving callers to read the coordinates.
+</Callout>
+
+`/homesadmin delhome <player> <home>` and `/homesadmin listhomes <player>` need
+`survivalcore.admin.homes`, and both run from the console.
+
+## Warps
+
+Server-wide named locations, built from `/warpadmin`. Each one has a display name, an icon, a cost, an
+optional permission and a location.
+
+`/warp` opens the list of the ones a player may use; `/warp <id>` goes straight there. Warps also cross
+the network.
+
+| Bypass node | What it skips |
+|---|---|
+| `exyliasurvivalcore.warps.bypass` | Both the cost and the cooldown |
+| `exyliasurvivalcore.warps.bypass.cost` | The cost |
+| `exyliasurvivalcore.warps.bypass.cooldown` | The cooldown |
+
+`modules/warps/menus/warp_setup.yml` is the one admin editor in this plugin that you can safely
+customise — every other one lives under `menus/admin/` and is rewritten from the jar.
+
+## TPA
+
+`/tpa <player>` asks to go to them; `/tpahere <player>` asks them to come to you. `/tpaccept` and
+`/tpadeny` answer, with an optional name to pick which request.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `request-expire-seconds` | 60 | How long a request lives |
+| `send-confirm-default` | `true` | Whether a confirmation screen is shown before sending |
+| `tpa-enabled-default` | `true` | Whether players accept requests at all to begin with |
+| `auto-accept-default` | `false` | Whether requests are accepted without asking |
+
+`/tpatoggle` flips whether they receive requests; `/tpatoggle autoaccept` and `/tpatoggle confirm`
+flip the other two. `/autotpaaccept` exists as well and is an exact duplicate of `/tpatoggle
+autoaccept` — same behaviour, same node.
+
+All three of these preferences are also on the `/settings` screen, reading and writing the same rows.
+
+## Back
+
+`/back` returns a player to where they were. Which moments are remembered is configuration:
+
+| Setting | Default |
+|---|---|
+| `save-on-death` | `true` |
+| `save-on-teleport` | `true` |
+| `save-on-portal` | `false` |
+
+The point is kept in memory only, so a restart clears it.
+
+## Random teleport
+
+`/rtp` opens a world list; `/rtp <world>` goes straight to one. Worlds come from
+`modules/rtp/worlds.yml` — a world that is not in the file cannot be reached at all.
+
+| Per-world key | What it does |
+|---|---|
+| `enabled` | Whether it is offered |
+| `display-name`, `icon` | How it appears in the menu |
+| `min-x`, `max-x`, `min-z`, `max-z` | The box searched |
+| `price` | Charged per teleport |
+| `cooldown` | Seconds, or `-1` to use the module's own |
+| `biome-blacklist` | Biomes a landing spot may not be in |
+
+A **pool** keeps safe locations ready in advance, so `/rtp` is instant rather than a search:
+
+```yaml
+pool:
+  enabled: true
+  size: 40
+  max-concurrent-searches: 3
+  refill-interval: 30
+```
+
+Pre-generating the world's chunks — with Chunky, for instance — collapses the time the pool needs to
+fill.
+
+<Callout type="note" title="The RTP bypass nodes are config strings">
+`bypass-cooldown-permission` and `bypass-price-permission` both ship as `survivalcore.rtp.bypass` —
+note the short prefix. They are whatever you write there, not fixed nodes.
+</Callout>
+
+`/rtpadmin forcertp <player> <world>` sends somebody, and `/rtpadmin pool` reports the pool.
+
+## Near
+
+`/near` lists nearby players with their distance and a compass direction.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `display-mode` | `UI` | `UI` for the menu, `CHAT` for a chat list |
+| `default-radius` | 100 | Searched when nothing else applies |
+| `max-radius` | 1000 | The ceiling, permission included |
+| `cooldown-seconds` | 3 | Between uses |
+| `distance-type` | `HORIZONTAL` | `HORIZONTAL` or `3D`, for filtering |
+
+`exyliasurvivalcore.near.radius.<n>` raises a player's radius, highest node winning — but `max-radius`
+still caps it. `distance-type` only decides who is filtered in; the distance shown is always
+horizontal.

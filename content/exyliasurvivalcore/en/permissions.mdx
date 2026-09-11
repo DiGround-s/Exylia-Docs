@@ -77,14 +77,34 @@ nothing until the module is back on.
 | `survivalcore.farming.admin.set` | `/farmingadmin set`, `reset` and `resetall` |
 | `exyliasurvivalcore.killrewards.admin` | `/killrewardsadmin`, `/kra`, `reset` and `resetbest` |
 | `exyliasurvivalcore.reclaim.admin` | `/reclaimadmin reset` and `/reclaimadmin resetsection` |
-| `exyliasurvivalcore.bounties.use` | `/bounty`, `/bounty place`, `/bounty cancel` |
+| `exyliasurvivalcore.bounties.use` | `/bounty`, `/bounty place`, `/bounty cancel` — which opens the same list `/bounty` does and cancels nothing |
 | `exyliasurvivalcore.bounties.admin` | `/bountyadmin remove`, `clear` and `add` |
-| `exyliasurvivalcore.bounties.anonymous` | Placing a bounty without your name on it |
-| `exyliasurvivalcore.stats` | `/stats` |
-| `exyliasurvivalcore.stats.others` | `/stats <player>` |
+| `exyliasurvivalcore.bounties.anonymous` | Placing a bounty without your name on it. **Has no effect** — see below |
+| `exyliasurvivalcore.crates.use` | `/crates`, `/crates preview`, `/crates open`, `/crates history`, and right-clicking a crate block |
+| `exyliasurvivalcore.crates.admin` | `/cratesadmin`, `/cratesa`, all six subcommands, every crate admin screen and the crate wand |
+| `exyliasurvivalcore.stats` | `/stats` — **unreachable**, see below |
+| `exyliasurvivalcore.stats.others` | `/stats <player>` — **unreachable**, see below |
 
 `/playtime` and `/reclaim` have no node. What a player may reclaim is decided by the section
 permissions instead — see [Sections, warps, kits and mines](#nodes-you-write-yourself).
+
+<Callout type="warning" title="`/playtime` and `/reclaim` are open, and both of them write">
+Neither command checks a node. `/reclaim` runs the commands of the highest-priority section whose
+permission the player holds — so the section nodes are the only gate. `/playtime <rewardId>` **claims**
+that reward; only having earned the playtime stops anybody.
+</Callout>
+
+<Callout type="danger" title="The two `stats` nodes cannot be used">
+`/stats` is missing the annotation that would register it, so the server never has the command and
+neither node is ever read. The screens still open through the `survivalcore:stats_open` action from any
+menu.
+</Callout>
+
+<Callout type="danger" title="`bounties.anonymous` does nothing">
+`/bounty place` works the flag out correctly from this node and `settings.allow-anonymous`, and hands
+it to the confirmation screen — but the shipped `bounty_place_confirm.yml` passes `false` for it
+regardless. Every bounty placed through the normal flow carries the placer's name.
+</Callout>
 
 ## Content and the world
 
@@ -94,7 +114,7 @@ permissions instead — see [Sections, warps, kits and mines](#nodes-you-write-y
 | `exyliasurvivalcore.lootchests.admin` | `/lootchestsadmin` |
 | `exyliasurvivalcore.lootchests.bypass` | Breaking a loot chest block, which deletes the chest instead of being cancelled |
 | `exyliasurvivalcore.powerups.admin` | `/powerupsadmin` |
-| `exyliasurvivalcore.afkzones.use` | `/afkzone` and `/afkzone preview` |
+| `exyliasurvivalcore.afkzones.use` | `/afkzone preview <id>`. There is no bare `/afkzone` |
 | `exyliasurvivalcore.afkzones.admin` | `/afkzonesadmin` |
 | `exyliasurvivalcore.itemspawners.admin` | `/spawnersadmin` |
 | `exyliasurvivalcore.regenzones.admin` | `/regenzonesadmin` |
@@ -121,6 +141,7 @@ permissions instead — see [Sections, warps, kits and mines](#nodes-you-write-y
 | `exyliasurvivalcore.repair.bypass.cooldown` | Repairing while on cooldown |
 | `exyliasurvivalcore.enchantments.bypass` | Keeping enchantments above the configured limits |
 | `exyliasurvivalcore.blockeditems.bypass` | Using items the blocked-items rules forbid |
+| `exyliasurvivalcore.settings` | `/settings`, `/preferences`, `/options` |
 
 `/repair` on its own does nothing: the aliases `/fix` and `/reparar` still need `hand` or `all`
 after them, each with its own node.
@@ -156,7 +177,7 @@ in the plugin's code.
 | A kit | Its `permission`, set through `/kitadmin` | Empty, which means every holder of `exyliasurvivalcore.kits` |
 | A mine | Its `permission`, set through `/minesadmin` | Empty, which means anybody may enter and mine it |
 | A reclaim section | `sections.<id>.permission` in `modules/reclaim/config.yml` | `exyliasurvivalcore.reclaim.<id>` |
-| A join / leave group | `groups.<id>.permission` in `modules/join-leave/groups.yml` | Empty, which never matches |
+| A join / leave group | `groups.<id>.permission` in `modules/join-leave/groups.yml` | The shipped `vip` group names `survivalcore.joinleave.vip` — the short prefix |
 | A rank requirement | A `PERMISSION` requirement's `node`, in the rankup config | None |
 
 A mine's permission gates the whole region: without it nothing inside may be broken, minable or

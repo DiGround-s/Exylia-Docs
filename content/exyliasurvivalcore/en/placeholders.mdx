@@ -126,8 +126,18 @@ it adds lives under `playtime_`.
 | `%exyliasurvivalcore_stats_rank_<stat>%` | Their position on that stat's board, or `N/A` |
 | `%exyliasurvivalcore_stats_value_<stat>%` | Their value for it, formatted, or `N/A` |
 
-`<stat>` is a key from `modules/stats/stats.yml`: `kills`, `deaths`, `kdr`, `streak`, `best_streak`
-and `playtime`, which is ranked alongside the rest and formatted as a length of time.
+`<stat>` is a key from `modules/stats/stats.yml`. The shipped keys are `kills`, `deaths`,
+`best_kill_streak`, `current_streak`, `playtime` and `kdr`.
+
+<Callout type="warning" title="The stat ids are not the same words as the streak placeholders">
+`%exyliasurvivalcore_stats_streak%` and `%…_stats_best_streak%` above are placeholder names that read
+the counters directly, and they work. They are **not** stat ids: inside `stats_value_`, `stats_rank_`
+and `stats_top_*` the ids are `current_streak` and `best_kill_streak`. So
+`%…_stats_value_streak%` answers `N/A`, and `%…_stats_value_current_streak%` is the one that works.
+
+`current_streak` also ships with `leaderboard: false`, so `%…_stats_top_name_1_current_streak%`
+answers with a dash by design.
+</Callout>
 
 ### Leaderboards
 

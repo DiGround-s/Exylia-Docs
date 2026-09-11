@@ -1,0 +1,153 @@
+---
+title: "Zonas"
+description: "Minas que se reinician, zonas reconstruidas desde esquemas, zonas AFK que pagan, portales, plataformas de salto y power-ups."
+---
+
+Seis módulos convierten una región del mundo en algo. Los seis se montan desde menús de administración
+y viven en la base de datos.
+
+## Minas
+
+Una mina es una región que vuelve. Hay dos clases, y eliges cuál al crearla.
+
+### Clásica
+
+La región entera se reconstruye de golpe, a partir de una **composición**: una lista de materiales con
+pesos.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `default-reset-interval-seconds` | 300 | Tiempo entre reinicios |
+| `default-reset-warning-seconds` | 10 | Aviso antes de uno |
+| `resetThresholdPercentage` | por mina | Reiniciar antes cuando se haya picado este porcentaje |
+| `clean-entities-on-reset` | `true` | Quitar objetos tirados y mobs primero |
+
+Un jugador que esté dentro cuando se reinicia es un problema que la mina resuelve por ti:
+**teletransportar al aire** lo sube al bloque libre más cercano en vez de dejar que se asfixie, y
+además se puede fijar una posición de **teletransporte seguro**.
+
+### Realista
+
+Los bloques no vuelven todos a la vez. Cada bloque tiene **niveles**: una cadena de etapas de desgaste
+por las que pasa según se pica, cada una con su tiempo de regeneración, su loot y sus efectos.
+`mine_levels`, `mine_level_detail` y `mine_level_chain` en los menús de administración son donde se
+escribe esa cadena.
+
+`default-realistic-regen-seconds` son 60.
+
+Las dos clases comparten: un teletransporte de entrada, un permiso, auto-recogida — los bloques picados
+van directos al inventario —, restringir el picado, que impide romper nada que no esté en la lista de la
+propia mina, y efectos de rotura.
+
+`visuals` lleva el título de aviso de reinicio, la barra de jefe del reinicio, el título de entrada y la
+barra de acción, con `%mine_name%`, `%seconds%`, `%next_reset%` y `%time%`.
+
+## Zonas de regeneración
+
+Una región guardada como esquema y pegada de vuelta sobre sí misma. Se monta desde `/regenzonesadmin`;
+el botón **schematic** del editor guarda la región tal y como está ahora mismo, que es el estado al que
+se restaurará.
+
+Dos modos:
+
+| Modo | Cuándo regenera |
+|---|---|
+| `FIXED` | Cada `interval-seconds`, con un aviso antes |
+| `IDLE` | `idle-delay-seconds` después de que salga el último jugador |
+
+El aviso solo aplica a `FIXED`.
+
+La pantalla de flags son las políticas de región de ExyliaLib, una fila por flag, ciclando **permitir →
+denegar → por defecto**. A su lado hay dos claves más: una lista de bloques permitidos y un valor en
+segundos para bloques temporales.
+
+<Callout type="warning" title="Sin esquemas de FastAsyncWorldEdit no hay regeneración">
+Si el soporte de esquemas no se puede usar, el plugin escribe `Regen zones are off: <razón>` una vez al
+arrancar. El módulo sigue activándose y los menús siguen funcionando, pero una regeneración no hace
+nada.
+</Callout>
+
+## Zonas AFK
+
+Estar en la región y cobrar en un temporizador. `/afkzone preview <id>` enseña lo que paga una zona.
+
+| Ajuste | Por defecto |
+|---|---|
+| `default-reward-interval-seconds` | 60 |
+
+Cada zona tiene su propio intervalo y su propia lista de recompensas. `visuals` cubre la barra de jefe,
+el título de entrada, el título de recompensa, la barra de acción y las dos líneas del resumen que
+recibe un jugador al salir, con `%zone_name%`, `%time_in_zone%`, `%next_reward%`, `%amount%` y
+`%reward_name%`.
+
+Las recompensas de objeto ya no se tiran al suelo cuando el inventario está lleno: se avisa al jugador
+una vez con `afk-zones.inventory-full` y la recompensa se retiene.
+
+<Callout type="note" title="No existe un `/afkzone` a secas">
+Solo existe `/afkzone preview <id>`. `/afkzone` por su cuenta imprime la línea de uso del framework de
+comandos.
+</Callout>
+
+## Portales
+
+Una región que teletransporta a quien entre, o le ejecuta comandos, o las dos cosas. Se monta desde
+`/portalsadmin`.
+
+Este módulo no tiene ningún archivo de configuración: un portal es una región, un destino y una lista
+de comandos, y los tres viven en la base de datos.
+
+## Plataformas de salto
+
+Un bloque que lanza a quien lo pise.
+
+| Campo por plataforma | Qué hace |
+|---|---|
+| Potencia, potencia vertical | Cuán lejos y cuán alto, ajustables en ±0,1 y ±0,5 |
+| Dirección | Un yaw fijo, o hacia donde mire el jugador |
+| Planeo | Abre el élitro después del lanzamiento |
+| Posiciones | Una definición de plataforma puede cubrir muchos bloques |
+
+`settings.launch-cooldown-ms` son 500 por defecto. Una plataforma con planeo espera a que el jugador
+deje el suelo antes de abrir el élitro, y una plataforma solo se busca cuando el jugador cambia de
+bloque, no en cada paquete de movimiento.
+
+## Power-ups
+
+Un objeto flotante que un jugador pisa para recibir un efecto de poción o una recompensa. Viven en
+**zonas**, y una zona los genera o bien en cualquier punto de un área o bien en una lista de posiciones
+fijas.
+
+| Campo por zona | Qué hace |
+|---|---|
+| Modo | Área, o lista de posiciones |
+| Intervalo de aparición | Segundos entre apariciones |
+| Máximo activo | Cuántos existen a la vez |
+| Vida | Segundos antes de que uno desaparezca |
+| Reaparición automática | Si un power-up recogido vuelve |
+| Selección aleatoria | Elegir entre las entradas al azar en vez de en orden |
+| Requiere sólido debajo, permitir en el aire | Dónde puede aterrizar una aparición |
+| Entradas | Los propios power-ups, cada uno con su peso |
+
+Cada power-up tiene icono, nombre, peso, efectos de poción, recompensas y un brillo con su propio color.
+
+| Ajuste | Por defecto |
+|---|---|
+| `pickup-radius` | 1.0 |
+| `item-scale` | 0.8 |
+| `view-distance` | 48.0 |
+| `rotation-speed-degrees` | 90.0 |
+| `particle-type` | `END_ROD` |
+| `area-max-attempts` | 20 |
+
+Los objetos flotantes se dibujan a nivel de paquete con PacketEvents, que es por lo que es una
+dependencia dura.
+
+<Callout type="note" title="`modules/powerups/config.yml` no tiene comentarios">
+Es el único archivo generado sin ninguna explicación dentro: dieciséis claves a secas. La tabla de
+arriba es lo que significan.
+</Callout>
+
+<Callout type="warning" title="`/powerupsadmin` no dice nada cuando el módulo está apagado">
+Todos los demás comandos de administración responden con `errors.module-disabled`. Este simplemente no
+hace nada.
+</Callout>

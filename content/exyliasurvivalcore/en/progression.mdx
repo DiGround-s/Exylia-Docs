@@ -1,0 +1,154 @@
+---
+title: "Progression"
+description: "The rank ladder and its prestige, playtime rewards, farming milestones and the /reclaim sections."
+---
+
+## Rankup
+
+A ladder of ranks in `modules/rankup/ranks.yml`. Each one has requirements to meet and a reward for
+meeting them.
+
+```yaml
+ranks:
+  member:
+    display-name: "&7Member"
+    icon: COAL
+    order: 1
+    description: []
+    requirements: []
+    reward:
+      commands: []
+      broadcast: ""
+      sound: ""
+    auto-rankup: false
+```
+
+`/rankup` opens the ladder, showing what is met and what is not; `/rankup claim` takes the next rank
+when everything is satisfied. `settings.auto-rankup` promotes without asking, and a per-rank
+`auto-rankup` does the same for one rung.
+
+### Requirements
+
+A requirement is a `type` and one field. Any entry may also carry `display`, which is the line shown in
+the menu instead of a generated one.
+
+| `type` | Field | Meaning |
+|---|---|---|
+| `money` | `amount` | A balance, through the economy |
+| `playtime` | `time` | Time played — `30m`, `1h`, `5h` |
+| `placeholder` | `condition` | A PlaceholderAPI comparison |
+| `permission` | `node` | A permission node they must hold |
+
+<Callout type="danger" title="`ranks.yml`'s own header lists two types that do not exist">
+The shipped comment mentions `kills` and `level`. Neither is real. A requirement whose `type` is not
+one of the four above is **dropped silently** when the file is read — so a rank whose only requirement
+was `kills` costs nothing at all.
+</Callout>
+
+### Prestige
+
+`/rankupadmin prestige <player> <level>` sets a prestige level; `/rankupadmin set` and `reset` move a
+player around the ladder, and `/rankupadmin info` reports where they are. A rank id that is not in the
+file is refused.
+
+`settings.notify-on-login` tells a player on join when they can rank up.
+
+## Playtime rewards
+
+Rewards unlocked by time played, claimed from `/playtime`.
+
+```yaml
+rewards:
+  newcomer:   { display-name: "…", icon: …, required-playtime: "30m",  commands: [], auto-claim: false }
+  first_hour: { required-playtime: "1h",  … }
+  five_hours: { required-playtime: "5h",  … }
+  veteran:    { required-playtime: "25h", … }
+  legend:     { required-playtime: "100h", … }
+```
+
+| Setting | Default | What it does |
+|---|---|---|
+| `notify-on-login` | `true` | Tell them on join what is claimable |
+| `notify-on-unlock` | `true` | Tell them the moment one unlocks |
+| `global-auto-claim` | `false` | Claim everything automatically, overriding each reward's own flag |
+
+<Callout type="warning" title="`/playtime <rewardId>` claims, and checks no permission">
+The bare `/playtime` opens the menu, but the command takes an optional reward id and claiming is what
+it does with it. There is no node on the command — only the playtime itself stops a player.
+</Callout>
+
+## Farming
+
+Counts blocks broken or mobs killed, and pays per N and at milestones.
+
+```yaml
+categories:
+  wheat_farming:
+    type: BLOCK
+    display-name: "&eWheat"
+    icon: WHEAT
+    tracked: [WHEAT]
+    require-max-growth: true
+    count-above: false
+    reward-every: 64
+    reward:      { commands: [], message: "", actionbar: "", sound: "" }
+    milestones:
+      first: { display-name: "…", required-count: 1000, commands: [], … }
+    infinite-milestone:
+      enabled: true
+      interval: 10000
+      commands: []
+```
+
+| Key | What it does |
+|---|---|
+| `type` | `BLOCK` for breaking, `ENTITY` for killing |
+| `tracked` | The materials or entity types that count |
+| `require-max-growth` | Only fully grown crops count |
+| `count-above` | For stacking plants — sugar cane, bamboo — count the blocks above too |
+| `reward-every` | Pay every N. `0` turns the per-N reward off |
+| `milestones` | One-off rewards at a total count |
+| `infinite-milestone` | Keeps paying every `interval` after the named milestones run out |
+
+`/farming` shows progress. `/farmingadmin set`, `reset`, `resetall` and `info` need
+`survivalcore.farming.admin`, and the three that write need `survivalcore.farming.admin.set`.
+
+## Reclaim
+
+`/reclaim` runs a block of commands — a donor kit, a monthly crate, whatever you write. Sections are
+defined in `modules/reclaim/config.yml`.
+
+```yaml
+sections:
+  default:
+    permission: exyliasurvivalcore.reclaim.default
+    priority: 0
+    each: "-1"
+    broadcast: ""
+    commands: []
+  vip:
+    permission: exyliasurvivalcore.reclaim.vip
+    priority: 1
+    each: "7d"
+    commands: []
+```
+
+Sections are sorted by **priority, highest first**, and the first one whose permission the player holds
+is the one that runs. So a VIP gets the VIP section and nothing else, not both.
+
+`each` is how often it may be run: `-1` means once ever, and anything else is a duration — `7d`, `12h`,
+`30m`, `45s`. `%player%` is substituted into every command.
+
+`/reclaimadmin reset <player>` and `resetsection <player> <section>` clear the record.
+
+<Callout type="warning" title="`/reclaim` checks no permission of its own">
+Anyone can run it. What they get is decided entirely by which section permission they hold — a player
+holding none is told there is nothing for them. Grant `exyliasurvivalcore.reclaim.default` to the
+group that should have the default section, and nothing wider.
+</Callout>
+
+<Callout type="note" title="Four modules used to lose a claim">
+Farming, playtime rewards, rankup and reclaim each saved a stale copy of the player's row alongside the
+claim's own write, and when the stale save landed second the claim vanished and could be collected
+again on the next login. Fixed in 1.1.1; if you are on an older build, that is what you were seeing.
+</Callout>

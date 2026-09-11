@@ -1,0 +1,155 @@
+---
+title: "Progresión"
+description: "La escalera de rangos y su prestigio, recompensas por tiempo jugado, hitos de farmeo y las secciones de /reclaim."
+---
+
+## Rankup
+
+Una escalera de rangos en `modules/rankup/ranks.yml`. Cada uno tiene requisitos que cumplir y una
+recompensa por cumplirlos.
+
+```yaml
+ranks:
+  member:
+    display-name: "&7Member"
+    icon: COAL
+    order: 1
+    description: []
+    requirements: []
+    reward:
+      commands: []
+      broadcast: ""
+      sound: ""
+    auto-rankup: false
+```
+
+`/rankup` abre la escalera y muestra qué se cumple y qué no; `/rankup claim` sube al siguiente rango
+cuando está todo satisfecho. `settings.auto-rankup` asciende sin preguntar, y un `auto-rankup` por
+rango hace lo mismo para un peldaño.
+
+### Requisitos
+
+Un requisito es un `type` y un campo. Cualquier entrada puede llevar además `display`, que es la línea
+que se muestra en el menú en vez de una generada.
+
+| `type` | Campo | Significado |
+|---|---|---|
+| `money` | `amount` | Un saldo, a través de la economía |
+| `playtime` | `time` | Tiempo jugado — `30m`, `1h`, `5h` |
+| `placeholder` | `condition` | Una comparación de PlaceholderAPI |
+| `permission` | `node` | Un nodo de permiso que debe tener |
+
+<Callout type="danger" title="La cabecera de `ranks.yml` lista dos tipos que no existen">
+El comentario que viene menciona `kills` y `level`. Ninguno es real. Un requisito cuyo `type` no sea uno
+de los cuatro de arriba se **descarta en silencio** al leer el archivo, así que un rango cuyo único
+requisito fuese `kills` sale gratis.
+</Callout>
+
+### Prestigio
+
+`/rankupadmin prestige <jugador> <nivel>` pone un nivel de prestigio; `/rankupadmin set` y `reset`
+mueven a un jugador por la escalera, y `/rankupadmin info` dice dónde está. Un id de rango que no esté
+en el archivo se rechaza.
+
+`settings.notify-on-login` avisa al jugador al entrar cuando puede subir de rango.
+
+## Recompensas por tiempo jugado
+
+Recompensas que se desbloquean con el tiempo jugado y se reclaman desde `/playtime`.
+
+```yaml
+rewards:
+  newcomer:   { display-name: "…", icon: …, required-playtime: "30m",  commands: [], auto-claim: false }
+  first_hour: { required-playtime: "1h",  … }
+  five_hours: { required-playtime: "5h",  … }
+  veteran:    { required-playtime: "25h", … }
+  legend:     { required-playtime: "100h", … }
+```
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `notify-on-login` | `true` | Avisarles al entrar de qué pueden reclamar |
+| `notify-on-unlock` | `true` | Avisarles en cuanto se desbloquea una |
+| `global-auto-claim` | `false` | Reclamarlo todo automáticamente, por encima del `auto-claim` de cada recompensa |
+
+<Callout type="warning" title="`/playtime <rewardId>` reclama, y no comprueba ningún permiso">
+El `/playtime` a secas abre el menú, pero el comando acepta un id de recompensa y lo que hace con él es
+reclamarla. El comando no tiene nodo: lo único que frena a un jugador es el tiempo jugado.
+</Callout>
+
+## Farmeo
+
+Cuenta bloques rotos o mobs matados, y paga por cada N y en los hitos.
+
+```yaml
+categories:
+  wheat_farming:
+    type: BLOCK
+    display-name: "&eWheat"
+    icon: WHEAT
+    tracked: [WHEAT]
+    require-max-growth: true
+    count-above: false
+    reward-every: 64
+    reward:      { commands: [], message: "", actionbar: "", sound: "" }
+    milestones:
+      first: { display-name: "…", required-count: 1000, commands: [], … }
+    infinite-milestone:
+      enabled: true
+      interval: 10000
+      commands: []
+```
+
+| Clave | Qué hace |
+|---|---|
+| `type` | `BLOCK` para romper, `ENTITY` para matar |
+| `tracked` | Los materiales o tipos de entidad que cuentan |
+| `require-max-growth` | Solo cuentan los cultivos crecidos del todo |
+| `count-above` | Para plantas que se apilan — caña, bambú — cuenta también los bloques de encima |
+| `reward-every` | Paga cada N. `0` apaga la recompensa por cada N |
+| `milestones` | Recompensas de una vez al llegar a un total |
+| `infinite-milestone` | Sigue pagando cada `interval` cuando se acaban los hitos con nombre |
+
+`/farming` muestra el progreso. `/farmingadmin set`, `reset`, `resetall` e `info` necesitan
+`survivalcore.farming.admin`, y los tres que escriben necesitan `survivalcore.farming.admin.set`.
+
+## Reclaim
+
+`/reclaim` ejecuta un bloque de comandos: un kit de donador, una caja mensual, lo que escribas. Las
+secciones se definen en `modules/reclaim/config.yml`.
+
+```yaml
+sections:
+  default:
+    permission: exyliasurvivalcore.reclaim.default
+    priority: 0
+    each: "-1"
+    broadcast: ""
+    commands: []
+  vip:
+    permission: exyliasurvivalcore.reclaim.vip
+    priority: 1
+    each: "7d"
+    commands: []
+```
+
+Las secciones se ordenan por **prioridad, la más alta primero**, y se ejecuta la primera cuyo permiso
+tenga el jugador. Así que un VIP recibe la sección VIP y ninguna más, no las dos.
+
+`each` es cada cuánto se puede ejecutar: `-1` significa una sola vez en la vida, y cualquier otra cosa
+es una duración — `7d`, `12h`, `30m`, `45s`. `%player%` se sustituye en cada comando.
+
+`/reclaimadmin reset <jugador>` y `resetsection <jugador> <sección>` borran el registro.
+
+<Callout type="warning" title="`/reclaim` no comprueba ningún permiso propio">
+Lo puede ejecutar cualquiera. Lo que consigue lo decide únicamente qué permiso de sección tenga; a
+quien no tenga ninguno se le dice que no hay nada para él. Da
+`exyliasurvivalcore.reclaim.default` al grupo que deba tener la sección por defecto, y nada más ancho.
+</Callout>
+
+<Callout type="note" title="Cuatro módulos perdían un reclamo">
+Farming, recompensas por tiempo jugado, rankup y reclaim guardaban una copia vieja de la fila del
+jugador junto a la escritura del propio reclamo, y cuando la copia vieja llegaba la segunda el reclamo
+desaparecía y se podía volver a cobrar al siguiente login. Arreglado en 1.1.1; si estás en una build
+anterior, eso es lo que estabas viendo.
+</Callout>

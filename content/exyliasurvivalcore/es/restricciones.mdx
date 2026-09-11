@@ -1,0 +1,97 @@
+---
+title: "Restricciones"
+description: "Topes de encantamiento por mundo o región, y objetos que no se pueden usar ni craftear donde tú digas."
+---
+
+Dos módulos quitan en vez de dar. Los dos se escriben como reglas en un archivo, los dos se acotan por
+mundo y por región de WorldGuard, y los dos tienen un único nodo de bypass.
+
+## Encantamientos
+
+`modules/enchantments/rules.yml` limita los niveles de encantamiento. La cabecera del archivo generado
+lista todos los encantamientos de **tu** servidor, separados en los dos modos de abajo.
+
+```yaml
+rules:
+  sharpness:
+    mode: EFFECT
+    limits:
+      global:
+        max: 3
+        global: true
+      arena:
+        max: 0
+        worlds: [pvp]
+        regions: ["world:spawn"]
+    block:
+      effect: true
+      enchant-table: true
+      anvil: true
+      villager: true
+      loot: true
+```
+
+| Clave | Qué hace |
+|---|---|
+| `mode` | `EFFECT` neutraliza el efecto del encantamiento y deja el objeto intacto; `STRIP` lo quita del objeto |
+| `limits.<nombre>.max` | El techo. `0` elimina el encantamiento entero |
+| `limits.<nombre>.global` | Aplica en todas partes |
+| `limits.<nombre>.worlds` | Mundos donde aplica |
+| `limits.<nombre>.regions` | Regiones, como `mundo:id`. Un `id` a secas coincide con ese id en todos los mundos |
+| `block.effect` | Si se bloquea el efecto. Por defecto `true` |
+| `block.enchant-table`, `anvil`, `villager`, `loot` | Dónde no se puede **obtener** el encantamiento |
+
+Cuando varios ámbitos coinciden con un jugador, gana el `max` **más bajo**. En un encantamiento de
+combate, la posición que decide es la de la **víctima**.
+
+<Callout type="warning" title="`EFFECT` solo funciona con veintidós encantamientos">
+Filo, Castigo, Perdición de los Artrópodos, Empalamiento, Retroceso, Aspecto Ígneo, Filo Barredor,
+Botín, Poder, Empuje, Llama, Fortuna, Toque de Seda, Espinas, Protección, Protección contra el Fuego,
+Protección contra Explosiones, Protección contra Proyectiles, Caída de Pluma, Irrompibilidad y
+Reparación. Cualquier otro tiene que usar `STRIP` — y el plugin avisa en consola cuando una regla se
+equivoca en esto.
+</Callout>
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `strip-scan-ticks` | 10 | Cada cuánto se escanean los inventarios en modo `STRIP` |
+| `notify-blocked` | `true` | Si se avisa al jugador |
+
+`exyliasurvivalcore.enchantments.bypass` ignora todas las reglas. Un bloque `disabled:` heredado se
+sigue leyendo como un límite de `0`. Si se nombran regiones y falta WorldGuard, el plugin avisa al
+arrancar.
+
+## Objetos bloqueados
+
+`modules/blocked-items/rules.yml` impide usar o craftear objetos. Este módulo no tiene `config.yml`: el
+archivo de reglas es todo.
+
+```yaml
+rules:
+  no-elytra:
+    items: [ELYTRA]
+    disabled:
+      global: false
+      worlds: [survival]
+      regions: ["world:spawn"]
+    block:
+      use: true
+      craft: false
+```
+
+`items` acepta nombres de material, o una etiqueta con `#` — `#swords` cubre todas las espadas sin
+listarlas.
+
+| Clave | Por defecto | Qué cubre |
+|---|---|---|
+| `block.use` | `true` | Colocar, romper, golpear, disparar, beber, comer, lanzar, levantar un escudo, planear con élitro, tótems, ponerse armadura, cubos, huevos de generación y barcas |
+| `block.craft` | `false` | Craftear el objeto |
+
+La posición que decide es la del **jugador**. `exyliasurvivalcore.blockeditems.bypass` ignora todas las
+reglas.
+
+<Callout type="note" title="Los dos archivos son de formato libre">
+A diferencia de los archivos de ajustes, estos dos se escriben una vez con una cabecera y no se vuelven
+a reescribir, así que nada de lo que añadas se poda y nada de lo que borres vuelve. `/sc reload` los
+relee.
+</Callout>

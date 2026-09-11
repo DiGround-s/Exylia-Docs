@@ -1,0 +1,103 @@
+---
+title: "FAQ"
+description: "Las preguntas que salen: los comandos que no existen, los menús que se sobrescriben y los ajustes que no hacen nada."
+---
+
+## `/stats` dice comando desconocido
+
+Porque lo es. La clase del comando existe, pero a su método le falta la anotación que lo registraría,
+así que el servidor nunca lo recibe. Enlaza `survivalcore:stats_open` a un botón de cualquier menú, a
+un NPC o a un objeto de hotbar: el perfil y sus rankings funcionan perfectamente.
+
+## Lo que edito en los menús de administración desaparece
+
+Todo lo que hay bajo `menus/admin/` se borra y se vuelve a extraer del jar en **cada** arranque y cada
+`/sc reload`, aunque cada uno de esos archivos diga lo contrario arriba del todo. Edita en su lugar los
+veintidós menús de jugador de `modules/<id>/menus/`: esos sí son tuyos. La única pantalla de
+administración editable es `modules/warps/menus/warp_setup.yml`.
+
+## He apagado un módulo y no ha cambiado nada
+
+Los interruptores de módulo necesitan reinicio. `/sc reload` relee los archivos de configuración, los
+ajustes de los módulos y los menús, pero nunca enciende ni apaga un módulo.
+
+## Un rango sale gratis
+
+Su requisito se descartó al leer el archivo. La cabecera de `ranks.yml` lista `kills` y `level` como
+tipos de requisito, y ninguno existe: el conjunto real es `money`, `playtime`, `placeholder` y
+`permission`. Un requisito de cualquier otro tipo se descarta en silencio, y eso deja el rango gratis.
+
+## `/bounty cancel` no cancela
+
+Abre la misma lista que abre `/bounty`. Cancela una aportación desde el menú.
+
+## Las recompensas anónimas no son anónimas
+
+`exyliasurvivalcore.bounties.anonymous` no tiene efecto por el flujo normal: la pantalla de
+confirmación pasa la marca como `false` sea lo que sea lo que calculó `/bounty place`. Toda recompensa
+puesta así lleva el nombre de quien la puso.
+
+## Cualquiera puede ejecutar `/reclaim` y `/playtime`
+
+Ninguno de los dos declara permiso. `/reclaim` ejecuta los comandos de la sección de mayor prioridad
+cuyo permiso tenga el jugador, así que los nodos de sección son la única puerta, y a quien no tenga
+ninguno se le dice que no hay nada para él. `/playtime <rewardId>` reclama esa recompensa, y lo único
+que frena a alguien es el propio tiempo jugado. Da los nodos de sección con cuidado.
+
+## Medio plugin está en español
+
+Ocho de las cadenas por defecto que vienen lo están: las barras de acción y títulos de warmup de spawn,
+homes, back, TPA y RTP dicen *Teleportando en %time%*. Son valores de configuración normales, en el
+`config.yml` de cada módulo. Edítalos.
+
+## Un permiso no hace nada
+
+Mira el prefijo. Ocho nodos siguen empezando por `survivalcore.` en vez de `exyliasurvivalcore.`: la
+pareja de administración del núcleo, los dos de rankup admin, los dos de farming admin y el de portales
+admin. Dalos exactamente como están escritos en la página de
+[Permisos](/docs/exyliasurvivalcore/permisos).
+
+Otros dos están declarados y no se leen nunca: `exyliasurvivalcore.spawn` y
+`exyliasurvivalcore.rtp.bypass`. `/spawn` está abierto a todo el mundo, y el bypass de RTP que se
+comprueba de verdad es el que nombre `modules/rtp/config.yml` — `survivalcore.rtp.bypass` de fábrica.
+
+## `%exyliasurvivalcore_stats_value_streak%` no muestra nada
+
+`streak` no es un id de stat. Los ids que vienen son `kills`, `deaths`, `best_kill_streak`,
+`current_streak`, `playtime` y `kdr`, así que las formas que funcionan son
+`…_stats_value_current_streak` y `…_stats_rank_best_kill_streak`. Los placeholders `%…_stats_streak%` y
+`%…_stats_best_streak%` son otra cosa y funcionan tal cual están escritos.
+
+## Las zonas de regeneración no regeneran nunca
+
+El soporte de esquemas de FastAsyncWorldEdit no se puede usar, y el plugin lo dice una vez al arrancar:
+`Regen zones are off: <razón>`. El módulo sigue activándose y los menús siguen funcionando; no se pega
+nada.
+
+## Los precios y los pagos se saltan
+
+No se encontró proveedor de economía. La fachada de economía de ExyliaLib acepta Vault o PlayerPoints;
+la consola escribe `No economy is installed: prices and payouts are skipped.` al arrancar cuando no hay
+ninguno.
+
+## ¿Por qué el plugin necesita FAWE y PacketEvents solo para `/home`?
+
+Los dos están declarados como dependencias duras, por las zonas de regeneración y por los power-ups
+respectivamente. Un servidor que solo quiera los módulos de teletransporte sigue sin poder arrancar sin
+ellos.
+
+## `/afkzone` y `/repair` imprimen una línea de uso
+
+Ninguno tiene forma raíz. Los comandos son `/afkzone preview <id>`, `/repair hand` y `/repair all`.
+
+## Dos jugadores del mismo grupo de reparación pagan distinto
+
+No están en el mismo grupo. Los grupos de reparación se resuelven en **orden de archivo**, no por
+precio: aplica el primer grupo de `groups.yml` cuyo nodo tenga el jugador. Escribe primero el mejor
+grupo.
+
+## ¿Pueden compartir esto dos servidores?
+
+Sí. Apúntalos a la misma base de datos y comparten homes, warps, kits, rangos, estadísticas y cajas — y
+los homes y warps llevan el servidor en el que se pusieron, así que `/home` y `/warp` cruzan la red. No
+se empuja nada en vivo entre servidores: una fila se recoge la próxima vez que se lee.

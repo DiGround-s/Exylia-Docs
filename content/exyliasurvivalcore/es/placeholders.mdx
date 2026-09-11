@@ -126,8 +126,18 @@ Todo lo demás que añade va bajo `playtime_`.
 | `%exyliasurvivalcore_stats_rank_<stat>%` | Su posición en el ranking de esa estadística, o `N/A` |
 | `%exyliasurvivalcore_stats_value_<stat>%` | Su valor, formateado, o `N/A` |
 
-`<stat>` es una clave de `modules/stats/stats.yml`: `kills`, `deaths`, `kdr`, `streak`, `best_streak`
-y `playtime`, que ahora se rankea junto al resto y se formatea como una duración.
+`<stat>` es una clave de `modules/stats/stats.yml`. Las que vienen son `kills`, `deaths`,
+`best_kill_streak`, `current_streak`, `playtime` y `kdr`.
+
+<Callout type="warning" title="Los ids de stat no son las mismas palabras que los placeholders de racha">
+`%exyliasurvivalcore_stats_streak%` y `%…_stats_best_streak%` de arriba son nombres de placeholder que
+leen los contadores directamente, y funcionan. **No** son ids de stat: dentro de `stats_value_`,
+`stats_rank_` y `stats_top_*` los ids son `current_streak` y `best_kill_streak`. Así que
+`%…_stats_value_streak%` responde `N/A`, y el que funciona es `%…_stats_value_current_streak%`.
+
+`current_streak` viene además con `leaderboard: false`, así que
+`%…_stats_top_name_1_current_streak%` responde con un guion a propósito.
+</Callout>
 
 ### Rankings
 

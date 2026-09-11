@@ -1,0 +1,153 @@
+---
+title: "Movimiento"
+description: "Spawn, homes, warps, TPA, /back, teletransporte aleatorio y /near: los siete módulos que mueven a un jugador."
+---
+
+Siete módulos mueven jugadores. Cinco comparten el mismo warmup: una cuenta atrás dibujada como barra
+de acción y título, cancelada al moverse o al recibir daño, con un sonido por segundo y un permiso que
+se la salta entera. Cada módulo tiene su propia copia de esos ajustes, así que un home puede ser
+instantáneo mientras un warp tarda cinco segundos.
+
+## Spawn
+
+`/spawn` teletransporta al spawn del servidor. `/spawn set` lo guarda, y necesita
+`exyliasurvivalcore.spawn.set`.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `warmup-seconds` | 3 | Cuenta atrás antes del teletransporte |
+| `cancel-on-move`, `cancel-on-damage` | `true` | Qué lo detiene |
+| `permission-bypass-warmup` | `exyliasurvivalcore.spawn.bypass` | El nodo que se salta la cuenta atrás — la cadena es tuya |
+| `blacklisted-worlds` | `[]` | Mundos desde los que `/spawn` se niega |
+| `teleport-on-join` | `false` | Cada login va al spawn |
+| `teleport-on-first-join` | `true` | El primer login va al spawn |
+| `respawn-at-spawn` | `true` | Morir manda al spawn |
+| `override-bed-spawn` | `true` | Incluso teniendo cama |
+
+`/spawn` en sí no comprueba **ningún permiso**. El spawn se envía además a los clientes como waypoint
+donde estén Apollo o Feather.
+
+## Homes
+
+Posiciones personales con nombre. `/sethome [nombre]`, `/home [nombre]`, y `/homes` para el menú:
+renombrar, cambiar icono, teletransportarse, borrar.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `max-homes` | 3 | El suelo para todo el mundo |
+| `default-home-name` | `home` | Cómo se llama un `/sethome` sin nombre |
+| `default-icon` | `GRASS_BLOCK` | El icono de un home nuevo |
+| `home-name-max-length` | 16 | Nombre más largo |
+| `warmup-seconds` y compañía | 3 | Como arriba |
+
+Cuántos homes tiene un jugador es un escalón de permisos:
+`exyliasurvivalcore.homes.max_homes.<n>`, y gana el nodo **más alto** que tenga. `max-homes` es solo lo
+que recibe quien no tenga ninguno.
+
+<Callout type="note" title="Un home sabe en qué servidor se puso">
+Los homes guardan un servidor junto a las coordenadas, así que `/home` funciona desde cualquier punto
+de la red. Un home en otro servidor no tiene posición local ninguna, que es por lo que la API expone un
+método de teletransporte en vez de dejar que quien la llama lea las coordenadas.
+</Callout>
+
+`/homesadmin delhome <jugador> <home>` y `/homesadmin listhomes <jugador>` necesitan
+`survivalcore.admin.homes`, y los dos funcionan desde consola.
+
+## Warps
+
+Posiciones con nombre para todo el servidor, montadas desde `/warpadmin`. Cada una tiene nombre
+visible, icono, coste, permiso opcional y posición.
+
+`/warp` abre la lista de las que puede usar el jugador; `/warp <id>` va directo. Los warps también
+cruzan la red.
+
+| Nodo de bypass | Qué se salta |
+|---|---|
+| `exyliasurvivalcore.warps.bypass` | El coste y el cooldown |
+| `exyliasurvivalcore.warps.bypass.cost` | El coste |
+| `exyliasurvivalcore.warps.bypass.cooldown` | El cooldown |
+
+`modules/warps/menus/warp_setup.yml` es el único editor de administración de este plugin que puedes
+personalizar sin riesgo: todos los demás viven bajo `menus/admin/` y se reescriben desde el jar.
+
+## TPA
+
+`/tpa <jugador>` pide ir hacia él; `/tpahere <jugador>` le pide que venga. `/tpaccept` y `/tpadeny`
+responden, con un nombre opcional para elegir qué petición.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `request-expire-seconds` | 60 | Cuánto vive una petición |
+| `send-confirm-default` | `true` | Si se muestra una confirmación antes de enviar |
+| `tpa-enabled-default` | `true` | Si de entrada se aceptan peticiones |
+| `auto-accept-default` | `false` | Si se aceptan sin preguntar |
+
+`/tpatoggle` cambia si recibe peticiones; `/tpatoggle autoaccept` y `/tpatoggle confirm` cambian los
+otros dos. `/autotpaaccept` existe además y es un duplicado exacto de `/tpatoggle autoaccept` — mismo
+comportamiento, mismo nodo.
+
+Las tres preferencias están también en la pantalla de `/settings`, leyendo y escribiendo las mismas
+filas.
+
+## Back
+
+`/back` devuelve al jugador a donde estaba. Qué momentos se recuerdan es configuración:
+
+| Ajuste | Por defecto |
+|---|---|
+| `save-on-death` | `true` |
+| `save-on-teleport` | `true` |
+| `save-on-portal` | `false` |
+
+El punto vive solo en memoria, así que un reinicio lo borra.
+
+## Teletransporte aleatorio
+
+`/rtp` abre una lista de mundos; `/rtp <mundo>` va directo a uno. Los mundos salen de
+`modules/rtp/worlds.yml`: uno que no esté en el archivo no se puede alcanzar.
+
+| Clave por mundo | Qué hace |
+|---|---|
+| `enabled` | Si se ofrece |
+| `display-name`, `icon` | Cómo aparece en el menú |
+| `min-x`, `max-x`, `min-z`, `max-z` | La caja donde se busca |
+| `price` | Se cobra por teletransporte |
+| `cooldown` | Segundos, o `-1` para usar el del módulo |
+| `biome-blacklist` | Biomas en los que no puede caer |
+
+Un **pool** mantiene posiciones seguras listas de antemano, así que `/rtp` es instantáneo en vez de una
+búsqueda:
+
+```yaml
+pool:
+  enabled: true
+  size: 40
+  max-concurrent-searches: 3
+  refill-interval: 30
+```
+
+Pregenerar los chunks del mundo — con Chunky, por ejemplo — reduce drásticamente lo que tarda el pool
+en llenarse.
+
+<Callout type="note" title="Los nodos de bypass del RTP son cadenas de configuración">
+`bypass-cooldown-permission` y `bypass-price-permission` vienen los dos como `survivalcore.rtp.bypass`
+— ojo al prefijo corto. Son lo que tú escribas ahí, no nodos fijos.
+</Callout>
+
+`/rtpadmin forcertp <jugador> <mundo>` manda a alguien, y `/rtpadmin pool` informa del pool.
+
+## Near
+
+`/near` lista los jugadores cercanos con su distancia y una dirección de brújula.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `display-mode` | `UI` | `UI` para el menú, `CHAT` para una lista por chat |
+| `default-radius` | 100 | El que se busca cuando no aplica otra cosa |
+| `max-radius` | 1000 | El techo, permiso incluido |
+| `cooldown-seconds` | 3 | Entre usos |
+| `distance-type` | `HORIZONTAL` | `HORIZONTAL` o `3D`, para filtrar |
+
+`exyliasurvivalcore.near.radius.<n>` sube el radio de un jugador, ganando el nodo más alto — pero
+`max-radius` lo sigue limitando. `distance-type` solo decide a quién se filtra; la distancia que se
+muestra es siempre horizontal.

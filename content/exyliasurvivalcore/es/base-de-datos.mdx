@@ -1,0 +1,108 @@
+---
+title: "Base de datos"
+description: "Las treinta y una tablas, qué módulo posee cada una, qué está indexado y las dos rarezas de esquema que conviene saber."
+---
+
+Cada módulo que guarda algo abre sus propias tablas, y un módulo apagado no crea ninguna. Todas pasan
+por una sola conexión, configurada en `database.yml`.
+
+Las tablas se crean desde las definiciones de los records con `CREATE TABLE IF NOT EXISTS`, la primera
+vez que se abre cada repositorio. No hay ningún esquema que aplicar ni migración que ejecutar.
+
+## Movimiento
+
+| Tabla | Clave | Guarda |
+|---|---|---|
+| `spawn_data` | `id` | La posición del spawn. Una fila |
+| `homes` | `id` = un UUID | Dueño (indexado), nombre, posición e icono |
+| `sc_warps` | `id` | Nombre visible, activado, coste, permiso, icono, posición |
+| `tpa_settings` | `playeruuid` | Si acepta peticiones, auto-aceptar y confirmar |
+| `rtp_cooldowns` | `id` | Jugador (indexado), mundo y cuándo se usó |
+
+`/back` no guarda nada: su punto está en memoria y un reinicio lo borra.
+
+## Combate
+
+| Tabla | Clave | Guarda |
+|---|---|---|
+| `player_stats` | `playeruuid` | Nombre, bajas, muertes, mejor racha |
+| `stat_cache` | `<uuid>:<statId>` | Un valor de stat cacheado por jugador, para los rankings |
+| `sc_bounties` | `id` | Objetivo, quien la puso, cantidad, cuándo se puso, cuándo caduca, anónima |
+
+`player_stats` lleva tres índices descendentes — sobre bajas, muertes y mejor racha — así que un ranking
+es una lectura acotada. `stat_cache` tiene el único índice de varias columnas del plugin, sobre el id de
+stat y su valor.
+
+## Progresión
+
+| Tabla | Clave | Guarda |
+|---|---|---|
+| `rankup_data` | `playeruuid` | Rango actual, rangos completados, nivel de prestigio |
+| `playtime_data` | `playeruuid` | Tiempo jugado total y las recompensas reclamadas |
+| `farming_data` | `playeruuid` | Cuentas por categoría e hitos reclamados |
+| `reclaim_data` | `playeruuid` | Lo reclamado una vez, y el último reclamo por sección |
+| `player_join_data` | `id` = el UUID del jugador | Primer login, número de entrada, entradas totales |
+
+## Kits y cajas
+
+| Tabla | Clave | Guarda |
+|---|---|---|
+| `sc_kits` | `id` | El kit entero: objetos, comandos, cooldown, usos, icono, orden, banderas |
+| `sc_kit_player_data` | `<playerId>:<kitId>` | Último reclamo y número de usos. Jugador indexado |
+| `sc_crates` | `id` | Premios, animación, icono y nombre de llave, pity, los desplazamientos del icono y el holograma |
+| `sc_crate_blocks` | `id` | De qué caja es un bloque colocado |
+| `sc_crate_players` | `<uuid>:<crateId>` | Llaves, aperturas desde el pity, total abierto. Jugador indexado |
+| `sc_crate_openings` | `id` | El historial: quién, qué caja, qué premio, qué tier, cuándo. Jugador indexado |
+| `sc_loot_chest_templates` | `id` | La tabla de loot y quién la hizo |
+| `sc_loot_chests` | `id` | Un cofre colocado: plantilla, posición, cooldown, último relleno |
+| `sc_item_spawners` | `id` | Posiciones, el rango de intervalo y la tabla de loot |
+
+## Zonas
+
+| Tabla | Clave | Guarda |
+|---|---|---|
+| `sc_mines` | `id` | La región, tipo, composición, niveles, ajustes de reinicio, teletransportes, banderas |
+| `sc_mine_broken_blocks` | `id` | Una fila por bloque a medio regenerar en una mina realista. Mina indexada |
+| `sc_regen_zones` | `id` | La región, modo, intervalos y banderas |
+| `sc_afk_zones` | `id` | La región, el intervalo de recompensa y la lista de recompensas |
+| `survival_portals` | `id` | La región, el destino y la lista de comandos |
+| `sc_jumpads` | `id` | Potencia, dirección, planeo y las posiciones de los bloques |
+| `sc_powerup_zones` | `id` | Modo, área o posiciones, tiempos y las entradas de power-up |
+
+`survival_portals` es la única tabla con el prefijo `survival_` en vez de `sc_`.
+
+## Comodidad
+
+| Tabla | Clave | Guarda |
+|---|---|---|
+| `player_utils_data` | `playeruuid` | Si el vuelo y la visión nocturna están activos |
+| `sc_player_settings` | `playeruuid` | Las preferencias que el jugador ha **apagado** |
+
+## Módulos que no guardan nada
+
+`back`, `blocked-items`, `death`, `enchantments`, `kill-rewards`, `near`, `repair` y
+`scheduled-commands`. Las rachas de bajas se cuentan en memoria y se pierden en un reinicio.
+
+## Dos cosas antes de tocar una tabla a mano
+
+<Callout type="note" title="Una posición guardada puede nombrar otro servidor">
+Homes, warps, portales y bloques de caja guardan `servidor,mundo,x,y,z,yaw,pitch`, donde `-` significa
+"este servidor". Eso es lo que hace que `/home` y `/warp` funcionen en toda una red. Una fila que
+nombre un servidor que no es este no tiene posición local ninguna, que es por lo que la API ofrece un
+método de teletransporte en vez de coordenadas.
+</Callout>
+
+<Callout type="warning" title="Dos tablas tienen `createdat` y `created_at` a la vez">
+`sc_bounties` y `sc_loot_chest_templates` llevan cada una dos columnas de fecha que se diferencian solo
+por un guion bajo, y guardan cosas distintas: la fecha del dominio — cuándo se puso la recompensa,
+cuándo se hizo la plantilla — y la fecha de creación de la fila. Lee la correcta.
+</Callout>
+
+Todas las tablas llevan además `created_at` y `updated_at`. Nada tiene una restricción de unicidad más
+allá de su clave primaria.
+
+## Compartir entre servidores
+
+Apunta todos los servidores a la misma base de datos y se comparten homes, warps, kits, rangos,
+estadísticas, cajas y el resto. No se empuja nada en vivo entre servidores: una fila se recoge la
+próxima vez que se lee.

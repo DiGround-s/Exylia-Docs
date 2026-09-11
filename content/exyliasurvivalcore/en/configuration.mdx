@@ -1,0 +1,116 @@
+---
+title: "Configuration"
+description: "The generated files, how they are written, which are yours to shape freely, and the comments that are out of date."
+---
+
+Everything lives in `plugins/ExyliaSurvivalCore/`. Nothing except the menus exists inside the jar: the
+configuration is generated from the plugin's own schema on first run, comments included.
+
+## Three kinds of file
+
+| Kind | Behaviour | Which files |
+|---|---|---|
+| **Schema-backed** | Fixed keys, generated with comments. A key the schema does not know is reported once as `UNKNOWN_KEY` and removed | `config.yml`, `messages.yml`, and each `modules/<id>/config.yml` |
+| **Free-form** | Written once with a header, never rewritten. Nothing is pruned, nothing you delete comes back | `modules/reclaim/config.yml`, `modules/scheduled-commands/config.yml`, `modules/blocked-items/rules.yml`, `modules/enchantments/rules.yml` |
+| **Lifted out** | A map that cannot live inside a schema record, moved into a sibling file the first time | `farming/categories.yml`, `join-leave/groups.yml`, `kill-rewards/rewards.yml`, `playtime-rewards/rewards.yml`, `rankup/ranks.yml`, `repair/groups.yml`, `rtp/worlds.yml`, `stats/stats.yml` |
+
+A lifted-out file that already exists is treated as already moved, so a file you deliberately emptied
+stays empty rather than having the shipped defaults written back over it.
+
+## `config.yml`
+
+Two keys: `debug`, and the thirty-two module switches. That is the entire file — see
+[Modules](/docs/exyliasurvivalcore/modules).
+
+There is **no database section here**. The database is configured in `database.yml`, written by
+ExyliaLib.
+
+## `messages.yml`
+
+One `prefix` and thirty-four sections — one per module, plus `errors`, `admin` and a few shared ones.
+Every line the plugin sends is in this file; nothing player-facing is hardcoded.
+
+`errors` is the shared block: `module-disabled`, `no-permission`, `player-not-found`,
+`invalid-number`, `world-blacklisted`.
+
+A line may open with an effect tag such as `[sound:ENTITY_VILLAGER_NO|1.0|1.0]`, which is an
+instruction and never reaches the screen. `%prefix%` is substituted from the `prefix` key.
+
+## Shared shapes
+
+Several modules draw the same three things, and they take the same keys everywhere.
+
+| Shape | Keys |
+|---|---|
+| Title | `text`, `subtitle`, `fade-in`, `stay`, `fade-out`, `time-style` |
+| Action bar | `text`, `duration`, `time-style` |
+| Boss bar | `text`, `colour`, `overlay`, `count-up`, `progress`, `time-style` |
+
+`colour` takes `PINK`, `BLUE`, `RED`, `GREEN`, `YELLOW`, `PURPLE` or `WHITE`. `overlay` takes
+`PROGRESS`, `NOTCHED_6`, `NOTCHED_10`, `NOTCHED_12` or `NOTCHED_20`. `time-style` takes `auto`,
+`seconds`, `tenths`, `hundredths`, `clock` or `full`. A `stay` or `duration` of `0` means "until
+something stops it".
+
+Sounds are always `SOUND_NAME|VOLUME|PITCH`, and a blank string disables one.
+
+## Per-module files
+
+| Module | Files |
+|---|---|
+| `spawn`, `tpa`, `homes`, `back`, `warps` | `config.yml` — the warmup, the bypass node, blacklisted worlds, the sounds and the three effects |
+| `rtp` | `config.yml` plus `worlds.yml` |
+| `join-leave` | `config.yml` plus `groups.yml` |
+| `kill-rewards` | `config.yml` plus `rewards.yml` |
+| `playtime-rewards` | `config.yml` plus `rewards.yml` |
+| `rankup` | `config.yml` plus `ranks.yml` |
+| `farming` | `config.yml` plus `categories.yml` |
+| `stats` | `config.yml` plus `stats.yml` |
+| `repair` | `config.yml` plus `groups.yml` |
+| `crates` | `config.yml` plus `tiers.yml` and `animations.yml` |
+| `enchantments` | `config.yml` plus `rules.yml` |
+| `blocked-items` | `rules.yml` only |
+| `reclaim`, `scheduled-commands` | `config.yml` only, free-form |
+| `player-utils`, `near`, `jumpads`, `kits`, `bounties`, `afk-zones`, `item-spawners`, `loot-chests`, `death`, `powerups`, `mines` | `config.yml` only |
+| `regen-zones` | `modules/regenzones/config.yml` — **no dash in the folder name** |
+| `portals`, `player-settings` | **No configuration file at all** |
+
+What each key does is on that module's own page: [Movement](/docs/exyliasurvivalcore/movement),
+[Combat](/docs/exyliasurvivalcore/combat), [Progression](/docs/exyliasurvivalcore/progression),
+[Kits and crates](/docs/exyliasurvivalcore/kits-and-crates), [Zones](/docs/exyliasurvivalcore/zones),
+[Restrictions](/docs/exyliasurvivalcore/restrictions) and
+[Quality of life](/docs/exyliasurvivalcore/quality-of-life).
+
+## Comments that are out of date
+
+The generated files carry their own explanations, and four of those are wrong. They are listed here so
+that a file disagreeing with this documentation is not a surprise.
+
+<Callout type="danger" title="`menus/admin/` is not yours, whatever its header says">
+All thirty-six admin menu files open with *"This file is yours to edit… written once, when it is
+missing, and never overwritten"*. The directory is deleted and re-extracted from the jar on **every**
+start and **every** `/sc reload`. The header is correct only in the twenty-two menus under
+`modules/*/menus/`.
+</Callout>
+
+<Callout type="warning" title="`ranks.yml` lists requirement types that do not exist">
+Its header mentions `kills` and `level`. The real set is `money`, `playtime`, `placeholder` and
+`permission`; a requirement of any other type is dropped silently when the file is read.
+</Callout>
+
+<Callout type="note" title="`admin.usage` names two subcommands `/survivalcore` does not have">
+The line reads *"Subcommands: reload, delhome, listhomes"*. `/survivalcore` has only `reload`;
+`delhome` and `listhomes` are on `/homesadmin`.
+</Callout>
+
+<Callout type="note" title="Eight defaults are still in Spanish">
+A fresh install shows Spanish warmup text for spawn, homes, back, TPA and RTP —
+*"Teleportando en %time%"*, *"Teleportando a %world%"*, *"Buscando…"*. They are ordinary configuration
+values; edit them in each module's `config.yml`.
+</Callout>
+
+## Reloading
+
+`/survivalcore reload`, from the console or in game, re-reads `config.yml` including `debug`, every
+module's own files — the nine that cache theirs included — `messages.yml`, and the menus.
+
+It does **not** apply a module switch. Turning a module on or off needs a restart.

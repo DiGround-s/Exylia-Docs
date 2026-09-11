@@ -661,14 +661,39 @@ const PRACTICE_NAV: NavGroup[] = [
   },
 ];
 
-/** Only the reference pages: the rest of the documentation follows the plugin. */
 const SURVIVALCORE_NAV: NavGroup[] = [
+  {
+    label: { en: "Getting started", es: "Empezar" },
+    pages: [
+      page("introduction", "introduction", "introduccion"),
+      page("installation", "installation", "instalacion"),
+      page("first-steps", "first-steps", "primeros-pasos"),
+    ],
+  },
+  {
+    label: { en: "Modules", es: "Módulos" },
+    pages: [
+      page("modules", "modules", "modulos"),
+      page("movement", "movement", "movimiento"),
+      page("combat", "combat", "combate"),
+      page("progression", "progression", "progresion"),
+      page("kits-and-crates", "kits-and-crates", "kits-y-cajas"),
+      page("zones", "zones", "zonas"),
+      page("restrictions", "restrictions", "restricciones"),
+      page("quality-of-life", "quality-of-life", "utilidades"),
+    ],
+  },
   {
     label: { en: "Reference", es: "Referencia" },
     pages: [
+      page("commands", "commands", "comandos"),
       page("permissions", "permissions", "permisos"),
       page("placeholders", "placeholders", "placeholders"),
+      page("configuration", "configuration", "configuracion"),
+      page("menus", "menus", "menus"),
+      page("database", "database", "base-de-datos"),
       page("api", "api", "api"),
+      page("faq", "faq", "faq"),
     ],
   },
 ];
@@ -840,7 +865,7 @@ export const plugins: Plugin[] = [
       en: "100 kill effects across five categories, each one a body choreographed joint by joint among real items and blocks, often with the killer and the crowd acting it out: chosen from a menu, won out of a crate or bound to a weapon with a token, and written as sequences a server owner can edit.",
       es: "100 efectos de muerte en cinco categorías, cada uno un cuerpo coreografiado articulación a articulación entre objetos y bloques reales, muchas veces con el asesino y el público actuándolo: elegidos desde un menú, ganados en una caja o atados a un arma con una ficha, y escritos como secuencias que el dueño puede editar.",
     },
-    version: "1.1.0",
+    version: "1.4.0",
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
@@ -861,7 +886,7 @@ export const plugins: Plugin[] = [
       en: "90 hit effects across six categories, played on the body of whoever was struck and written to a budget of six tenths of a second: chosen from a menu or bound to a weapon with a token.",
       es: "90 efectos de golpe en seis categorías, lanzados sobre el cuerpo de quien recibe el impacto y escritos con un presupuesto de seis décimas de segundo: elegidos desde un menú o atados a un arma con una ficha.",
     },
-    version: "1.4.0",
+    version: "1.1.0",
     status: "stable",
     category: { en: "Cosmetic", es: "Cosmético" },
     minecraft: "1.21+",
@@ -1058,8 +1083,8 @@ export const plugins: Plugin[] = [
       en: "Homes, warps, TPA, RTP, kits, mines, bounties, loot chests, power-ups, rankup, farming milestones and regenerating zones, each one a module that registers nothing at all when it is turned off.",
       es: "Homes, warps, TPA, RTP, kits, minas, recompensas por cabeza, cofres de loot, power-ups, rankup, hitos de farmeo y zonas que se regeneran, cada uno un módulo que no registra absolutamente nada cuando está apagado.",
     },
-    version: "1.0.5",
-    status: "beta",
+    version: "1.1.2",
+    status: "stable",
     category: { en: "Survival", es: "Survival" },
     minecraft: "1.21+",
     banner: "https://s3.exylia.net/exylia-plugins/public/static/images/plugins/survival/ExyliaSurvivalCoreBanner.webp",

@@ -1,0 +1,93 @@
+---
+title: "Restrictions"
+description: "Enchantment caps per world or region, and items that cannot be used or crafted where you say."
+---
+
+Two modules take things away rather than giving them. Both are written as rules in a file, both scope
+by world and by WorldGuard region, and both have a single bypass node.
+
+## Enchantments
+
+`modules/enchantments/rules.yml` caps enchantment levels. The header of the generated file lists every
+enchantment on **your** server, split into the two modes below.
+
+```yaml
+rules:
+  sharpness:
+    mode: EFFECT
+    limits:
+      global:
+        max: 3
+        global: true
+      arena:
+        max: 0
+        worlds: [pvp]
+        regions: ["world:spawn"]
+    block:
+      effect: true
+      enchant-table: true
+      anvil: true
+      villager: true
+      loot: true
+```
+
+| Key | What it does |
+|---|---|
+| `mode` | `EFFECT` neutralises the enchantment's effect and leaves the item alone; `STRIP` removes it from the item |
+| `limits.<name>.max` | The ceiling. `0` removes the enchantment entirely |
+| `limits.<name>.global` | Applies everywhere |
+| `limits.<name>.worlds` | Worlds it applies in |
+| `limits.<name>.regions` | Regions, as `world:id`. A bare `id` matches that id in every world |
+| `block.effect` | Whether the effect is blocked at all. Default `true` |
+| `block.enchant-table`, `anvil`, `villager`, `loot` | Where the enchantment may not be **obtained** |
+
+When several scopes match a player, the **lowest** max wins. For a combat enchantment, the location
+that decides is the **victim's**.
+
+<Callout type="warning" title="`EFFECT` only works for twenty-two enchantments">
+Sharpness, Smite, Bane of Arthropods, Impaling, Knockback, Fire Aspect, Sweeping Edge, Looting, Power,
+Punch, Flame, Fortune, Silk Touch, Thorns, Protection, Fire Protection, Blast Protection, Projectile
+Protection, Feather Falling, Unbreaking and Mending. Anything else has to use `STRIP` — and the plugin
+warns on the console when a rule gets this wrong.
+</Callout>
+
+| Setting | Default | What it does |
+|---|---|---|
+| `strip-scan-ticks` | 10 | How often inventories are scanned in `STRIP` mode |
+| `notify-blocked` | `true` | Whether the player is told |
+
+`exyliasurvivalcore.enchantments.bypass` ignores every rule. A legacy `disabled:` block is still read as
+a limit of `0`. If regions are named and WorldGuard is absent, the plugin warns at boot.
+
+## Blocked items
+
+`modules/blocked-items/rules.yml` stops items being used or crafted. There is no `config.yml` for this
+module — the rules file is all of it.
+
+```yaml
+rules:
+  no-elytra:
+    items: [ELYTRA]
+    disabled:
+      global: false
+      worlds: [survival]
+      regions: ["world:spawn"]
+    block:
+      use: true
+      craft: false
+```
+
+`items` takes material names, or a tag with a `#` — `#swords` covers every sword without listing them.
+
+| Key | Default | What it covers |
+|---|---|---|
+| `block.use` | `true` | Placing, breaking, hitting, shooting, drinking, eating, throwing, raising a shield, gliding with an elytra, totems, wearing armour, buckets, spawn eggs and boats |
+| `block.craft` | `false` | Crafting the item at all |
+
+The location that decides is the **player's**. `exyliasurvivalcore.blockeditems.bypass` ignores every
+rule.
+
+<Callout type="note" title="Both files are free-form">
+Unlike the settings files, these two are written once with a header and never rewritten, so nothing you
+add is pruned and nothing you delete comes back. `/sc reload` re-reads them.
+</Callout>

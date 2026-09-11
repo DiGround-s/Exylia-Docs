@@ -77,14 +77,34 @@ cambia nada hasta que el módulo vuelve a estar encendido.
 | `survivalcore.farming.admin.set` | `/farmingadmin set`, `reset` y `resetall` |
 | `exyliasurvivalcore.killrewards.admin` | `/killrewardsadmin`, `/kra`, `reset` y `resetbest` |
 | `exyliasurvivalcore.reclaim.admin` | `/reclaimadmin reset` y `/reclaimadmin resetsection` |
-| `exyliasurvivalcore.bounties.use` | `/bounty`, `/bounty place`, `/bounty cancel` |
+| `exyliasurvivalcore.bounties.use` | `/bounty`, `/bounty place`, `/bounty cancel` — que abre la misma lista que `/bounty` y no cancela nada |
 | `exyliasurvivalcore.bounties.admin` | `/bountyadmin remove`, `clear` y `add` |
-| `exyliasurvivalcore.bounties.anonymous` | Poner una recompensa sin que aparezca tu nombre |
-| `exyliasurvivalcore.stats` | `/stats` |
-| `exyliasurvivalcore.stats.others` | `/stats <jugador>` |
+| `exyliasurvivalcore.bounties.anonymous` | Poner una recompensa sin que aparezca tu nombre. **No hace nada** — mira abajo |
+| `exyliasurvivalcore.crates.use` | `/crates`, `/crates preview`, `/crates open`, `/crates history` y hacer clic derecho en un bloque de caja |
+| `exyliasurvivalcore.crates.admin` | `/cratesadmin`, `/cratesa`, sus seis subcomandos, todas las pantallas de administración de cajas y la varita |
+| `exyliasurvivalcore.stats` | `/stats` — **inalcanzable**, mira abajo |
+| `exyliasurvivalcore.stats.others` | `/stats <jugador>` — **inalcanzable**, mira abajo |
 
 `/playtime` y `/reclaim` no tienen nodo. Lo que un jugador puede reclamar lo deciden los permisos de
 cada sección — mira [Los nodos que escribes tú](#los-nodos-que-escribes-tú).
+
+<Callout type="warning" title="`/playtime` y `/reclaim` están abiertos, y los dos escriben">
+Ninguno de los dos comprueba un nodo. `/reclaim` ejecuta los comandos de la sección de mayor prioridad
+cuyo permiso tenga el jugador, así que los nodos de sección son la única puerta. `/playtime <rewardId>`
+**reclama** esa recompensa; lo único que frena a alguien es no haber acumulado el tiempo.
+</Callout>
+
+<Callout type="danger" title="Los dos nodos de `stats` no se pueden usar">
+A `/stats` le falta la anotación que lo registraría, así que el servidor nunca tiene el comando y
+ninguno de los dos nodos se llega a leer. Las pantallas siguen abriéndose con la acción
+`survivalcore:stats_open` desde cualquier menú.
+</Callout>
+
+<Callout type="danger" title="`bounties.anonymous` no hace nada">
+`/bounty place` calcula bien la marca a partir de este nodo y de `settings.allow-anonymous`, y se la
+pasa a la pantalla de confirmación — pero el `bounty_place_confirm.yml` que viene le pasa `false`
+igualmente. Toda recompensa puesta por el flujo normal lleva el nombre de quien la puso.
+</Callout>
 
 ## Contenido y mundo
 
@@ -94,7 +114,7 @@ cada sección — mira [Los nodos que escribes tú](#los-nodos-que-escribes-tú)
 | `exyliasurvivalcore.lootchests.admin` | `/lootchestsadmin` |
 | `exyliasurvivalcore.lootchests.bypass` | Romper el bloque de un cofre de loot, que lo borra en lugar de cancelarse |
 | `exyliasurvivalcore.powerups.admin` | `/powerupsadmin` |
-| `exyliasurvivalcore.afkzones.use` | `/afkzone` y `/afkzone preview` |
+| `exyliasurvivalcore.afkzones.use` | `/afkzone preview <id>`. No existe un `/afkzone` a secas |
 | `exyliasurvivalcore.afkzones.admin` | `/afkzonesadmin` |
 | `exyliasurvivalcore.itemspawners.admin` | `/spawnersadmin` |
 | `exyliasurvivalcore.regenzones.admin` | `/regenzonesadmin` |
@@ -121,6 +141,7 @@ cada sección — mira [Los nodos que escribes tú](#los-nodos-que-escribes-tú)
 | `exyliasurvivalcore.repair.bypass.cooldown` | Reparar estando en cooldown |
 | `exyliasurvivalcore.enchantments.bypass` | Conservar encantamientos por encima de los límites configurados |
 | `exyliasurvivalcore.blockeditems.bypass` | Usar objetos que las reglas de blocked-items prohíben |
+| `exyliasurvivalcore.settings` | `/settings`, `/preferences`, `/options` |
 
 `/repair` a secas no hace nada: los alias `/fix` y `/reparar` siguen necesitando `hand` o `all`
 detrás, cada uno con su nodo.
@@ -156,7 +177,7 @@ código del plugin.
 | Un kit | Su `permission`, desde `/kitadmin` | Vacío, que significa cualquiera con `exyliasurvivalcore.kits` |
 | Una mina | Su `permission`, desde `/minesadmin` | Vacío, que significa que cualquiera puede entrar y picar |
 | Una sección de reclaim | `sections.<id>.permission` en `modules/reclaim/config.yml` | `exyliasurvivalcore.reclaim.<id>` |
-| Un grupo de join / leave | `groups.<id>.permission` en `modules/join-leave/groups.yml` | Vacío, que no coincide con nadie |
+| Un grupo de join / leave | `groups.<id>.permission` en `modules/join-leave/groups.yml` | El grupo `vip` que viene nombra `survivalcore.joinleave.vip` — con el prefijo corto |
 | Un requisito de rango | El `node` de un requisito `PERMISSION`, en la configuración de rankup | Ninguno |
 
 El permiso de una mina protege toda la región: sin él no se puede romper nada dentro, sea minable o

@@ -1,0 +1,120 @@
+---
+title: "Combate"
+description: "Recompensas por baja y rachas, recompensas por cabeza, estadísticas con rankings y qué pasa al morir."
+---
+
+## Recompensas por baja
+
+Cada baja puede pagar, y las bajas seguidas montan una racha. Las dos se escriben en
+`modules/kill-rewards/rewards.yml`.
+
+```yaml
+on-kill:
+  commands: []
+  killer:   { chat: "", actionbar: "", title: "", sound: "" }
+  victim:   { chat: "", actionbar: "", title: "", sound: "" }
+  server-broadcast: ""
+streak-milestones:
+  '3':  { … }
+  '5':  { … }
+  '10': { … }
+streak-end:
+  min-streak: 3
+  commands: []
+  killer: { … }
+  victim: { … }
+  server-broadcast: ""
+```
+
+`%killer%`, `%victim%`, `%streak%` y `%victim_streak%` están disponibles en todo el archivo. Los
+comandos aceptan un prefijo `console:` o `player:`.
+
+`settings.worlds` es una lista blanca: vacía significa todos los mundos.
+`settings.streak-reset-on-logout` decide si una racha sobrevive a una desconexión.
+
+## Recompensas por cabeza
+
+`/bounty place <jugador> <cantidad>` pone dinero sobre una cabeza. Quien mate a ese jugador se lo lleva.
+Varios jugadores pueden aportar a la misma cabeza, y `/bounty` lista las abiertas con sus aportaciones.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `min-amount` | 100 | Aportación mínima |
+| `max-amount` | 1000000 | Máxima, `-1` para ilimitada |
+| `max-bounties-per-placer` | 5 | Cuántas cabezas puede financiar un jugador |
+| `max-target-pool` | `-1` | Techo del total de una cabeza |
+| `allow-self-bounty` | `false` | Si un jugador puede financiar su propia cabeza |
+| `cancel-penalty-percent` | 10 | Lo que se retiene al cancelar una aportación |
+| `expiry-hours` | `-1` | `-1` no caduca nunca |
+| `allow-anonymous` | `true` | Si se puede ocultar el nombre de quien la pone |
+| `notify-target-on-login` | `true` | Si se avisa al perseguido al conectarse |
+| `target-bossbar-duration-seconds` | 10 | Cuánto se le muestra la barra de jefe |
+
+Los administradores tienen `/bountyadmin add`, `remove` y `clear`.
+
+<Callout type="warning" title="Dos cosas de este módulo no funcionan como se leen">
+`/bounty cancel` abre la misma lista que `/bounty` y no cancela nada: cancela una aportación desde el
+menú.
+
+`exyliasurvivalcore.bounties.anonymous` no tiene ningún efecto por el flujo normal. `/bounty place`
+calcula bien la marca y se la pasa a la pantalla de confirmación, pero el `bounty_place_confirm.yml`
+que viene le pasa `false` igualmente, así que toda recompensa puesta así lleva nombre.
+</Callout>
+
+## Estadísticas
+
+Bajas, muertes, mejor racha y racha actual se registran por jugador, y `modules/stats/stats.yml` decide
+cuáles se muestran y se clasifican.
+
+```yaml
+stats:
+  kills:            { enabled: true, type: INTERNAL, format: NUMBER, leaderboard: true,  … }
+  deaths:           { enabled: true, type: INTERNAL, format: NUMBER, leaderboard: true,  … }
+  best_kill_streak: { enabled: true, type: INTERNAL, format: NUMBER, leaderboard: true,  … }
+  current_streak:   { enabled: true, type: INTERNAL, format: NUMBER, leaderboard: false, … }
+  playtime:         { enabled: true, type: PAPI,     format: TIME,   placeholder: "%exyliasurvivalcore_playtime_millis%" }
+  kdr:              { enabled: true, type: COMPUTED, format: DECIMAL, formula: KILLS_PER_DEATH }
+```
+
+| `type` | De dónde sale el número |
+|---|---|
+| `INTERNAL` | Uno de los cuatro contadores que lleva el plugin |
+| `COMPUTED` | Una fórmula sobre otras stats |
+| `PAPI` | Cualquier nombre de PlaceholderAPI |
+| `VAULT` | El saldo del jugador |
+
+`format` es `NUMBER`, `DECIMAL`, `MONEY` o `TIME`. `leaderboard: false` deja una stat fuera de los
+rankings pero visible en el perfil.
+
+<Callout type="note" title="`COMPUTED` tiene exactamente una fórmula">
+`KILLS_PER_DEATH` es el único valor que acepta `formula`. Cualquier otro cae en él en silencio.
+</Callout>
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `leaderboard-refresh-interval` | 300 | Segundos entre reconstrucciones del ranking |
+| `papi-sample-interval` | 60 | Segundos entre muestras de una stat `PAPI` |
+| `leaderboard-size` | 100 | Hasta dónde llega un ranking |
+
+Una recarga reprograma los dos temporizadores con los valores nuevos.
+
+<Callout type="danger" title="`/stats` no existe en ejecución">
+La clase del comando se registra, pero a su método le falta la anotación que lo convierte en comando,
+así que no se añade nada al servidor. `exyliasurvivalcore.stats` y `exyliasurvivalcore.stats.others`
+quedan por tanto inalcanzables.
+
+Las pantallas sí funcionan: enlaza `survivalcore:stats_open` a un botón de cualquier menú, a un NPC o a
+un objeto de hotbar y el perfil y sus rankings abren con normalidad.
+</Callout>
+
+## Muerte
+
+El módulo de muerte son tres ajustes.
+
+| Ajuste | Por defecto | Qué hace |
+|---|---|---|
+| `scatter-radius` | 0.3 | Cuánto se dispersan los drops, para que una pila no sea un montón |
+| `fire-protection` | `true` | Los drops sobreviven al fuego — **no** a la lava |
+| `custom-messages` | `true` | La línea de muerte sale de `messages.yml` y no de vanilla |
+
+El anuncio de muerte es uno de los siete que respetan las preferencias de `/settings` de cada jugador.

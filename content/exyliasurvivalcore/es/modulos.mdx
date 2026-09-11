@@ -1,0 +1,117 @@
+---
+title: "Módulos"
+description: "Los treinta y dos interruptores de config.yml, qué cubre cada uno y qué deja de hacer un módulo apagado."
+---
+
+`config.yml` son dos claves. Eso es el archivo entero.
+
+```yaml
+debug: false
+modules:
+  spawn: true
+  tpa: true
+  homes: true
+  join-leave: true
+  rtp: true
+  kill-rewards: true
+  scheduled-commands: true
+  playtime-rewards: true
+  rankup: true
+  player-utils: true
+  back: true
+  farming: true
+  reclaim: true
+  stats: true
+  portals: true
+  jumpads: true
+  kits: true
+  bounties: true
+  afk-zones: true
+  item-spawners: true
+  warps: true
+  near: true
+  loot-chests: true
+  crates: true
+  repair: true
+  death: true
+  powerups: true
+  mines: true
+  regen-zones: true
+  enchantments: true
+  blocked-items: true
+  player-settings: true
+```
+
+`debug` añade detalle en consola, incluido con qué actor se ejecuta cada línea de comando configurada.
+Se relee con `/sc reload`; los interruptores no.
+
+<Callout type="warning" title="Un interruptor de módulo necesita reinicio">
+`/sc reload` relee los archivos de configuración, los ajustes de cada módulo y los menús, pero nunca
+enciende ni apaga un módulo. Cambia un interruptor y reinicia.
+</Callout>
+
+## Qué significa "apagado"
+
+Un módulo apagado no se construye más allá de su propio interruptor. No registra **ni comandos, ni
+listeners, ni tablas, ni placeholders, ni temporizadores**. Su archivo de configuración se queda intacto
+en disco, así que volver a encenderlo retoma exactamente donde lo dejaste.
+
+Un id de módulo que nadie declara está simplemente apagado, y eso no es un error.
+
+## Los treinta y dos
+
+| Interruptor | Qué le da a un jugador | Página |
+|---|---|---|
+| `spawn` | `/spawn`, con warmup, y spawn forzado al entrar o reaparecer | [Movimiento](/docs/exyliasurvivalcore/movimiento) |
+| `homes` | Homes personales, en toda la red | [Movimiento](/docs/exyliasurvivalcore/movimiento) |
+| `warps` | Warps del servidor, con precio y cooldown, en toda la red | [Movimiento](/docs/exyliasurvivalcore/movimiento) |
+| `tpa` | Peticiones de teletransporte entre jugadores | [Movimiento](/docs/exyliasurvivalcore/movimiento) |
+| `back` | `/back` a donde murió o desde donde se teletransportó | [Movimiento](/docs/exyliasurvivalcore/movimiento) |
+| `rtp` | Un aterrizaje seguro al azar, servido desde un pool pregenerado | [Movimiento](/docs/exyliasurvivalcore/movimiento) |
+| `near` | Quién hay cerca, con distancia y dirección | [Movimiento](/docs/exyliasurvivalcore/movimiento) |
+| `kill-rewards` | Dinero y una racha por una baja | [Combate](/docs/exyliasurvivalcore/combate) |
+| `bounties` | Dinero sobre la cabeza de otro jugador | [Combate](/docs/exyliasurvivalcore/combate) |
+| `stats` | Bajas, muertes, rachas, tiempo jugado y rankings | [Combate](/docs/exyliasurvivalcore/combate) |
+| `death` | Drops dispersos, a prueba de fuego, y el mensaje de muerte del plugin | [Combate](/docs/exyliasurvivalcore/combate) |
+| `rankup` | Una escalera de rangos con requisitos y prestigio | [Progresión](/docs/exyliasurvivalcore/progresion) |
+| `playtime-rewards` | Recompensas por tiempo jugado | [Progresión](/docs/exyliasurvivalcore/progresion) |
+| `farming` | Recompensas por cada N y por hitos, al farmear y al matar | [Progresión](/docs/exyliasurvivalcore/progresion) |
+| `reclaim` | `/reclaim` para la sección que tenga | [Progresión](/docs/exyliasurvivalcore/progresion) |
+| `kits` | Kits con cooldown, límite de usos y vista previa | [Kits y cajas](/docs/exyliasurvivalcore/kits-y-cajas) |
+| `crates` | Cajas con llaves, tiers, pity y diez animaciones | [Kits y cajas](/docs/exyliasurvivalcore/kits-y-cajas) |
+| `loot-chests` | Cofres que se rellenan, construidos desde plantillas | [Kits y cajas](/docs/exyliasurvivalcore/kits-y-cajas) |
+| `item-spawners` | Objetos brillantes que caen de un bloque spawner | [Kits y cajas](/docs/exyliasurvivalcore/kits-y-cajas) |
+| `mines` | Regiones que se reinician enteras o bloque a bloque | [Zonas](/docs/exyliasurvivalcore/zonas) |
+| `regen-zones` | Regiones reconstruidas desde un esquema | [Zonas](/docs/exyliasurvivalcore/zonas) |
+| `afk-zones` | Pagar por estarse quieto en una región | [Zonas](/docs/exyliasurvivalcore/zonas) |
+| `portals` | Entrar en una región y ser teletransportado o recibir comandos | [Zonas](/docs/exyliasurvivalcore/zonas) |
+| `jumpads` | Plataformas que lanzan al jugador, con planeo opcional | [Zonas](/docs/exyliasurvivalcore/zonas) |
+| `powerups` | Recogidas flotantes que dan un efecto o una recompensa | [Zonas](/docs/exyliasurvivalcore/zonas) |
+| `enchantments` | Topes de encantamiento por mundo o región | [Restricciones](/docs/exyliasurvivalcore/restricciones) |
+| `blocked-items` | Objetos que no se pueden usar ni craftear | [Restricciones](/docs/exyliasurvivalcore/restricciones) |
+| `player-utils` | `/heal`, `/feed`, `/fly`, `/hat`, `/craft`, `/anvil`, `/ec`, `/nv`, `/ping` | [Comodidad](/docs/exyliasurvivalcore/utilidades) |
+| `repair` | `/repair hand` y `/repair all`, con precio por grupo | [Comodidad](/docs/exyliasurvivalcore/utilidades) |
+| `join-leave` | Mensajes de entrada y salida con estilo, por rango | [Comodidad](/docs/exyliasurvivalcore/utilidades) |
+| `scheduled-commands` | Comandos de consola y anuncios en un temporizador | [Comodidad](/docs/exyliasurvivalcore/utilidades) |
+| `player-settings` | `/settings`, diez interruptores de qué les llega | [Comodidad](/docs/exyliasurvivalcore/utilidades) |
+
+## Qué se hacen entre ellos
+
+Los módulos son independientes — ninguno se niega a arrancar porque otro esté apagado — pero unos
+cuantos se leen entre sí cuando los dos están encendidos.
+
+<Callout type="note" title="`player-settings` es donde acaban siete anuncios">
+Rankups, recompensas puestas, recompensas cobradas, premios de caja, muertes, reclaims, rachas de bajas
+y mensajes de entrada y salida comprueban las preferencias de quien los recibe antes de mandarse. Con
+`player-settings` apagado, todos van a todo el mundo, que es como se comportaba el plugin antes de que
+existiera ese módulo.
+</Callout>
+
+<Callout type="note" title="`stats` se alimenta a sí mismo y de PlaceholderAPI">
+Las stats `kdr` y `playtime` se calculan a partir de otras stats y de un nombre de PlaceholderAPI. Con
+`stats` apagado no se registran bajas ni muertes y los rankings están vacíos; la racha de kill-rewards
+se cuenta aparte y sigue funcionando.
+</Callout>
+
+Apagar `crates`, `kits`, `mines` y los demás deja intacto en la base de datos todo lo que construyeron.
+Volver a encender uno lo devuelve exactamente como estaba.
