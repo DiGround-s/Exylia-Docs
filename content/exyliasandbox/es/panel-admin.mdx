@@ -1,0 +1,95 @@
+---
+title: "El panel de administración"
+description: "`/sandbox` pantalla por pantalla: mundos, gamerules, jugadores, plataformas, kits predefinidos, categorías de la sala de kits y el lobby."
+---
+
+`/sandbox` abre todo lo que posee un administrador. Necesita `exyliasandbox.admin`, y cada botón detrás
+vuelve a comprobar ese nodo, así que un jugador que llegue de alguna forma a una pantalla sigue sin
+poder pulsar nada.
+
+## El hub
+
+| Botón | Abre |
+|---|---|
+| **MANAGE WORLDS** | La lista de mundos, con el total y los jugadores dentro |
+| **KIT ROOM** | Las categorías de la sala de kits |
+| **PREDEFINED KITS** | Las plantillas de kit |
+| **TP REGIONS** | Las plataformas de teletransporte |
+| **SET LOBBY** | Guarda donde estás parado como lobby |
+| **SET KIT CREATOR** | Guarda donde estás parado como sala del creador de kits |
+| **RECARGAR CONFIGS** | Vuelve a leer los archivos de configuración y recompila los menús |
+
+Los tres últimos actúan al momento, sin confirmación.
+
+## Mundos
+
+La lista pagina todos los mundos configurados. Cada fila muestra su id, si es gestionado o importado, su
+estado, los jugadores dentro, su bioma y el radio de su borde; un mundo `READY` brilla.
+
+| Clic | Qué hace |
+|---|---|
+| Izquierdo | Abre la pantalla del mundo |
+| Derecho | Te teletransporta dentro, sin reservar sesión |
+
+**CREATE WORLD** e **IMPORT WORLD** arrancan cada uno un asistente corto por chat y acaban en la pantalla
+del mundo sin haber escrito nada. **Reset to Defaults** devuelve los cinco mundos originales, con
+confirmación.
+
+### La pantalla del mundo
+
+Todo aquí edita un borrador. Nada llega a la base de datos hasta **SAVE WORLD**; el botón de volver lo
+descarta.
+
+| Botón | Qué hace |
+|---|---|
+| **ICON** | Abre un selector de icono |
+| **NAME** | Petición por chat del nombre visible |
+| **BIOME** | Petición por chat de un id de bioma. `N/A` en un mundo importado |
+| **GENERATION** | Cicla los cinco presets. `N/A` en un mundo importado |
+| **BORDER** | Izquierdo +500, derecho −500 con suelo en 100, shift + izquierdo escribe un número. Es el diámetro |
+| **GAMERULES** | Los trece interruptores y la dificultad |
+| **TELEPORT** | Te mete en el mundo |
+| **PLAYERS** | Los jugadores que hay dentro |
+| **SAVE WORLD** | Escribe la fila, crea la carpeta y encola la pregeneración |
+| La última ranura | Borra el mundo, con confirmación. Un mundo que nunca se ha guardado muestra un panel gris |
+
+El borde que se ve junto a un mundo es su **radio**; el botón edita el diámetro.
+
+### Gamerules
+
+Trece interruptores, cada uno dibujado `ENABLED` o `DISABLED`, más una dificultad que cicla
+`PEACEFUL → EASY → NORMAL → HARD`. La lista completa y a qué corresponde cada uno está en la página de
+[Mundos](/docs/exyliasandbox/mundos#gamerules-y-dificultad).
+
+### Jugadores
+
+Una cabeza por jugador en el mundo, con su modo de juego, vida, nivel y coordenadas. Pulsar una te
+teletransporta a él.
+
+## Plataformas de teletransporte
+
+La lista, el editor y sus dos botones de borrado están en la página de
+[Plataformas de teletransporte](/docs/exyliasandbox/regiones-tp). Borrar una desde cualquiera de los dos
+sitios no pregunta nada.
+
+## Kits predefinidos
+
+La lista de plantillas, su botón de crear y el editor por kit están en la página de
+[Kits](/docs/exyliasandbox/kits#kits-predefinidos). `/sandbox predefinedkits` abre la lista directamente.
+
+## Categorías de la sala de kits
+
+La lista de categorías, su botón de crear, su selector de icono y su gesto de borrado están en la página
+de [Sala de kits](/docs/exyliasandbox/sala-de-kits#editarla).
+
+## Recargar
+
+**RECARGAR CONFIGS**, y `/sandbox reload` desde consola, vuelven a leer `config.yml`, `messages.yml` y
+`scoreboards.yml` y recompilan los menús. Los mundos, kits, plataformas y estadísticas no se tocan:
+viven en la base de datos y se leen cuando cambian.
+
+<Callout type="note" title="Las pantallas de administración se reescriben en cada arranque">
+Todo lo que hay bajo `menus/admin/` se refresca desde el jar cada vez que el plugin arranca, y cada uno
+de esos archivos lo avisa. Edita `menus/user/` con confianza; lo que edites en `menus/admin/` lo deshace
+el siguiente reinicio.
+</Callout>

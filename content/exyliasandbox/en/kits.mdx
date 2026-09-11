@@ -1,0 +1,101 @@
+---
+title: "Kits"
+description: "The kit creator, how many slots a player gets, the favourite, and the predefined kits an admin writes for them to copy."
+---
+
+A kit is a whole inventory a player saved: storage, armour and offhand. It is stored per player, in a
+numbered slot, and it is what dresses them the moment they enter a sandbox world.
+
+## How many slots
+
+The number of slots is a permission tier. The plugin walks down from `exyliasandbox.max_kits.100` to
+`exyliasandbox.max_kits.1` and takes the first node the player holds; a player holding none gets **one**.
+The highest node wins, so grant exactly one per group.
+
+The limit is enforced in three places: the kit creator's title counter, **+ NEW KIT** (which refuses
+with `kit-creator.max-kits-reached` when every slot in `1..max` is taken), and the copy screen, which
+draws exactly that many rows.
+
+## The kit creator
+
+`/kitcreator` opens the slot grid. Its title shows `<used>/<max>`.
+
+| Action | What it does |
+|---|---|
+| **+ NEW KIT** | Takes the first free slot, teleports the player to the kit-creator room and empties their inventory |
+| A kit row | Opens **Kit options** for that slot |
+| **PREDEFINED KITS** | The admin templates, to copy into a slot |
+
+Inside the creator the player's real inventory is held aside and given back when they leave. The kit
+room opens by itself five ticks after entering, and `/kitroom` reopens it.
+
+`/kitsave` writes whatever they are wearing and carrying into the slot they entered. Nothing is saved
+until they run it.
+
+<Callout type="warning" title="The creator is a mode, not a menu">
+While in the kit creator a player cannot `/rtp`, join a queue, `/back`, `/rekit`, use `/tpa`, be picked
+up by a teleport pad, or `/leavesandbox`. Disconnecting releases the claim and gives their inventory
+back.
+</Callout>
+
+## Kit options
+
+Clicking a saved kit opens a small screen for that slot.
+
+| Slot | Button | What it does |
+|---|---|---|
+| Edit | Re-enters the creator with that kit on |
+| Favorite | Toggles the favourite star |
+| Rename | Chat prompt |
+| Change Icon | Chat prompt for a material name |
+| Delete | Removes the row |
+
+The preview in the middle shows the kit as it will be applied.
+
+<Callout type="note" title="The favourite is a toggle, and only one kit can hold it">
+Setting a favourite clears the star from every other kit of that player. Clicking the star on the
+current favourite turns it off and leaves them with **none** — which is what a teleport pad refuses on.
+The first kit a player ever saves becomes their favourite automatically.
+</Callout>
+
+## Which kit is used, when
+
+| Entry | Kit |
+|---|---|
+| `/rtp`, `/rtpqueue`, `/rtpqueuefast`, `/back`, `/tpa` with two or more usable kits | The one they pick from the kit list |
+| Any of those with exactly one usable kit | That one, with no menu |
+| Any of those with none | Refused with `queue.no-kit` |
+| Any of those from **inside** a sandbox world | The kit they are already wearing |
+| A teleport pad | The **favourite**, and nothing else |
+| `/rekit` | The kit they are already wearing, re-applied |
+
+Only kits with contents are listed. An empty slot is not offered anywhere.
+
+## Predefined kits
+
+A predefined kit is an admin-built template, stored server-wide with an id, a name, a description and
+an icon. Players never wear one directly: they **copy** it into one of their own slots.
+
+`/predefinedkits` and the **PREDEFINED KITS** button both open the list. Clicking a template shows the
+player's own slots — green and empty, or amber and glowing with the kit already there and *"Click to
+overwrite it"*. Clicking a slot copies the template in.
+
+`/predefinedkits <kit> <slot>` does the same in one line, skipping both screens.
+
+Admins build them at `/sandbox` → **PREDEFINED KITS**:
+
+| Button | What it does |
+|---|---|
+| **+ CREATE KIT** | Chat prompt for a name; the id is a slug of that name and never changes on rename |
+| **Edit Contents** | Enters the same kit creator, pre-dressed. `/kitsave` writes it back |
+| **Rename Kit**, **Description**, **Change Icon** | Chat prompts |
+| **Delete Kit** | Through a confirmation screen |
+
+## What is stored
+
+One row per kit in `sandbox_player_kits`, keyed `<uuid>:<slot>`, holding the storage contents, the
+armour, the offhand, the name, the icon and the favourite flag. Predefined kits are the same shape in
+`sandbox_predefined_kits`, keyed by their slug.
+
+Kits are cached per player and written back when they disconnect. The active slot a player is wearing
+is **not** stored: a restart leaves nobody wearing anything.

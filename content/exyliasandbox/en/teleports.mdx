@@ -1,0 +1,58 @@
+---
+title: "Teleports"
+description: "`/tpa` between players inside a sandbox, `/back` to where you last were, and `/rekit`."
+---
+
+Three commands move a player around once the sandbox worlds exist. None of them has a cooldown.
+
+## `/tpa`
+
+`/tpa <player>` asks to be teleported to somebody. The **target** must already be inside a sandbox
+world; asking somebody in the lobby is refused with `tpa.target-outside-world`.
+
+If the requester is already inside a sandbox, the request carries the kit they are wearing. Otherwise
+the usual kit branch applies: none refuses, one goes straight through, two or more opens the kit list
+first.
+
+| Command | What it does |
+|---|---|
+| `/tpa <player>` | Sends a request. A second request to the same player is refused with `tpa.already-sent` |
+| `/tpaccept [player]` | Accepts. With no name it takes the **newest** request still alive |
+| `/tpdeny [player]` | Denies. With no name, same selection |
+
+Requests expire after `tpa.request-timeout-seconds`, sixty by default, and both sides are told. A
+disconnect drops every request to and from that player.
+
+`/tpaccept` requires the accepter to be inside a sandbox world; `/tpdeny` has no such check.
+
+Accepting claims the requester, snapshots and clears their inventory if they were outside, dresses them
+in the chosen kit, and moves them.
+
+## `/back`
+
+`/back` returns a player to the last place they were inside a sandbox world. Only one point is kept per
+player, and only ever a location inside a sandbox world.
+
+It is written when:
+
+- a player already inside a sandbox re-rolls with `/rtp`;
+- a `/tpa` is accepted and the requester was already inside;
+- a teleport pad picks up a player who was already inside;
+- **a player dies** — the death location becomes the point.
+
+`/back` from the lobby runs the kit branch. `/back` from inside a sandbox keeps the kit, and the spot
+they were standing on becomes the new point, so `/back` twice is a return trip.
+
+It refuses with `back.no-location` when there is no point, or when the world it names is no longer a
+sandbox world.
+
+## `/rekit`
+
+`/rekit` puts the active kit back on and sets health, food and saturation to full. It only works while
+standing in a sandbox world, and it re-applies the kit the player is **wearing** — not their favourite.
+A player who arrived without a kit is told `rekit.no-kit`.
+
+## What is not persisted
+
+The `/back` point, the pending TPA requests and the kit a player is wearing all live in memory. A
+restart clears all three.

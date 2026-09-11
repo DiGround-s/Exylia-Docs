@@ -1,0 +1,131 @@
+---
+title: "Mundos"
+description: "Mundos gestionados e importados, el generador y sus cinco presets, el borde, las gamerules y qué hace la pregeneración."
+---
+
+Un mundo sandbox es una fila en `sandbox_worlds` y, normalmente, una carpeta que posee el plugin. Todo
+lo suyo se edita desde `/sandbox` → **MANAGE WORLDS**; no hay lista de mundos en ningún archivo de
+configuración.
+
+## Dos clases
+
+| | `MANAGED` | `IMPORTED` |
+|---|---|---|
+| Carpeta | `exylia_sandbox_<id>`, creada por el plugin | una carpeta existente que nombras tú |
+| Terreno | el generador de este plugin, desde un preset | lo que ya haya |
+| Al crearse | la carpeta se **borra** y se reconstruye | no se toca nada |
+| Al borrarse | la carpeta se borra | se quita la fila, la carpeta se queda |
+| Bioma y generación | editables | se ignoran; la pantalla muestra `N/A` |
+
+Las dos clases reciben el mismo borde, las mismas gamerules y el mismo PvP.
+
+## Estado
+
+Un mundo pasa por `CREATING` → `PREGENERATING` → `READY`, o acaba en `UNAVAILABLE` cuando no se ha
+podido cargar. Solo un mundo `READY` acepta jugadores: su fila en el selector se dibuja sin brillo y al
+pulsarla no pasa nada.
+
+## El generador
+
+El generador apaga **todas** las fases de vanilla — ruido, superficie, bedrock, cuevas, decoración,
+estructuras y aparición de mobs — y escribe el chunk él mismo. En un mundo gestionado no hay cuevas, ni
+minerales, ni barrancos, ni aldeas, salvo lo que ponga la pasada de decoración del preset.
+
+La altura es una base más una ondulación suave de dos octavas, con una elevación de montaña que solo
+aparece en la parte alta del rango de ruido y añade como mucho diez bloques. Debajo va la pila de capas
+del preset, y al fondo el bedrock. Por debajo de `y = minY + 40` el relleno infinito pasa a ser
+deepslate, sea cual sea el preset.
+
+### Los cinco presets
+
+| Preset | Altura base | Capas, de arriba abajo | Decoración |
+|---|---|---|---|
+| Plains | 74 | bloque de hierba, 3 tierra, piedra | hierba corta, helechos, amapolas, dientes de león, robles |
+| Desert | 72 | 2 arena, 4 arenisca, piedra | cactus, arbustos secos |
+| Snowy | 78 | 3 bloque de nieve, 3 tierra, piedra | agujas de hielo compacto, hielo azul |
+| Mushroom | 74 | micelio, 3 tierra, piedra | setas gigantes marrones y rojas |
+| Badlands | 86 | 3 arena roja, 4 arenisca roja, ocho bandas de terracota, piedra | cactus |
+
+La pasada de decoración se guía por la lista de materiales del preset y sus probabilidades son fijas:
+6 % de roble por columna válida, 7 % y 6 % para las dos setas, 10 % para hierba y helechos, 1,8 % para
+nieve polvo, 1,5 % para hielo azul y arbusto seco, 0,8 % para una flor, 0,4 % para un cactus y 0,3 %
+para una aguja de hielo. Árboles y setas solo aparecen lejos del borde del chunk, porque una pasada de
+decoración no puede alcanzar el chunk vecino.
+
+<Callout type="note" title="Dos valores guardados que el generador no lee">
+`heightVariation` y `stoneVariants` se escriben en el registro de generación de cada mundo y aparecen
+en los cinco presets, pero nadie los lee. Cambiar el terreno de un preset es cambiar su `baseHeight`,
+su pila de capas o su lista de decoración.
+</Callout>
+
+## El borde
+
+**BORDER** en la pantalla del mundo es el **diámetro**, y el número que se ve junto a un mundo es el
+**radio**, la mitad. El borde siempre está centrado en `0, 0`. El clic izquierdo suma 500, el derecho
+resta 500 con un suelo de 100, y shift + izquierdo escribe un número.
+
+La búsqueda del teletransporte aleatorio se mantiene a `rtp.border-margin` bloques del borde, así que un
+borde de 3000 con el margen por defecto de 20 deja a los jugadores dentro de un radio de 1480.
+
+## Gamerules y dificultad
+
+**GAMERULES** en la pantalla del mundo abre trece interruptores y el ciclo de dificultad. Se aplican
+cada vez que se carga el mundo.
+
+| Interruptor | Gamerule o bandera |
+|---|---|
+| `mob_spawning` | `doMobSpawning` |
+| `spawn_mobs`, `spawn_animals` | las banderas de aparición del mundo |
+| `mob_griefing` | `mobGriefing` |
+| `daylight_cycle` | `doDaylightCycle` |
+| `weather_cycle` | `doWeatherCycle` |
+| `tile_drops` | `doTileDrops` |
+| `entity_drops` | `doEntityDrops` |
+| `show_death_messages` | `showDeathMessages` |
+| `immediate_respawn` | `doImmediateRespawn` |
+| `announce_advancements` | `announceAdvancements` |
+| `disable_item_drops` | propio del plugin: cancela que caigan objetos en el mundo |
+| `disable_powder_snow` | propio del plugin: cancela el daño y la colocación de nieve polvo |
+
+La dificultad cicla `PEACEFUL → EASY → NORMAL → HARD`.
+
+Dos cosas no son interruptores. El **PvP está forzado** en todos los mundos sandbox, y `keepInventory`
+está forzado a **apagado** — aunque la muerte se cancela antes de que vanilla llegue a soltar nada, así
+que en la práctica da igual.
+
+<Callout type="warning" title="`disable_powder_snow` no sobrevive a una recarga">
+El interruptor funciona mientras el mundo siga cargado, pero no se escribe en los ajustes guardados.
+Tras un reinicio vuelve a su valor por defecto. Todos los demás interruptores de esa pantalla sí se
+guardan.
+</Callout>
+
+## Pregeneración
+
+Cuando se crea un mundo gestionado, el plugin le pide a Chunky que genere un cuadrado hasta el radio del
+borde y espera. El progreso se ve en la lista de mundos como `PREGEN <porcentaje>`, y el mundo sigue en
+`PREGENERATING` hasta que termina.
+
+Dos archivos marcadores dentro de la carpeta del mundo llevan el estado entre reinicios:
+`.pregen_pending` mientras una pregeneración está sin terminar, y `.sandbox-generated` cuando el mundo
+está completo. Es el segundo, no `level.dat`, lo que el plugin mira para decidir si un mundo ya existe.
+
+<Callout type="danger" title="El servidor se apaga cuando se vacía la cola">
+Las pregeneraciones van de una en una. Cuando termina la última de la cola, el plugin llama a
+`Bukkit.shutdown()`. Está pensado para el primer arranque, pero salta igual cuando creas un mundo desde
+el panel con el servidor en marcha. Hazlo en una ventana de mantenimiento.
+</Callout>
+
+Si falta Chunky, o informa de una versión de API que este plugin no conoce, la pregeneración se salta
+entera: el mundo se marca completo de inmediato y genera chunks según entran los jugadores.
+
+## Qué pasa con los chunks
+
+El guardado de chunks está apagado en todos los mundos sandbox `READY`, y los chunks del spawn no se
+mantienen en memoria. Nada de lo que un jugador construya, rompa o suelte en un mundo sandbox sobrevive
+a que ese mundo se recargue, que es justo la idea.
+
+## Borrar un mundo
+
+La última ranura de la pantalla del mundo lo borra, con pantalla de confirmación. La carpeta de un mundo
+gestionado se va con él; un mundo importado conserva su carpeta y solo pierde su fila. Los jugadores que
+estén dentro salen cuando el plugin descarga el mundo al apagarse.

@@ -1,0 +1,102 @@
+---
+title: "Kits"
+description: "El creador de kits, cuántas ranuras tiene un jugador, el favorito y los kits predefinidos que escribe un administrador para que los copien."
+---
+
+Un kit es un inventario entero que un jugador guardó: mochila, armadura y mano secundaria. Se guarda
+por jugador, en una ranura numerada, y es lo que lo viste en cuanto entra en un mundo sandbox.
+
+## Cuántas ranuras
+
+El número de ranuras es un escalón de permisos. El plugin baja desde `exyliasandbox.max_kits.100` hasta
+`exyliasandbox.max_kits.1` y se queda con el primer nodo que tenga el jugador; quien no tenga ninguno
+recibe **una**. Gana el nodo más alto, así que da exactamente uno por grupo.
+
+El límite se aplica en tres sitios: el contador del título del creador, **+ NEW KIT** (que rechaza con
+`kit-creator.max-kits-reached` cuando todas las ranuras de `1..max` están ocupadas), y la pantalla de
+copia, que dibuja exactamente esas filas.
+
+## El creador de kits
+
+`/kitcreator` abre la rejilla de ranuras. Su título muestra `<usadas>/<máximo>`.
+
+| Acción | Qué hace |
+|---|---|
+| **+ NEW KIT** | Coge la primera ranura libre, teletransporta a la sala del creador y vacía el inventario |
+| Una fila de kit | Abre **Kit options** de esa ranura |
+| **PREDEFINED KITS** | Las plantillas de administrador, para copiarlas a una ranura |
+
+Dentro del creador el inventario real del jugador se guarda aparte y se le devuelve al salir. La sala de
+kits se abre sola cinco ticks después de entrar, y `/kitroom` la vuelve a abrir.
+
+`/kitsave` escribe lo que lleve puesto y encima en la ranura por la que entró. No se guarda nada hasta
+que lo ejecuta.
+
+<Callout type="warning" title="El creador es un modo, no un menú">
+Mientras está en el creador de kits, un jugador no puede hacer `/rtp`, entrar en cola, `/back`,
+`/rekit`, usar `/tpa`, ser recogido por una plataforma ni `/leavesandbox`. Desconectarse libera la
+reserva y le devuelve el inventario.
+</Callout>
+
+## Kit options
+
+Pulsar un kit guardado abre una pantalla pequeña para esa ranura.
+
+| Botón | Qué hace |
+|---|---|
+| Edit | Vuelve a entrar al creador con ese kit puesto |
+| Favorite | Alterna la estrella de favorito |
+| Rename | Petición por chat |
+| Change Icon | Petición por chat de un nombre de material |
+| Delete | Borra la fila |
+
+La vista previa del centro muestra el kit tal y como se aplicará.
+
+<Callout type="note" title="El favorito alterna, y solo un kit puede tenerlo">
+Marcar un favorito quita la estrella de todos los demás kits de ese jugador. Pulsar la estrella del
+favorito actual la apaga y lo deja con **ninguno** — que es lo que rechaza una plataforma de
+teletransporte. El primer kit que guarda un jugador se marca favorito solo.
+</Callout>
+
+## Qué kit se usa, y cuándo
+
+| Entrada | Kit |
+|---|---|
+| `/rtp`, `/rtpqueue`, `/rtpqueuefast`, `/back`, `/tpa` con dos o más kits usables | El que elija en la lista |
+| Cualquiera de esos con exactamente uno | Ese, sin menú |
+| Cualquiera de esos con ninguno | Rechazado con `queue.no-kit` |
+| Cualquiera de esos desde **dentro** de un mundo sandbox | El que ya lleva puesto |
+| Una plataforma de teletransporte | El **favorito**, y nada más |
+| `/rekit` | El que ya lleva puesto, otra vez |
+
+Solo se listan kits con contenido. Una ranura vacía no se ofrece en ningún sitio.
+
+## Kits predefinidos
+
+Un kit predefinido es una plantilla que monta un administrador, guardada para todo el servidor con un
+id, un nombre, una descripción y un icono. Los jugadores nunca se ponen una directamente: la **copian**
+a una ranura suya.
+
+`/predefinedkits` y el botón **PREDEFINED KITS** abren la lista. Pulsar una plantilla muestra las
+ranuras del jugador — verdes y vacías, o ámbar y brillantes con el kit que ya hay y un *"Click to
+overwrite it"*. Pulsar una ranura copia la plantilla dentro.
+
+`/predefinedkits <kit> <ranura>` hace lo mismo en una línea, saltándose las dos pantallas.
+
+Los administradores las montan en `/sandbox` → **PREDEFINED KITS**:
+
+| Botón | Qué hace |
+|---|---|
+| **+ CREATE KIT** | Petición por chat de un nombre; el id es un slug de ese nombre y no cambia al renombrar |
+| **Edit Contents** | Entra al mismo creador de kits, ya vestido. `/kitsave` lo escribe de vuelta |
+| **Rename Kit**, **Description**, **Change Icon** | Peticiones por chat |
+| **Delete Kit** | Con pantalla de confirmación |
+
+## Qué se guarda
+
+Una fila por kit en `sandbox_player_kits`, con clave `<uuid>:<ranura>`, que lleva el contenido de la
+mochila, la armadura, la mano secundaria, el nombre, el icono y la marca de favorito. Los kits
+predefinidos tienen la misma forma en `sandbox_predefined_kits`, con su slug como clave.
+
+Los kits se cachean por jugador y se escriben al desconectarse. La ranura activa que lleva puesta un
+jugador **no** se guarda: tras un reinicio nadie lleva nada.

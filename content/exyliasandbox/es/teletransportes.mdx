@@ -1,0 +1,57 @@
+---
+title: "Teletransportes"
+description: "`/tpa` entre jugadores dentro de un sandbox, `/back` al último sitio donde estuviste y `/rekit`."
+---
+
+Tres comandos mueven a un jugador una vez existen los mundos sandbox. Ninguno tiene tiempo de espera.
+
+## `/tpa`
+
+`/tpa <jugador>` pide que te teletransporten a alguien. El **destinatario** tiene que estar ya dentro de
+un mundo sandbox; pedírselo a alguien del lobby se rechaza con `tpa.target-outside-world`.
+
+Si quien pide ya está dentro de un sandbox, la petición lleva el kit que tiene puesto. Si no, aplica la
+rama de kits de siempre: ninguno rechaza, uno pasa directo, dos o más abren la lista de kits primero.
+
+| Comando | Qué hace |
+|---|---|
+| `/tpa <jugador>` | Manda una petición. Una segunda al mismo jugador se rechaza con `tpa.already-sent` |
+| `/tpaccept [jugador]` | Acepta. Sin nombre coge la petición **más reciente** que siga viva |
+| `/tpdeny [jugador]` | Rechaza. Misma selección |
+
+Las peticiones caducan a los `tpa.request-timeout-seconds`, sesenta por defecto, y se avisa a las dos
+partes. Desconectarse tira todas las peticiones hacia y desde ese jugador.
+
+`/tpaccept` exige que quien acepta esté dentro de un mundo sandbox; `/tpdeny` no comprueba nada de eso.
+
+Aceptar reserva a quien pidió, guarda y vacía su inventario si estaba fuera, lo viste con el kit elegido
+y lo mueve.
+
+## `/back`
+
+`/back` devuelve al jugador al último sitio donde estuvo dentro de un mundo sandbox. Se guarda un solo
+punto por jugador, y solo una posición dentro de un mundo sandbox.
+
+Se escribe cuando:
+
+- un jugador que ya está dentro se relanza con `/rtp`;
+- se acepta un `/tpa` y quien pidió ya estaba dentro;
+- una plataforma recoge a un jugador que ya estaba dentro;
+- **el jugador muere** — el sitio de la muerte pasa a ser el punto.
+
+`/back` desde el lobby aplica la rama de kits. `/back` desde dentro conserva el kit, y el sitio donde
+estaba pasa a ser el punto nuevo, así que dos `/back` son un viaje de ida y vuelta.
+
+Rechaza con `back.no-location` cuando no hay punto, o cuando el mundo que nombra ya no es un mundo
+sandbox.
+
+## `/rekit`
+
+`/rekit` vuelve a poner el kit activo y deja vida, comida y saturación al máximo. Solo funciona estando
+en un mundo sandbox, y vuelve a aplicar el kit que el jugador **lleva puesto**, no su favorito. A quien
+haya llegado sin kit se le dice `rekit.no-kit`.
+
+## Qué no se guarda
+
+El punto de `/back`, las peticiones de `/tpa` pendientes y el kit que lleva puesto un jugador viven en
+memoria. Un reinicio borra los tres.

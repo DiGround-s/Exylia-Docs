@@ -1,0 +1,87 @@
+---
+title: "API"
+description: "Preguntar dónde está un jugador, leer los mundos y sus kits, vestirlo y leer sus estadísticas de sandbox."
+badge: "dev"
+---
+
+`SandBoxService` es como otro plugin pregunta si un jugador está en un sandbox o en una cola, lee los
+mundos configurados y los kits guardados de un jugador, viste a alguien con uno de ellos y lee sus
+bajas, muertes y tiempo jugado.
+
+```java
+ExyliaAPI.get(SandBoxService.class).ifPresent(sandbox -> {
+    if (sandbox.isInSandbox(player.getUniqueId())) {
+        event.setCancelled(true);
+    }
+});
+```
+
+<Callout type="note" title="Añadirlo a tu proyecto">
+El artefacto, el repositorio y la línea de `plugin.yml` son los mismos para todos los plugins de Exylia
+y están en la [página de la API pública](/docs/exylialib/api).
+</Callout>
+
+## La respuesta es la reserva, no el mundo
+
+`isInSandbox` responde desde la reserva de sesión que toma el plugin, no desde el mundo en el que esté
+parado el jugador. Los dos no coinciden durante un teletransporte sin terminar, y gana la reserva — que
+es lo que quieres: un jugador ya reservado y en vuelo está ocupado.
+
+Todo lo que devuelve un valor lee una caché y es seguro desde un placeholder, una línea de marcador o
+un redibujado de menú. Todo lo que actúa teletransporta jugadores y reescribe inventarios: llama a eso
+en el hilo principal, y no más a menudo de lo que podría provocarlo un jugador.
+
+## Sesión
+
+| Método | Qué hace |
+|---|---|
+| `boolean isInSandbox(UUID)` | Si tiene la reserva de sandbox. |
+| `boolean isInQueue(UUID)` | Si está esperando rival. |
+| `boolean leave(Player)` | Lo manda de vuelta al lobby. Informa de si la petición se aceptó, no de si terminó; `false` mientras está montando un kit. |
+| `boolean joinQueue(Player, String worldId, int kitSlot)` | Lo mete en la cola de un mundo. `false` solo cuando no hay ningún mundo con ese id — cualquier otro rechazo de la cola ya se le ha dicho al jugador. |
+| `void leaveQueue(Player)` | Lo saca de la cola en la que esté. |
+
+## Mundos
+
+| Método | Qué hace |
+|---|---|
+| `List<SandboxWorld> worlds()` | Todos los mundos configurados, inservibles incluidos, sin orden concreto. Inmutable. |
+| `Optional<SandboxWorld> world(String worldId)` | Uno por id. |
+| `Optional<SandboxWorld> worldOf(World)` | La pregunta de un listener: ¿este mundo de Bukkit es de los nuestros? |
+| `float pregenerationProgress(String worldId)` | De `0` a `1`. **`0` tanto para un mundo terminado** como para uno que nunca empezó. |
+
+`SandboxWorld` es una foto fija, no una vista viva: `id`, `displayName`, `worldName`, `biome`,
+`borderSize`, `type`, `status` y `loaded`, más `isPlayable()` — cargado y `READY`. Lleva un **nombre**
+de mundo en vez de un `World` porque un mundo configurado no está necesariamente cargado.
+
+`WorldStatus` es `CREATING`, `PREGENERATING`, `READY` o `UNAVAILABLE`. `WorldType` es `MANAGED` o
+`IMPORTED`.
+
+## Kits
+
+| Método | Qué hace |
+|---|---|
+| `List<SandboxKit> kits(UUID)` | Sus kits guardados, ordenados por ranura. Un jugador desconectado no informa de nada. Inmutable. |
+| `Optional<SandboxKit> kit(UUID, int slot)` | Una ranura. |
+| `Optional<SandboxKit> favoriteKit(UUID)` | El marcado con estrella, si tiene alguno. |
+| `int maxKits(Player)` | Cuántas ranuras se le permiten. Lee permisos, por eso toma el jugador. |
+| `int activeKitSlot(UUID)` | La ranura que lleva puesta, `-1` si no lleva ninguna. |
+| `void applyKit(Player, int slot)` | Sustituye lo que lleva por ese kit. No hace nada en una ranura sin usar. |
+
+`SandboxKit` es `slot`, `name`, `favorite`, `hasContents`, `createdAt` y `updatedAt`. El contenido no se
+expone a propósito: usa `applyKit` en vez de leer las pilas.
+
+## Estadísticas
+
+| Método | Qué hace |
+|---|---|
+| `SandboxStats stats(UUID)` | Nunca vacío. Un jugador que nadie ha cargado se lee como ceros, y la lectura se lanza, así que el siguiente dibujado ya tiene los números. |
+
+`SandboxStats` es `player`, `kills`, `deaths` y `playtimeMillis`, más `kdr()` — que devuelve el número
+de bajas cuando no hay muertes. El tiempo jugado es tiempo de sandbox, no tiempo en el servidor.
+
+## No hay eventos
+
+El plugin no dispara ninguno, y el paquete publicado no lleva clases de evento. Para reaccionar a que un
+jugador entre o salga, mira su mundo con `worldOf`, o pregunta a `isInSandbox` cuando importe. Si
+necesitas un enganche en un momento concreto, pídelo en vez de sondear cada tick.

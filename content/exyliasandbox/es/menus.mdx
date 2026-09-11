@@ -1,0 +1,132 @@
+---
+title: "Menús"
+description: "Las diecinueve pantallas: qué abre cada una, qué hacen sus botones y qué carpeta se puede editar."
+---
+
+Vienen diecinueve archivos de menú, en dos carpetas que se comportan distinto.
+
+| Carpeta | Comportamiento |
+|---|---|
+| `menus/user/` | Se escribe una vez en la primera ejecución y no se sobrescribe. Tuya para editar |
+| `menus/admin/` | **Se reescribe desde el jar en cada arranque.** Cada archivo lo avisa arriba |
+
+## Las pantallas de jugador
+
+### `user/world_selector.yml`
+
+La abren `/rtp` y `/rtpqueue`. Una lista paginada de cada mundo configurado.
+
+El **tamaño de pila de cada fila es la cantidad de jugadores en ese mundo**, y el brillo solo está
+cuando es `READY`. Pulsar un mundo ejecuta una acción que lleva la propia fila: la rama de RTP o la de
+cola. Un mundo que no está listo lleva una acción vacía, así que el clic no hace absolutamente nada.
+
+### `user/kit_selector.yml`
+
+Un archivo, cinco usos: elegir kit para `/rtp`, para una cola, para la cola rápida, para `/back` y para
+un `/tpa`. Solo se listan los kits con contenido, ordenados por ranura. Lo que hace el clic lo decide el
+flujo que la abrió.
+
+### `user/kit_creator.yml`
+
+`/kitcreator`. Las ranuras del jugador, con `<usadas>/<máximo>` en el título. **+ NEW KIT** coge la
+primera libre; **PREDEFINED KITS** abre las plantillas; un kit guardado abre sus opciones.
+
+### `user/kit_options.yml`
+
+Un kit: Edit, Favorite, Rename, Change Icon, Delete, y una vista previa del propio kit.
+
+### `user/kitroom.yml`
+
+La estantería. Dos secciones en una pantalla: la rejilla de objetos arriba y las categorías abajo. La
+categoría seleccionada se dibuja brillante y verde, el resto en gris.
+
+<Callout type="note" title="Este archivo no lleva `actions`">
+Los botones de categoría y cada objeto se enlazan a sus acciones en el código y no en el YAML, así que
+el archivo no lleva clave `actions:` para ellos. Moverlos de sitio está bien; no hay nada que copiar.
+</Callout>
+
+### `user/predefined_kits.yml`
+
+Las plantillas que tienen contenido. Pulsar una abre la pantalla de copia.
+
+### `user/predefined_kit_copy.yml`
+
+Una fila por ranura permitida, dibujada con dos plantillas: una ranura vacía en verde, y una ocupada en
+ámbar, brillante, mostrando el kit que hay y avisando de que se va a sobrescribir. Pulsar copia.
+
+## Las pantallas de administración
+
+### `admin/admin.yml`
+
+El hub. Mira [El panel de administración](/docs/exyliasandbox/panel-admin).
+
+### `admin/world_list.yml`
+
+Todos los mundos, paginados, con su tipo, estado, jugadores, bioma y radio de borde. Clic izquierdo
+configura, derecho teletransporta. **CREATE WORLD**, **IMPORT WORLD** y **Reset to Defaults** abajo.
+
+### `admin/world_config.yml`
+
+El borrador de un mundo: icono, nombre, bioma, preset de generación, borde, gamerules, teletransporte,
+jugadores, guardar y borrar. No se escribe nada hasta **SAVE WORLD**.
+
+### `admin/world_settings.yml`
+
+El ciclo de dificultad y trece interruptores de gamerule, cada uno con su icono y su estado `ENABLED` /
+`DISABLED`.
+
+### `admin/world_players.yml`
+
+Una cabeza por jugador en el mundo, con modo de juego, vida, nivel y coordenadas. Pulsar una te
+teletransporta a él.
+
+### `admin/tp_region_list.yml`
+
+Todas las plataformas, con su mundo, intervalo, destino y dispersión. Clic izquierdo edita, **clic
+derecho borra sin confirmación**. **CREATE TP REGION** abajo.
+
+### `admin/tp_region_editor.yml`
+
+Una plataforma: nombre, límites, mundo destino, intervalo, radio de dispersión, guardar, y un borrado en
+la última ranura — también sin confirmación.
+
+### `admin/predefined_kit_list.yml`
+
+Las plantillas. Pulsar una abre su editor; **+ CREATE KIT** empieza una nueva.
+
+### `admin/predefined_kit_editor.yml`
+
+Una plantilla: cambiar icono, renombrar, descripción, editar contenido y borrar con confirmación.
+
+### `admin/kitroom_category_list.yml`
+
+Las categorías de la sala de kits. Clic izquierdo abre la rejilla, derecho elige icono, **shift +
+izquierdo borra sin confirmación**. **+ CREATE CATEGORY** y **Reset to Defaults** abajo.
+
+### `admin/kitroom_category_editor.yml`
+
+Una rejilla donde se puede soltar de todo, cuarenta y cinco ranuras, precargada con los objetos de la
+categoría.
+
+<Callout type="danger" title="Esta pantalla no guarda">
+La rejilla se abre y acepta objetos, pero nada la escribe de vuelta. Cerrarla descarta todos los
+cambios. Usa **Reset to Defaults** en la lista de categorías para recuperar el catálogo original.
+</Callout>
+
+### `admin/confirm.yml`
+
+La pantalla de confirmación compartida. Pasan por ella cuatro cosas: restaurar la sala de kits,
+restaurar los mundos, borrar un mundo y borrar un kit predefinido. Borrar una plataforma y borrar una
+categoría **no**.
+
+## Acciones que puedes usar en otro sitio
+
+Cuatro acciones están registradas y ninguna pantalla de las que vienen las usa, así que están libres
+para tus propios menús, objetos de hotbar o NPCs:
+
+| Acción | Qué hace |
+|---|---|
+| `sandbox:open_world_selector` | Abre la lista de mundos en modo RTP |
+| `sandbox:open_kitroom` | Abre la sala de kits |
+| `sandbox:join_no_kit <mundo>` | Entra en la cola de ese mundo sin elegir kit. El jugador sigue necesitando uno guardado |
+| `sandbox:leave_queue` | Sale de la cola |

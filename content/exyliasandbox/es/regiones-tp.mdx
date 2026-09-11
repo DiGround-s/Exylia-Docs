@@ -1,0 +1,98 @@
+---
+title: "Plataformas de teletransporte"
+description: "Una caja en el lobby con holograma, barra de jefe y una cuenta atrás que manda a un mundo sandbox a todo el que esté encima."
+---
+
+Una plataforma de teletransporte es una caja que dibujas en algún sitio del lobby. Los jugadores se
+ponen dentro, corre una cuenta atrás, y al llegar a cero todos los que estén ahí se mandan juntos a un
+mundo sandbox, repartidos en un círculo y mirando al centro.
+
+Es la entrada sin comandos: un jugador con kit favorito no tiene que escribir nada nunca.
+
+## Qué hace una plataforma mientras alguien está encima
+
+- Un **holograma** flota sobre su centro, refrescado una vez por segundo, con los jugadores encima, el
+  mundo destino, el nombre de la plataforma y el tiempo que falta.
+- Una **barra de jefe** y un **título** se muestran a cada ocupante, contando los mismos segundos.
+- Protección: construir y romper se rechazan dentro de la caja, el PvP se permite. A los jugadores en
+  modo creativo no se les detiene.
+
+## A quién se lleva
+
+Al llegar a cero se manda a todo el que esté dentro de la caja, salvo:
+
+| Se salta | Por qué |
+|---|---|
+| Jugadores en el creador de kits | Están montando |
+| Jugadores ya reservados por otra actividad | Ocupados en otra cosa de la suite |
+| **Jugadores sin kit favorito** | Se les dice `tp-region.no-favorite-kit` y se quedan donde están |
+
+En este flujo no hay menú de kits. El favorito es el único kit que usa una plataforma.
+
+El destino es el mundo objetivo de la plataforma si está puesto y `READY`; si no, un mundo `READY` al
+azar. Todos aterrizan en un círculo de `spreadRadius` bloques alrededor de un sitio seguro, cada uno
+girado hacia el centro.
+
+## Montar una
+
+`/sandbox` → **TP REGIONS**.
+
+<Steps>
+  <Step title="Créala">
+    **CREATE TP REGION** pide un nombre por chat y te da una varita de selección. Pulsa las dos esquinas
+    opuestas de la caja.
+  </Step>
+  <Step title="Pon el destino">
+    **TARGET WORLD** cicla `Random` y después cada id de mundo configurado. `Random` elige un mundo
+    `READY` cada vez que salta la cuenta atrás.
+  </Step>
+  <Step title="Pon el intervalo">
+    **INTERVAL** acepta una duración escrita por chat: `30s`, `5m`, `1h30m`. El mínimo son cinco
+    segundos. Una plataforma nueva empieza en treinta.
+  </Step>
+  <Step title="Pon la dispersión">
+    **SPREAD RADIUS** es el radio del círculo donde aterrizan. El clic izquierdo suma uno, el derecho
+    resta uno, con suelo en uno. Una plataforma nueva empieza en tres.
+  </Step>
+  <Step title="Guarda">
+    **SAVE REGION** escribe la fila. Salir con el botón de volver descarta todo.
+  </Step>
+</Steps>
+
+**EDIT BOUNDS** redibuja la caja de una plataforma existente. Si otro plugin ya tiene un selector de
+bloques abierto para ti, rechaza con `tp-region.selection-busy`.
+
+<Callout type="warning" title="Borrar una plataforma no pregunta nada">
+El clic derecho en la lista, y la última ranura del editor, la borran al instante. Ninguno de los dos
+tiene pantalla de confirmación.
+</Callout>
+
+## Los visuales
+
+`config.yml` → `tp-region` lleva los tres, y cada uno es un bloque de efecto normal, así que se les
+puede añadir un sonido o una partícula.
+
+| Clave | Qué es |
+|---|---|
+| `bossbar` | La barra que ve cada ocupante. Color, superposición y texto son tuyos |
+| `countdown-title` | El título y el subtítulo, reenviados cada segundo |
+| `hologram` | El texto flotante: líneas, escala, orientación, distancia de visión, desplazamientos y un intervalo de refresco |
+
+Dentro de esos tres, `%region%` es el nombre de la plataforma, `%world%` el mundo destino, `%time%` los
+segundos que faltan, y `%total_players%` la cantidad de jugadores **sobre esa plataforma** — no los que
+hay en los mundos sandbox, que es lo que significa el placeholder de la misma forma en el resto del
+plugin.
+
+<Callout type="note" title="El refresco del holograma va en ticks">
+`tp-region.hologram.config.update-interval` es un número de ticks, no segundos. El `20` que viene es una
+vez por segundo.
+</Callout>
+
+## Qué se guarda
+
+Una fila por plataforma en `sandbox_tp_regions`: un id de doce caracteres, el nombre visible, el
+intervalo en segundos, el id del mundo destino (vacío significa aleatorio), el radio de dispersión, el
+mundo en el que está la caja y sus seis coordenadas.
+
+La plataforma se registra en el registro de regiones de ExyliaLib, que es como sabe cuándo alguien entra
+o sale. A quien ya esté dentro cuando el plugin carga se le cuenta como que ha entrado.

@@ -1,0 +1,96 @@
+---
+title: "Introducción"
+description: "Qué es ExyliaSandBox: mundos PvP generados, entrada por teletransporte aleatorio, una cola 1v1, kits guardados y una sala de kits."
+---
+
+ExyliaSandBox convierte un servidor Paper o Folia en un conjunto de mundos PvP desechables. El plugin
+genera el terreno por su cuenta, mete a los jugadores con `/rtp`, los viste con un kit que guardaron
+antes y los devuelve al lobby en cuanto mueren. Nada de lo que pasa en un mundo sandbox está pensado
+para durar: los chunks no se guardan, la muerte cancela la muerte de vanilla entera, y el mundo se
+puede borrar y reconstruir desde el panel de administración.
+
+Trae **cinco mundos, cinco presets de terreno, siete tablas, diecinueve menús y dieciocho comandos**.
+Todo lo que configura un administrador vive detrás de un único árbol de menús en `/sandbox`: no hay
+lista de mundos que editar a mano.
+
+## Qué hace
+
+<Cards>
+  <Card title="Mundos generados" href="/docs/exyliasandbox/mundos">
+    Un generador propio con todas las fases de vanilla apagadas: terreno suave, un bioma, una pila de
+    capas y una pasada de decoración que eliges entre cinco presets.
+  </Card>
+  <Card title="Teletransporte aleatorio" href="/docs/exyliasandbox/rtp-y-cola">
+    `/rtp` busca un sitio seguro dentro del borde, reserva al jugador, lo viste con un kit y lo manda.
+  </Card>
+  <Card title="Una cola 1v1" href="/docs/exyliasandbox/rtp-y-cola">
+    `/rtpqueue` empareja a dos jugadores a una distancia fija, mirándose. `/rtpqueuefast` elige el mundo
+    por ellos.
+  </Card>
+  <Card title="Kits que escribe el jugador" href="/docs/exyliasandbox/kits">
+    Un creador de kits, un número de ranuras por permiso, un favorito, y plantillas de administrador que
+    el jugador copia a una ranura suya.
+  </Card>
+  <Card title="Una sala de kits" href="/docs/exyliasandbox/sala-de-kits">
+    Una estantería de equipo encantado por categorías, para montar un kit. Coger de ella no la vacía.
+  </Card>
+  <Card title="Plataformas de teletransporte" href="/docs/exyliasandbox/regiones-tp">
+    Una caja en el lobby con holograma, barra de jefe y una cuenta atrás que manda a la vez a todo el que
+    esté encima.
+  </Card>
+  <Card title="Moverse por dentro" href="/docs/exyliasandbox/teletransportes">
+    `/tpa` a un jugador que ya está dentro, `/back` al último sitio donde estuviste, `/rekit` para
+    volver a ponerte el kit.
+  </Card>
+  <Card title="El panel de administración" href="/docs/exyliasandbox/panel-admin">
+    `/sandbox`: mundos, gamerules, jugadores, plataformas, kits predefinidos, categorías de la sala de
+    kits y el lobby.
+  </Card>
+</Cards>
+
+## Cómo transcurre una sesión
+
+<Steps>
+  <Step title="Primero un kit">
+    `/kitcreator` abre las ranuras del jugador. Entra en una, coge equipo de la sala de kits y `/kitsave`
+    guarda el inventario entero: mochila, armadura y mano secundaria. Cuántas ranuras tiene es un
+    permiso.
+  </Step>
+  <Step title="Dentro">
+    `/rtp` elige un mundo, `/rtpqueue` espera rival, o se pone sobre una plataforma y deja que la cuenta
+    atrás lo haga. Su inventario se guarda y se vacía, se pone el kit y se busca un sitio seguro dentro
+    del borde.
+  </Step>
+  <Step title="Peleando">
+    El PvP está forzado en todos los mundos sandbox, el marcador muestra bajas, muertes, KDR, tiempo
+    jugado y el borde, y la lista blanca de comandos impide ejecutar cualquier cosa que no esté en ella.
+  </Step>
+  <Step title="Fuera">
+    Morir, `/leavesandbox` o desconectarse terminan igual: al lobby, inventario restaurado y reserva
+    liberada. La muerte se cancela, así que no hay pantalla de reaparición y no cae nada.
+  </Step>
+</Steps>
+
+## De un vistazo
+
+| | |
+|---|---|
+| Versión documentada | 1.0.3 |
+| Minecraft | 1.21+ |
+| Plataformas | Spigot, Paper y Folia |
+| Necesario | `ExyliaLib`, `Chunky`, `packetevents` |
+| Opcional | `PlaceholderAPI`, `ExyliaPracticeCore`, el plugin `Worlds` en Folia |
+| Base de datos | H2 por defecto; MySQL, MariaDB, PostgreSQL y MongoDB a través de ExyliaLib |
+
+## Cómo está organizada esta documentación
+
+**Empezar** instala el plugin y monta el primer mundo y el primer kit. **Configurar** tiene una página
+por cada cosa que posee un administrador: mundos, kits, la sala de kits y las plataformas.
+**Sistemas** cubre lo que hace un jugador: el RTP y su cola, los comandos de teletransporte y el panel
+pantalla por pantalla. **Referencia** son las listas planas: comandos, permisos, placeholders, los
+archivos generados, los menús, las tablas, la API y las preguntas que salen.
+
+<Callout type="note" title="De dónde salen los números">
+Cada valor por defecto, mensaje, nodo y regla de estas páginas se leyó del código del plugin en la
+versión 1.0.3. Donde una página dice que algo no es configurable, es porque no existe ninguna clave.
+</Callout>

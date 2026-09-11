@@ -1,0 +1,128 @@
+---
+title: "Instalación"
+description: "Dependencias, el primer arranque y el reinicio que provoca, los archivos que genera el plugin y dónde se configura la base de datos."
+---
+
+## Antes de empezar
+
+ExyliaSandBox declara dos dependencias **duras**. Sin cualquiera de las dos el servidor se niega a
+cargar el plugin.
+
+| Plugin | Para qué |
+|---|---|
+| `Chunky` | Pregenerar cada mundo gestionado hasta su borde antes de dejar entrar a nadie. |
+| `packetevents` | Declarado como dependencia dura en `plugin.yml`. El plugin no lo llama por su cuenta; está porque el resto de la suite se apoya en él. |
+
+`ExyliaLib` está en `softdepend` a propósito — el loader que instala ExyliaLib es el que tiene que
+cargar primero para que esa instalación ocurra — pero el plugin no funciona sin él. Aporta la
+configuración, los menús, la base de datos, los placeholders, los hologramas, los marcadores, el
+registro de regiones, las copias de inventario, las reservas de sesión, los asistentes y las entradas
+por chat.
+
+Opcional:
+
+- **PlaceholderAPI** para usar los nueve placeholders del plugin fuera de él.
+- **ExyliaPracticeCore**. Su presencia cambia quién es dueño del inventario del jugador — mira el aviso
+  de abajo.
+- **El plugin `Worlds`**, solo en Folia. Folia no puede crear un mundo de la forma normal; ExyliaLib
+  rodea el problema a través de `Worlds`. Sin él, un mundo gestionado en Folia queda `UNAVAILABLE`.
+- **LuckPerms**, o cualquier plugin de permisos, para el escalón `exyliasandbox.max_kits.<n>`.
+
+`ViaVersion`, `Multiverse-Core`, `PhantomWorlds`, `ExyliaEvents` y `ExyliaFFA` aparecen en `plugin.yml`
+pero este plugin nunca los lee.
+
+<Callout type="warning" title="ExyliaPracticeCore se queda con el inventario">
+Cuando ExyliaPracticeCore está instalado, ExyliaSandBox **nunca** guarda ni restaura el inventario del
+jugador al entrar, al salir, al morir o al conectarse: lo viste el lobby de práctica. La detección es
+por nombre de plugin. Instálalo, o no lo instales; instalarlo a mitad de una sesión es lo que deja a un
+jugador con un kit de sandbox en el lobby.
+</Callout>
+
+## Instalar
+
+<Steps>
+  <Step title="Suelta los jars">
+    Copia `ExyliaSandBox.jar`, `ExyliaLib.jar`, `Chunky.jar` y `packetevents.jar` en `plugins/`.
+  </Step>
+  <Step title="Arranca el servidor, y cuenta con que se pare">
+    El primer arranque escribe `config.yml`, `messages.yml`, `scoreboards.yml`, los menús y las siete
+    tablas, siembra cinco mundos y cinco categorías de sala de kits, y pregenera cada mundo gestionado
+    con Chunky. **Cuando termina el último, el plugin apaga el servidor.** Vuelve a arrancarlo y los
+    mundos están listos.
+  </Step>
+  <Step title="Fija el lobby">
+    `/sandbox` → **SET LOBBY** guarda donde estés parado. Ahí va cada jugador cuando muere, se va o se
+    desconecta. Nada funciona bien hasta que esté puesto.
+  </Step>
+  <Step title="Fija la sala del creador de kits">
+    `/sandbox` → **SET KIT CREATOR** guarda la sala a la que teletransporta `/kitcreator`.
+  </Step>
+  <Step title="Da los nodos">
+    No hay nada declarado en `plugin.yml`, así que ningún nodo tiene valor por defecto. Mira
+    [Primeros pasos](/docs/exyliasandbox/primeros-pasos).
+  </Step>
+</Steps>
+
+<Callout type="danger" title="Terminar una pregeneración apaga el servidor">
+Y no solo en el primer arranque. Cada vez que se vacía la cola de pregeneración — incluido después de
+crear un mundo desde el panel con el servidor en marcha — el plugin llama a `Bukkit.shutdown()` y
+escribe `All worlds pregenereted. Restarting server...`. Crea mundos en una ventana de mantenimiento, o
+con un gestor de procesos que vuelva a levantar el servidor.
+</Callout>
+
+## Archivos generados
+
+Todos viven en `plugins/ExyliaSandBox/`.
+
+| Archivo | Contenido |
+|---|---|
+| `config.yml` | Los números del RTP y la cola, las barras de acción de la cola, el tiempo de espera del TPA, los visuales de las plataformas y la lista blanca de comandos. |
+| `messages.yml` | Cada línea que manda el plugin, en doce secciones. |
+| `scoreboards.yml` | El único marcador, para quien esté en un mundo sandbox. |
+| `menus/user/` | Las siete pantallas de jugador. Se escriben una vez y no se sobrescriben. |
+| `menus/admin/` | Las doce pantallas de administración. **Se reescriben desde el jar en cada arranque.** |
+| `database.yml` | Motor de base de datos y Redis, escrito por ExyliaLib. |
+
+No hay ningún `config.yml` dentro del jar: el archivo se genera desde el propio esquema del plugin en
+la primera ejecución, comentarios incluidos. Por eso una clave desconocida se avisa una vez y se
+elimina.
+
+<Callout type="warning" title="menus/admin/ se reescribe en cada arranque">
+Cada pantalla de administración se refresca desde el jar cada vez que el plugin arranca, para que un
+botón añadido en una versión llegue a servidores que ya tienen la carpeta. Cada uno de esos archivos lo
+avisa arriba del todo. Lo que edites en `menus/user/` se conserva.
+</Callout>
+
+## Base de datos
+
+Por defecto el plugin usa **H2**: un archivo dentro de la carpeta del plugin, sin servidor y sin
+mantenimiento. Para compartir mundos, kits y estadísticas entre servidores, apunta todos a la misma
+base de datos:
+
+```yaml title="plugins/ExyliaSandBox/database.yml"
+database:
+  type: mysql
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: minecraft
+    username: root
+    password: ""
+```
+
+Motores admitidos: `h2`, `mysql`, `mariadb`, `postgresql` y `mongodb`. El archivo es de ExyliaLib; su
+referencia completa está en la [página de base de datos de la librería](/docs/exylialib/base-de-datos).
+
+Las siete tablas, todas con el prefijo `sandbox_`: `sandbox_worlds`, `sandbox_player_kits`,
+`sandbox_predefined_kits`, `sandbox_kitroom_categories`, `sandbox_kitroom_items`,
+`sandbox_player_stats`, `sandbox_settings` y `sandbox_tp_regions`. Sus columnas están en la página de
+[Base de datos](/docs/exyliasandbox/base-de-datos).
+
+## Actualizar
+
+Cambia el jar y reinicia. Tus ediciones a `config.yml`, `messages.yml`, `scoreboards.yml` y
+`menus/user/` se conservan; `menus/admin/` se refresca desde el jar. Los mundos, los kits y las
+estadísticas viven en la base de datos y una actualización no los toca.
+
+`/sandbox reload` vuelve a leer los tres archivos de configuración y recompila los menús sin reiniciar.
+Funciona desde consola.

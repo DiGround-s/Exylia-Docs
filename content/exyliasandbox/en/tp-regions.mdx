@@ -1,0 +1,97 @@
+---
+title: "Teleport pads"
+description: "A cuboid in the lobby with a hologram, a boss bar and a countdown that sends everybody standing on it into a sandbox world."
+---
+
+A teleport pad is a box you draw somewhere in the lobby. Players stand in it, a countdown runs, and
+when it reaches zero everybody standing there is sent into a sandbox world together, spread on a circle
+and facing the middle.
+
+It is the no-command entry: a player who has a favourite kit never has to type anything.
+
+## What a pad does while somebody stands on it
+
+- A **hologram** floats over its centre, refreshed once a second, showing the players on the pad, the
+  target world, the pad's name and the time left.
+- A **boss bar** and a **title** are shown to each occupant, both counting the same seconds down.
+- Protection: building and breaking are refused inside the box, PvP is allowed. Creative-mode players
+  are not stopped.
+
+## Who is taken
+
+At zero, everybody standing in the box is sent, except:
+
+| Skipped | Why |
+|---|---|
+| Players in the kit creator | They are mid-build |
+| Players already claimed by another activity | Busy elsewhere in the suite |
+| **Players with no favourite kit** | Told `tp-region.no-favorite-kit` and left standing |
+
+There is no kit menu in this flow. The favourite is the only kit a pad will use.
+
+The destination is the pad's target world if it is set and `READY`; otherwise a random `READY` world.
+Everybody lands on a circle of `spreadRadius` blocks around one safe location, each turned to face the
+centre.
+
+## Building one
+
+`/sandbox` → **TP REGIONS**.
+
+<Steps>
+  <Step title="Create it">
+    **CREATE TP REGION** asks for a name in chat, then hands you a selection wand. Click the two
+    opposite corners of the box.
+  </Step>
+  <Step title="Set the target">
+    **TARGET WORLD** cycles `Random` and then every configured world id. `Random` picks a `READY` world
+    each time the countdown fires.
+  </Step>
+  <Step title="Set the interval">
+    **INTERVAL** takes a duration typed in chat — `30s`, `5m`, `1h30m`. The minimum is five seconds. A
+    new pad starts at thirty.
+  </Step>
+  <Step title="Set the spread">
+    **SPREAD RADIUS** is the radius of the circle players land on. Left-click adds one, right-click
+    removes one, with a floor of one. A new pad starts at three.
+  </Step>
+  <Step title="Save">
+    **SAVE REGION** writes the row. Leaving with the back button discards everything.
+  </Step>
+</Steps>
+
+**EDIT BOUNDS** redraws the box on an existing pad. If another plugin is already holding a block
+selector for you, it refuses with `tp-region.selection-busy`.
+
+<Callout type="warning" title="Deleting a pad asks nothing">
+Right-clicking a pad in the list, and the last slot of the pad editor, both delete it immediately.
+There is no confirmation screen on either.
+</Callout>
+
+## The visuals
+
+`config.yml` → `tp-region` holds all three, and each is an ordinary effect block, so a sound or a
+particle can be added to any of them.
+
+| Key | What it is |
+|---|---|
+| `bossbar` | The bar each occupant sees. Colour, overlay and text are yours |
+| `countdown-title` | The title and subtitle, re-sent every second |
+| `hologram` | The floating text: lines, scale, billboard, view distance, offsets and a refresh interval |
+
+Inside these three, `%region%` is the pad's name, `%world%` the target world, `%time%` the seconds
+left, and `%total_players%` the number of players **on that pad** — not the number in the sandbox
+worlds, which is what the placeholder of the same shape means everywhere else.
+
+<Callout type="note" title="The hologram refresh is in ticks">
+`tp-region.hologram.config.update-interval` is a tick count, not seconds. The shipped `20` is once a
+second.
+</Callout>
+
+## What is stored
+
+One row per pad in `sandbox_tp_regions`: a twelve-character id, the display name, the interval in
+seconds, the target world id (empty means random), the spread radius, the world the box is in and its
+six coordinates.
+
+The pad registers itself with ExyliaLib's region registry, which is how it knows when somebody walks in
+or out. Players already standing inside when the plugin loads are counted as having entered.

@@ -1,0 +1,116 @@
+---
+title: "Base de datos"
+description: "Las siete tablas, sus columnas y lo que se mantiene en memoria a propósito."
+---
+
+Todo lo que posee el plugin vive en la base de datos: no hay lista de mundos, ni archivo de kits, ni
+archivo de plataformas en disco. H2 por defecto, o cualquier motor que soporte ExyliaLib, configurado en
+`database.yml`.
+
+## `sandbox_worlds`
+
+Una fila por mundo configurado.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `id` | clave | El id del mundo tal cual se escribió |
+| `display_name` | texto | |
+| `biome` | texto | Un id de bioma, `minecraft:plains` |
+| `border_size` | int | El **diámetro** |
+| `icon` | texto | Nombre de material, cadena de cabeza o un objeto serializado |
+| `generation_json` | texto | El preset: altura base, la pila de capas y la lista de decoración |
+| `type` | texto | `MANAGED` o `IMPORTED` |
+| `folder_name` | texto | Solo mundos importados |
+| `settings_json` | texto | La dificultad y doce de los trece interruptores |
+| `created_at`, `updated_at` | long | |
+
+`disable_powder_snow` se alterna en la pantalla de administración y se lee en vivo, pero no se escribe
+en `settings_json` — vuelve a su valor por defecto en la siguiente carga.
+
+## `sandbox_player_kits`
+
+Una fila por kit.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `id` | clave | `<uuid>:<ranura>` |
+| `player_uuid` | indexada | |
+| `slot` | int | Empieza en 1 |
+| `name`, `icon` | texto | |
+| `contents`, `armor`, `offhand` | texto | Pilas de objetos serializadas |
+| `favorite` | booleano | Como mucho una fila verdadera por jugador |
+
+## `sandbox_predefined_kits`
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `id` | clave | Un slug del nombre al crearla. Renombrar no lo cambia |
+| `name`, `description`, `icon` | texto | |
+| `contents`, `armor`, `offhand` | texto | |
+
+## `sandbox_kitroom_categories`
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `id` | clave | |
+| `display_name` | texto | |
+| `material` | texto | El icono |
+| `priority` | int | Orden en la fila de abajo |
+
+## `sandbox_kitroom_items`
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `id` | clave | `<idCategoría>:<ranura>` |
+| `category_id` | indexada | |
+| `slot` | int | |
+| `item_stack` | texto | Una pila serializada |
+
+## `sandbox_player_stats`
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `uuid` | clave | |
+| `kills`, `deaths` | int | Solo se cuentan dentro de mundos sandbox |
+| `playtime_millis` | long | Tiempo en sandbox, no tiempo en el servidor |
+
+Una baja cuenta cuando quien mata y quien muere están los dos en un mundo sandbox y no son el mismo
+jugador. El KDR sin muertes es el número de bajas.
+
+## `sandbox_tp_regions`
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `id` | clave | Doce caracteres hexadecimales |
+| `display_name` | texto | |
+| `interval_seconds` | int | Mínimo cinco |
+| `target_world_id` | texto | Vacío significa un mundo `READY` al azar |
+| `spread_radius` | int | |
+| `world_name` | texto | El mundo donde está la caja |
+| `min_x` … `max_z` | double | Las seis coordenadas |
+
+## `sandbox_settings`
+
+Exactamente una fila, con la posición del lobby y la de la sala del creador de kits.
+
+Un `data.yml` heredado en la carpeta del plugin se lee una vez al arrancar y se importa a esta fila,
+para las posiciones que la base de datos no tenga ya. El archivo no se reescribe ni se borra.
+
+## Qué no está en la base de datos
+
+| Solo en memoria | Se pierde con |
+|---|---|
+| El kit que lleva puesto un jugador | Un reinicio, o al salir |
+| El punto de `/back` | Un reinicio, o una desconexión |
+| Estar en cola | Un reinicio, o una desconexión |
+| Peticiones de `/tpa` pendientes | Su caducidad, una desconexión o un reinicio |
+| La sesión del creador de kits | Una desconexión, que además devuelve el inventario |
+| Quién está sobre una plataforma | Se recalcula cuando el plugin carga |
+
+Los kits y las estadísticas se cachean por jugador y se escriben al desconectarse.
+
+## Compartir entre servidores
+
+Apunta todos los servidores a la misma base de datos y los mundos, kits, plantillas, la sala de kits y
+las plataformas son los mismos en todos. Nada se sincroniza en vivo: un mundo creado en un servidor lo
+recoge otro la próxima vez que lea, y los kits se leen al conectarse.

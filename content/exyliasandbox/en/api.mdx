@@ -1,0 +1,87 @@
+---
+title: "API"
+description: "Ask where a player is, read the worlds and their kits, dress them, and read their sandbox statistics."
+badge: "dev"
+---
+
+`SandBoxService` is how another plugin asks whether a player is in a sandbox or a queue, reads the
+configured worlds and a player's saved kits, dresses somebody in one of them, and reads their kills,
+deaths and playtime.
+
+```java
+ExyliaAPI.get(SandBoxService.class).ifPresent(sandbox -> {
+    if (sandbox.isInSandbox(player.getUniqueId())) {
+        event.setCancelled(true);
+    }
+});
+```
+
+<Callout type="note" title="Adding it to your project">
+The artifact, the repository and the `plugin.yml` line are the same for every Exylia plugin and live
+on the [public API page](/docs/exylialib/api).
+</Callout>
+
+## The claim is the answer, not the world
+
+`isInSandbox` answers from the session claim the plugin takes, not from the world the player is
+standing in. The two disagree for the length of every unfinished teleport, and the claim wins — which
+is what you want: a player who has been claimed and is mid-flight is already busy.
+
+Everything that returns a value reads a cache and is safe from a placeholder, a scoreboard line or a
+menu redraw. Everything that acts teleports players and rewrites inventories: call those on the main
+thread, and no more often than a player could trigger them.
+
+## Session
+
+| Method | What it does |
+|---|---|
+| `boolean isInSandbox(UUID)` | Whether they hold the sandbox claim. |
+| `boolean isInQueue(UUID)` | Whether they are waiting for an opponent. |
+| `boolean leave(Player)` | Sends them back to the lobby. Reports whether the request was accepted, not whether it finished; `false` while they are building a kit. |
+| `boolean joinQueue(Player, String worldId, int kitSlot)` | Queues them for one world. `false` only when no world is configured under that id — anything else the queue refuses is said to the player. |
+| `void leaveQueue(Player)` | Takes them out of whichever queue they are in. |
+
+## Worlds
+
+| Method | What it does |
+|---|---|
+| `List<SandboxWorld> worlds()` | Every configured world, unusable ones included, in no particular order. Unmodifiable. |
+| `Optional<SandboxWorld> world(String worldId)` | One by id. |
+| `Optional<SandboxWorld> worldOf(World)` | The listener's question: is this Bukkit world one of ours? |
+| `float pregenerationProgress(String worldId)` | `0` to `1`. **`0` for a world that has finished** as well as one that never started. |
+
+`SandboxWorld` is a snapshot, not a live view: `id`, `displayName`, `worldName`, `biome`, `borderSize`,
+`type`, `status` and `loaded`, plus `isPlayable()` — loaded and `READY`. It carries a world **name**
+rather than a `World` because a configured world is not necessarily loaded.
+
+`WorldStatus` is `CREATING`, `PREGENERATING`, `READY` or `UNAVAILABLE`. `WorldType` is `MANAGED` or
+`IMPORTED`.
+
+## Kits
+
+| Method | What it does |
+|---|---|
+| `List<SandboxKit> kits(UUID)` | Their saved kits, ordered by slot. An offline player reports nothing. Unmodifiable. |
+| `Optional<SandboxKit> kit(UUID, int slot)` | One slot. |
+| `Optional<SandboxKit> favoriteKit(UUID)` | The starred one, if they have one. |
+| `int maxKits(Player)` | How many slots they are allowed. Reads permissions, so it takes the player. |
+| `int activeKitSlot(UUID)` | The slot they are wearing, `-1` when they are wearing none. |
+| `void applyKit(Player, int slot)` | Replaces what they carry with that kit. A no-op on an unused slot. |
+
+`SandboxKit` is `slot`, `name`, `favorite`, `hasContents`, `createdAt` and `updatedAt`. The contents
+are deliberately not exposed — use `applyKit` rather than reading the stacks.
+
+## Statistics
+
+| Method | What it does |
+|---|---|
+| `SandboxStats stats(UUID)` | Never empty. A player nothing has loaded reads as zeroes, and the read is started, so the next draw has the numbers. |
+
+`SandboxStats` is `player`, `kills`, `deaths` and `playtimeMillis`, plus `kdr()` — which returns the
+kill count when there are no deaths. Playtime is sandbox time only, not time on the server.
+
+## There are no events
+
+The plugin fires nothing, and the published package carries no event classes. To react to a player
+entering or leaving, watch their world with `worldOf`, or ask `isInSandbox` when it matters. If you
+need a hook at a specific moment, ask for it rather than polling every tick.

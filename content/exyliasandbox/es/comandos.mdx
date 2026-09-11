@@ -1,0 +1,94 @@
+---
+title: "Comandos"
+description: "Cada comando que registra el plugin, sus argumentos, sus alias y el nodo que comprueba."
+---
+
+No hay nada declarado en `plugin.yml`: cada comando se registra en tiempo de ejecución, así que los
+argumentos de abajo son lo que ofrece el autocompletado y los nodos los comprueba el propio comando.
+
+## Comandos de jugador
+
+| Comando | Alias | Permiso | Qué hace |
+|---|---|---|---|
+| `/rtp` | — | `exyliasandbox.command.rtp` | Abre la lista de mundos |
+| `/rtp <mundo>` | — | `exyliasandbox.command.rtp` | Directo a ese mundo. Rechaza si no está `READY` |
+| `/rtpqueue` | — | `exyliasandbox.command.rtpqueue` | Abre la lista de mundos y entra en la cola de ese mundo |
+| `/rtpqueuefast` | — | `exyliasandbox.command.rtpqueuefast` | Entra en cola eligiendo el mundo por ti |
+| `/leavertpqueue` | — | `exyliasandbox.command.leavertpqueue` | Sale de la cola |
+| `/leavesandbox` | — | `exyliasandbox.command.leavesandbox` | De vuelta al lobby |
+| `/tpa <jugador>` | — | `exyliasandbox.command.tpa` | Pide teletransporte a un jugador que está dentro |
+| `/tpaccept [jugador]` | — | `exyliasandbox.command.tpa` | Acepta. Sin nombre, la petición más reciente que siga viva |
+| `/tpdeny [jugador]` | — | `exyliasandbox.command.tpa` | Rechaza. Misma selección |
+| `/back` | — | `exyliasandbox.command.back` | Al último sitio donde estuviste dentro de un sandbox |
+| `/rekit` | — | `exyliasandbox.command.rekit` | Vuelve a ponerte el kit que llevas, y te cura |
+| `/kitroom [categoría]` | — | `exyliasandbox.command.kitroom` | Abre la sala de kits, opcionalmente en una categoría |
+| `/kitcreator` | — | `exyliasandbox.command.kitcreator` | Abre tus ranuras de kit |
+| `/kitsave` | — | `exyliasandbox.command.kitcreator` | Guarda lo que llevas en la ranura por la que entraste |
+| `/predefinedkits [kit] [ranura]` | `/predefinedkit`, `/pkits` | `exyliasandbox.command.predefinedkits` | Las plantillas. Con los dos argumentos, copia una directa a una ranura |
+
+El autocompletado es en vivo: `<mundo>` ofrece cada id configurado, `/tpa <jugador>` ofrece los
+jugadores que están dentro de mundos sandbox cargados, `/tpaccept` ofrece los nombres de quien te está
+esperando, `/kitroom` ofrece los ids de categoría y `/predefinedkits` ofrece las plantillas que tienen
+contenido.
+
+`/tpdeny` no tiene autocompletado.
+
+## Comandos de administración
+
+| Comando | Permiso | Qué hace |
+|---|---|---|
+| `/sandbox` | `exyliasandbox.admin` | Abre el panel de administración |
+| `/sandbox predefinedkits` | `exyliasandbox.admin` | Abre la lista de plantillas directamente |
+| `/sandbox reload` | `exyliasandbox.admin` | Vuelve a leer las configuraciones y recompila los menús. Funciona desde consola |
+
+Exportar e importar los datos del plugin no es un comando de este plugin: usa `/exylialib export` y
+`/exylialib import` de ExyliaLib.
+
+## La lista blanca de comandos
+
+Mientras un jugador está dentro de un mundo sandbox **o esperando en cola**, solo se permiten los
+comandos listados en `config.yml` → `command-whitelist.commands`. Todo lo demás se rechaza con
+`general.command-blocked`.
+
+La comparación es sobre la primera palabra, en minúsculas, y se quita antes un prefijo `plugin:`, así
+que `minecraft:tp` se bloquea igual que `tp`.
+
+La lista que viene:
+
+```yaml
+command-whitelist:
+  enabled: true
+  commands:
+    - msg
+    - message
+    - tell
+    - w
+    - whisper
+    - reply
+    - r
+    - respond
+    - sandbox
+    - rtp
+    - rtpqueue
+    - rtpqueuefast
+    - back
+    - tpa
+    - tpaccept
+    - tpdeny
+    - rekit
+    - leavesandbox
+    - leavertpqueue
+    - kitcreator
+    - kitsave
+    - kitroom
+    - bot
+    - leave
+```
+
+`exyliasandbox.bypass.blocked-commands` se salta la lista entera.
+
+<Callout type="note" title="`/predefinedkits` no está en la lista que viene">
+Ni `predefinedkits` ni sus dos alias están en la lista blanca, así que quedan bloqueados dentro de un
+mundo sandbox. No pasa nada — copiar una plantilla es algo que se hace en el lobby — pero añádelos a la
+lista si quieres el comando disponible desde dentro.
+</Callout>

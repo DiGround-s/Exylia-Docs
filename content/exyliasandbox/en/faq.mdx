@@ -1,0 +1,86 @@
+---
+title: "FAQ"
+description: "The questions that come up: the restart, the missing lobby, kits that will not save and worlds that stay unavailable."
+---
+
+## Why did my server shut down after creating a world?
+
+Because that is what the plugin does when the pre-generation queue drains. It calls `Bukkit.shutdown()`
+and logs `All worlds pregenereted. Restarting server...`. It is meant for the first boot, where every
+seeded world is generated at once; it fires just the same when you create one world from the panel on a
+live server. Create worlds in a maintenance window, and run the server under something that brings it
+back up.
+
+## Nothing works and everybody lands in the wrong place
+
+The lobby is not set. `/sandbox` → **SET LOBBY** stores wherever you are standing, and that is where
+every player goes on death, on `/leavesandbox` and on a disconnect.
+
+## A world is stuck on `UNAVAILABLE`
+
+The world could not be loaded. On Folia, this usually means the `Worlds` plugin is missing — Folia
+cannot create a world the ordinary way, and ExyliaLib routes around it through that plugin. On Spigot
+or Paper, check the console for the failure at startup.
+
+## `/rtp` says the player has no kit
+
+They have no saved kit with anything in it. `/kitcreator` → **+ NEW KIT**, take gear from the kit room,
+`/kitsave`. Or `/predefinedkits` to copy a template an admin built.
+
+## A teleport pad ignores somebody
+
+A pad uses the player's **favourite** kit and nothing else. Somebody with kits but no favourite is told
+so and left standing. The star in **Kit options** toggles, so clicking it on the current favourite
+leaves the player with none.
+
+## Why can a player only save one kit?
+
+They hold no `exyliasandbox.max_kits.<n>` node, and the fallback is one slot. Grant a single node —
+`exyliasandbox.max_kits.5` for five. The highest node a player holds is the one that counts.
+
+## My kit-room edits disappear
+
+They are not saved. The category grid opens and accepts items, but nothing writes it back to the
+database. Use **Reset to Defaults** on the category list to restore the shipped catalogue.
+
+## Why is the kit room in Spanish?
+
+The five seeded categories ship with Spanish ids and names — `armaduras`, `consumibles`, `explosivos`,
+`pociones`, `flechas`. Rename the display names from the admin screen. The ids are what
+`/kitroom <category>` takes and a rename does not change them.
+
+## A player kept their sandbox kit in the lobby
+
+ExyliaPracticeCore was installed or removed between their entry and their exit. When it is present this
+plugin never saves or restores the inventory — the practice lobby dresses the player — and when it is
+absent this plugin does. Changing that mid-session leaves nobody holding the snapshot.
+
+## Why does a command not work inside a sandbox?
+
+The command whitelist. Only what is listed in `config.yml` → `command-whitelist.commands` runs inside a
+sandbox world or while queued; everything else is refused. Add the command to the list, or grant
+`exyliasandbox.bypass.blocked-commands`.
+
+## Nothing a player builds survives
+
+Chunk saving is off in every sandbox world, on purpose. A world is rebuilt from its generator whenever
+it is loaded fresh. Import a world instead if you want a fixed arena — the plugin never touches an
+imported world's terrain.
+
+## I deleted a teleport pad by accident
+
+There is no confirmation on that gesture, and no undo. Rebuild it: **CREATE TP REGION**, name, wand,
+target, interval, spread, save.
+
+## Where are the statistics?
+
+`sandbox_player_stats`, and on the sidebar. `%exyliasandbox_sandbox_kills%`,
+`%exyliasandbox_sandbox_deaths%`, `%exyliasandbox_sandbox_kdr%` and
+`%exyliasandbox_sandbox_playtime%` put them anywhere PlaceholderAPI reaches. Kills only count when both
+players are inside a sandbox world.
+
+## Can two servers share this?
+
+Yes: point them at the same database and they share worlds, kits, templates, the kit room and the pads.
+Nothing is pushed live between servers — a world created on one is picked up by another the next time
+it reads.

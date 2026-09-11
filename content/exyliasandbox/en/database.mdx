@@ -1,0 +1,115 @@
+---
+title: "Database"
+description: "The seven tables, their columns, and what is deliberately kept in memory instead."
+---
+
+Everything the plugin owns lives in the database: there is no world list, no kit file and no pad file
+on disk. H2 by default, or any engine ExyliaLib supports, configured in `database.yml`.
+
+## `sandbox_worlds`
+
+One row per configured world.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | key | The world id as typed |
+| `display_name` | text | |
+| `biome` | text | A biome id, `minecraft:plains` |
+| `border_size` | int | The **diameter** |
+| `icon` | text | Material name, head string or a serialised item |
+| `generation_json` | text | The preset: base height, the layer stack and the feature list |
+| `type` | text | `MANAGED` or `IMPORTED` |
+| `folder_name` | text | Imported worlds only |
+| `settings_json` | text | The difficulty and twelve of the thirteen toggles |
+| `created_at`, `updated_at` | long | |
+
+`disable_powder_snow` is toggled in the admin screen and read live, but it is not written into
+`settings_json` — it goes back to its default on the next load.
+
+## `sandbox_player_kits`
+
+One row per kit.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | key | `<uuid>:<slot>` |
+| `player_uuid` | indexed | |
+| `slot` | int | 1-based |
+| `name`, `icon` | text | |
+| `contents`, `armor`, `offhand` | text | Serialised item stacks |
+| `favorite` | boolean | At most one true row per player |
+
+## `sandbox_predefined_kits`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | key | A slug of the name at creation. Renaming does not change it |
+| `name`, `description`, `icon` | text | |
+| `contents`, `armor`, `offhand` | text | |
+
+## `sandbox_kitroom_categories`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | key | |
+| `display_name` | text | |
+| `material` | text | The icon |
+| `priority` | int | Sort order along the bottom row |
+
+## `sandbox_kitroom_items`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | key | `<categoryId>:<slot>` |
+| `category_id` | indexed | |
+| `slot` | int | |
+| `item_stack` | text | One serialised stack |
+
+## `sandbox_player_stats`
+
+| Column | Type | Notes |
+|---|---|---|
+| `uuid` | key | |
+| `kills`, `deaths` | int | Counted only inside sandbox worlds |
+| `playtime_millis` | long | Sandbox time, not server time |
+
+A kill counts when both the killer and the victim are in a sandbox world and they are not the same
+player. KDR with no deaths is the kill count.
+
+## `sandbox_tp_regions`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | key | Twelve hex characters |
+| `display_name` | text | |
+| `interval_seconds` | int | Minimum five |
+| `target_world_id` | text | Empty means a random `READY` world |
+| `spread_radius` | int | |
+| `world_name` | text | The world the box is in |
+| `min_x` … `max_z` | double | The six corners |
+
+## `sandbox_settings`
+
+Exactly one row, holding the lobby location and the kit-creator room location.
+
+A legacy `data.yml` in the plugin folder is read once on startup and imported into this row, for
+locations the database does not already have. The file is never rewritten or deleted.
+
+## What is not in the database
+
+| Kept in memory only | Lost on |
+|---|---|
+| The kit a player is wearing | Restart, or leaving |
+| The `/back` point | Restart, or a disconnect |
+| Queue membership | Restart, or a disconnect |
+| Pending `/tpa` requests | Their timeout, a disconnect, or a restart |
+| The kit-creator session | A disconnect, which also gives the inventory back |
+| Who is standing on a teleport pad | Recomputed when the plugin loads |
+
+Kits and statistics are cached per player and written back when they disconnect.
+
+## Sharing across servers
+
+Point every server at the same database and the worlds, kits, templates, kit-room and pads are the same
+everywhere. Nothing is synchronised live: a world created on one server is picked up by another when it
+next reads, and kits are read on join.

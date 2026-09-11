@@ -1,0 +1,75 @@
+---
+title: "Sala de kits"
+description: "La estantería de la que los jugadores montan sus kits: categorías, qué se lleva un clic y cómo la edita un administrador."
+---
+
+La sala de kits es una estantería. Un jugador la abre mientras monta un kit, pulsa un objeto y recibe
+una **copia**: la estantería nunca se vacía ni cambia.
+
+`/kitroom` la abre, `/kitroom <categoría>` la abre en una categoría, y se abre sola cinco ticks después
+de que un jugador entre en el creador de kits.
+
+## La pantalla
+
+La fila de abajo son las categorías; todo lo de arriba es la rejilla de la categoría actual, cuarenta y
+cinco ranuras. Los huecos de la rejilla se respetan: un administrador puede colocar los objetos en
+bloques con espacios entre ellos y los espacios se quedan vacíos.
+
+## Qué se lleva un clic
+
+| Clic | Qué recibes |
+|---|---|
+| Izquierdo o derecho | Una pila |
+| Shift + izquierdo o derecho | Una pila completa, hasta el máximo del material |
+| F | El objeto a la mano secundaria; lo que hubiera vuelve a ti |
+| Q | El objeto tirado a la altura de los ojos, sin retardo de recogida |
+
+Un inventario lleno rechaza con `kitroom.no-space`. Lo que no quepa se tira a los pies en vez de
+borrarse.
+
+## Las categorías que vienen
+
+Se siembran cinco categorías la primera vez que el plugin arranca con la tabla vacía, con unos 130
+objetos ya encantados entre todas.
+
+| Id | Nombre | Icono | Qué lleva |
+|---|---|---|---|
+| `armaduras` | Armaduras | Peto de netherita | Equipo de netherita y diamante con Protección IV, Irrompibilidad III y Reparación; espadas con Filo V, tridentes con Empalamiento V y Lealtad III, mazas, élitros |
+| `consumibles` | Consumibles | Manzana dorada | Manzanas doradas y encantadas, perlas, telarañas, botellas de experiencia, cubos de agua, tótems, obsidiana, cristales del end, anclas de reaparición, piedra luminosa |
+| `explosivos` | Explosivos | TNT | TNT, vagonetas con TNT, fuegos artificiales, cargas de viento, varas de brisa |
+| `pociones` | Pociones | Poción arrojadiza | Veintitrés pociones arrojadizas |
+| `flechas` | Flechas | Flecha con punta | Veintitrés tipos de flecha con punta, más flechas espectrales y normales |
+
+<Callout type="note" title="Los ids y nombres que vienen están en español">
+`armaduras`, `consumibles`, `explosivos`, `pociones` y `flechas` es lo que siembra el plugin. Cambia los
+nombres visibles desde la pantalla de administración cuando quieras; los ids son lo que toma
+`/kitroom <categoría>` y no cambian al renombrar.
+</Callout>
+
+## Editarla
+
+`/sandbox` → **KIT ROOM** lista las categorías.
+
+| Clic | Qué hace |
+|---|---|
+| Izquierdo | Abre la rejilla de objetos de la categoría |
+| Derecho | Abre un selector de icono para la categoría |
+| Shift + izquierdo | **Borra la categoría, sin confirmación** |
+| **+ CREATE CATEGORY** | Petición por chat de un nombre; el id es ese nombre en minúsculas con los espacios como guiones bajos y todo lo demás quitado |
+| **Reset to Defaults** | Devuelve las cinco categorías originales, con pantalla de confirmación |
+
+El orden en que aparecen las categorías es su prioridad guardada, que las cinco originales fijan de 0 a
+4.
+
+<Callout type="danger" title="Lo que edites en la rejilla de una categoría no se guarda">
+La rejilla se abre, acepta objetos y parece funcionar, pero el código que la escribe de vuelta en la
+base de datos no está conectado: al cerrar la pantalla se descarta todo. Monta las categorías con
+**Reset to Defaults** y el conjunto original, y trata la rejilla como de solo lectura hasta que esto se
+arregle.
+</Callout>
+
+## Qué se guarda
+
+Dos tablas. `sandbox_kitroom_categories` lleva una fila por categoría — id, nombre visible, material del
+icono y prioridad. `sandbox_kitroom_items` lleva una fila por ranura ocupada, con clave
+`<idCategoría>:<ranura>`, cada una con una pila de objetos.

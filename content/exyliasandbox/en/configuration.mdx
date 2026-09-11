@@ -1,0 +1,149 @@
+---
+title: "Configuration"
+description: "The three generated files: the RTP numbers, the queue bars, the pad visuals, the command whitelist, the messages and the sidebar."
+---
+
+Three files are generated in `plugins/ExyliaSandBox/` on the first run. None of them exists inside the
+jar: they are written from the plugin's own schema, comments included, which is why an unknown key is
+reported once and then removed from the file.
+
+| File | What is in it |
+|---|---|
+| `config.yml` | RTP and queue numbers, the two queue action bars, the TPA timeout, the pad visuals, the command whitelist |
+| `messages.yml` | Every line the plugin sends, in twelve sections |
+| `scoreboards.yml` | The one sidebar |
+
+Everything else — worlds, kits, templates, kit-room categories, teleport pads, the lobby and the
+kit-creator room — lives in the database and is edited from `/sandbox`.
+
+## `config.yml`
+
+### `rtp`
+
+| Key | Default | What it does |
+|---|---|---|
+| `queue-pair-distance` | `10` | Blocks between the two players a queue pair drops in |
+| `search-attempts` | `50` | Random spots tried before giving up on a safe location |
+| `border-margin` | `20` | Blocks kept clear of the border, subtracted from the **radius** |
+| `rotative-queue-actionbar-time` | `2.0` | Seconds each waiting player is advertised for |
+
+`in-queue-actionbar` and `rotative-queue-actionbar` are effect blocks. Their `text` takes `%world%`,
+`%time%` and, on the rotative one, `%player%`. A `duration` of `0` means the bar stays until the queue
+tick replaces or stops it.
+
+```yaml title="plugins/ExyliaSandBox/config.yml"
+rtp:
+  queue-pair-distance: 10
+  search-attempts: 50
+  border-margin: 20
+  in-queue-actionbar:
+    action-bar:
+      text: "{primary}Waiting in queue {muted}- %world% {muted}- {info}⌚ %time%"
+      duration: 0
+      time-style: full
+  rotative-queue-actionbar-time: 2.0
+  rotative-queue-actionbar:
+    action-bar:
+      text: "{highlight}%player% {letters}is in queue in %world% {muted}- {highlight}/rtpqueue"
+      duration: 0
+      time-style: full
+```
+
+### `tpa`
+
+| Key | Default | What it does |
+|---|---|---|
+| `request-timeout-seconds` | `60` | How long a `/tpa` request lives |
+
+### `tp-region`
+
+Three effect blocks and a hologram, all covered on the
+[Teleport pads](/docs/exyliasandbox/tp-regions#the-visuals) page.
+
+- `bossbar` — the bar each occupant sees. `colour` takes `PINK`, `BLUE`, `RED`, `GREEN`, `YELLOW`,
+  `PURPLE` or `WHITE`; `overlay` takes `PROGRESS`, `NOTCHED_6`, `NOTCHED_10`, `NOTCHED_12` or
+  `NOTCHED_20`.
+- `countdown-title` — the title and subtitle, re-sent every second.
+- `hologram` — lines, scale, billboard, alignment, view distance, offsets, and a `config.update-interval`
+  that is a **tick** count.
+
+### `command-whitelist`
+
+`enabled` and a list of command names. See [Commands](/docs/exyliasandbox/commands#the-command-whitelist).
+
+### `kit-creator`
+
+Three title blocks — `name-input-title`, `rename-input-title` and `icon-input-title`.
+
+<Callout type="note" title="These three do nothing">
+The chat prompts the kit creator actually shows are built into the plugin. The three blocks are written
+into `config.yml` and never read.
+</Callout>
+
+## `messages.yml`
+
+One `prefix` and twelve sections. Every line takes `%prefix%`, and most take one or two of `%world%`,
+`%player%`, `%region%`, `%name%`, `%slot%`, `%max%` and `%percent%`.
+
+| Section | Covers |
+|---|---|
+| `world` | Created, saved, deleted, imported, not found |
+| `queue` | Joining, leaving, pairing, teleporting, no kit, no safe location, the join broadcast |
+| `tpa` | Sent, received, accepted, denied, expired, and the six refusals |
+| `back` | No location, teleporting |
+| `lobby` | Lobby set, kit-creator room set, not set |
+| `kitroom` | No space, and the category create, delete and icon lines |
+| `kit-creator` | Entering, saving, renaming, deleting, the icon, and the slot limit |
+| `predefined-kit` | Saving, renaming, deleting, copying, the two refusals and the invalid slot |
+| `rekit` | Applied, no kit, not in a world |
+| `tp-region` | No favourite kit, teleported, the wand, and the create, save and delete lines |
+| `general` | Not available, command blocked |
+| `screens` | The `PREGEN %percent%` label in the world list |
+
+A line may open with an effect tag such as `[sound:ENTITY_VILLAGER_NO|1.0|1.0]`, several separated by
+`;`. The tag is an instruction and never reaches the screen. Colours are palette tokens — `{primary}`,
+`{success}`, `{error}`, `{warning}`, `{info}`, `{highlight}`, `{muted}`, `{letters}`, `{accent}`,
+`{secondary}` — resolved from ExyliaLib's shared `colors.yml`.
+
+Two labels are not in the file and cannot be changed: the four world statuses shown in the admin
+screens, and the `Activo` / `Inactivo` pair on the favourite button in **Kit options**.
+
+`back.outside-world` and `queue.select-kit` are generated into the file but never sent.
+
+## `scoreboards.yml`
+
+One board, `sandbox`, shown to anybody standing in a sandbox world. `title` is a list: several entries
+animate one per refresh, one entry stands still. At most fifteen lines are drawn.
+
+```yaml title="plugins/ExyliaSandBox/scoreboards.yml"
+scoreboards:
+  sandbox:
+    enabled: true
+    title: ["{primary}&lSANDBOX"]
+    lines:
+      - ""
+      - " {muted}❙ {letters}World: {highlight}%world%"
+      - " {muted}❙ {letters}Players: {success}%players%"
+      - ""
+      - " {muted}❙ {letters}Kills: {success}%kills%"
+      - " {muted}❙ {letters}Deaths: {error}%deaths%"
+      - " {muted}❙ {letters}KDR: {highlight}%kdr%"
+      - " {muted}❙ {letters}Playtime: {info}%sandbox_playtime%"
+      - ""
+      - " {muted}❙ {letters}Border: {info}%border%"
+      - ""
+      - " {highlight}exylia.net"
+    update:
+      interval: 10
+      smart: true
+      cache: true
+```
+
+`update.interval` is in **ticks**, not seconds. `smart` sends only the lines that changed. The names
+available inside those lines are on the
+[Placeholders](/docs/exyliasandbox/placeholders#the-sidebar-names-are-different) page.
+
+## Reloading
+
+`/sandbox reload`, and **RECARGAR CONFIGS** in the admin panel, re-read all three files and recompile
+the menus. The database is not touched.
