@@ -44,7 +44,7 @@ the clan, a **rank permission** (the clan's own). Both have to pass.
 | `/clan open` | `…commands.open` | `TOGGLE_OPEN` | — |
 | `/clan info` | `…commands.info` | — | — |
 | `/clan info <clan>` | `…commands.info` | — | — |
-| `/clan focus <player>` | `…commands.focus` | — | — |
+| `/clan focus [player]` | `…commands.focus` | — | — |
 | `/clan camp <clan>` | `…commands.camp` | — | — |
 | `/clan rally` | `…commands.rally` | — | — |
 | `/clan regroup` | `…commands.regroup` | `REGROUP` | `regroup` |
@@ -103,8 +103,8 @@ needs **both**.
 | Detail | Behaviour |
 |---|---|
 | `setbalance` | Floored at zero. |
-| `setdtr` | Clamped between `min-dtr` and the clan's current maximum. |
-| `setlevel` | Sets the EXP to that level's `required-exp`. Needs the `levels` module. |
+| `setdtr` | Clamped at the clan's current maximum only — there is no lower bound, so a negative value goes through. It also clears the DTR freeze. |
+| `setlevel` | Sets the EXP to that level's `required-exp`. A level not in the table is refused with `admin.invalid-level`. Needs the `levels` module. |
 | `playerstat` / `clanstat` | `PLAYTIME` is in seconds. Floored at zero. |
 | `logs` | Defaults to 20 entries. Needs the `logs` module. |
 | `forcekick` | Disbands the clan if the player kicked was its last member. |
@@ -127,5 +127,6 @@ permission.
 ## Reload
 
 `/clanadmin reload` re-reads `config.yml`, `messages.yml`, `lfc.yml` and `lfp.yml`, rebuilds the level
-table and recompiles every menu. `/exylialib reload` also recompiles the menus, so a palette change made
-through the library reaches them.
+table, re-reads the recruitment categories, applies a changed `visibility-mode` to everybody online, and
+recompiles every menu. `/exylialib reload` also recompiles the menus, so a palette change made through
+the library reaches them.

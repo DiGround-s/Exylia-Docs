@@ -57,7 +57,7 @@ inside this block is ever pruned, and an entry you delete stays deleted.
 
 | Key | What it does |
 |---|---|
-| `name` | What players see. |
+| `name` | What players see. Cleaned on the way in: formatting is stripped, the text is trimmed, and it is cut at **32 visible characters**. |
 | `weight` | Higher outranks lower. |
 | `permissions` | A list of the names below. Anything not listed is refused. An unknown name is dropped. |
 | `is-default` | Whether a new member is given this rank. Exactly one entry should be `true`. |
@@ -65,6 +65,13 @@ inside this block is ever pruned, and an entry you delete stays deleted.
 <Callout type="danger" title="An empty `default-roles` breaks clan creation">
 `/clan create` refuses and logs `Cannot create a clan: default-roles is empty in config.yml.` rather than
 making a clan whose founder has no rank. Nothing is written back into the file — the block is yours.
+</Callout>
+
+<Callout type="note" title="A rank name is cleaned before it is stored">
+This applies to the ranks players write in game as well. Creating or renaming a rank strips every colour
+code and formatting tag, trims the result and truncates it at 32 visible characters; a name that is
+empty once cleaned is refused with `errors.role-name-invalid`. The plugin's own chat prompt still says
+*3-16 chars* — the limit the code enforces is the 32 above.
 </Callout>
 
 The founder is given the **heaviest** rank in the block, not the one named `leader`. If you rewrite the

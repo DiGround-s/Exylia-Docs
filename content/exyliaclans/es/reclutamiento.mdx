@@ -52,6 +52,11 @@ categories:
 Los ids de categoría, de respuesta y de tier son todos tuyos. Nada dentro de `categories` se poda, y una
 entrada que borres se queda borrada. `icon` acepta un material o una referencia a cabeza.
 
+<Callout type="note" title="Las categorías que trae `lfc.yml` están en español">
+`lfp.yml` trae ejemplos en inglés; `lfc.yml` trae *Rol Principal* con *Atacante*, *Soporte*,
+*Recolector* y *Explorador*. Son ejemplos, así que renómbralos a lo que tu servidor quiera preguntar.
+</Callout>
+
 `MULTI_ANSWER` es lo que convierte una lista plana en un perfil que dice algo: un jugador no marca solo
 *PotPvP*, lo marca en *HT2*. Los dos archivos vienen con la misma escalera de diez tiers de ejemplo.
 
@@ -111,21 +116,29 @@ El jugador elige una oferta, escribe un mensaje limitado a `application-message-
 | Espera antes de volver a solicitar al mismo clan tras un rechazo o una retirada | `application-cooldown-seconds`, 120 s |
 | Una solicitud por jugador y clan | la clave de la fila es `playerUuid:clanId` |
 
-Las solicitudes son `PENDING`, `ACCEPTED` o `REJECTED`. Al solicitante se le avisa en los dos casos, y
-puede retirar una pendiente desde **Mis solicitudes**.
+Las solicitudes son `PENDING`, `ACCEPTED`, `REJECTED` o `WITHDRAWN`. Al solicitante se le avisa en los
+dos casos, y puede retirar una pendiente desde **Mis solicitudes**.
 
 Aceptar mete al jugador en el clan en ese momento, así que siguen aplicando todas las reglas normales de
 entrada: que el clan esté lleno, que el jugador esté baneado de él, o que se haya metido en otro mientras
-tanto. Todas las solicitudes de un jugador se limpian cuando entra en un clan por cualquier vía.
+tanto.
+
+<Callout type="note" title="Entrar en un clan limpia las solicitudes pendientes, salvo si lo fundaste tú">
+Entrar en un clan marca `WITHDRAWN` todas las solicitudes **pendientes** de ese jugador; las aceptadas y
+las rechazadas se quedan como están, y no se borra nada. Crear un clan con `/clan create` limpia el
+perfil de LFC del fundador pero **no** sus solicitudes, así que un fundador conserva todas las
+pendientes y siguen contando para `max-applications-per-player`. Se retiran desde **Mis solicitudes**.
+</Callout>
 
 Una solicitud aceptada se escribe en el log del clan, igual que la creación, edición, renovación y
 cancelación de la oferta.
 
-## Los siete menús de cada uno
+## Los menús
 
 Los dos tablones tienen la misma forma: un navegador, una pantalla de crear/editar, un selector de modo,
-uno de opción y uno de tier; `/lfp` añade la lista de solicitudes, el detalle de una solicitud y *mis
-solicitudes*. Son menús normales — ver [Menús](/docs/exyliaclans/menus).
+uno de opción y uno de tier — **cinco archivos para `/lfc`**. `/lfp` añade la lista de solicitudes, el
+detalle de una solicitud y *mis solicitudes*: **ocho**. Son menús normales — ver
+[Menús](/docs/exyliaclans/menus).
 
 <Callout type="tip" title="Empieza con menos preguntas">
 Cada categoría es un clic más entre un jugador y un perfil publicado. Tres o cuatro preguntas que de

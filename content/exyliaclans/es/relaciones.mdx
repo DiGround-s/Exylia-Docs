@@ -76,7 +76,7 @@ rivals:
 | Ajuste | Efecto |
 |---|---|
 | `kill-exp-multiplier` | La EXP de la baja — base más bonus de racha — se multiplica por esto cuando la víctima estaba en un clan rival. `1.0` desactiva la consulta. |
-| `kill-stat-multiplier` | La baja registrada del clan se multiplica por esto en una baja contra rival. Se redondea, así que `2.0` registra dos bajas y `1.5` registra una. |
+| `kill-stat-multiplier` | La baja registrada del clan se multiplica por esto en una baja contra rival. Se redondea hacia arriba en el medio, así que `2.0` registra dos bajas y `1.5` también registra dos. |
 | `notify-target-on-declare` | Si se avisa al clan declarado. |
 
 Los rivales son además lo que lee `/clan camp`, y lo que hace que un jugador salga como enemigo en los
@@ -91,19 +91,33 @@ sigue registrando una baja. Dejarlo en `1.0` mantiene los dos números en sinton
 
 ```yaml
 settings:
-  visibility-mode: UNIFIED
+  visibility-mode: DISABLED
 ```
 
 | Modo | A quién se pinta |
 |---|---|
-| `CLAN_ONLY` | Compañeros de clan, en verde. Los aliados se ven como desconocidos. |
-| `ALLY_ONLY` | Aliados, en aqua. Los del clan se ven como desconocidos. |
-| `CLAN_AND_ALLY_MIXED` | Clan en verde; aliados en aqua **y brillando**, para distinguirlos. |
-| `UNIFIED` | Todos los amigos en un mismo color. |
+| `DISABLED` | **A nadie.** Es lo que viene por defecto. Los nombres son exactamente lo que dibuje TAB o tu propio plugin. |
+| `CLAN_ONLY` | Compañeros de clan y tú mismo, en verde. Los aliados se ven como desconocidos. |
+| `ALLY_ONLY` | Aliados y tú mismo, en aqua. Los del clan se ven como desconocidos. |
+| `CLAN_AND_ALLY_MIXED` | Clan y tú mismo en verde; aliados en aqua **y brillando**, para distinguirlos. |
+| `UNIFIED` | Clan, aliados y tú mismo, todos en un mismo color. |
+
+Un valor desconocido cae en `CLAN_AND_ALLY_MIXED`.
 
 El color es por espectador, no un equipo de scoreboard compartido por todo el servidor, así que dos
 jugadores pueden ver a un tercero de forma distinta. Con `TAB` instalado, su gestión de equipos se pausa
 para un jugador mientras este plugin lo colorea, y se reanuda cuando sale del clan.
+
+<Callout type="warning" title="`DISABLED` es el valor por defecto, y apaga más que el color">
+De fábrica este plugin no pinta absolutamente nada: no toca ningún nametag, no crea ningún equipo de
+scoreboard y nunca pausa la gestión de equipos de TAB. Un [focus](/docs/exyliaclans/herramientas-de-guerra#focus)
+sigue haciendo **brillar** al objetivo, porque el brillo va en la propia entidad — pero no lo pone en
+rojo, porque el rojo necesita el equipo de scoreboard que `DISABLED` nunca crea. Pon cualquiera de los
+otros cuatro modos para recuperar los colores.
+</Callout>
+
+Todo esto es a nivel de paquetes y necesita **PacketEvents**. Sin él, todos los modos se comportan como
+`DISABLED`.
 
 ## Friendly fire
 
@@ -116,7 +130,30 @@ settings:
 |---|---|
 | Mismo clan | El clan tiene friendly fire activado, o el mundo está en `forced-ff-worlds` |
 | Aliados mutuos | **Los dos** clanes lo tienen activado, o el mundo está forzado |
-| Cualquier otro | Siempre |
+| Cualquier otro | Siempre, **salvo que haya una tregua por expulsión** |
+
+## La tregua tras una expulsión
+
+```yaml
+kick-protection:
+  enabled: true
+  duration-seconds: 120
+```
+
+Expulsar o banear a un jugador arma una tregua de dos minutos entre él y el clan del que acaba de salir.
+Mientras dura, **no pasa daño en ninguno de los dos sentidos** entre ese jugador y cualquiera que siga
+en el clan, o en un clan aliado mutuo suyo. A quien ataca se le dice por qué, con los segundos que
+quedan, como mucho una vez cada tres segundos.
+
+Se arma desde todas las salidas: los botones de expulsar y banear del menú de miembros, `/clan kick`,
+`/clan ban` y `/clanadmin forcekick`.
+
+<Callout type="warning" title="La tregua gana a `forced-ff-worlds`">
+Se comprueba **antes** que las reglas de friendly fire, así que a un jugador expulsado tampoco se le
+puede rematar en un mundo de arena. Dos minutos es lo que viene por defecto; `enabled: false` lo apaga
+entero y un jugador expulsado queda a tiro al instante.
+</Callout>
+
 
 `/clan ff` lo alterna y necesita `TOGGLE_FRIENDLY_FIRE`. Los proyectiles se resuelven a quien los disparó,
 así que una flecha sigue las mismas reglas que una espada. Un jugador sin clan nunca está protegido por

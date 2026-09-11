@@ -16,11 +16,16 @@ al cielo.
 |---|---|
 | Clic izquierdo a un bloque | Esquina 1 |
 | Clic derecho a un bloque | Esquina 2 |
-| Shift + clic al aire | Paga y confirma |
+| Agacharse + cualquier clic | Paga y confirma |
 | `/clan claim` otra vez | Cancela |
 
-Torres de cristal rematadas con un bloque de diamante marcan cada esquina, dibujadas solo para quien
-selecciona. Son a nivel de paquete: no se coloca ningún bloque en el mundo.
+Ir agachado convierte **cualquier** clic en una confirmación: sobre bloque o al aire, izquierdo o
+derecho. Así que ponte en shift solo cuando de verdad quieras comprar el terreno.
+
+Unas torres marcan cada esquina, dibujadas solo para quien selecciona: tres bloques de cristal, luego un
+bloque de diamante, repitiéndose de arriba abajo por todo el mundo. Son a nivel de paquete, así que no
+se coloca ningún bloque — y solo se dibuja en el hueco **vacío**, que es por lo que una torre se corta
+donde haya terreno.
 
 La herramienta no se puede tirar, no se puede guardar (abrir cualquier inventario está bloqueado mientras
 hay sesión), no dropea al morir, y se retira del inventario al entrar, así que una herramienta vieja nunca
@@ -92,8 +97,9 @@ Cuando el DTR se regenera por encima de cero, la flag se limpia y vuelve la prot
 /clan reclaim
 ```
 
-Redibuja el rectángulo **dentro** del existente. La herramienta es la misma, con los límites actuales
-marcados con torres de cristal naranja rematadas con oro; una selección que se salga se rechaza.
+Redibuja el rectángulo **dentro** del existente. Necesita el mismo permiso de rango `CLAIM_LAND` que un
+primer terreno. La herramienta es la misma, con los límites actuales marcados con cristal naranja y oro;
+una selección que se salga se rechaza.
 
 | Regla | Detalle |
 |---|---|
@@ -135,9 +141,17 @@ jugador:
 | Cristal azul, bloque de lapislázuli | El de un aliado |
 | Cristal rojo, bloque de redstone | El de cualquier otro |
 
-Se refresca cada cinco segundos y se apaga solo a los dos minutos, o cuando el jugador repite el comando,
-cambia de mundo o se desconecta. Si no hay ningún terreno dentro del radio no se dibuja nada, y se le dice
-al jugador qué radio se ha mirado.
+Cada terreno recibe además un contorno de partículas de polvo trazado cada 30 ticks, de dos en dos
+bloques, y una columna brillante en su centro.
+
+Se refresca cada cinco segundos y se apaga solo a los dos minutos, o cuando el jugador repite el
+comando, cambia de mundo o se desconecta.
+
+<Callout type="note" title="Un resultado vacío también cuenta como mapa abierto">
+Si no hay ningún terreno dentro del radio no se dibuja nada y se le dice al jugador qué radio se ha
+mirado — pero el mapa queda registrado como abierto igual, así que el siguiente `/clan map` responde que
+lo oculta en vez de volver a buscar. El tercero ya busca.
+</Callout>
 
 ## Entrar y salir
 
@@ -161,5 +175,8 @@ claims:
   protection-mode: WORLDGUARD
 ```
 
-`pillar-duration-seconds` es cuánto se quedan las torres de esquina para todo el que esté cerca después de
-reclamar, que es distinto de la vista previa de la selección.
+<Callout type="note" title="`pillar-duration-seconds` no hace nada">
+La clave se genera en el archivo y describe unas torres que verían todos los que estén cerca al reclamar,
+pero nada en el flujo de reclamo llega a pedirlas. Las únicas torres que ve un jugador son la vista
+previa de la selección y `/clan map`.
+</Callout>

@@ -58,7 +58,7 @@ main thread, and no more often than a player could trigger them.
 | `Optional<ClanMember> memberOf(UUID player)` | Their membership record. Empty when they are in no clan. |
 | `List<ClanMember> membersOf(String clanId)` | Everyone in a clan. Empty when the clan does not exist. |
 | `Optional<ClanRole> roleOf(UUID player)` | Their role within their clan. Empty when they are in no clan. |
-| `String roleNameOf(UUID player)` | The role name, for display. An empty string when they are in no clan. |
+| `String roleNameOf(UUID player)` | The role name, for display. Never `null` and never empty: a player in no clan reads `messages.yml` → `placeholders.none`, which ships as `{muted}None`. |
 | `int memberCount(UUID player)` | How many players are in that player's clan. `0` when they are in none. |
 
 ## Relations
@@ -98,7 +98,7 @@ reading a clan stays a cache hit.
 | `boolean isRaidable(String clanId)` | Whether the clan's land can be raided right now. |
 | `DtrState dtrState(String clanId)` | Where it stands in the DTR cycle. `NORMAL` when the clan does not exist or the server runs without DTR. |
 | `double dtr(String clanId)` | Its current deaths-till-raidable. |
-| `double maxDtr(String clanId)` | The highest DTR it can reach at its current size and level. |
+| `double maxDtr(String clanId)` | The highest DTR it can reach at its current size. Members divided by `members-per-point`, never below `1.0`. Level does not enter into it. |
 
 ## Land
 
@@ -187,3 +187,12 @@ ExyliaLib menu in any plugin — see [Menus](/docs/exyliaclans/menus#actions) �
 reads clan state directly. See [Placeholders](/docs/exyliaclans/placeholders).
 
 If something you genuinely need is still missing, ask on [Discord](https://discord.exylia.net).
+
+## The older reflection jar
+
+The build also ships `ExyliaClans-API.jar`, a standalone reflection bridge —
+`net.exylia.exyliaclans.api.ExyliaClansAPI` with fifteen static methods and a `ClanData` record. It
+predates the suite-wide API and reaches the plugin by reflection rather than through a service.
+
+Everything it does, `ClansService` does with real types and without reflection. It is kept so that
+plugins written against it keep working; write anything new against `ClansService`.

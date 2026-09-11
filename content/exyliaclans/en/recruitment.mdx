@@ -52,6 +52,11 @@ categories:
 The category ids, the answer ids and the tier ids are all yours. Nothing inside `categories` is pruned,
 and an entry you delete stays deleted. `icon` takes a material name or a head reference.
 
+<Callout type="note" title="The shipped `lfc.yml` categories are in Spanish">
+`lfp.yml` ships English examples; `lfc.yml` ships *Rol Principal* with *Atacante*, *Soporte*,
+*Recolector* and *Explorador*. They are examples, so rename them to whatever your server asks players.
+</Callout>
+
 `MULTI_ANSWER` is what turns a flat list into a profile that says something: a player does not just tick
 *PotPvP*, they tick it at *HT2*. Both files ship with the same ten-tier ladder as an example.
 
@@ -111,21 +116,29 @@ A player picks a posting, writes a message capped at `application-message-max-le
 | Wait before applying to the same clan again after a rejection or withdrawal | `application-cooldown-seconds`, 120 s |
 | One application per player per clan | the row id is `playerUuid:clanId` |
 
-Applications are `PENDING`, `ACCEPTED` or `REJECTED`. The applicant is notified either way, and can
-withdraw a pending one from **My applications**.
+Applications are `PENDING`, `ACCEPTED`, `REJECTED` or `WITHDRAWN`. The applicant is notified either way,
+and can withdraw a pending one from **My applications**.
 
 Accepting joins the player to the clan there and then, so all the ordinary join rules still apply — the
 clan being full, the player being banned from it, or the player having joined somewhere else in the
-meantime. Every one of a player's applications is cleared when they join a clan by any route.
+meantime.
+
+<Callout type="note" title="Joining clears pending applications — unless you founded the clan">
+Joining a clan marks every **pending** application of that player `WITHDRAWN`; accepted and rejected
+rows are left alone, and nothing is deleted. Creating a clan with `/clan create` clears the founder's
+LFC profile but **not** their applications, so a founder keeps every pending one and it keeps counting
+against `max-applications-per-player`. Withdraw them from **My applications**.
+</Callout>
 
 An accepted application is written to the clan log, along with the posting being created, edited,
 renewed or cancelled.
 
-## The seven menus each
+## The menus
 
 Both boards ship with the same shape: a browser, a create/edit screen, a mode picker, an option picker
-and a tier picker; `/lfp` adds the applications list, the application detail screen and *my
-applications*. They are ordinary menu files — see [Menus](/docs/exyliaclans/menus).
+and a tier picker — **five files for `/lfc`**. `/lfp` adds the applications list, the application detail
+screen and *my applications*, for **eight**. They are ordinary menu files — see
+[Menus](/docs/exyliaclans/menus).
 
 <Callout type="tip" title="Start with fewer questions">
 Every category is another click between a player and a posted profile. Three or four questions that

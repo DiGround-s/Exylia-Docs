@@ -24,7 +24,8 @@ convierte en `bajas`. La misma regla vale para el KDR de un jugador.
 ## Bajas contra rivales
 
 `rivals.kill-stat-multiplier` multiplica la baja registrada **del clan** en una baja contra un rival. Se
-redondea, así que `2.0` registra dos y `1.5` registra una. La fila por jugador registra siempre una.
+redondea hacia arriba en el medio, así que `2.0` registra dos y `1.5` también registra dos. La fila por
+jugador registra siempre una. Con `modules.rivals: false` el multiplicador no se lee nunca.
 
 Dejarlo en `1.0` — el valor por defecto — mantiene el total del clan y la suma de sus miembros en
 sintonía.
@@ -81,7 +82,7 @@ logs:
   max-entries-per-clan: 200
 ```
 
-Cada clan tiene su propio log. Se escribe para **43 tipos de evento**: creación, disolución, renombrado;
+Cada clan tiene su propio log. Se escribe para **42 tipos de evento**: creación, disolución, renombrado;
 miembros que entran, salen, son expulsados, baneados, desbaneados, ascendidos, descendidos, reasignados de
 rango; transferencias de liderazgo; rangos creados, borrados, renombrados, repesados, con permisos
 cambiados, puestos por defecto; depósitos y retiradas del banco; peticiones de alianza enviadas,
@@ -90,8 +91,10 @@ quitados; homes puestos y quitados; friendly fire y clan abierto alternados; inv
 canceladas; correo de clan enviado; todos los eventos de oferta LFP y las solicitudes aceptadas; y las
 llamadas de regroup.
 
-Las entradas que pasan de `max-entries-per-clan` se podan de la más antigua tras cada escritura. Ponlo
-alto y la tabla crece; ponlo a `0` y no se poda nada.
+Las entradas que pasan de `max-entries-per-clan` se podan de la más antigua tras cada escritura, **como
+mucho `max-entries` filas por escritura** — así que un clan muy por encima del límite se va vaciando en
+las siguientes escrituras en vez de en una sola consulta. Ponlo alto y la tabla crece; ponlo a `0` y no
+se poda nada.
 
 Cómo se lee:
 

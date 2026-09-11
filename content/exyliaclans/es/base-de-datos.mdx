@@ -4,8 +4,8 @@ description: "Las trece tablas, qué las indexa, y qué saber antes de tocarlas 
 ---
 
 El almacenamiento es de ExyliaLib. `database.yml` se escribe en el primer arranque y usa H2 por defecto;
-también hay MySQL, SQLite, MongoDB y Redis. Las tablas se crean y migran desde las definiciones de los
-records, así que no hay ningún esquema que aplicar.
+los otros motores son MySQL, MariaDB, PostgreSQL y MongoDB, con un bloque `redis` al lado. Las tablas se
+crean y migran desde las definiciones de los records, así que no hay ningún esquema que aplicar.
 
 ## Las trece tablas
 
@@ -48,10 +48,10 @@ Los dos convierten una página en una lectura acotada en vez de un escaneo.
 
 | Columna | Formato |
 |---|---|
-| `clans.banned_players` | UUIDs separados por comas |
+| `clans.bannedPlayers` | UUIDs separados por comas |
 | `clan_roles.permissions` | Nombres de permiso separados por comas. Un nombre desconocido se salta al leer |
-| `clans.home_location` | Una localización serializada; `null` si no está puesta |
-| `clan_mails.read_by_players` / `deleted_by_players` | UUIDs separados por comas — así leído y borrado son por miembro desde una sola fila |
+| `clans.homeLocation` | Una localización serializada que **lleva el servidor en el que se puso**: `servidor,mundo,x,y,z,yaw,pitch`. `null` si no está puesta |
+| `clan_mails.readByPlayers` / `deletedByPlayers` | UUIDs separados por comas — así leído y borrado son por miembro desde una sola fila |
 | `lfc_profiles.data` / `lfp_postings.data` | Las respuestas serializadas |
 | `*.status` | `ACTIVE` / `EXPIRED` para ofertas y perfiles; `PENDING` / `ACCEPTED` / `REJECTED` para solicitudes |
 

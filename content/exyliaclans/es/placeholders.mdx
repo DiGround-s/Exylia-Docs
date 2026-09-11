@@ -7,15 +7,28 @@ Todos los placeholders están escritos enteros, y al hacer clic en uno se copia.
 
 ## El clan del espectador
 
+<Callout type="note" title="Dos líneas de messages.yml deciden cómo se ve la ausencia">
+Aquí nada resuelve nunca a una cadena vacía. Un jugador sin clan, un hueco de plantilla vacío y un clan
+sin clasificar responden todos con una palabra configurable:
+
+| Clave | Viene como | La usan |
+|---|---|---|
+| `placeholders.none` | `{muted}None` | `clan_name`, `clan_role` |
+| `placeholders.na` | `{muted}N/A` | Huecos vacíos de la plantilla, posiciones sin clasificar |
+
+Las dos viven en `messages.yml`, bajo `placeholders`, junto a las palabras que usan los menús.
+Cámbialas ahí y cada placeholder de esta página las sigue.
+</Callout>
+
 | Placeholder | Descripción |
 |---|---|
-| `%exyliaclans_clan_name%` | El nombre del clan, o `None` |
+| `%exyliaclans_clan_name%` | El nombre del clan, o `placeholders.none` |
 | `%exyliaclans_clan_id%` | Su id, o vacío |
 | `%exyliaclans_clan_members%` | Miembros totales |
 | `%exyliaclans_clan_online%` | Miembros conectados |
 | `%exyliaclans_clan_max_members%` | El tope, con el bonus de nivel incluido |
 | `%exyliaclans_clan_balance%` | El banco, formateado |
-| `%exyliaclans_clan_role%` | El nombre del rango del espectador |
+| `%exyliaclans_clan_role%` | El nombre del rango del espectador, o `placeholders.none` |
 | `%exyliaclans_clan_is_leader%` | `true` / `false` |
 | `%exyliaclans_clan_ff%` | Friendly fire, `true` / `false` |
 | `%exyliaclans_clan_allies%` | Número de clanes aliados |
@@ -23,7 +36,7 @@ Todos los placeholders están escritos enteros, y al hacer clic en uno se copia.
 | `%exyliaclans_clan_deaths%` | Muertes del clan |
 | `%exyliaclans_clan_kdr%` | KDR del clan, dos decimales |
 | `%exyliaclans_clan_playtime%` | Tiempo jugado total, formateado |
-| `%exyliaclans_clan_level%` | Nivel del clan, `0` sin clan |
+| `%exyliaclans_clan_level%` | Nivel del clan. Un jugador sin clan lee `1`, no `0` |
 | `%exyliaclans_clan_exp%` | EXP actual |
 | `%exyliaclans_clan_exp_next%` | EXP que falta para el siguiente nivel |
 | `%exyliaclans_clan_mail_unread%` | Correo sin leer de este espectador |
@@ -54,8 +67,8 @@ Todos los placeholders están escritos enteros, y al hacer clic en uno se copia.
 ## La lista de conectados
 
 Hasta **treinta** huecos en cada una, ordenados por peso de rango — el más pesado primero — y luego
-alfabéticamente. Un hueco sin nadie no devuelve nada, así que merece la pena usar la sintaxis de
-respaldo. Cambia `<n>` por el número de hueco, de `1` a `30`.
+alfabéticamente. Un hueco sin nadie responde con `placeholders.na`, que viene como `{muted}N/A`.
+Cambia `<n>` por el número de hueco, de `1` a `30`.
 
 | Placeholder | Descripción |
 |---|---|
@@ -82,7 +95,7 @@ cuatro veces por segundo cuestan una reconstrucción.
 ## Rankings
 
 Claves válidas: `online`, `members`, `kills`, `deaths`, `kdr`, `playtime`, `balance`. Lo que no esté
-clasificado devuelve `-`.
+clasificado devuelve `placeholders.na`.
 
 | Placeholder | Descripción |
 |---|---|

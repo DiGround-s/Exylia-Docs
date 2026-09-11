@@ -50,8 +50,9 @@ event world and the practice world in it.
 ## Regaining it
 
 A task runs every `regen-interval-seconds` (45 s) and adds `regen-amount` (0.1) to every clan that is not
-frozen and not already at its maximum. With the defaults that is 0.08 DTR per minute, so a single death
-takes about eleven minutes to undo — ten of them being the freeze.
+frozen and not already at its maximum. With the defaults that is 0.133 DTR per minute, so undoing a
+single death — 0.9 — takes nine ticks of the task, about 6 minutes 45 seconds, and that only starts once
+the ten-minute freeze has run out. Call it seventeen minutes from the death to being whole again.
 
 ## The four states
 
@@ -98,8 +99,17 @@ land, redraw it or dissolve itself to escape a raid it is losing.
 /clanadmin setdtr <clan> <SET|ADD|REMOVE> <value>
 ```
 
-Clamped between `min-dtr` and the clan's current maximum, so it cannot be used to hand out more DTR than
-the roster supports.
+Clamped at the clan's current maximum, so it cannot be used to hand out more DTR than the roster
+supports. There is **no lower clamp**: `SET -50` goes straight through, well past `min-dtr`.
+
+It also clears the freeze, so a clan set back to a positive number regenerates from the next tick
+instead of waiting out `freeze-seconds`.
+
+<Callout type="warning" title="It does not tell WorldGuard">
+Un-raiding a clan by hand does not run the raidable change, so a WorldGuard region left open by a raid
+keeps its `BUILD=ALLOW` until the next restart. In the plugin's own protection mode there is nothing to
+undo.
+</Callout>
 
 ## Turning it off
 
@@ -107,8 +117,9 @@ With `modules.dtr: false` there is no regeneration task, no freeze, no death bro
 state — which means **no claim ever opens**. Territory becomes permanent, and disband and unclaim lose
 their state check. If your server has claims, it almost certainly wants DTR too.
 
-<Callout type="note" title="The one-off backfill">
-On the first start after DTR is enabled, every clan sitting at exactly `0.0` with no freeze is given its
-maximum, and the count is logged. That is a migration for clans created while the module was off, not
-something that runs again.
+<Callout type="note" title="The backfill runs on every start">
+Every start with the module on, each clan sitting at exactly `0.0` with no freeze is given its maximum
+and the count is logged. It is what catches clans created while the module was off — but it is not a
+one-off migration, so a clan you deliberately leave at `0.0` with `/clanadmin setdtr` is topped back up
+the next time the server boots.
 </Callout>

@@ -92,7 +92,11 @@ clan gets exactly the level 10 row:
 | Rivals | `max-rivals`, 10 | 10 + 10 = **20** |
 
 The keys are yours. Add an eleventh level and raise `max-level` to 11, or delete rows to shorten the
-ladder. A key that is not a number is skipped.
+ladder. A key that is not a number is skipped, and so is any level **below 1 or above `max-level`** — so
+adding an eleventh row without raising `max-level` leaves it unread.
+
+Every cap the plugin enforces is derived from this table at the moment it is asked, so an edit and a
+`/clanadmin reload` change what existing clans may do straight away.
 
 <Callout type="warning" title="Losing EXP can lose a level">
 Deaths and raids remove EXP, and the level is recomputed from the new total. A clan that drops below a
@@ -113,8 +117,12 @@ progress bar and each row's bonuses, styled by the `level.*` block in `messages.
 /clanadmin setlevel <clan> <level>
 ```
 
-`setlevel` is a shortcut for setting the EXP to that level's `required-exp`. Both report the module as
-disabled when `modules.levels` is `false`.
+`setlevel` is a shortcut for setting the EXP to that level's `required-exp`. A level that is not in the
+table is refused with `admin.invalid-level`. Both report the module as disabled when `modules.levels`
+is `false`.
+
+EXP is clamped at the highest level's threshold, so a clan at `max-level` cannot be pushed past it with
+`setexp ADD`.
 
 ## Turning levels off
 

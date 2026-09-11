@@ -60,7 +60,7 @@ provocarlo.
 | `Optional<ClanMember> memberOf(UUID player)` | Su registro de pertenencia. Vacío si no está en ningún clan. |
 | `List<ClanMember> membersOf(String clanId)` | Todos los miembros de un clan. Vacío si el clan no existe. |
 | `Optional<ClanRole> roleOf(UUID player)` | Su rango dentro del clan. Vacío si no está en ninguno. |
-| `String roleNameOf(UUID player)` | El nombre del rango, para mostrar. Cadena vacía si no está en ningún clan. |
+| `String roleNameOf(UUID player)` | El nombre del rango, para mostrar. Nunca `null` ni vacío: un jugador sin clan devuelve `messages.yml` → `placeholders.none`, que viene como `{muted}None`. |
 | `int memberCount(UUID player)` | Cuántos jugadores hay en el clan de ese jugador. `0` si no está en ninguno. |
 
 ## Relaciones
@@ -100,7 +100,7 @@ un clan siga siendo un acierto de caché.
 | `boolean isRaidable(String clanId)` | Si el terreno del clan se puede raidear ahora mismo. |
 | `DtrState dtrState(String clanId)` | En qué punto del ciclo de DTR está. `NORMAL` si el clan no existe o el servidor va sin DTR. |
 | `double dtr(String clanId)` | Su DTR actual. |
-| `double maxDtr(String clanId)` | El DTR máximo que puede alcanzar con su tamaño y nivel actuales. |
+| `double maxDtr(String clanId)` | El DTR máximo que puede alcanzar con su tamaño actual. Miembros entre `members-per-point`, nunca por debajo de `1.0`. El nivel no entra en el cálculo. |
 
 ## Terrenos
 
@@ -190,3 +190,12 @@ desde cualquier menú de ExyliaLib, de cualquier plugin — ver [Menús](/docs/e
 holograma leen el estado del clan directamente. Ver [Placeholders](/docs/exyliaclans/placeholders).
 
 Si de verdad te falta algo, pídelo en [Discord](https://discord.exylia.net).
+
+## El jar de reflexión antiguo
+
+La build publica además `ExyliaClans-API.jar`, un puente por reflexión independiente:
+`net.exylia.exyliaclans.api.ExyliaClansAPI`, con quince métodos estáticos y un record `ClanData`. Es
+anterior a la API común de la suite y llega al plugin por reflexión en vez de por un service.
+
+Todo lo que hace, `ClansService` lo hace con tipos reales y sin reflexión. Se mantiene para que los
+plugins escritos contra él sigan funcionando; escribe lo nuevo contra `ClansService`.

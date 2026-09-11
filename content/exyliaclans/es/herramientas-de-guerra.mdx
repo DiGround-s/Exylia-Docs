@@ -10,11 +10,26 @@ necesita `REGROUP` — los otros tres los puede usar cualquier miembro.
 
 ```
 /clan focus <jugador>
+/clan focus
 ```
 
-Marca a un enemigo para todo el clan: se le pinta de **rojo y brillando** para cada miembro conectado, y
-una bossbar muestra su vida. Es la forma de cantar un objetivo en mitad de una pelea sin escribir un
-nombre por el chat.
+Marca a un enemigo para todo el clan: se le hace **brillar** para cada miembro conectado, y una bossbar
+muestra su vida. Es la forma de cantar un objetivo en mitad de una pelea sin escribir un nombre por el
+chat.
+
+Hay tres formas de quitarla: `/clan focus` **sin ningún nombre**, `/clan focus` sobre el jugador que ya
+está marcado, o dejar que se quite sola cuando el objetivo muere, se desconecta o se le encuentra
+desconectado o muerto en una pasada de la barra. Al clan se le avisa con `clan.focus-cleared`; a un
+clan que no marca a nadie se le dice `clan.focus-none`.
+
+<Callout type="note" title="El rojo necesita un modo de visibilidad; el resto del focus no necesita nada">
+El **rojo** es un equipo de scoreboard, y `visibility-mode` viene como `DISABLED`, que no crea ninguno
+— así que de fábrica un jugador marcado brilla pero no se pone rojo. Pon cualquier otro modo en la
+página de [Relaciones](/docs/exyliaclans/relaciones#cómo-se-pinta-a-un-jugador) para recuperar el color.
+
+Sin **PacketEvents** lo que se queda callado es el contorno, no el comando: la bossbar y el aviso a
+todo el clan siguen funcionando.
+</Callout>
 
 | Se niega cuando | Mensaje |
 |---|---|
@@ -44,7 +59,9 @@ al color que le toque — no al que tuviera antes.
 Pone un marcador sobre el **home** de otro clan, para todo el tuyo: un waypoint rojo en los clientes que
 los dibujan, y una bossbar contando la distancia. Repetirlo sobre el mismo clan quita el marcador.
 
-Se niega si ese clan no tiene home. No está limitado a rivales: se puede campear a cualquiera.
+Se niega si ese clan no tiene home, y también si su home está **en otro servidor** o en un mundo que no
+esté cargado aquí: un home de clan lleva el servidor en el que se puso, así que una red puede tener un
+home al que este servidor no puede apuntar. No está limitado a rivales: se puede campear a cualquiera.
 
 ```yaml
 bossbars:
@@ -58,8 +75,12 @@ bossbars:
       style: PROGRESS
 ```
 
-`max-distance` es dónde la barra se lee vacía, no un límite de alcance. `duration-seconds: 0` significa
-que el marcador de camp no caduca solo.
+`max-distance` es dónde la barra se lee vacía, no un límite de alcance.
+
+<Callout type="note" title="Un marcador de camp no caduca nunca, diga lo que diga `duration-seconds`">
+La clave se genera en el archivo, pero el marcador de camp no programa ninguna caducidad. Solo `rally`
+lee su propio `duration-seconds`. Un camp se quita repitiendo `/clan camp` sobre el mismo clan.
+</Callout>
 
 ## Rally
 
@@ -104,8 +125,13 @@ warmup y se teletransporta al punto.
 | `regroup-cooldown-seconds` | 60 | Por clan, entre llamadas. `0` lo desactiva. |
 | `regroup-expire-seconds` | 60 | Cuánto sigue disponible el punto. `0` no caduca. |
 
-La cuenta atrás la dibuja `regroup-effects`, y a un miembro que siga en el warmup cuando el punto caduque
-se le detiene en vez de teletransportarlo.
+La cuenta atrás la dibuja `regroup-effects`.
+
+<Callout type="warning" title="Un punto caducado sigue teletransportando a quien ya está contando">
+El destino se captura al empezar el warmup, así que a un miembro cuya cuenta atrás sobreviva a
+`regroup-expire-seconds` se le teletransporta igual: la caducidad solo quita el punto y lo anuncia. Un
+warmup solo se detiene con un `/clan regroup` **nuevo** del mismo clan, o si el clan se disuelve.
+</Callout>
 
 ```yaml
 regroup-effects:

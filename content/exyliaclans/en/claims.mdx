@@ -15,11 +15,15 @@ permission.
 |---|---|
 | Left click a block | Corner 1 |
 | Right click a block | Corner 2 |
-| Shift + click in the air | Pay and confirm |
+| Sneak + any click | Pay and confirm |
 | `/clan claim` again | Cancel |
 
-Glass towers topped with a diamond block mark each corner, drawn only for the player selecting. They are
-packet-level: no block is ever placed in the world.
+Sneaking turns **every** click into a confirmation, on a block or in the air, left or right — so hold
+shift only when you mean to buy the land.
+
+Towers mark each corner, drawn only for the player selecting: three glass blocks, then a diamond block,
+repeating all the way up and down the world. They are packet-level, so no block is ever placed — and
+only **empty** space is drawn into, which is why a tower breaks wherever terrain is in the way.
 
 The tool cannot be dropped, cannot be stored (opening any inventory is blocked while a session is
 running), does not drop on death, and is stripped from the inventory on join, so a stale one can never
@@ -92,8 +96,9 @@ When the DTR regenerates back above zero, the flag is cleared and protection ret
 /clan reclaim
 ```
 
-Redraws the rectangle **inside** the existing one. The tool is the same, with the current bounds shown as
-orange glass towers topped with a gold block; a selection that leaves those bounds is refused.
+Redraws the rectangle **inside** the existing one. It needs the same `CLAIM_LAND` rank permission as a
+first claim. The tool is the same, with the current bounds shown as orange glass and gold blocks; a
+selection that leaves those bounds is refused.
 
 | Rule | Detail |
 |---|---|
@@ -133,9 +138,17 @@ Draws every claim within `map-radius` (200 blocks) as coloured pillars, visible 
 | Blue glass, lapis block | An ally's |
 | Red glass, redstone block | Anybody else's |
 
+Each claim also gets a dust-particle outline traced every 30 ticks, two blocks at a time, and a glowing
+column at its centre.
+
 It refreshes every five seconds and switches itself off after two minutes, or when the player runs the
-command again, changes world or logs out. With no claim inside the radius, nothing is drawn and the
-player is told the radius that was searched.
+command again, changes world or logs out.
+
+<Callout type="note" title="An empty result still counts as a map being open">
+With no claim inside the radius nothing is drawn and the player is told the radius that was searched —
+but the map is registered as open all the same, so the next `/clan map` reports it as hidden instead of
+searching again. A third one searches.
+</Callout>
 
 ## Entering and leaving
 
@@ -159,5 +172,8 @@ claims:
   protection-mode: WORLDGUARD
 ```
 
-`pillar-duration-seconds` is how long the corner towers stay up for everybody nearby after a claim is
-made, which is separate from the selection preview.
+<Callout type="note" title="`pillar-duration-seconds` does nothing">
+The key is generated into the file and describes towers shown to everybody nearby once a claim is made,
+but nothing in the claim flow ever asks for them. The only pillars a player sees are the selection
+preview and `/clan map`.
+</Callout>

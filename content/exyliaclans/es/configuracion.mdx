@@ -30,7 +30,7 @@ settings:
   clan-name-min-length: 3
   clan-name-max-length: 16
   clan-name-regex: "^[a-zA-Z0-9_]+$"
-  visibility-mode: UNIFIED
+  visibility-mode: DISABLED
   forced-ff-worlds: []
   chat:
     quick-clan-prefixes: ["."]
@@ -53,7 +53,7 @@ settings:
 | `clan-name-min-length` | 3 | Nombre de clan más corto |
 | `clan-name-max-length` | 16 | El más largo |
 | `clan-name-regex` | `^[a-zA-Z0-9_]+$` | Patrón que debe cumplir un nombre |
-| `visibility-mode` | `UNIFIED` | `CLAN_ONLY`, `ALLY_ONLY`, `CLAN_AND_ALLY_MIXED` o `UNIFIED` |
+| `visibility-mode` | `DISABLED` | `DISABLED`, `CLAN_ONLY`, `ALLY_ONLY`, `CLAN_AND_ALLY_MIXED` o `UNIFIED`. Mira [Relaciones](/docs/exyliaclans/relaciones#cómo-se-pinta-a-un-jugador) |
 | `forced-ff-worlds` | `[]` | Mundos donde el friendly fire está siempre activo |
 | `chat.quick-clan-prefixes` | `["."]` | Prefijos que envían una línea al chat de clan |
 | `chat.quick-ally-prefixes` | `["@"]` | Prefijos que envían una línea al clan y a los aliados |
@@ -136,6 +136,22 @@ Ver [DTR](/docs/exyliaclans/dtr).
 `max-level`, `exp-actions`, `level-definitions` y `kill-streak-bonuses`. Ver
 [Niveles](/docs/exyliaclans/niveles).
 
+## kick-protection
+
+```yaml
+kick-protection:
+  enabled: true
+  duration-seconds: 120
+```
+
+| Clave | Por defecto | Qué hace |
+|---|---|---|
+| `enabled` | `true` | Si un jugador expulsado recibe tregua o no |
+| `duration-seconds` | 120 | Cuánto dura |
+
+La regla entera — a quién cubre y por qué gana a `forced-ff-worlds` — está en
+[Relaciones](/docs/exyliaclans/relaciones#la-tregua-tras-una-expulsión).
+
 ## relational-placeholders
 
 Las cuatro etiquetas y los cuatro colores con los que se dibuja a un jugador para otro. Ver
@@ -157,20 +173,21 @@ home-effects:
     text: "{primary}⏳ Clan Home {muted}| {primary}Teleportando en {highlight}%time%"
   warmup-title:
     title: "{highlight}%time%"
-    subtitle: "{muted}¡No te muevas!"
+    subtitle: "{muted}Do not move!"
     fade-in: 0
     stay: 10
     fade-out: 0
   teleport-title:
     title: "{primary}&lCLAN HOME"
-    subtitle: "{muted}¡Bienvenido de vuelta!"
+    subtitle: "{muted}Welcome back!"
     fade-in: 10
     stay: 50
     fade-out: 15
 ```
 
-`%time%` son los segundos que faltan. Los tiempos van en ticks: veinte por segundo. Los textos de
-`home-effects` vienen en español; los de `regroup-effects`, en inglés.
+`%time%` son los segundos que faltan. Los tiempos van en ticks: veinte por segundo. Queda una sola
+cadena en español entre las que vienen: `home-effects.warmup-actionbar.text`, que dice *Teleportando
+en*. Todo lo demás de los dos bloques está en inglés.
 
 ## default-roles
 
@@ -178,8 +195,23 @@ Los rangos con los que nace un clan. Ver [Rangos](/docs/exyliaclans/roles).
 
 ## messages.yml
 
-Once secciones: `prefix`, `clan`, `claim`, `errors`, `level`, `dtr`, `placeholders`, `logs`, `lfc`, `lfp`,
-`mail`, `admin`.
+Trece secciones bajo un `prefix`: `clan`, `claim`, `errors`, `level`, `dtr`, `placeholders`, `logs`,
+`lfc`, `lfp`, `mail`, `admin` y `confirm`. Unas 460 claves entre todas: cada línea que puede mandar el
+plugin está aquí, y no queda nada escrito a fuego.
+
+| Sección | Qué lleva |
+|---|---|
+| `clan` | Todo `/clan`: creación, invitaciones, rangos, banco, home, chat y las diez peticiones por chat |
+| `claim` | Reclamar, liberar, el mapa y el nombre y lore de la propia herramienta |
+| `errors` | Cada negativa, incluidas `module-disabled`, `kick-protection` y `role-name-invalid` |
+| `level` | Subidas y bajadas de nivel, líneas de EXP |
+| `dtr` | La visualización del DTR y las líneas de detalle congelado, regenerando y raidable |
+| `placeholders` | Palabras cortas que sustituyen los menús y la capa de PlaceholderAPI — ver abajo |
+| `logs` | Las cinco plantillas de línea del registro: con objetivo, sin objetivo, detalle, sin detalle y actor desconocido |
+| `lfc`, `lfp` | Los tablones de reclutamiento en los dos sentidos |
+| `mail` | El buzón del clan |
+| `admin` | Todo lo que dice `/clanadmin` |
+| `confirm` | El texto de la pantalla de confirmación compartida |
 
 Tres cosas que conviene saber:
 
@@ -190,9 +222,12 @@ Tres cosas que conviene saber:
 - **`%prefix%` se sustituye desde la clave `prefix`**, y funcionan las etiquetas de clic y hover de
   MiniMessage: la línea de invitación que viene es un botón *Aceptar* clicable.
 
-La sección `placeholders` es un saco de palabras cortas que los menús sustituyen — *Sí*, *No*,
-*Activado*, *Conectado*, los caracteres de la barra de progreso — para que treinta y siete archivos de
-menú no escriban cada uno los suyos.
+La sección `placeholders` es un saco de palabras cortas que se sustituyen — *Sí*, *No*, *Activado*,
+*Conectado*, los caracteres de la barra de progreso — para que treinta y siete archivos de menú no
+escriban cada uno los suyos. Dos de sus claves las lee además la **capa de PlaceholderAPI**:
+`placeholders.none` es lo que responden `%exyliaclans_clan_name%` y `%exyliaclans_clan_role%` para un
+jugador sin clan, y `placeholders.na` es lo que responde un hueco vacío de la plantilla o una posición
+sin clasificar. Mira [Placeholders](/docs/exyliaclans/placeholders).
 
 ## lfc.yml y lfp.yml
 
@@ -201,5 +236,6 @@ menú no escriban cada uno los suyos.
 
 ## Recargar
 
-`/clanadmin reload` vuelve a leer los cuatro archivos, reconstruye la tabla de niveles y recompila los
-menús. Los cambios en `default-roles` solo llegan a los clanes creados después.
+`/clanadmin reload` vuelve a leer los cuatro archivos, reconstruye la tabla de niveles, relee las
+categorías de reclutamiento, aplica a todo el que esté conectado un `visibility-mode` cambiado, y
+recompila los menús. Los cambios en `default-roles` solo llegan a los clanes creados después.

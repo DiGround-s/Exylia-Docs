@@ -25,7 +25,8 @@ Rather than infinity. A leaderboard has to sort it and a menu has to print it, s
 ## Rival kills
 
 `rivals.kill-stat-multiplier` multiplies the **clan's** recorded kill for a kill against a rival. It is
-rounded, so `2.0` records two and `1.5` records one. The per-player row always records exactly one.
+rounded half up, so `2.0` records two and `1.5` records two as well. The per-player row always records
+exactly one. With `modules.rivals: false` the multiplier is never read at all.
 
 Leaving it at `1.0` — the default — keeps the clan total and the sum of its members in step.
 
@@ -80,15 +81,16 @@ logs:
   max-entries-per-clan: 200
 ```
 
-Every clan keeps its own log. It is written for **43 kinds of event**: creation, disband, rename; members
+Every clan keeps its own log. It is written for **42 kinds of event**: creation, disband, rename; members
 joining, leaving, being kicked, banned, unbanned, promoted, demoted, assigned a rank; leadership
 transfers; ranks created, deleted, renamed, re-weighted, re-permissioned, made default; bank deposits and
 withdrawals; alliance requests sent, accepted, declined, allies removed; rivals added and removed; claims
 created, reclaimed and removed; homes set and removed; friendly fire and open toggled; invitations sent
 and cancelled; clan mail sent; every LFP posting event and accepted application; and regroup calls.
 
-Entries past `max-entries-per-clan` are pruned oldest-first after each write. Set it high and the table
-grows; set it to `0` and nothing is pruned.
+Entries past `max-entries-per-clan` are pruned oldest-first after each write, **at most `max-entries`
+rows per write** — so a clan that is a long way over the limit drains across the next few writes rather
+than in one query. Set it high and the table grows; set it to `0` and nothing is pruned.
 
 Reading it:
 

@@ -91,8 +91,12 @@ recibe exactamente la fila del nivel 10:
 | Alianzas | `max-alliances`, 5 | 5 + 5 = **10** |
 | Rivales | `max-rivals`, 10 | 10 + 10 = **20** |
 
-Las claves son tuyas. Añade un nivel once y sube `max-level` a 11, o borra filas para acortar la escalera.
-Una clave que no sea un número se salta.
+Las claves son tuyas. Añade un nivel once y sube `max-level` a 11, o borra filas para acortar la
+escalera. Una clave que no sea un número se salta, y también cualquier nivel **por debajo de 1 o por
+encima de `max-level`** — así que añadir una fila once sin subir `max-level` la deja sin leer.
+
+Todos los topes que aplica el plugin se derivan de esta tabla en el momento en que se consultan, así que
+una edición y un `/clanadmin reload` cambian de inmediato lo que pueden hacer los clanes que ya existen.
 
 <Callout type="warning" title="Perder EXP puede perder un nivel">
 Las muertes y los raideos quitan EXP, y el nivel se recalcula sobre el total nuevo. A un clan que baja de
@@ -113,8 +117,12 @@ barra de progreso y los bonus de cada fila, con el estilo del bloque `level.*` d
 /clanadmin setlevel <clan> <nivel>
 ```
 
-`setlevel` es un atajo para poner la EXP en el `required-exp` de ese nivel. Los dos informan de módulo
-desactivado cuando `modules.levels` está en `false`.
+`setlevel` es un atajo para poner la EXP en el `required-exp` de ese nivel. Un nivel que no esté en la
+tabla se rechaza con `admin.invalid-level`. Los dos informan de módulo desactivado cuando
+`modules.levels` está en `false`.
+
+La EXP se limita al umbral del nivel más alto, así que a un clan en `max-level` no se le puede pasar de
+ahí con `setexp ADD`.
 
 ## Apagar los niveles
 

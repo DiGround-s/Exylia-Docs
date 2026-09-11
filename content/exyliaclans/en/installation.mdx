@@ -31,11 +31,11 @@ description: "Dependencies, the files it writes, the tables it creates, and what
 | File | Contents |
 |---|---|
 | `config.yml` | Limits, warmups, the twelve module switches, claims, DTR, levels, boss bars and `default-roles`. |
-| `messages.yml` | Every line the plugin sends, in eleven sections. |
+| `messages.yml` | Every line the plugin sends, in thirteen sections. |
 | `lfc.yml` | Looking-for-clan: cooldowns, expiry, and the questions a player answers. |
 | `lfp.yml` | Looking-for-players: cooldowns, expiry, text limits, application limits, and what a clan may ask for. |
 | `menus/*.yml` | Thirty-seven screens. |
-| `database.yml` | Written by ExyliaLib. H2 by default; MySQL, SQLite, MongoDB and Redis are also available. |
+| `database.yml` | Written by ExyliaLib. H2 by default; MySQL, MariaDB, PostgreSQL and MongoDB are the other engines, with a `redis` block alongside them. |
 
 <Callout type="note" title="The YAML is generated, not shipped">
 `config.yml`, `messages.yml`, `lfc.yml` and `lfp.yml` are written from typed records on first start,

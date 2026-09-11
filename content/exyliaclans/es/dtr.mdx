@@ -51,8 +51,10 @@ mundo de eventos y el de practice.
 ## Recuperarlo
 
 Una tarea corre cada `regen-interval-seconds` (45 s) y suma `regen-amount` (0.1) a cada clan que no esté
-congelado ni ya en su máximo. Con los valores por defecto son 0,08 DTR por minuto, así que deshacer una
-sola muerte lleva unos once minutos, diez de ellos de congelado.
+congelado ni ya en su máximo. Con los valores por defecto son 0,133 DTR por minuto, así que deshacer una
+sola muerte — 0,9 — son nueve pasadas de la tarea, unos 6 minutos y 45 segundos, y eso solo empieza
+cuando se agotan los diez minutos de congelado. Unos diecisiete minutos desde la muerte hasta estar
+entero otra vez.
 
 ## Los cuatro estados
 
@@ -99,8 +101,17 @@ clan no puede soltar su terreno, redibujarlo ni disolverse para escapar de un ra
 /clanadmin setdtr <clan> <SET|ADD|REMOVE> <valor>
 ```
 
-Se limita entre `min-dtr` y el máximo actual del clan, así que no sirve para dar más DTR del que soporta
-la plantilla.
+Se limita al máximo actual del clan, así que no sirve para dar más DTR del que soporta la plantilla.
+**No hay límite por abajo**: un `SET -50` pasa tal cual, muy por debajo de `min-dtr`.
+
+También quita el congelado, así que un clan puesto en un número positivo regenera desde la siguiente
+pasada en vez de esperar a que se agote `freeze-seconds`.
+
+<Callout type="warning" title="No avisa a WorldGuard">
+Sacar a un clan del estado raidable a mano no dispara el cambio de estado, así que una región de
+WorldGuard que un raideo dejó abierta conserva su `BUILD=ALLOW` hasta el siguiente reinicio. En el modo
+de protección propio del plugin no hay nada que deshacer.
+</Callout>
 
 ## Apagarlo
 
@@ -109,8 +120,9 @@ raidable — lo que significa que **ningún terreno se abre nunca**. El territor
 disolver y quitar terreno pierden su comprobación de estado. Si tu servidor tiene terrenos, casi seguro
 que también quiere DTR.
 
-<Callout type="note" title="El backfill de una vez">
-En el primer arranque tras activar el DTR, cada clan que esté exactamente a `0.0` y sin congelado recibe
-su máximo, y se registra el número. Es una migración para clanes creados con el módulo apagado, no algo
-que vuelva a ejecutarse.
+<Callout type="note" title="El backfill corre en cada arranque">
+En cada arranque con el módulo activo, cada clan que esté exactamente a `0.0` y sin congelado recibe su
+máximo, y se registra el número. Es lo que recoge a los clanes creados con el módulo apagado — pero no
+es una migración de una sola vez, así que un clan que dejes a `0.0` a propósito con `/clanadmin setdtr`
+vuelve a llenarse en el siguiente arranque del servidor.
 </Callout>

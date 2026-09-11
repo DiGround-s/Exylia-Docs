@@ -74,7 +74,7 @@ rivals:
 | Setting | Effect |
 |---|---|
 | `kill-exp-multiplier` | Kill EXP — base plus streak bonus — is multiplied by this when the victim was in a rival clan. `1.0` disables the lookup entirely. |
-| `kill-stat-multiplier` | The clan's recorded kill count is multiplied by this for a rival kill. It is rounded, so `2.0` records two kills and `1.5` records one. |
+| `kill-stat-multiplier` | The clan's recorded kill count is multiplied by this for a rival kill. It is rounded half up, so `2.0` records two kills and `1.5` records two as well. |
 | `notify-target-on-declare` | Whether the declared clan is told. |
 
 Rivals are also what `/clan camp` reads, and what makes a player show as an enemy to the relational
@@ -89,19 +89,33 @@ It only touches `clan_stats`, which is what the kills leaderboard sorts on. The 
 
 ```yaml
 settings:
-  visibility-mode: UNIFIED
+  visibility-mode: DISABLED
 ```
 
 | Mode | Who is painted |
 |---|---|
-| `CLAN_ONLY` | Clanmates, green. Allies look like strangers. |
-| `ALLY_ONLY` | Allies, aqua. Clanmates look like strangers. |
-| `CLAN_AND_ALLY_MIXED` | Clanmates green; allies aqua **and glowing**, so the two are told apart. |
-| `UNIFIED` | Everybody friendly in one colour. |
+| `DISABLED` | **Nobody.** The shipped default. Names are exactly what TAB or your own plugin draws. |
+| `CLAN_ONLY` | Clanmates and yourself, green. Allies look like strangers. |
+| `ALLY_ONLY` | Allies and yourself, aqua. Clanmates look like strangers. |
+| `CLAN_AND_ALLY_MIXED` | Clanmates and yourself green; allies aqua **and glowing**, so the two are told apart. |
+| `UNIFIED` | Clanmates, allies and yourself, all in one colour. |
+
+An unknown value falls back to `CLAN_AND_ALLY_MIXED`.
 
 The colour is per viewer, not a scoreboard team the whole server shares, so two players can see the same
 third player differently. Where `TAB` is installed its own team handling is paused for a player while
 this plugin is colouring them, and resumed when they leave a clan.
+
+<Callout type="warning" title="`DISABLED` ships as the default, and it turns more off than colour">
+Out of the box this plugin paints nothing at all: no nametags are touched, no scoreboard team is
+created, and TAB's team handling is never paused. A [focus](/docs/exyliaclans/war-tools#focus) still
+makes the target **glow**, because glow rides on the entity itself — but it is not red, because red
+needs the scoreboard team that `DISABLED` never creates. Set one of the four other modes to get the
+colours back.
+</Callout>
+
+The whole feature is packet-level and needs **PacketEvents**. Without it, every mode behaves as
+`DISABLED`.
 
 ## Friendly fire
 
@@ -114,7 +128,30 @@ settings:
 |---|---|
 | Same clan | The clan has friendly fire on, or the world is in `forced-ff-worlds` |
 | Mutual allies | **Both** clans have it on, or the world is forced |
-| Anyone else | Always |
+| Anyone else | Always, **unless a kick truce is running** |
+
+## The truce after a kick
+
+```yaml
+kick-protection:
+  enabled: true
+  duration-seconds: 120
+```
+
+Kicking or banning a player arms a two-minute truce between them and the clan they just left. While it
+runs, **no damage passes in either direction** between that player and anybody still in the clan, or in
+a clan mutually allied with it. The attacker is told why, with the seconds remaining, at most once
+every three seconds.
+
+It is armed from every route out: the kick and ban buttons in the members menu, `/clan kick`,
+`/clan ban` and `/clanadmin forcekick`.
+
+<Callout type="warning" title="The truce beats `forced-ff-worlds`">
+It is checked **before** the friendly-fire rules, so a kicked player cannot be finished off in an arena
+world either. Two minutes is the shipped value; `enabled: false` turns the whole thing off and a kicked
+player is fair game immediately.
+</Callout>
+
 
 `/clan ff` toggles it and needs `TOGGLE_FRIENDLY_FIRE`. Projectiles are resolved to whoever fired them,
 so an arrow follows the same rules as a sword. A player not in a clan is never protected by any of this.

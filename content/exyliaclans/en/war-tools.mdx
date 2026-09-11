@@ -10,11 +10,26 @@ which needs `REGROUP` — the other three are open to any member.
 
 ```
 /clan focus <player>
+/clan focus
 ```
 
-Marks one enemy for the whole clan: they are painted **red and glowing**, for every online member, and a
-boss bar shows their health. It is how a clan calls a target in the middle of a fight without typing a
-name into chat.
+Marks one enemy for the whole clan: they are made to **glow** for every online member, and a boss bar
+shows their health. It is how a clan calls a target in the middle of a fight without typing a name into
+chat.
+
+There are three ways to take it off: `/clan focus` with **no name at all**, `/clan focus` on the player
+who is already focused, or letting it clear itself when the target dies, disconnects, or is found
+offline or dead on a bar tick. The clan is told with `clan.focus-cleared`; a clan focusing nobody is
+told `clan.focus-none`.
+
+<Callout type="note" title="Red needs a visibility mode; the rest of the focus does not need anything">
+The **red** colour is a scoreboard team, and `visibility-mode` ships as `DISABLED`, which never creates
+one — so out of the box a focused player glows without turning red. Set any other mode on the
+[Relations](/docs/exyliaclans/relations#how-a-player-is-coloured) page to get the colour.
+
+Without **PacketEvents** the outline is what goes quiet, not the command: the boss bar and the call to
+the whole clan still work.
+</Callout>
 
 | Refused when | Message |
 |---|---|
@@ -44,7 +59,9 @@ to whatever colour they should have been — not to whatever colour they had bef
 Puts a marker on another clan's **home**, for your whole clan: a red waypoint on clients that draw them,
 and a boss bar counting the distance down. Running it again on the same clan clears the marker.
 
-It is refused if that clan has no home set. It is not restricted to rivals — you can camp anyone.
+It is refused if that clan has no home set, and also if their home is **on another server** or in a
+world that is not loaded here — a clan home carries the server it was set on, so a network can have a
+home this server cannot point at. It is not restricted to rivals: you can camp anyone.
 
 ```yaml
 bossbars:
@@ -58,8 +75,12 @@ bossbars:
       style: PROGRESS
 ```
 
-`max-distance` is where the bar reads empty, not a range limit. `duration-seconds: 0` means the camp
-marker never expires on its own.
+`max-distance` is where the bar reads empty, not a range limit.
+
+<Callout type="note" title="A camp marker never expires, whatever `duration-seconds` says">
+The key is generated into the file but the camp marker schedules no expiry at all. Only `rally` reads
+its own `duration-seconds`. Clear a camp by running `/clan camp` on the same clan again.
+</Callout>
 
 ## Rally
 
@@ -104,8 +125,13 @@ warmup and then teleports them to the point.
 | `regroup-cooldown-seconds` | 60 | Per clan, between calls. `0` disables. |
 | `regroup-expire-seconds` | 60 | How long the point stays joinable. `0` never expires. |
 
-The countdown is drawn by `regroup-effects`, and a member still in the warmup when the point expires is
-stopped rather than teleported.
+The countdown is drawn by `regroup-effects`.
+
+<Callout type="warning" title="An expired point still teleports whoever is already counting down">
+The destination is captured when the warmup starts, so a member whose countdown outlives
+`regroup-expire-seconds` is teleported anyway — the expiry only drops the point and announces it. A
+warmup is stopped only by a **new** `/clan regroup` from the same clan, or by the clan disbanding.
+</Callout>
 
 ```yaml
 regroup-effects:

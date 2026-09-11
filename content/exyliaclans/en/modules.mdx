@@ -30,7 +30,7 @@ A disabled module does three things: its manager is never built, its commands an
 |---|---|
 | `claims` | `/clan claim`, `/clan unclaim`, `/clan reclaim`, `/clan map`, the claim tool, the corner pillars, the protection listener and the WorldGuard regions. |
 | `dtr` | The whole deaths-till-raidable pool: the regeneration task, the freeze, the death broadcast and the raidable state. |
-| `clan-home` | `/clan home`, `/clan sethome` and the home waypoints. |
+| `clan-home` | `/clan home`, `/clan sethome` and the home waypoints. A clan home stores the **server** it was set on, so `/clan home` crosses the network; the waypoint is skipped for a home on another server. |
 | `bank` | `/clan deposit`, `/clan withdraw` and the bank menu. |
 | `allies` | `/clan ally` in all four forms and the allies menu. |
 | `levels` | EXP, level-ups, kill-streak bonuses and the level menu — including the member, ally and rival caps each level grants. |

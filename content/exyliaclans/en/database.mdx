@@ -3,9 +3,9 @@ title: "Database"
 description: "The thirteen tables, what keys them, and what to know before touching them by hand."
 ---
 
-Storage is ExyliaLib's. `database.yml` is written on first start and defaults to H2; MySQL, SQLite,
-MongoDB and Redis are also available. Tables are created and migrated from the record definitions, so
-there is no schema file to apply.
+Storage is ExyliaLib's. `database.yml` is written on first start and defaults to H2; MySQL, MariaDB,
+PostgreSQL and MongoDB are the other engines, and a `redis` block sits alongside them. Tables are
+created and migrated from the record definitions, so there is no schema file to apply.
 
 ## The thirteen tables
 
@@ -48,10 +48,10 @@ Both make a page a bounded read rather than a scan.
 
 | Column | Format |
 |---|---|
-| `clans.banned_players` | Comma-separated UUIDs |
+| `clans.bannedPlayers` | Comma-separated UUIDs |
 | `clan_roles.permissions` | Comma-separated permission names. An unknown name is skipped when read |
-| `clans.home_location` | A serialised location; `null` when unset |
-| `clan_mails.read_by_players` / `deleted_by_players` | Comma-separated UUIDs — which is how read and deleted are per member off one row |
+| `clans.homeLocation` | A serialised location that **carries the server it was set on** — `server,world,x,y,z,yaw,pitch`. `null` when unset |
+| `clan_mails.readByPlayers` / `deletedByPlayers` | Comma-separated UUIDs — which is how read and deleted are per member off one row |
 | `lfc_profiles.data` / `lfp_postings.data` | The serialised answers |
 | `*.status` | `ACTIVE` / `EXPIRED` for postings and profiles; `PENDING` / `ACCEPTED` / `REJECTED` for applications |
 

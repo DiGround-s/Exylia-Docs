@@ -44,7 +44,7 @@ actúa sobre el clan, un **permiso de rango** (el del propio clan). Los dos tien
 | `/clan open` | `…commands.open` | `TOGGLE_OPEN` | — |
 | `/clan info` | `…commands.info` | — | — |
 | `/clan info <clan>` | `…commands.info` | — | — |
-| `/clan focus <jugador>` | `…commands.focus` | — | — |
+| `/clan focus [jugador]` | `…commands.focus` | — | — |
 | `/clan camp <clan>` | `…commands.camp` | — | — |
 | `/clan rally` | `…commands.rally` | — | — |
 | `/clan regroup` | `…commands.regroup` | `REGROUP` | `regroup` |
@@ -104,8 +104,8 @@ staff necesita **los dos**.
 | Detalle | Comportamiento |
 |---|---|
 | `setbalance` | Con suelo en cero. |
-| `setdtr` | Limitado entre `min-dtr` y el máximo actual del clan. |
-| `setlevel` | Pone la EXP en el `required-exp` de ese nivel. Necesita el módulo `levels`. |
+| `setdtr` | Limitado solo al máximo actual del clan: no hay límite por abajo, así que un valor negativo pasa tal cual. También quita el congelado del DTR. |
+| `setlevel` | Pone la EXP en el `required-exp` de ese nivel. Un nivel que no esté en la tabla se rechaza con `admin.invalid-level`. Necesita el módulo `levels`. |
 | `playerstat` / `clanstat` | `PLAYTIME` va en segundos. Con suelo en cero. |
 | `logs` | 20 entradas por defecto. Necesita el módulo `logs`. |
 | `forcekick` | Disuelve el clan si el jugador expulsado era su último miembro. |
@@ -129,5 +129,6 @@ Abre el navegador de looking for players. Publicar y responder solicitudes neces
 ## Reload
 
 `/clanadmin reload` vuelve a leer `config.yml`, `messages.yml`, `lfc.yml` y `lfp.yml`, reconstruye la
-tabla de niveles y recompila todos los menús. `/exylialib reload` también recompila los menús, así que un
-cambio de paleta hecho desde la librería les llega.
+tabla de niveles, relee las categorías de reclutamiento, aplica a todo el que esté conectado un
+`visibility-mode` cambiado, y recompila todos los menús. `/exylialib reload` también recompila los
+menús, así que un cambio de paleta hecho desde la librería les llega.
